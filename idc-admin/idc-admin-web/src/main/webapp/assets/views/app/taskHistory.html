@@ -1,0 +1,351 @@
+<div class="portlet light " ng-if="tabStack.length==0">
+    <div class="portlet-title">
+        <div class="caption">
+            <i class="fa fa-gift"></i>查询条件
+        </div>
+        <div class="tools">
+            <a class="collapse" href="javascript:;" data-original-title="" title="">
+            </a>
+        </div>
+    </div>
+
+    <div class="portlet-body">
+        <div class="row">
+            <!-- BEGIN FORM-->
+            <form role="form" class="form-horizontal" method="post" id="queryform"
+                  onsubmit="return false;">
+
+                <div class="row">
+                    <div class=" col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label class="col-md-2 col-lg-4 control-label">任务编号:</label>
+                            <div class="col-md-10 col-lg-8">
+                                <input type="text" class="form-control  input-medium"
+                                       ng-model="queryCondition.task.taskId">
+                            </div>
+                        </div>
+                    </div>
+                    <div class=" col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label class="col-md-2 col-lg-4  control-label">任务类型:</label>
+                            <div class="col-md-10 col-lg-8">
+                                <select class="form-control input-medium"
+                                        ng-options="item.value as item.key for item in taskTypeOptions"
+                                        ng-model="queryCondition.task.taskType">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class=" col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label class="col-md-2 col-lg-4  control-label">任务名称: </label>
+                            <div class="col-md-10 col-lg-8">
+                                <input type="text" class="form-control input-medium"
+                                       ng-model="queryCondition.task.taskName">
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class=" col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label class="col-md-2 col-lg-4  control-label">类名:</label>
+                            <div class="col-md-10 col-lg-8">
+                                <input type="text" class="input-medium form-control"
+                                       ng-model="queryCondition.task.className">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class=" col-md-6 col-lg-6">
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">时间范围:</label>
+                            <div class="col-md-10">
+                                <date-range start-time="queryCondition.beginTime"
+                                            end-time="queryCondition.endTime"></date-range>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class=" col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label class="col-md-2 col-lg-4 control-label">执行结果:</label>
+                            <div class="col-md-10 col-lg-8">
+                                <select class="form-control input-medium"
+                                        ng-model="queryCondition.executeResult">
+                                    <option ></option>
+                                    <option value="SUCCEED">SUCCESS</option>
+                                    <option value="FAILED">FAILED</option>
+                                    <option value="EXECUTE_TIMEOUT">EXECUTE_TIMEOUT</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-offset-6 col-md-6 col-lg-offset-0 col-lg-3 ">
+                        <div class="form-group">
+                            <div class="col-md-10 col-lg-8 col-md-offset-2 col-lg-offset-4">
+                                <button class="btn green control-label " type="submit"
+                                        ng-click="onSearch()"><i
+                                        class="fa fa-search"></i>查询
+                                </button>
+                                <button class="btn blue control-label " type="submit"
+                                        ng-click="resetForm()"><i
+                                        class="fa fa-rotate-left "></i>重置
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <!-- END FORM-->
+        </div>
+    </div>
+</div>
+<div ng-switch="activeTab">
+    <div class="fade-in-up" ng-switch-when="taskHistory">
+        <div class="row">
+            <div class="col-md-12">
+
+                <!--portlet box-->
+                <div class="portlet light ">
+                    <div class="portlet-title">
+                        <div class="caption">
+                            <i class="fa fa-list-ul"></i>任务执行历史列表
+                        </div>
+                        <div class="tools">
+                            <button type="button" class="btn btn-circle green btn-outline btn-sm "
+                                    ng-click="tableParams.reload()">
+                                <i class="fa fa-repeat"></i>
+                                刷新
+                            </button>
+                            <button type="button"
+                                    class="btn yellow btn-outline btn-circle btn-sm"
+                                    ng-click="show=!show">
+                                <i ng-class="show?'fa fa-chevron-left':'fa fa-chevron-right'">
+                                    <span  ng-bind-html="show?'基本信息':'详细信息'"></span>
+                                </i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="portlet-body">
+                        <div class="table-responsive">
+                            <table ng-table="tableParams"
+                                   class="table table-bordered table-striped table-condensed">
+                                <!--template-pagination="tablePager.html">-->
+                                <tr ng-repeat="row in $data" ng-class="row.triggerType == 1? 'warning':''">
+                                    <td class="text-center ddc-white-space-nowrap" data-title="'运行时间'"
+                                        ng-bind-html="row.fireTime?row.fireTime:row.dispatchTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center" data-title="'任务编号'"
+                                        ng-bind-html="row.taskId">
+                                    </td>
+                                    <td class=" ddc-white-space-nowrap" data-title="'任务名称'"
+                                        ng-bind-html="row.task.taskName">
+                                    </td>
+                                    <td class=" ddc-white-space-nowrap" ng-if="queryCondition.task.taskType!=21" data-title="'类名'"
+                                        ng-bind-html="row.task.className">
+                                    </td>
+                                    <td class="text-center" data-title="'任务类型'"
+                                        ng-bind-html="row.task.taskType|taskTypeLabel|trustHtml">
+                                    </td>
+                                    <td class="text-center" data-title="'执行结果'"
+                                        ng-bind-html="row.executeResult|executeResultLabel|trustHtml">
+                                    </td>
+                                    <td class="text-center " ng-if="show" data-title="'执行结果描述'">
+                                        <tips class="ddc-text-overflow" tips-title="row.executeResultDesc"></tips>
+                                    </td>
+                                    <td class="text-center" data-title="'操作'">
+                                        <div ng-switch="row.task.taskType">
+                                            <button ng-if="row.task.taskType == 11 || row.task.taskType == 13" type="button"
+                                                    class="btn yellow btn-outline btn-sm"
+                                                    ng-click="taskStatusTable(row.taskId,row.executeId,0)">任务执行状态
+                                            </button>
+                                            <button ng-if="row.task.taskType == 21" type="button"
+                                                    class="btn green btn-outline btn-sm" ng-click="subTaskHistory(row)">
+                                                子任务执行历史
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-center" data-title="'运行编号'" ng-if="show"
+                                        ng-bind-html="row.executeId">
+                                    </td>
+                                    <td class="text-center" data-title="'运行批次编号'" ng-if="show"
+                                        ng-bind-html="row.executeBatchId">
+                                    </td>
+                                    <td class="text-center ddc-white-space-nowrap"  ng-if="show"  data-title="'下发时间'"
+                                        ng-bind-html="row.dispatchTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center ddc-white-space-nowrap" ng-if="show" data-title="'执行开始时间'"
+                                        ng-bind-html="row.startTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center ddc-white-space-nowrap" ng-if="show" data-title="'执行结束时间'"
+                                        ng-bind-html="row.completeTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center" ng-if="show" data-title="'执行实例'"
+                                        ng-if="queryCondition.task.taskType != 21" ng-bind-html="row.ip+':'+row.port">
+                                    </td>
+
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fade-in-up" ng-switch-when="subTaskHistory">
+        <div class="row">
+            <div class="col-md-12">
+                <!--portlet box-->
+                <div class="portlet light ">
+                    <div class="portlet-title">
+                        <div class="caption">
+                            <i class="fa fa-list-ul"></i>流程子任务执行历史列表
+                        </div>
+                        <div class="tools">
+                            <button ng-if="tabStack.length>0" type="button"
+                                    class="btn btn-circle yellow btn-outline btn-sm"
+                                    ng-click="back()">
+                                <i class="fa fa-reply"></i>
+                                返回
+                            </button>
+                            <button ng-if="tabStack.length==0" type="button"
+                                    class="btn btn-circle green btn-outline btn-sm "
+                                    ng-click="subTaskHistoryParams.reload()">
+                                <i class="fa fa-repeat"></i>
+                                刷新
+                            </button>
+                            <button type="button"
+                                    class="btn yellow btn-outline btn-circle btn-sm"
+                                    ng-click="show=!show">
+                                <i ng-class="show?'fa fa-chevron-left':'fa fa-chevron-right'">
+                                    <span  ng-bind-html="show?'基本信息':'详细信息'"></span>
+                                </i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="portlet-body">
+                        <div class="table-responsive">
+                            <table ng-table="subTaskHistoryParams"
+                                   class="table table-bordered table-striped table-condensed">
+                                <!--template-pagination="tablePager.html">-->
+                                <tr ng-repeat="row in $data">
+                                    <td class="text-center ddc-white-space-nowrap" data-title="'运行时间'"
+                                        ng-bind-html="row.fireTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center" data-title="'任务编号'"
+                                        ng-bind-html="row.taskId">
+                                    </td>
+                                    <td class=" ddc-white-space-nowrap" data-title="'任务名称'"
+                                        ng-bind-html="row.task.taskName">
+                                    </td>
+                                    <td class=" ddc-white-space-nowrap" ng-if="queryCondition.task.taskType!=21" data-title="'类名'"
+                                        ng-bind-html="row.task.className">
+                                    </td>
+                                    <td class="text-center" data-title="'任务类型'"
+                                        ng-bind-html="row.task.taskType|taskTypeLabel|trustHtml">
+                                    </td>
+                                    <td class="text-center" data-title="'执行结果'"
+                                        ng-bind-html="row.executeResult|executeResultLabel|trustHtml">
+                                    </td>
+                                    <td class="text-center " ng-if="show" data-title="'执行结果描述'">
+                                        <tips class="ddc-text-overflow" tips-title="row.executeResultDesc"></tips>
+                                    </td>
+                                    <td class="text-center" data-title="'操作'" width="10%">
+                                        <button type="button" class="btn yellow btn-outline btn-sm"
+                                                ng-click="taskStatusTable(row.taskId,row.executeId,row.workflowExecuteId)">
+                                            任务执行状态
+                                        </button>
+                                    </td>
+                                    <td class="text-center" data-title="'运行编号'" ng-if="show"
+                                        ng-bind-html="row.executeId">
+                                    </td>
+                                    <td class="text-center" data-title="'运行批次编号'" ng-if="show"
+                                        ng-bind-html="row.executeBatchId">
+                                    </td>
+                                    <td class="text-center ddc-white-space-nowrap" ng-if="show" data-title="'执行开始时间'"
+                                        ng-bind-html="row.startTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center ddc-white-space-nowrap" ng-if="show" data-title="'执行结束时间'"
+                                        ng-bind-html="row.completeTime|date:'yyyy-MM-dd HH:mm:ss'">
+                                    </td>
+                                    <td class="text-center" ng-if="show" data-title="'执行实例'"
+                                        ng-if="queryCondition.task.taskType != 21" ng-bind-html="row.ip+':'+row.port">
+                                    </td>
+
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fade-in-up" ng-switch-when="taskStatus">
+        <div class="portlet light ">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-list-ul"></i>任务执行状态列表
+                </div>
+                <div class="tools">
+                    <button type="button"
+                            class="btn btn-circle green btn-outline btn-sm "
+                            ng-click="taskStatusTableParams.reload()">
+                        <i class="fa fa-repeat"></i>
+                        刷新
+                    </button>
+                    <button type="button" class="btn btn-circle yellow btn-outline btn-sm"
+                            ng-click="back()">
+                        <i class="fa fa-reply"></i>
+                        返回
+                    </button>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div class="table-responsive">
+                    <table ng-table="taskStatusTableParams"
+                           class="table table-bordered table-striped table-condensed ">
+                        <tr ng-repeat="row in $data">
+                            <td class="text-center" data-title="'运行编号'"
+                                ng-bind-html="row.executeId">
+                            </td>
+                            <td class="text-center" data-title="'运行批次编号'"
+                                ng-bind-html="row.executeBatchId">
+                            </td>
+                            <td class="text-center" data-title="'任务编号'"
+                                ng-bind-html="row.taskId">
+                            </td>
+                            <td ng-if="queryCondition.task.taskType!=11" class="text-center" data-title="'流程任务运行编号'"
+                                ng-bind-html="row.workflowExecuteId">
+                            </td>
+                            <td class="text-center" data-title="'状态'"
+                                ng-bind-html="row.status">
+                            </td>
+                            <td class="text-center" data-title="'状态信息'"
+                                ng-bind-html="row.message">
+                            </td>
+                            <td class="text-center" data-title="'时间戳'"
+                                ng-bind-html="row.timestamp|date:'yyyy-MM-dd HH:mm:ss' ">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/ng-template" id="dateRange.html">
+    <div class="input-group ddc-date-range" >
+        <input type="text" class="form-control text-center" disabled="true" value="{{ startTime }} - {{ endTime }}">
+            <span class="input-group-btn">
+                <button class="btn default date-range-toggle" type="button">
+                    <i class="fa fa-calendar"></i>
+                </button>
+            </span>
+    </div>
+</script>

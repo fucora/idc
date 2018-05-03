@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iwellmass.dispatcher.common.dao.DdcFiveMinuteExecuteStatisticMapper" >
+	<resultMap id="BaseResultMap" type="com.iwellmass.dispatcher.common.model.DdcFiveMinuteExecuteStatistic" >
+		<id column="ID" property="id" jdbcType="BIGINT" />
+		<id column="APP_ID" property="appId" jdbcType="INTEGER" />
+		<result column="DATA_TIME" property="dataTime" jdbcType="TIMESTAMP" />
+		<result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
+		<result column="EXECUTE_SUCCEED" property="executeSucceed" jdbcType="INTEGER" />
+		<result column="EXECUTE_FAILED" property="executeFailed" jdbcType="INTEGER" />
+		<result column="EXECUTE_TIME_OUT" property="executeTimeOut" jdbcType="INTEGER" />
+		<result column="EXECUTE_DURATION" property="executeDuration" jdbcType="DOUBLE" />
+		<result column="EXECUTE_MAX_DURATION" property="executeMaxDuration" jdbcType="DOUBLE" />
+		<result column="EXECUTE_MIN_DURATION" property="executeMinDuration" jdbcType="DOUBLE" />
+	</resultMap>
+
+  <select id="aggregateHistory" resultMap="BaseResultMap">
+
+	SELECT
+		DDC_TASK.APP_ID AS APP_ID,
+		#{startTime} AS DATA_TIME,
+		DDC_TASK.TASK_ID AS TASK_ID,
+		SUM(EXECUTE_RESULT = "SUCCEED") AS EXECUTE_SUCCEED,
+		SUM(EXECUTE_RESULT = "FAILED") AS EXECUTE_FAILED,
+		SUM(EXECUTE_RESULT = "EXECUTE_TIMEOUT") AS EXECUTE_TIME_OUT,
+		IFNULL(AVG(COMPLETE_TIME - START_TIME),0) AS EXECUTE_DURATION,
+		IFNULL(MAX(COMPLETE_TIME - START_TIME),0) AS EXECUTE_MAX_DURATION,
+		IFNULL(MIN(COMPLETE_TIME - START_TIME),0) AS EXECUTE_MIN_DURATION
+	FROM
+		DDC_TASK_EXECUTE_HISTORY
+	LEFT JOIN DDC_TASK ON DDC_TASK_EXECUTE_HISTORY.TASK_ID = DDC_TASK.TASK_ID
+	WHERE
+		FIRE_TIME >= #{startTime}
+	AND FIRE_TIME   <![CDATA[ < ]]> #{endTime}
+	GROUP BY
+		DDC_TASK.TASK_ID
+
+  </select>
+
+	<select id="aggregateSubHistory" resultMap="BaseResultMap">
+		SELECT
+			DDC_TASK.APP_ID AS APP_ID,
+		#{startTime} AS DATA_TIME,
+		DDC_TASK.TASK_ID AS TASK_ID,
+		SUM(EXECUTE_RESULT = "SUCCEED") AS EXECUTE_SUCCEED,
+		SUM(EXECUTE_RESULT = "FAILED") AS EXECUTE_FAILED,
+		SUM(EXECUTE_RESULT = "EXECUTE_TIMEOUT") AS EXECUTE_TIME_OUT,
+		IFNULL(AVG(COMPLETE_TIME - START_TIME),0) AS EXECUTE_DURATION,
+		IFNULL(MAX(COMPLETE_TIME - START_TIME),0) AS EXECUTE_MAX_DURATION,
+		IFNULL(MIN(COMPLETE_TIME - START_TIME),0) AS EXECUTE_MIN_DURATION
+		FROM
+		DDC_SUBTASK_EXECUTE_HISTORY
+		LEFT JOIN DDC_TASK ON DDC_SUBTASK_EXECUTE_HISTORY.TASK_ID = DDC_TASK.TASK_ID
+		WHERE
+		FIRE_TIME >= #{startTime}
+		AND FIRE_TIME   <![CDATA[ < ]]> #{endTime}
+		GROUP BY
+		DDC_TASK.TASK_ID
+	</select>
+
+	<insert id="insertList">
+		INSERT INTO DDC_FIVE_MINUTE_EXECUTE_STATISTIC (
+		APP_ID,
+		DATA_TIME,
+		TASK_ID,
+		EXECUTE_SUCCEED,
+		EXECUTE_FAILED,
+		EXECUTE_TIME_OUT,
+		EXECUTE_DURATION,
+		EXECUTE_MAX_DURATION,
+		EXECUTE_MIN_DURATION
+		)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(
+			#{item.appId},#{item.dataTime},#{item.taskId},
+			#{item.executeSucceed},#{item.executeFailed},
+			#{item.executeTimeOut},#{item.executeDuration},
+			#{item.executeMaxDuration},#{item.executeMinDuration}
+			)
+		</foreach>
+	</insert>
+</mapper>

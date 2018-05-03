@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:component-scan base-package="com.iwellmass.ddc.server.dag" />
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:server.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!--
+	<bean id="monitorConfig" class="com.iwellmass.monitor.sdk.MonitorConfig"
+		init-method="monitorInit">
+		<constructor-arg name="projectCode" value="${dmc.monitor.projectCode}" />
+		<constructor-arg name="appCode" value="${dmc.monitor.appCode}" />
+		<constructor-arg name="startupMonitor" value="${dmc.monitor.enabled}" />
+	</bean> -->
+	
+    <bean class="com.iwellmass.dispatcher.server.util.PropertyHolder" />
+
+	<bean class="com.iwellmass.dispatcher.server.ServerStarter" />
+	
+	<bean id="statusServerService" class="com.iwellmass.dispatcher.server.thrift.impl.StatusServerServiceImpl" />
+	
+	<bean id="thriftService" class="com.iwellmass.dispatcher.server.thrift.StatusThriftServer">
+		<property name="thriftPort" value="${ddc.server.thrift.port}" />
+		<property name="selectorThreads" value="${ddc.server.thrift.selectorThreads}" />
+		<property name="workerThreads" value="${ddc.server.thrift.workerThreads}" />
+		<property name="statusServerService" ref="statusServerService" />
+	</bean>
+	
+	<bean id="jvmContext" class="com.iwellmass.dispatcher.common.context.JVMContext">
+	    <property name="alarmKeys">
+			<map> 
+				<entry key="timeout" value="${ddc.alarmKey.timeout}" /> 
+				<entry key="overerror" value="${ddc.alarmKey.overerror}" /> 
+				<entry key="notask" value="${ddc.alarmKey.notask}" /> 
+				<entry key="errorkey" value="${ddc.alarmKey.errorkey}" /> 
+				<entry key="noclient" value="${ddc.alarmKey.noclient}" /> 
+			</map>  
+		</property>
+	</bean> 	
+</beans>

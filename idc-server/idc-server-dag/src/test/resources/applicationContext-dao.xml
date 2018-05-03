@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns="http://www.springframework.org/schema/beans" xmlns:tx="http://www.springframework.org/schema/tx" 
+       xmlns:aop="http://www.springframework.org/schema/aop" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd 
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:server.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	 <bean id="ddcDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url">
+            <value>${ddc.url}</value>
+        </property>
+        <property name="username">
+            <value>${ddc.username}</value>
+        </property>
+        <property name="password">
+            <value>${ddc.password}</value>
+        </property>
+        <property name="initialSize">
+            <value>${ddc.initialSize}</value>
+        </property>
+        <property name="minIdle">
+            <value>${ddc.minIdle}</value>
+        </property>
+        <property name="maxActive">
+            <value>${ddc.maxActive}</value>
+        </property>
+        <property name="maxWait">
+            <value>${ddc.maxWait}</value>
+        </property>
+        <property name="timeBetweenEvictionRunsMillis">
+            <value>${ddc.timeBetweenEvictionRunsMillis}</value>
+        </property>
+        <property name="minEvictableIdleTimeMillis">
+            <value>${ddc.minEvictableIdleTimeMillis}</value>
+        </property>
+        <property name="validationQuery">
+            <value>${ddc.validationQuery}</value>
+        </property>
+        <property name="testWhileIdle">
+            <value>${ddc.testWhileIdle}</value>
+        </property>
+        <property name="testOnBorrow">
+            <value>${ddc.testOnBorrow}</value>
+        </property>
+        <property name="testOnReturn">
+            <value>${ddc.testOnReturn}</value>
+        </property>     
+        <property name="filters">
+            <value>${ddc.filters}</value>
+        </property>              
+    </bean>	
+    
+    <bean id="ddcLockDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url">
+            <value>${ddc.url}</value>
+        </property>
+        <property name="username">
+            <value>${ddc.username}</value>
+        </property>
+        <property name="password">
+            <value>${ddc.password}</value>
+        </property>
+        <property name="initialSize">
+            <value>${ddc.initialSize}</value>
+        </property>
+        <property name="minIdle">
+            <value>${ddc.minIdle}</value>
+        </property>
+        <property name="maxActive">
+            <value>${ddc.maxActive}</value>
+        </property>
+        <property name="maxWait">
+            <value>${ddc.maxWait}</value>
+        </property>
+        <property name="timeBetweenEvictionRunsMillis">
+            <value>${ddc.timeBetweenEvictionRunsMillis}</value>
+        </property>
+        <property name="minEvictableIdleTimeMillis">
+            <value>${ddc.minEvictableIdleTimeMillis}</value>
+        </property>
+        <property name="validationQuery">
+            <value>${ddc.validationQuery}</value>
+        </property>
+        <property name="testWhileIdle">
+            <value>${ddc.testWhileIdle}</value>
+        </property>
+        <property name="testOnBorrow">
+            <value>${ddc.testOnBorrow}</value>
+        </property>
+        <property name="testOnReturn">
+            <value>${ddc.testOnReturn}</value>
+        </property>     
+        <property name="filters">
+            <value>${ddc.filters}</value>
+        </property>
+        <property name="defaultAutoCommit">
+            <value>false</value>
+        </property>                      
+    </bean>	
+    
+	<bean id="ddcSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="ddcDataSource" />
+		<property name="mapperLocations" value="classpath:mapper/*Mapper.xml" />
+	</bean>	 
+	
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="sqlSessionFactoryBeanName" value="ddcSqlSessionFactory"/>      
+       <property name="basePackage" value="com.iwellmass.dispatcher.common.dao" />
+    </bean>	
+    
+	<bean id="ddcTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+        <property name="dataSource" ref="ddcDataSource"></property>  
+    </bean>   
+    <tx:annotation-driven transaction-manager="ddcTransactionManager" />
+    
+	<!-- <tx:advice id="ddcTxAdvice" transaction-manager="ddcTransactionManager">
+		<tx:attributes>
+			<tx:method name="save*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="update*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="delete*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="execute*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="add*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="bind*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="unbind*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="generate*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="insert*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="distribute*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="run*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="do*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="calculate*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="clear*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="upload*" rollback-for="java.lang.Exception" propagation="REQUIRED" />
+			<tx:method name="*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>	
+	
+	<aop:config>
+		<aop:pointcut id="service" expression="execution(* com.iwellmass.dispatcher.common.service..*.* (..))" />
+		<aop:advisor advice-ref="ddcTxAdvice" pointcut-ref="service" />	
+	</aop:config>	 -->
+	
+</beans>

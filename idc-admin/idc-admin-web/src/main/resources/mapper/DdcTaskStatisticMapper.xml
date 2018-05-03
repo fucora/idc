@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskStatisticMapper">
+    <resultMap id="BaseResultMapEx" type="com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatistic">
+    	<result column="TASK_ID" property="taskId" />
+        <result column="TOTAL_COUNTS" property="totalCounts"/>
+        <result column="SUCCEED_COUNTS" property="successdCounts"/>
+        <result column="FAILED_COUNTS" property="failedCounts"/>
+        <result column="SUCCEED_RATE" property="successRate"/>
+        <association property="task"
+                     resultMap="com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper.BaseResultMap"></association>
+    </resultMap>
+    <select id="selectByExampleEx" resultMap="BaseResultMapEx">
+        SELECT DT.TASK_NAME,DT.TASK_ID , DT.CLASS_NAME ,
+        DT.TASK_TYPE , DT.CRON ,
+        COUNT(*) AS TOTAL_COUNTS, SUM(CASE WHEN EXECUTE_RESULT='SUCCEED' THEN 1 ELSE 0 END) AS SUCCEED_COUNTS, SUM(CASE
+        WHEN EXECUTE_RESULT='FAILED' THEN 1 ELSE 0 END) AS FAILED_COUNTS,
+        ROUND(((SUM(CASE WHEN EXECUTE_RESULT='SUCCEED' THEN 1 ELSE 0 END)/COUNT(*)) * 100), 2) AS SUCCEED_RATE
+        <include refid="queryCondition"/>
+        GROUP BY DT.TASK_ID
+        <if test="page != null and page.begin != null and page.length != null">
+            <![CDATA[ limit #{page.begin},#{page.length} ]]>
+        </if>
+    </select>
+
+
+    <select id="countByExampleEx"
+            resultType="java.lang.Integer">
+        select COUNT(DISTINCT DT.TASK_ID)
+        <include refid="queryCondition"/>
+    </select>
+
+    <sql id="queryCondition">
+        FROM DDC_TASK DT, DDC_TASK_EXECUTE_HISTORY DTEH WHERE DTEH.TASK_ID = DT.TASK_ID
+        <if test="beginTime!=null and beginTime != '' and endTime != null and endTime !='' ">
+            and DTEH.DISPATCH_TIME BETWEEN #{beginTime} AND #{endTime}
+        </if>
+        <if test="task!=null">
+            <if test="task.appId!=null">
+                AND DT.APP_ID = #{task.appId}
+            </if>
+            <if test="task.taskId!=null">
+                AND DT.TASK_ID = #{task.taskId}
+            </if>
+            <if test="task.taskType!=null">
+                AND DT.TASK_TYPE = #{task.taskType}
+            </if>
+            <if test="task.taskName!=null and task.taskName != ''">
+                AND DT.TASK_NAME LIKE CONCAT("%",#{task.taskName},"%")
+            </if>
+            <if test="task.className!=null and task.className != ''">
+                AND DT.CLASS_NAME LIKE CONCAT("%",#{task.className},"%")
+            </if>
+        </if>
+    </sql>
+
+	<!-- 流程子任务的统计数据 -->
+    <select id="selectSubTaskByExampleEx" resultMap="BaseResultMapEx">
+        SELECT DT.TASK_NAME,DT.TASK_ID , DT.CLASS_NAME ,
+        DT.TASK_TYPE , DT.CRON ,
+        COUNT(*) AS TOTAL_COUNTS, SUM(CASE WHEN EXECUTE_RESULT='SUCCEED' THEN 1 ELSE 0 END) AS SUCCEED_COUNTS, SUM(CASE
+        WHEN EXECUTE_RESULT='FAILED' THEN 1 ELSE 0 END) AS FAILED_COUNTS,
+        ROUND(((SUM(CASE WHEN EXECUTE_RESULT='SUCCEED' THEN 1 ELSE 0 END)/COUNT(*)) * 100), 2) AS SUCCEED_RATE
+        <include refid="subQueryCondition"/>
+        GROUP BY DT.TASK_ID
+        <if test="page != null and page.begin != null and page.length != null">
+            <![CDATA[ limit #{page.begin},#{page.length} ]]>
+        </if>
+    </select>
+
+    <select id="countSubTaskByExampleEx"
+            resultType="java.lang.Integer">
+        select COUNT(DISTINCT DT.TASK_ID)
+        <include refid="subQueryCondition"/>
+    </select>
+
+    <sql id="subQueryCondition">
+        FROM DDC_TASK DT, DDC_SUBTASK_EXECUTE_HISTORY DTEH WHERE DTEH.TASK_ID = DT.TASK_ID
+        <if test="beginTime!=null and beginTime != '' and endTime != null and endTime !='' ">
+            and DTEH.DISPATCH_TIME BETWEEN #{beginTime} AND #{endTime}
+        </if>
+        <if test="task!=null">
+            <if test="task.appId!=null">
+                AND DT.APP_ID = #{task.appId}
+            </if>
+            <if test="task.taskId!=null">
+                AND DT.TASK_ID = #{task.taskId}
+            </if>
+            <if test="task.taskType!=null">
+                AND DT.TASK_TYPE = #{task.taskType}
+            </if>
+            <if test="task.taskName!=null and task.taskName != ''">
+                AND DT.TASK_NAME LIKE CONCAT("%",#{task.taskName},"%")
+            </if>
+            <if test="task.className!=null and task.className != ''">
+                AND DT.CLASS_NAME LIKE CONCAT("%",#{task.className},"%")
+            </if>
+        </if>
+    </sql>
+</mapper>

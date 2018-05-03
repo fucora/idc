@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration >
+<classPathEntry location="D:\mysql-connector-java-5.1.38.jar" />
+
+  <context id="ddc" >
+    <plugin type="com.utils.PaginationPlugin" />
+    <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://localhost:3306/ddc" userId="root" password="" />
+
+    <javaModelGenerator targetPackage="com.iwellmass.dispatcher.admin.dao.model" targetProject="../ddc-admin-dao/src/main/java" />
+    <sqlMapGenerator targetPackage="com.iwellmass.dispatcher.admin.dao.xml" targetProject="../ddc-admin-dao/src/main/java" />
+    <javaClientGenerator targetPackage="com.iwellmass.dispatcher.admin.dao.mapper" targetProject="../ddc-admin-dao/src/main/java" type="XMLMAPPER" />
+
+    <table schema="ddc" tableName="DDC_ALARM_HISTORY" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_APPLICATION" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_FIVE_MINUTE_EXECUTE_STATISTIC" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_HOUR_EXECUTE_STATISTIC" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_NODE" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_SERVER" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_SUBTASK_EXECUTE_HISTORY" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_TASK" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" >
+    	<generatedKey column="TASK_ID" sqlStatement="MySql" identity="true"/>
+    </table>
+    <table schema="ddc" tableName="DDC_TASK_EXECUTE_HISTORY" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_TASK_EXECUTE_STATUS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_TASK_UPDATE_HISTORY" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_TASK_WORKFLOW" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" >
+    	<generatedKey column="WORKFLOW_ID" sqlStatement="MySql" identity="true"/>
+    </table>
+    <table schema="ddc" tableName="DDC_USER" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_USER_ALARM" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+    <table schema="ddc" tableName="DDC_USER_APPLICATION" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true"  enableUpdateByExample="true" />
+  </context>
+</generatorConfiguration>

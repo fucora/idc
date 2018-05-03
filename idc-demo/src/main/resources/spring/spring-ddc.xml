@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+	
+   	<bean class="com.iwellmass.dispatcher.sdk.SchedulerStarter" init-method="start">
+       <!--应用编码，在任务调度系统web端创建应用后获得-->
+    	<constructor-arg name="appKey" value="${ddc.app.key}"/>
+      <!--任务调度系统的域名地址-->
+        <constructor-arg name="serverUrl" value="${ddc.service.url}"/>
+	     <!--待调度的任务实现，必须继承自AbstractSimpleTask，AbstractDataFlowTask或者实现ITaskService-->
+	     <constructor-arg name="tasks">
+	        <set>
+	          <bean class="com.iwellmass.ddc.demo.simple.SimpleTask"/>
+	       </set>
+	     </constructor-arg>
+   </bean>
+	
+</beans>

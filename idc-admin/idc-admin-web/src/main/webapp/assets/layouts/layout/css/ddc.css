@@ -1,0 +1,23 @@
+.page-logo-title {
+    line-height: 60px;
+    color: #FF6F49;
+    font-size: 18px;
+}
+
+.ng-invalid {
+    border-color: red !important;
+}
+
+.ddc-text-overflow{
+    text-overflow: ellipsis  ;
+    width: 20em  ;
+    white-space: nowrap  ;
+    display: block  ;
+    overflow: hidden  ;
+}
+.ddc-white-space-nowrap{
+    white-space:nowrap;
+}
+.ddc-date-range{
+    max-width: 381px;
+}
