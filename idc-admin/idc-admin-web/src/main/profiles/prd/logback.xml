@@ -2,10 +2,20 @@
 <configuration scan="true" scanPeriod="60 seconds">
 
 	<property name="logPath" value="/web/logs/ddc.dmall.com/admin" />
-	<property name="logLevel" value="INFO"/>
+	<property name="logLevel" value="DEBUG"/>
     <property name="outPattern" value="[%-5p]  %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] [%c] - %m%n" />
     <property name="maxHistory" value="30" />
     <property name="charSet" value="UTF-8" />
+	
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>${outPattern}</Pattern>
+            <charset>${charSet}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>"DEBUG"</level>
+        </filter>
+    </appender>
     
     <appender name="DDC_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logPath}/ddc_admin_info.log</file>
@@ -36,6 +46,12 @@
             <level>WARN</level>
         </filter>
     </appender>
+
+	<appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender"> 
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>512</queueSize>
+        <appender-ref ref="STDOUT" />
+    </appender>
     
     <appender name="ASYNC_DDC_INFO" class="ch.qos.logback.classic.AsyncAppender">
         <discardingThreshold>0</discardingThreshold>
@@ -50,6 +66,7 @@
     </appender>
      
 	<root level="${logLevel}">
+		<appender-ref ref="ASYNC_STDOUT"/>
 		<appender-ref ref="ASYNC_DDC_INFO"/>
 		<appender-ref ref="ASYNC_DDC_ERROR"/>
 	</root>
