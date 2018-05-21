@@ -260,6 +260,7 @@ public class StatusServerServiceImpl implements StatusServerService.Iface {
 	}
 	
 	/**
+	 * <pre>
 	 *  普通定时任务                                             				流程子任务
 	 *     	 |														 				|
 	 * 成功——————失败									成功——————————————————————————失败

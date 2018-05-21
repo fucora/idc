@@ -15,13 +15,9 @@
 
 	<distributionManagement>
 		<repository>
-			<id>dmall</id>
-			<url>http://nexus.dmall.com:8081/nexus/content/repositories/releases</url>
+			<id>tencent</id>
+			<url>http://supervise.iwellmass.com:8081/repository/maven-private/</url>
 		</repository>
-		<snapshotRepository>
-			<id>dmall</id>
-			<url>http://nexus.dmall.com:8081/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
 	</distributionManagement>
 
 	<build>

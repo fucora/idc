@@ -159,14 +159,14 @@ public class TaskServiceImpl implements ITaskService {
 
         task.setTaskStatus(Constants.TASK_STATUS_DISABLED);
         task.setUpdateUser("admin");
-//        task.setUpdateUser(LoginContext.getLoginContext().getUserName());
+        task.setUpdateUser("admin");
         task.setUpdateTime(now);
         taskMapper.updateByPrimaryKeySelective(task);
 
         DdcTaskUpdateHistory record = new DdcTaskUpdateHistory();
         record.setTaskId(taskId);
         task.setUpdateUser("admin");
-//        record.setUpdateUser(LoginContext.getLoginContext().getUserName());
+        record.setUpdateUser("admin");
         record.setUpdateTime(now);
         record.setUpdateDetail("任务被停用！");
         taskUpdateMapper.insertSelective(record);

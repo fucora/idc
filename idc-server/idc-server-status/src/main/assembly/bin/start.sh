@@ -8,7 +8,7 @@ CONF_DIR=$DEPLOY_DIR/conf
 SERVER_NAME=DDC_SERVER
 SERVER_PORT=40000
 LOGS_DIR=$DEPLOY_DIR/logs
-JAVA_COMMAND=/usr/java/jdk1.8.0_74/bin/java
+JAVA_COMMAND=$JAVA_HOME/bin/java
 
 PIDS=`ps aux | grep java | grep "$CONF_DIR" |awk '{print $2}'`
 if [ -n "$PIDS" ]; then
@@ -49,7 +49,7 @@ if [ "$1" = "jmx" ]; then
 fi
 
 echo -e "Starting the $SERVER_NAME ...\c"
-nohup $JAVA_COMMAND $JAVA_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CONF_DIR:$LIB_JARS com.dmall.dispatcher.server.ServerLauncher > $STDOUT_FILE 2>&1 &
+nohup $JAVA_COMMAND $JAVA_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CONF_DIR:$LIB_JARS com.iwellmass.dispatcher.server.ServerLauncher > $STDOUT_FILE 2>&1 &
 
 COUNT=0
 while [ $COUNT -lt 1 ]; do
@@ -69,3 +69,4 @@ echo "OK!"
 PIDS=`ps aux | grep java | grep "$CONF_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
+
