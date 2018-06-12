@@ -57,7 +57,7 @@
 	<distributionManagement>
 		<repository>
 			<id>tencent</id>
-			<url>http://supervise.iwellmass.com:8081/repository/maven-private/</url>
+			<url>http://maven.iwellmass.com:8081/repository/maven-private/</url>
 		</repository>
 	</distributionManagement>
 </project>
