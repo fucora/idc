@@ -1,9 +1,9 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskUpdateHistory;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public interface ITaskService {
      * @return
      */
 
-    TableDataResult taskTable(int appId, DdcTask task, Page page);
+    ServiceResult taskTable(int appId, DdcTask task, Pager page);
 
     /**
      * 创建或修改任务
@@ -105,5 +105,5 @@ public interface ITaskService {
      * @return
      */
 
-    TableDataResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Page page);
+    ServiceResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page);
 }

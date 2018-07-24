@@ -10,14 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcAlarmHistoryMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistoryExample;
 import com.iwellmass.dispatcher.admin.service.IAlarmHistoryService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcAdminPermission;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcPermission;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.common.utils.DateUtils;
 
 /**
@@ -31,7 +31,7 @@ public class AlarmHistoryService implements IAlarmHistoryService {
 
     @Override
     @DdcPermission
-    public TableDataResult alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Page page, String startTime, String endTime) {
+    public ServiceResult alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");
@@ -45,12 +45,12 @@ public class AlarmHistoryService implements IAlarmHistoryService {
             alarmHistoryCriteria.andTaskIdEqualTo(alarmHistory.getTaskId());
         }
         alarmHistoryCriteria.andAppIdEqualTo(appId);
-        return new TableDataResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
+        return new ServiceResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
     }
 
     @Override
     @DdcAdminPermission
-    public TableDataResult alarmHistoryTable(DdcAlarmHistory alarmHistory,Page page,String startTime,String endTime) {
+    public ServiceResult alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");
@@ -66,7 +66,7 @@ public class AlarmHistoryService implements IAlarmHistoryService {
         if(alarmHistory.getTaskId()!=null){
             alarmHistoryCriteria.andTaskIdEqualTo(alarmHistory.getTaskId());
         }
-        return new TableDataResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
+        return new ServiceResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
     }
 
     @Override

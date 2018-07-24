@@ -1,12 +1,12 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
-import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
-import com.iwellmass.dispatcher.common.entry.DDCException;
-
 import java.util.List;
 import java.util.Map;
+
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
+import com.iwellmass.dispatcher.common.entry.DDCException;
 
 
 /**
@@ -21,7 +21,7 @@ public interface INodeService {
      * @param page  the page
      * @return the table data result
      */
-    TableDataResult queryAllNodeTable(int appId, Page page);
+    ServiceResult queryAllNodeTable(int appId, Pager page);
 
 
     /**

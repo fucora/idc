@@ -1,12 +1,12 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcNodeMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNodeExample;
 import com.iwellmass.dispatcher.admin.service.INodeService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcPermission;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 
@@ -32,7 +32,7 @@ public class NodeService implements INodeService {
 
     @Override
     @DdcPermission
-    public TableDataResult queryAllNodeTable(int appId, Page page) {
+    public ServiceResult queryAllNodeTable(int appId, Pager page) {
         DdcNodeExample nodeExample = new DdcNodeExample();
         DdcNodeExample.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andAppIdEqualTo(appId);
@@ -50,7 +50,7 @@ public class NodeService implements INodeService {
             }
         }
 
-        return new TableDataResult(page, nodes, nodeMapper.countByExample(nodeExample));
+        return new ServiceResult(page, nodes, nodeMapper.countByExample(nodeExample));
     }
 
     @Override
@@ -81,7 +81,7 @@ public class NodeService implements INodeService {
         DdcNodeExample nodeExample = new DdcNodeExample();
         DdcNodeExample.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andAppIdEqualTo(appId);
-        nodeExample.setPage(new Page(0, 1));
+        nodeExample.setPage(new Pager(0, 1));
         nodeExample.setOrderByClause("LAST_START_TIME DESC");
         List<DdcNode> nodeList = nodeMapper.selectByExampleWithBLOBs(nodeExample);
         if (CollectionUtils.isEmpty(nodeList)) {

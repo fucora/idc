@@ -1,11 +1,11 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
+import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcServerMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcServer;
 import com.iwellmass.dispatcher.admin.dao.model.DdcServerExample;
 import com.iwellmass.dispatcher.admin.service.IServerService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcAdminPermission;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.common.constants.Constants;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class ServerService implements IServerService {
 
     @Override
     @DdcAdminPermission
-    public TableDataResult listServerTable() {
+    public ServiceResult listServerTable() {
 
         List<DdcServer> servers = ddcServerMapper.selectByExample(new DdcServerExample());
         long now = System.currentTimeMillis();
@@ -39,6 +39,6 @@ public class ServerService implements IServerService {
                 }
             }
         }
-        return new TableDataResult(servers);
+        return new ServiceResult(servers);
     }
 }

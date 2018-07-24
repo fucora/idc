@@ -1,10 +1,9 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
+import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.dao.model.DdcSubtaskExecuteHistoryEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteHistoryEx;
 import com.iwellmass.dispatcher.admin.service.ITaskExecuteHistory;
-import com.iwellmass.dispatcher.admin.service.domain.DataResult;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +26,16 @@ public class TaskHistoryController {
 
     @RequestMapping(value = "taskHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public TableDataResult taskHistoryTable(@RequestBody DdcTaskExecuteHistoryEx history) {
+    public ServiceResult taskHistoryTable(@RequestBody DdcTaskExecuteHistoryEx history) {
 
 //    	MethodInfo methodInfo = Monitor.methodStart("com.dmall.dispatcher.admin.web.controller.TaskHistoryController.taskHistoryTable");
-        TableDataResult result = new TableDataResult();
+        ServiceResult result = new ServiceResult();
         try {
             result = taskExecuteHistory.taskHistoryTable(history.getTask().getAppId(), history);
         } catch (Exception e) {
             logger.error("获取任务执行历史列表数据失败！", e);
-            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
-            result.setMsg(e.getMessage());
+            result.setState(ServiceResult.STATE_APP_EXCEPTION);
+            result.setError(e.getMessage());
 //            Monitor.methodFail(methodInfo);
         } finally {
 //        	Monitor.methodFinish(methodInfo);
@@ -46,16 +45,16 @@ public class TaskHistoryController {
 
     @RequestMapping(value = "subTaskHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public TableDataResult subTaskHistoryTable(@RequestBody DdcSubtaskExecuteHistoryEx history) {
+    public ServiceResult subTaskHistoryTable(@RequestBody DdcSubtaskExecuteHistoryEx history) {
     	
 //    	MethodInfo methodInfo = Monitor.methodStart("com.dmall.dispatcher.admin.web.controller.TaskHistoryController.subTaskHistoryTable");
-        TableDataResult result = new TableDataResult();
+        ServiceResult result = new ServiceResult();
         try {
             result = taskExecuteHistory.subTaskHistoryTable(history.getTask().getAppId(), history);
         } catch (Exception e) {
             logger.error("获取子任务执行历史列表数据失败！", e);
-            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
-            result.setMsg(e.getMessage());
+            result.setState(ServiceResult.STATE_APP_EXCEPTION);
+            result.setError(e.getMessage());
 //            Monitor.methodFail(methodInfo);
         } finally {
 //        	Monitor.methodFinish(methodInfo);

@@ -8,7 +8,7 @@ package com.iwellmass.dispatcher.admin.dao;
  * @author pan.wei
  * @date 2011-12-1 上午11:36:12
  */
-public class Page {
+public class Pager {
 
 	// 分页查询开始记录位置
 	private int begin;
@@ -19,7 +19,7 @@ public class Page {
 	// 查询结果总记录数
 	private int count;
 
-	public Page() {
+	public Pager() {
 	}
 
 	/**
@@ -28,7 +28,7 @@ public class Page {
 	 * @param begin
 	 * @param length
 	 */
-	public Page(int begin, int length) {
+	public Pager(int begin, int length) {
 		this.begin = begin;
 		this.length = length;
 	}
@@ -38,7 +38,7 @@ public class Page {
 	 * @param length
 	 * @param count
 	 */
-	public Page(int begin, int length, int count) {
+	public Pager(int begin, int length, int count) {
 		this(begin, length);
 		this.count = count;
 	}

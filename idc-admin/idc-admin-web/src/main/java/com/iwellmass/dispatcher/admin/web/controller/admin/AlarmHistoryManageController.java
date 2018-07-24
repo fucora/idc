@@ -1,10 +1,9 @@
 package com.iwellmass.dispatcher.admin.web.controller.admin;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 import com.iwellmass.dispatcher.admin.service.IAlarmHistoryService;
-import com.iwellmass.dispatcher.admin.service.domain.DataResult;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +35,14 @@ public class AlarmHistoryManageController {
      */
     @RequestMapping(value = "/alarmHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public TableDataResult alarmHistoryTable(DdcAlarmHistory alarmHistory, Page page, String beginTime, String endTime) {
-        TableDataResult result = new TableDataResult();
+    public ServiceResult alarmHistoryTable(DdcAlarmHistory alarmHistory, Pager page, String beginTime, String endTime) {
+        ServiceResult result = new ServiceResult();
         try {
             result = alarmHistoryService.alarmHistoryTable(alarmHistory,page,beginTime,endTime);
         } catch (Exception e) {
             logger.error("查询报警历史表单失败", e);
-            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
-            result.setMsg(e.getMessage());
+            result.setState(ServiceResult.STATE_APP_EXCEPTION);
+            result.setError(e.getMessage());
         }
         return result;
     }

@@ -1,6 +1,6 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
+import com.iwellmass.common.ServiceResult;
 
 /**
  * Created by xkwu on 2016/11/1.
@@ -11,7 +11,7 @@ public interface IRunningTaskService {
      *
      * @return
      */
-    TableDataResult runningTaskTable();
+    ServiceResult runningTaskTable();
 
     int deleteRunningTask(Long id);
 }

@@ -1,6 +1,6 @@
 package com.iwellmass.dispatcher.admin.dao.model;
 
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 
 /**
  * Created by xkwu on 2016/5/24.
@@ -8,7 +8,7 @@ import com.iwellmass.dispatcher.admin.dao.Page;
 public class DdcTaskStatisticEx extends DdcTaskStatistic {
     private String beginTime;
     private String endTime;
-    private Page page;
+    private Pager page;
 
     public String getBeginTime() {
         return beginTime;
@@ -26,11 +26,11 @@ public class DdcTaskStatisticEx extends DdcTaskStatistic {
         this.endTime = endTime;
     }
 
-    public Page getPage() {
+    public Pager getPage() {
         return page;
     }
 
-    public void setPage(Page page) {
+    public void setPage(Pager page) {
         this.page = page;
     }
 }

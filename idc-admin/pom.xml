@@ -13,11 +13,9 @@
 	</modules>
 
 	<properties>
-		<spring_version>4.2.4.RELEASE</spring_version>
 		<!-- Build args -->
-		<maven_compiler_plugin_version>2.3.2</maven_compiler_plugin_version>
-		<java_source_version>1.7</java_source_version>
-		<java_target_version>1.7</java_target_version>
+		<java_source_version>1.8</java_source_version>
+		<java_target_version>1.8</java_target_version>
 	</properties>
 
 	<dependencies>
@@ -28,25 +26,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>${spring_version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.logback-extensions</groupId>
 			<artifactId>logback-ext-spring</artifactId>
 			<version>0.1.2</version>
 		</dependency>
 
-
-
-		<!-- erp 集成(begin) -->
-<!--		<dependency>
-			<groupId>com.wm</groupId>
-			<artifactId>wm-nb-common</artifactId>
-			<version>0.2.7.RELEASE</version>
-		</dependency>-->
 
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -72,7 +56,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven_compiler_plugin_version}</version>
 				<configuration>
 					<source>${java_source_version}</source>
 					<target>${java_target_version}</target>

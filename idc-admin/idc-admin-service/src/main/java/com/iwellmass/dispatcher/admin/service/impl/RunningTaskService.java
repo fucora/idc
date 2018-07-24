@@ -1,10 +1,10 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
+import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcRunningTaskMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcRunningTaskExample;
 import com.iwellmass.dispatcher.admin.service.IRunningTaskService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcAdminPermission;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,8 @@ public class RunningTaskService implements IRunningTaskService {
 
     @Override
     @DdcAdminPermission
-    public TableDataResult runningTaskTable() {
-        return new TableDataResult(ddcRunningTaskMapper.selectByExample(new DdcRunningTaskExample()));
+    public ServiceResult runningTaskTable() {
+        return new ServiceResult(ddcRunningTaskMapper.selectByExample(new DdcRunningTaskExample()));
     }
 
     @Override

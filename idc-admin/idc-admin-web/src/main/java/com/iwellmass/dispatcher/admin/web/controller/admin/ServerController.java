@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.service.IServerService;
-import com.iwellmass.dispatcher.admin.service.domain.DataResult;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 /**
  * Created by xkwu on 2016/6/20.
@@ -25,14 +24,14 @@ public class ServerController {
 
     @RequestMapping(value = "/listServerTable", method = RequestMethod.POST)
     @ResponseBody
-    public TableDataResult listServerTable() {
-        TableDataResult result = new TableDataResult();
+    public ServiceResult listServerTable() {
+        ServiceResult result = new ServiceResult();
         try {
             result = iServerService.listServerTable();
         } catch (Exception e) {
             logger.error("获取服务器列表失败", e);
-            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
-            result.setMsg(e.getMessage());
+            result.setState(ServiceResult.STATE_APP_EXCEPTION);
+            result.setError(e.getMessage());
         }
         return result;
     }

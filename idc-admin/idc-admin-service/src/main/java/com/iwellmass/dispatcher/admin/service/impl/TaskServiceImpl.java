@@ -5,7 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iwellmass.dispatcher.admin.dao.Page;
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcApplicationMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskUpdateHistoryMapper;
@@ -13,7 +14,6 @@ import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskWorkflowMapper;
 import com.iwellmass.dispatcher.admin.dao.model.*;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcPermission;
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.common.task.DmallTask;
@@ -227,7 +227,7 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @DdcPermission
-    public TableDataResult taskTable(int appId, DdcTask task, Page page) {
+    public ServiceResult taskTable(int appId, DdcTask task, Pager page) {
         DdcTaskExample taskExample = new DdcTaskExample();
         DdcTaskExample.Criteria taskCriteria = taskExample.createCriteria();
 
@@ -246,7 +246,7 @@ public class TaskServiceImpl implements ITaskService {
         }
         taskExample.setPage(page);
 
-        return new TableDataResult(page, taskMapper.selectByExample(taskExample), taskMapper.countByExample(taskExample));
+        return new ServiceResult(page, taskMapper.selectByExample(taskExample), taskMapper.countByExample(taskExample));
     }
 
     @Override
@@ -693,13 +693,13 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public TableDataResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Page page) {
+    public ServiceResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
         DdcTaskUpdateHistoryExample historyExample = new DdcTaskUpdateHistoryExample();
         historyExample.setOrderByClause("UPDATE_TIME DESC");
         DdcTaskUpdateHistoryExample.Criteria historyCriteria = historyExample.createCriteria();
         historyCriteria.andTaskIdEqualTo(history.getTaskId());
         historyExample.setPage(page);
-        return new TableDataResult(page, taskUpdateMapper.selectByExampleWithBLOBs(historyExample), taskUpdateMapper.countByExample(historyExample));
+        return new ServiceResult(page, taskUpdateMapper.selectByExampleWithBLOBs(historyExample), taskUpdateMapper.countByExample(historyExample));
     }
 
 }

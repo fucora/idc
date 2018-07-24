@@ -17,8 +17,6 @@ import java.util.List;
 @Service
 public class PermissionService implements IPermissionService {
 
-    @Value("#{'${ddc.admin.user}'.split(',')}")
-    private Integer[] adminUsers;
 
     @Autowired
     private IApplicationService applicationService;

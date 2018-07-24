@@ -1,6 +1,6 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
+import com.iwellmass.common.ServiceResult;
 
 /**
  * Created by xkwu on 2016/6/20.
@@ -12,5 +12,5 @@ public interface IServerService {
      *  获取DDC_SERVER表的数据
      * @return the table data result
      */
-    TableDataResult listServerTable();
+    ServiceResult listServerTable();
 }
