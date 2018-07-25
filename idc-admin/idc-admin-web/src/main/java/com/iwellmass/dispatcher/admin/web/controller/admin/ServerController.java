@@ -1,5 +1,7 @@
 package com.iwellmass.dispatcher.admin.web.controller.admin;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.dispatcher.admin.dao.model.DdcServer;
 import com.iwellmass.dispatcher.admin.service.IServerService;
 
 /**
@@ -24,15 +27,8 @@ public class ServerController {
 
     @RequestMapping(value = "/listServerTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult listServerTable() {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = iServerService.listServerTable();
-        } catch (Exception e) {
-            logger.error("获取服务器列表失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<List<DdcServer>> listServerTable() {
+    	List<DdcServer> result = iServerService.listServerTable();
+    	return ServiceResult.success(result);
     }
 }

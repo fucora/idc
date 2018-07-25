@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.dispatcher.admin.dao.model.DdcRunningTask;
 import com.iwellmass.dispatcher.admin.service.IRunningTaskService;
 
 /**
@@ -24,16 +26,9 @@ public class RunningTaskManageController {
 
     @RequestMapping(value = "/listRunningTaskTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult listRunningTaskTable() {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = iRunningTaskService.runningTaskTable();
-        } catch (Exception e) {
-            logger.error("获取正在运行任务列表失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<PageData<DdcRunningTask>> listRunningTaskTable() {
+    	PageData<DdcRunningTask> result = iRunningTaskService.runningTaskTable();
+    	return ServiceResult.success(result);
     }
 
     @RequestMapping(value = "/deleteRunningTask", method = RequestMethod.POST)

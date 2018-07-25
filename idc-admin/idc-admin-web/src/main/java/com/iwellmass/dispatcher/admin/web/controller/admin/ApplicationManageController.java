@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.web.controller.admin;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
 import com.iwellmass.dispatcher.admin.service.IApplicationService;
@@ -39,16 +40,9 @@ public class ApplicationManageController {
      */
     @RequestMapping(value = "/listAppTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult listAppTable(DdcApplication application,Pager page) {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = applicationService.listApplicationTable(application,page);
-        } catch (Exception e) {
-            logger.error("获取应用列表失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<PageData<DdcApplication>> listAppTable(DdcApplication application,Pager page) {
+    	PageData<DdcApplication> listApplicationTable = applicationService.listApplicationTable(application,page);
+    	return ServiceResult.success(listApplicationTable);
     }
 
     /**

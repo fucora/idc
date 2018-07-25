@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskExecuteStatusMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteStatus;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class TaskStatusService {
     @Autowired
     private DdcTaskExecuteStatusMapper statusMapper;
-    public ServiceResult taskStatusTable(DdcTaskExecuteStatus status, Pager page) {
+    public PageData<DdcTaskExecuteStatus> taskStatusTable(DdcTaskExecuteStatus status, Pager page) {
         DdcTaskExecuteStatusExample ddcTaskExecuteStatusExample = new DdcTaskExecuteStatusExample();
         ddcTaskExecuteStatusExample.setPage(page);
         DdcTaskExecuteStatusExample.Criteria taskExecuteStatusCriteria = ddcTaskExecuteStatusExample.createCriteria();
@@ -32,6 +33,6 @@ public class TaskStatusService {
         
         ddcTaskExecuteStatusExample.setOrderByClause("TIMESTAMP ASC, ID ASC");
         
-        return new ServiceResult(page, statusMapper.selectByExample(ddcTaskExecuteStatusExample), statusMapper.countByExample(ddcTaskExecuteStatusExample));
+        return new PageData<>(statusMapper.countByExample(ddcTaskExecuteStatusExample), statusMapper.selectByExample(ddcTaskExecuteStatusExample));
     }
 }

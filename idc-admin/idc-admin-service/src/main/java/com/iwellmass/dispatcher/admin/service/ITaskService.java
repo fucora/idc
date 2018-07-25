@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.service;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskUpdateHistory;
@@ -55,7 +56,7 @@ public interface ITaskService {
      * @return
      */
 
-    ServiceResult taskTable(int appId, DdcTask task, Pager page);
+    PageData<DdcTask> taskTable(int appId, DdcTask task, Pager page);
 
     /**
      * 创建或修改任务
@@ -105,5 +106,5 @@ public interface ITaskService {
      * @return
      */
 
-    ServiceResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page);
+    PageData<DdcTaskUpdateHistory> taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page);
 }

@@ -3,6 +3,7 @@ package com.iwellmass.dispatcher.admin.service;
 import java.util.Map;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 
@@ -19,7 +20,7 @@ public interface IAlarmHistoryService {
      * @param endTime   the end time
      * @return the table data result
      */
-    ServiceResult alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime);
+    PageData<DdcAlarmHistory> alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime);
 
     /**
      * Alarm history table table data result.
@@ -29,7 +30,7 @@ public interface IAlarmHistoryService {
      * @param endTime   the end time
      * @return the table data result
      */
-    ServiceResult alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime);
+    PageData<DdcAlarmHistory> alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime);
 
     Map<String,Integer> alarmHistoryInfo(int appId);
 }

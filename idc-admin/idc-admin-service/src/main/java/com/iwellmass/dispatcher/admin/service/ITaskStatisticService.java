@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatistic;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatisticEx;
 
 /**
@@ -8,7 +9,7 @@ import com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatisticEx;
  */
 public interface ITaskStatisticService {
 
-    ServiceResult taskStatisticTable(int appId, DdcTaskStatisticEx taskStatisticEx);
+	PageData<DdcTaskStatistic> taskStatisticTable(int appId, DdcTaskStatisticEx taskStatisticEx);
 
-    ServiceResult subTaskStatisticTable(int appId, DdcTaskStatisticEx taskStatisticEx);
+    PageData<DdcTaskStatistic>  subTaskStatisticTable(int appId, DdcTaskStatisticEx taskStatisticEx);
 }

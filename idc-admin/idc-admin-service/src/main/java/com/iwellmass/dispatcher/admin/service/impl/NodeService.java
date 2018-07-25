@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcNodeMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
@@ -32,7 +33,7 @@ public class NodeService implements INodeService {
 
     @Override
     @DdcPermission
-    public ServiceResult queryAllNodeTable(int appId, Pager page) {
+    public PageData<DdcNode> queryAllNodeTable(int appId, Pager page) {
         DdcNodeExample nodeExample = new DdcNodeExample();
         DdcNodeExample.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andAppIdEqualTo(appId);
@@ -50,7 +51,7 @@ public class NodeService implements INodeService {
             }
         }
 
-        return new ServiceResult(page, nodes, nodeMapper.countByExample(nodeExample));
+        return new PageData<>(nodeMapper.countByExample(nodeExample), nodes);
     }
 
     @Override

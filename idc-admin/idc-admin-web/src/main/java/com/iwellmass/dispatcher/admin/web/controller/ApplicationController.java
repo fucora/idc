@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
+import com.iwellmass.dispatcher.admin.dao.model.DdcApplicationEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcUser;
 import com.iwellmass.dispatcher.admin.service.IApplicationService;
 
@@ -72,30 +74,14 @@ public class ApplicationController {
 
     @RequestMapping(value = "/listAppTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult listAppTable(Pager page) {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = applicationService.listApplicationTable(page);
-        } catch (Exception e) {
-            logger.error("获取应用列表失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<PageData<DdcApplicationEx>> listAppTable(Pager page) {
+    	return ServiceResult.success(applicationService.listApplicationTable(page));
     }
 
     @RequestMapping(value = "/listAppUser", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult listAppUser(int appId, Pager page) {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = applicationService.listAppUser(appId, page);
-        } catch (Exception e) {
-            logger.error("获取当前应用下用户列表失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<PageData<DdcUser>> listAppUser(int appId, Pager page) {
+    	return ServiceResult.success(applicationService.listAppUser(appId, page));
     }
 
     @RequestMapping(value = "/addAppUser", method = RequestMethod.POST)

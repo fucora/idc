@@ -18,6 +18,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcApplicationMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcNodeMapper;
@@ -349,23 +350,24 @@ public class ApplicationServiceImpl implements IApplicationService {
     }
 
     @Override
-    public ServiceResult listApplicationTable(Pager page) {
+    public PageData<DdcApplicationEx> listApplicationTable(Pager page) {
         DdcApplicationEx applicationEx = new DdcApplicationEx();
         applicationEx.setUserId(1);
         applicationEx.setPage(page);
-        return new ServiceResult(page, appMapper.selectByExampleEx(applicationEx), appMapper.countByExampleEx(applicationEx));
+        List<DdcApplicationEx> data = appMapper.selectByExampleEx(applicationEx);
+        return new PageData<>(appMapper.countByExampleEx(applicationEx), data);
     }
 
     @Override
     @DdcAdminPermission
-    public ServiceResult listApplicationTable(DdcApplication application, Pager page) {
+    public PageData<DdcApplication> listApplicationTable(DdcApplication application, Pager page) {
         DdcApplicationExample appExample = new DdcApplicationExample();
         appExample.setPage(page);
         DdcApplicationExample.Criteria appCriteria = appExample.createCriteria();
         if (!StringUtils.isEmpty(application.getAppName())) {
             appCriteria.andAppNameLike("%" + application.getAppName() + "%");
         }
-        return new ServiceResult(page, appMapper.selectByExample(appExample), appMapper.countByExample(appExample));
+        return new PageData<>(appMapper.countByExample(appExample), appMapper.selectByExample(appExample));
     }
 
     @Override
@@ -539,7 +541,7 @@ public class ApplicationServiceImpl implements IApplicationService {
 
     @Override
     @DdcPermission
-    public ServiceResult listAppUser(int appId, Pager page) {
+    public PageData<DdcUser> listAppUser(int appId, Pager page) {
         DdcUserApplicationExample example = new DdcUserApplicationExample();
         DdcUserApplicationExample.Criteria criteria = example.createCriteria();
         criteria.andAppIdEqualTo(appId);
@@ -550,13 +552,13 @@ public class ApplicationServiceImpl implements IApplicationService {
             userIdsList.add(userApplication.getUserId());
         }
         if(userApplicationList.size() == 0){
-            return new ServiceResult();
+            return new PageData<>();
         }
         DdcUserExample userExample = new DdcUserExample();
         DdcUserExample.Criteria userCriteria = userExample.createCriteria();
         userCriteria.andUserIdIn(userIdsList);
 
-        return new ServiceResult(page, userMapper.selectByExample(userExample), userMapper.countByExample(userExample));
+        return new PageData<>(userMapper.countByExample(userExample), userMapper.selectByExample(userExample));
     }
 
 }

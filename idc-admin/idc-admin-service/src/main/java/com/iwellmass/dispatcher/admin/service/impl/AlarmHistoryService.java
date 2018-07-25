@@ -3,6 +3,7 @@ package com.iwellmass.dispatcher.admin.service.impl;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcAlarmHistoryMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
@@ -31,7 +33,7 @@ public class AlarmHistoryService implements IAlarmHistoryService {
 
     @Override
     @DdcPermission
-    public ServiceResult alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime) {
+    public PageData<DdcAlarmHistory> alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");
@@ -45,12 +47,15 @@ public class AlarmHistoryService implements IAlarmHistoryService {
             alarmHistoryCriteria.andTaskIdEqualTo(alarmHistory.getTaskId());
         }
         alarmHistoryCriteria.andAppIdEqualTo(appId);
-        return new ServiceResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
+        
+        List<DdcAlarmHistory> data = alarmHistoryMapper.selectByExample(alarmHistoryExample);
+        
+        return new PageData<>(alarmHistoryMapper.countByExample(alarmHistoryExample), data);
     }
 
     @Override
     @DdcAdminPermission
-    public ServiceResult alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime) {
+    public PageData<DdcAlarmHistory> alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");
@@ -66,7 +71,8 @@ public class AlarmHistoryService implements IAlarmHistoryService {
         if(alarmHistory.getTaskId()!=null){
             alarmHistoryCriteria.andTaskIdEqualTo(alarmHistory.getTaskId());
         }
-        return new ServiceResult(page, alarmHistoryMapper.selectByExample(alarmHistoryExample), alarmHistoryMapper.countByExample(alarmHistoryExample));
+        List<DdcAlarmHistory> data = alarmHistoryMapper.selectByExample(alarmHistoryExample);
+        return new PageData<>(alarmHistoryMapper.countByExample(alarmHistoryExample), data);
     }
 
     @Override

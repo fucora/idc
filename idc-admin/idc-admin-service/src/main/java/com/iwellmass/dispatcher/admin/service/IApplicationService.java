@@ -3,8 +3,10 @@ package com.iwellmass.dispatcher.admin.service;
 import java.util.List;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
+import com.iwellmass.dispatcher.admin.dao.model.DdcApplicationEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcUser;
 import com.iwellmass.dispatcher.admin.dao.model.DdcUserApplication;
 import com.iwellmass.dispatcher.common.entry.DDCException;
@@ -39,7 +41,7 @@ public interface IApplicationService {
      * @param page
      * @return
      */
-    ServiceResult listApplicationTable(Pager page);
+    PageData<DdcApplicationEx> listApplicationTable(Pager page);
 
     /**
      * 分页查看所有应用
@@ -47,7 +49,7 @@ public interface IApplicationService {
      * @param page
      * @return
      */
-    ServiceResult listApplicationTable(DdcApplication application,Pager page);
+    PageData<DdcApplication> listApplicationTable(DdcApplication application,Pager page);
 
     /**
      * 获取用户权限范围类的应用列表
@@ -114,7 +116,7 @@ public interface IApplicationService {
      * @return
      */
 
-    ServiceResult listAppUser(int appId, Pager page);
+    PageData<DdcUser> listAppUser(int appId, Pager page);
 
     /**
      * Create application.

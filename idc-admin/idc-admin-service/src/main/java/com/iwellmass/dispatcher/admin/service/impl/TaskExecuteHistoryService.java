@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcSubtaskExecuteHistoryMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskExecuteHistoryMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcSubtaskExecuteHistoryEx;
@@ -23,13 +24,13 @@ public class TaskExecuteHistoryService implements ITaskExecuteHistory {
     private DdcSubtaskExecuteHistoryMapper subtaskExecuteHistoryMapper;
 
     @DdcPermission
-    public ServiceResult taskHistoryTable(int appId,DdcTaskExecuteHistoryEx history) {
+    public PageData<DdcTaskExecuteHistoryEx> taskHistoryTable(int appId,DdcTaskExecuteHistoryEx history) {
 
-        return new ServiceResult(history.getPage(), historyMapper.selectByExampleEx(history), historyMapper.countByExampleEx(history));
+        return new PageData<>(historyMapper.countByExampleEx(history), historyMapper.selectByExampleEx(history));
     }
     @DdcPermission
-    public ServiceResult subTaskHistoryTable(int appId,DdcSubtaskExecuteHistoryEx history) {
+    public PageData<DdcSubtaskExecuteHistoryEx> subTaskHistoryTable(int appId,DdcSubtaskExecuteHistoryEx history) {
 
-        return new ServiceResult(history.getPage(), subtaskExecuteHistoryMapper.selectByExampleEx(history), subtaskExecuteHistoryMapper.countByExampleEx(history));
+        return new PageData<>(subtaskExecuteHistoryMapper.countByExampleEx(history), subtaskExecuteHistoryMapper.selectByExampleEx(history));
     }
 }

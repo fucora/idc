@@ -1,13 +1,16 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.dispatcher.admin.dao.mapper.DdcRunningTaskMapper;
-import com.iwellmass.dispatcher.admin.dao.model.DdcRunningTaskExample;
-import com.iwellmass.dispatcher.admin.service.IRunningTaskService;
-import com.iwellmass.dispatcher.admin.service.aspect.DdcAdminPermission;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.dispatcher.admin.dao.mapper.DdcRunningTaskMapper;
+import com.iwellmass.dispatcher.admin.dao.model.DdcRunningTask;
+import com.iwellmass.dispatcher.admin.dao.model.DdcRunningTaskExample;
+import com.iwellmass.dispatcher.admin.service.IRunningTaskService;
+import com.iwellmass.dispatcher.admin.service.aspect.DdcAdminPermission;
 
 /**
  * Created by xkwu on2016/11/1.
@@ -19,8 +22,10 @@ public class RunningTaskService implements IRunningTaskService {
 
     @Override
     @DdcAdminPermission
-    public ServiceResult runningTaskTable() {
-        return new ServiceResult(ddcRunningTaskMapper.selectByExample(new DdcRunningTaskExample()));
+    public PageData<DdcRunningTask> runningTaskTable() {
+    	List<DdcRunningTask> data = ddcRunningTaskMapper.selectByExample(new DdcRunningTaskExample());
+    	
+        return new PageData<>(data.size(), data);
     }
 
     @Override

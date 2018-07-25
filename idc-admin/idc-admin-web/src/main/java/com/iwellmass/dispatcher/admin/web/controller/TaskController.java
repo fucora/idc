@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskUpdateHistory;
@@ -97,18 +98,8 @@ public class TaskController {
 
 	@RequestMapping(value = "taskTable", method = RequestMethod.POST)
 	@ResponseBody
-	public ServiceResult taskTable(DdcTask task, Pager page) {
-
-		ServiceResult result = new ServiceResult();
-		try {
-			result = taskService.taskTable(task.getAppId(), task, page);
-		} catch (Exception e) {
-			logger.error("查询任务列表失败！", e);
-			result.setState(ServiceResult.STATE_APP_EXCEPTION);
-			result.setError(e.getMessage());
-		} finally {
-		}
-		return result;
+	public ServiceResult<PageData<DdcTask>> taskTable(DdcTask task, Pager page) {
+		return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
 	}
 
 	@RequestMapping(value = "modifyTaskStatus", method = RequestMethod.POST)
@@ -219,16 +210,8 @@ public class TaskController {
 
 	@RequestMapping(value = "/taskUpdateHistoryTable", method = RequestMethod.POST)
 	@ResponseBody
-	public ServiceResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
-		ServiceResult result = new ServiceResult();
-		try {
-			result = taskService.taskUpdateHistoryTable(history, page);
-		} catch (Exception e) {
-			logger.error("获取变更记录失败！！", e);
-			result.setState(ServiceResult.STATE_APP_EXCEPTION);
-			result.setError(e.getMessage());
-		}
-		return result;
+	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
+		return ServiceResult.success(taskService.taskUpdateHistoryTable(history, page));
 	}
 
 }

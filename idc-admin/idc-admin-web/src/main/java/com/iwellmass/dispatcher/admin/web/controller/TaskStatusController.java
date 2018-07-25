@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteStatus;
 import com.iwellmass.dispatcher.admin.service.impl.TaskStatusService;
@@ -22,7 +23,7 @@ public class TaskStatusController {
 
     @RequestMapping(value = "taskStatusTable",method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult taskStatusTable(DdcTaskExecuteStatus status, Pager page) {
-        return statusService.taskStatusTable(status, page);
+    public ServiceResult<PageData<DdcTaskExecuteStatus>> taskStatusTable(DdcTaskExecuteStatus status, Pager page) {
+        return ServiceResult.success(statusService.taskStatusTable(status, page));
     }
 }

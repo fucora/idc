@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.admin.service.INodeService;
@@ -25,17 +26,9 @@ public class NodeController {
 
     @RequestMapping(value = "/queryAllNodeTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult queryAllNode(int appId, Pager page) {
+    public ServiceResult<PageData<DdcNode>> queryAllNode(int appId, Pager page) {
 
-        ServiceResult result = new ServiceResult();
-        try {
-            result = nodeService.queryAllNodeTable(appId, page);
-        } catch (Exception e) {
-            logger.error("获取实例失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    	return ServiceResult.success(nodeService.queryAllNodeTable(appId, page));
     }
 
     @RequestMapping(value = "/queryNodeByApp", method = RequestMethod.GET)

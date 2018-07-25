@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcApplicationMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
@@ -227,7 +228,7 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @DdcPermission
-    public ServiceResult taskTable(int appId, DdcTask task, Pager page) {
+    public PageData<DdcTask> taskTable(int appId, DdcTask task, Pager page) {
         DdcTaskExample taskExample = new DdcTaskExample();
         DdcTaskExample.Criteria taskCriteria = taskExample.createCriteria();
 
@@ -246,7 +247,7 @@ public class TaskServiceImpl implements ITaskService {
         }
         taskExample.setPage(page);
 
-        return new ServiceResult(page, taskMapper.selectByExample(taskExample), taskMapper.countByExample(taskExample));
+        return new PageData<>(taskMapper.countByExample(taskExample), taskMapper.selectByExample(taskExample));
     }
 
     @Override
@@ -693,13 +694,13 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public ServiceResult taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
+    public PageData<DdcTaskUpdateHistory> taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
         DdcTaskUpdateHistoryExample historyExample = new DdcTaskUpdateHistoryExample();
         historyExample.setOrderByClause("UPDATE_TIME DESC");
         DdcTaskUpdateHistoryExample.Criteria historyCriteria = historyExample.createCriteria();
         historyCriteria.andTaskIdEqualTo(history.getTaskId());
         historyExample.setPage(page);
-        return new ServiceResult(page, taskUpdateMapper.selectByExampleWithBLOBs(historyExample), taskUpdateMapper.countByExample(historyExample));
+        return new PageData<>(taskUpdateMapper.countByExample(historyExample), taskUpdateMapper.selectByExampleWithBLOBs(historyExample));
     }
 
 }

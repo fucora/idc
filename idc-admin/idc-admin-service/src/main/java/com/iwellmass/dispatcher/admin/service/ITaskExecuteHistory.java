@@ -1,6 +1,6 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.model.DdcSubtaskExecuteHistoryEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteHistoryEx;
 
@@ -18,7 +18,7 @@ public interface ITaskExecuteHistory {
      * @return
      */
 
-    ServiceResult taskHistoryTable(int appId, DdcTaskExecuteHistoryEx history);
+	PageData<DdcTaskExecuteHistoryEx> taskHistoryTable(int appId, DdcTaskExecuteHistoryEx history);
 
     /**
      * 查询流程任务对应的子任务的执行历史
@@ -27,5 +27,5 @@ public interface ITaskExecuteHistory {
      * @return
      */
 
-    ServiceResult subTaskHistoryTable(int appId, DdcSubtaskExecuteHistoryEx history);
+	PageData<DdcSubtaskExecuteHistoryEx> subTaskHistoryTable(int appId, DdcSubtaskExecuteHistoryEx history);
 }

@@ -1,6 +1,8 @@
 package com.iwellmass.dispatcher.admin.service;
 
-import com.iwellmass.common.ServiceResult;
+import java.util.List;
+
+import com.iwellmass.dispatcher.admin.dao.model.DdcServer;
 
 /**
  * Created by xkwu on 2016/6/20.
@@ -12,5 +14,5 @@ public interface IServerService {
      *  获取DDC_SERVER表的数据
      * @return the table data result
      */
-    ServiceResult listServerTable();
+	List<DdcServer> listServerTable();
 }

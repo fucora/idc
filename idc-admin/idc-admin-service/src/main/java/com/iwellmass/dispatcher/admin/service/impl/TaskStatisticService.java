@@ -1,13 +1,14 @@
 package com.iwellmass.dispatcher.admin.service.impl;
 
-import com.iwellmass.common.ServiceResult;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskStatisticMapper;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatistic;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskStatisticEx;
 import com.iwellmass.dispatcher.admin.service.ITaskStatisticService;
 import com.iwellmass.dispatcher.admin.service.aspect.DdcPermission;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 /**
  * Created by xkwu on 2016/5/24.
@@ -19,13 +20,13 @@ public class TaskStatisticService implements ITaskStatisticService {
 
     @Override
     @DdcPermission
-    public ServiceResult taskStatisticTable(int appId,DdcTaskStatisticEx taskStatisticEx) {
-        return new ServiceResult(taskStatisticEx.getPage(), taskStatisticMapper.selectByExampleEx(taskStatisticEx), taskStatisticMapper.countByExampleEx(taskStatisticEx));
+    public PageData<DdcTaskStatistic> taskStatisticTable(int appId,DdcTaskStatisticEx taskStatisticEx) {
+        return new PageData<>(taskStatisticMapper.countByExampleEx(taskStatisticEx), taskStatisticMapper.selectByExampleEx(taskStatisticEx));
     }
 
 	@Override
     @DdcPermission
-	public ServiceResult subTaskStatisticTable(int appId,DdcTaskStatisticEx taskStatisticEx) {
-		return new ServiceResult(taskStatisticEx.getPage(), taskStatisticMapper.selectSubTaskByExampleEx(taskStatisticEx), taskStatisticMapper.countSubTaskByExampleEx(taskStatisticEx));
+	public PageData<DdcTaskStatistic> subTaskStatisticTable(int appId,DdcTaskStatisticEx taskStatisticEx) {
+		return new PageData<>(taskStatisticMapper.countSubTaskByExampleEx(taskStatisticEx), taskStatisticMapper.selectSubTaskByExampleEx(taskStatisticEx));
 	}
 }

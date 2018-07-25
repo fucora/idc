@@ -1,6 +1,7 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 import com.iwellmass.dispatcher.admin.service.IAlarmHistoryService;
@@ -35,15 +36,10 @@ public class AlarmHistoryController {
      */
     @RequestMapping(value = "/alarmHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult alarmHistoryTable(DdcAlarmHistory alarmHistory, Pager page, String beginTime, String endTime) {
-        ServiceResult result = new ServiceResult();
-        try {
-            result = alarmHistoryService.alarmHistoryTable(alarmHistory.getAppId().intValue(),alarmHistory,page,beginTime,endTime);
-        } catch (Exception e) {
-            logger.error("查询报警历史表单失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
-        }
-        return result;
+    public ServiceResult<PageData<DdcAlarmHistory>> alarmHistoryTable(DdcAlarmHistory alarmHistory, Pager page, String beginTime, String endTime) {
+    	
+    	
+    	PageData<DdcAlarmHistory> result = alarmHistoryService.alarmHistoryTable(alarmHistory.getAppId().intValue(),alarmHistory,page,beginTime,endTime);
+    	return ServiceResult.success(result);
     }
 }

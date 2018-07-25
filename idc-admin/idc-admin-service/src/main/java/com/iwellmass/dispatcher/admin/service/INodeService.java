@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.Pager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.common.entry.DDCException;
@@ -21,7 +22,7 @@ public interface INodeService {
      * @param page  the page
      * @return the table data result
      */
-    ServiceResult queryAllNodeTable(int appId, Pager page);
+	PageData<DdcNode> queryAllNodeTable(int appId, Pager page);
 
 
     /**
