@@ -2,7 +2,7 @@ package com.iwellmass.dispatcher.admin.web.controller;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 import com.iwellmass.dispatcher.admin.service.IAlarmHistoryService;
 
@@ -36,7 +36,7 @@ public class AlarmHistoryController {
      */
     @RequestMapping(value = "/alarmHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcAlarmHistory>> alarmHistoryTable(DdcAlarmHistory alarmHistory, Pager page, String beginTime, String endTime) {
+    public ServiceResult<PageData<DdcAlarmHistory>> alarmHistoryTable(DdcAlarmHistory alarmHistory, IDCPager page, String beginTime, String endTime) {
     	
     	
     	PageData<DdcAlarmHistory> result = alarmHistoryService.alarmHistoryTable(alarmHistory.getAppId().intValue(),alarmHistory,page,beginTime,endTime);

@@ -1,6 +1,6 @@
 package com.iwellmass.dispatcher.admin.dao.model;
 
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 
 /**
  * Created by xkwu on 2016/5/27.
@@ -9,7 +9,7 @@ public class DdcSubtaskExecuteHistoryEx extends DdcSubtaskExecuteHistory {
     private String beginTime;
     private String endTime;
     private DdcTask task;
-    private Pager page;
+    private IDCPager page;
 
     public DdcTask getTask() {
         return task;
@@ -36,11 +36,11 @@ public class DdcSubtaskExecuteHistoryEx extends DdcSubtaskExecuteHistory {
         this.beginTime = beginTime;
     }
 
-    public Pager getPage() {
+    public IDCPager getPage() {
         return page;
     }
 
-    public void setPage(Pager page) {
+    public void setPage(IDCPager page) {
         this.page = page;
     }
 }

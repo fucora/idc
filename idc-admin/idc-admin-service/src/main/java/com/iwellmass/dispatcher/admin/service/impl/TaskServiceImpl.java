@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcApplicationMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskUpdateHistoryMapper;
@@ -228,7 +228,7 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @DdcPermission
-    public PageData<DdcTask> taskTable(int appId, DdcTask task, Pager page) {
+    public PageData<DdcTask> taskTable(int appId, DdcTask task, IDCPager page) {
         DdcTaskExample taskExample = new DdcTaskExample();
         DdcTaskExample.Criteria taskCriteria = taskExample.createCriteria();
 
@@ -694,7 +694,7 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public PageData<DdcTaskUpdateHistory> taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
+    public PageData<DdcTaskUpdateHistory> taskUpdateHistoryTable(DdcTaskUpdateHistory history, IDCPager page) {
         DdcTaskUpdateHistoryExample historyExample = new DdcTaskUpdateHistoryExample();
         historyExample.setOrderByClause("UPDATE_TIME DESC");
         DdcTaskUpdateHistoryExample.Criteria historyCriteria = historyExample.createCriteria();

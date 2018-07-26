@@ -19,7 +19,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcApplicationMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcNodeMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
@@ -350,7 +350,7 @@ public class ApplicationServiceImpl implements IApplicationService {
     }
 
     @Override
-    public PageData<DdcApplicationEx> listApplicationTable(Pager page) {
+    public PageData<DdcApplicationEx> listApplicationTable(IDCPager page) {
         DdcApplicationEx applicationEx = new DdcApplicationEx();
         applicationEx.setUserId(1);
         applicationEx.setPage(page);
@@ -360,7 +360,7 @@ public class ApplicationServiceImpl implements IApplicationService {
 
     @Override
     @DdcAdminPermission
-    public PageData<DdcApplication> listApplicationTable(DdcApplication application, Pager page) {
+    public PageData<DdcApplication> listApplicationTable(DdcApplication application, IDCPager page) {
         DdcApplicationExample appExample = new DdcApplicationExample();
         appExample.setPage(page);
         DdcApplicationExample.Criteria appCriteria = appExample.createCriteria();
@@ -541,7 +541,7 @@ public class ApplicationServiceImpl implements IApplicationService {
 
     @Override
     @DdcPermission
-    public PageData<DdcUser> listAppUser(int appId, Pager page) {
+    public PageData<DdcUser> listAppUser(int appId, IDCPager page) {
         DdcUserApplicationExample example = new DdcUserApplicationExample();
         DdcUserApplicationExample.Criteria criteria = example.createCriteria();
         criteria.andAppIdEqualTo(appId);

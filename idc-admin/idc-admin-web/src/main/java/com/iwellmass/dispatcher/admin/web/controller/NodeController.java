@@ -2,7 +2,7 @@ package com.iwellmass.dispatcher.admin.web.controller;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.admin.service.INodeService;
 
@@ -26,7 +26,7 @@ public class NodeController {
 
     @RequestMapping(value = "/queryAllNodeTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcNode>> queryAllNode(int appId, Pager page) {
+    public ServiceResult<PageData<DdcNode>> queryAllNode(int appId, IDCPager page) {
 
     	return ServiceResult.success(nodeService.queryAllNodeTable(appId, page));
     }

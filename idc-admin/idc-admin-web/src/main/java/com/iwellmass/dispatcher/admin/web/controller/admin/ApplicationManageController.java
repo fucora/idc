@@ -2,7 +2,7 @@ package com.iwellmass.dispatcher.admin.web.controller.admin;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
 import com.iwellmass.dispatcher.admin.service.IApplicationService;
 
@@ -40,7 +40,7 @@ public class ApplicationManageController {
      */
     @RequestMapping(value = "/listAppTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcApplication>> listAppTable(DdcApplication application,Pager page) {
+    public ServiceResult<PageData<DdcApplication>> listAppTable(DdcApplication application,IDCPager page) {
     	PageData<DdcApplication> listApplicationTable = applicationService.listApplicationTable(application,page);
     	return ServiceResult.success(listApplicationTable);
     }

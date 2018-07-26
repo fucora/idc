@@ -1,6 +1,0 @@
-  安装文件到本地maven仓库使用
-  <dependency>
-      <groupId>com.utils</groupId>
-      <artifactId>page</artifactId>
-      <version>1.0-SNAPSHOT</version>
-  </dependency>

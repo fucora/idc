@@ -1,14 +1,13 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
 import java.util.Calendar;
-import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -16,19 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.common.util.Utils;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskUpdateHistory;
 import com.iwellmass.dispatcher.admin.service.IExecuteStatisticService;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
-import com.iwellmass.dispatcher.common.utils.DateUtils;
+import com.iwellmass.idc.model.Job;
 
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping("task")
+@RequestMapping("/job")
 public class TaskController {
 
 	private static Logger logger = LoggerFactory.getLogger(TaskController.class);
@@ -41,64 +41,26 @@ public class TaskController {
 
 	@PostMapping
 	@ApiOperation("新增调度任务")
-	public ServiceResult createOrUpdateTask(DdcTask task) {
-
-		ServiceResult result = new ServiceResult();
-		try {
-
-			// 如果是简单任务校验参数配置
-			if (task.getTaskCategoty() == Constants.TASK_CATEGORY_BASIC
-					&& task.getTaskType() == Constants.TASK_TYPE_SIMPLE) {
-
-				String startTimeStr = task.getSimpleStartTime();
-				Date startTime = null;
-
-				if (StringUtils.isBlank(startTimeStr)) {
-					throw new DDCException("执行开始时间不能为空！");
-				}
-
-				try {
-					startTime = DateUtils.parseDate(startTimeStr, DateUtils.FORMAT_DATETIME);
-				} catch (Exception e) {
-					throw new DDCException("执行开始时间{%s}格式错误！", startTimeStr);
-				}
-
-				if (startTime.before(new Date())) {
-					throw new DDCException("执行开始时间不能小于当前时间！");
-				}
-
-				String endTimeStr = task.getSimpleEndTime();
-				Date endTime = null;
-				try {
-					if (StringUtils.isNotBlank(endTimeStr)) {
-						endTime = DateUtils.parseDate(endTimeStr, DateUtils.FORMAT_DATETIME);
-					}
-				} catch (Exception e) {
-					throw new DDCException("执行结束时间{%s}格式错误！", endTimeStr);
-				}
-				if (endTime != null && endTime.before(startTime)) {
-					throw new DDCException("执行结束时间不能小于执行开始时间！");
-				}
-
-				if (task.getSimpleRepeatCount() != 1
-						&& (task.getSimpleRepeatInterval() == null || task.getSimpleRepeatInterval().intValue() == 0)) {
-					throw new DDCException("执行间隔时间不能为空！");
-				}
-			}
-
-			taskService.createOrUpdateTask(task.getAppId(), task);
-		} catch (Exception e) {
-			logger.error("创建或者更新任务失败！", e);
-			result.setState(ServiceResult.STATE_APP_EXCEPTION);
-			result.setError(e.getMessage());
-		} finally {
-		}
-		return result;
+	public ServiceResult<String> addJob(@RequestBody Job job) throws DDCException {
+		
+		
+		
+		
+		
+		DdcTask task = new DdcTask();
+		task.setClassName(job.getTaskType());
+		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
+		// 统一使用 workflow 引擎
+		task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
+		task.setTaskType(Constants.TASK_TYPE_SUBTASK);
+		
+		taskService.createOrUpdateTask(task.getAppId(), task);
+		return ServiceResult.success("success");
 	}
 
 	@RequestMapping(value = "taskTable", method = RequestMethod.POST)
 	@ResponseBody
-	public ServiceResult<PageData<DdcTask>> taskTable(DdcTask task, Pager page) {
+	public ServiceResult<PageData<DdcTask>> taskTable(DdcTask task, IDCPager page) {
 		return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
 	}
 
@@ -210,7 +172,7 @@ public class TaskController {
 
 	@RequestMapping(value = "/taskUpdateHistoryTable", method = RequestMethod.POST)
 	@ResponseBody
-	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, Pager page) {
+	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, IDCPager page) {
 		return ServiceResult.success(taskService.taskUpdateHistoryTable(history, page));
 	}
 

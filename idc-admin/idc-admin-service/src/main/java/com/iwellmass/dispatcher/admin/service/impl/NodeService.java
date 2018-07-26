@@ -2,7 +2,7 @@ package com.iwellmass.dispatcher.admin.service.impl;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcNodeMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNodeExample;
@@ -33,7 +33,7 @@ public class NodeService implements INodeService {
 
     @Override
     @DdcPermission
-    public PageData<DdcNode> queryAllNodeTable(int appId, Pager page) {
+    public PageData<DdcNode> queryAllNodeTable(int appId, IDCPager page) {
         DdcNodeExample nodeExample = new DdcNodeExample();
         DdcNodeExample.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andAppIdEqualTo(appId);
@@ -82,7 +82,7 @@ public class NodeService implements INodeService {
         DdcNodeExample nodeExample = new DdcNodeExample();
         DdcNodeExample.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andAppIdEqualTo(appId);
-        nodeExample.setPage(new Pager(0, 1));
+        nodeExample.setPage(new IDCPager(0, 1));
         nodeExample.setOrderByClause("LAST_START_TIME DESC");
         List<DdcNode> nodeList = nodeMapper.selectByExampleWithBLOBs(nodeExample);
         if (CollectionUtils.isEmpty(nodeList)) {

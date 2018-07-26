@@ -1,12 +1,12 @@
 package com.iwellmass.dispatcher.admin.dao.model;
 
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 
 /**
  * Created by xkwu on 2016/6/21.
  */
 public class DdcApplicationEx extends DdcApplication {
-    private Pager page;
+    private IDCPager page;
     private Boolean enableAlarm;
 
     private Integer userId;
@@ -27,11 +27,11 @@ public class DdcApplicationEx extends DdcApplication {
         this.userId = userId;
     }
 
-    public Pager getPage() {
+    public IDCPager getPage() {
         return page;
     }
 
-    public void setPage(Pager page) {
+    public void setPage(IDCPager page) {
         this.page = page;
     }
 }

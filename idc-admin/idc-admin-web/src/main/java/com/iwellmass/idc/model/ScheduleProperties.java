@@ -1,0 +1,65 @@
+package com.iwellmass.idc.model;
+
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.iwellmass.common.util.Assert;
+import com.iwellmass.common.util.Utils;
+
+import io.swagger.annotations.ApiModelProperty;
+
+public class ScheduleProperties {
+
+	@ApiModelProperty("每月号数 ( 0 ~ 30 )")
+	private List<Integer> daysOfMonth;
+
+	@ApiModelProperty("每周星期数  1(周日) ~ 7(周六) ) ")
+	private List<Integer> daysOfWeek;
+
+	@ApiModelProperty("具体时间")
+	private LocalTime duetime = LocalTime.of(0, 0, 0);
+
+	public List<Integer> getDaysOfMonth() {
+		return daysOfMonth;
+	}
+
+	public void setDaysOfMonth(List<Integer> daysOfMonth) {
+		this.daysOfMonth = daysOfMonth;
+	}
+
+	public List<Integer> getDaysOfWeek() {
+		return daysOfWeek;
+	}
+
+	public void setDaysOfWeek(List<Integer> daysOfWeek) {
+		this.daysOfWeek = daysOfWeek;
+	}
+
+	public LocalTime getDuetime() {
+		return duetime;
+	}
+
+	public void setDuetime(LocalTime duetime) {
+		this.duetime = duetime;
+	}
+
+	public String toCronExpr(ScheduleType type) {
+		switch (type) {
+		case MONTHLY:
+			Assert.isTrue(Utils.isNullOrEmpty(daysOfMonth), "月调度配置不能为空");
+			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(), 
+					String.join(",", daysOfMonth.stream().map(i -> i+ "").collect(Collectors.toList())));
+		case WEEKLY:
+			Assert.isTrue(Utils.isNullOrEmpty(daysOfMonth), "周调度配置不能为空");
+			return String.format("%s %s %s ? * %s *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(), 
+					String.join(",", daysOfWeek.stream().map(i -> i+ "").collect(Collectors.toList())));
+		case DAILY:
+			return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
+		default:
+			throw new UnsupportedOperationException("not supported yet.");
+		}
+	}
+	
+	
+}

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcAlarmHistoryMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistory;
 import com.iwellmass.dispatcher.admin.dao.model.DdcAlarmHistoryExample;
@@ -33,7 +33,7 @@ public class AlarmHistoryService implements IAlarmHistoryService {
 
     @Override
     @DdcPermission
-    public PageData<DdcAlarmHistory> alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, Pager page, String startTime, String endTime) {
+    public PageData<DdcAlarmHistory> alarmHistoryTable(int appId, DdcAlarmHistory alarmHistory, IDCPager page, String startTime, String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");
@@ -55,7 +55,7 @@ public class AlarmHistoryService implements IAlarmHistoryService {
 
     @Override
     @DdcAdminPermission
-    public PageData<DdcAlarmHistory> alarmHistoryTable(DdcAlarmHistory alarmHistory,Pager page,String startTime,String endTime) {
+    public PageData<DdcAlarmHistory> alarmHistoryTable(DdcAlarmHistory alarmHistory,IDCPager page,String startTime,String endTime) {
         DdcAlarmHistoryExample alarmHistoryExample = new DdcAlarmHistoryExample();
         alarmHistoryExample.setPage(page);
         alarmHistoryExample.setOrderByClause("ALARM_DATE DESC");

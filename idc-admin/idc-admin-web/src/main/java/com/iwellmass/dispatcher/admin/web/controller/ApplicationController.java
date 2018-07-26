@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.Pager;
+import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplicationEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcUser;
@@ -74,13 +74,13 @@ public class ApplicationController {
 
     @RequestMapping(value = "/listAppTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcApplicationEx>> listAppTable(Pager page) {
+    public ServiceResult<PageData<DdcApplicationEx>> listAppTable(IDCPager page) {
     	return ServiceResult.success(applicationService.listApplicationTable(page));
     }
 
     @RequestMapping(value = "/listAppUser", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcUser>> listAppUser(int appId, Pager page) {
+    public ServiceResult<PageData<DdcUser>> listAppUser(int appId, IDCPager page) {
     	return ServiceResult.success(applicationService.listAppUser(appId, page));
     }
 
