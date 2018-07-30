@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 
@@ -18,6 +19,7 @@ public class ScheduleProperties {
 	private List<Integer> daysOfWeek;
 
 	@ApiModelProperty("具体时间")
+	@JsonFormat(pattern = "hh:mm:ss")
 	private LocalTime duetime = LocalTime.of(0, 0, 0);
 
 	public List<Integer> getDaysOfMonth() {
@@ -47,11 +49,11 @@ public class ScheduleProperties {
 	public String toCronExpr(ScheduleType type) {
 		switch (type) {
 		case MONTHLY:
-			Assert.isTrue(Utils.isNullOrEmpty(daysOfMonth), "月调度配置不能为空");
+			Assert.isFalse(Utils.isNullOrEmpty(daysOfMonth), "月调度配置不能为空");
 			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(), 
 					String.join(",", daysOfMonth.stream().map(i -> i+ "").collect(Collectors.toList())));
 		case WEEKLY:
-			Assert.isTrue(Utils.isNullOrEmpty(daysOfMonth), "周调度配置不能为空");
+			Assert.isFalse(Utils.isNullOrEmpty(daysOfMonth), "周调度配置不能为空");
 			return String.format("%s %s %s ? * %s *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(), 
 					String.join(",", daysOfWeek.stream().map(i -> i+ "").collect(Collectors.toList())));
 		case DAILY:

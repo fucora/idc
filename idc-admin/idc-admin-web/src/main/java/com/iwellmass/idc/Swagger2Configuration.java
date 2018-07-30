@@ -1,4 +1,4 @@
-package com.iwellmass.dispatcher.admin;
+package com.iwellmass.idc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class Swagger2Configuration {
         schemes.add(oauth());
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo()).select().paths(PathSelectors.any())
-                .apis(RequestHandlerSelectors.basePackage("com.iwellmass.dispatcher.admin"))
+                .apis(RequestHandlerSelectors.basePackage("com.iwellmass.idc.controller"))
                 .build().securitySchemes(schemes);
     }
 

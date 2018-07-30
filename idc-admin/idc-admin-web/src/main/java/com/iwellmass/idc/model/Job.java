@@ -27,7 +27,7 @@ public class Job {
 	private String taskId;
 
 	private String taskType;
-
+	
 	private ScheduleType scheduleType;
 
 	private ScheduleProperties scheduleProperties;
@@ -38,6 +38,8 @@ public class Job {
 	
 	private Timestamp createTime;
 
+	private Integer groupId;
+	
 	private Set<JobDependency> dependencies;
 	
 	@Id
@@ -141,6 +143,16 @@ public class Job {
 	public void setCreateTime(Timestamp createTime) {
 		this.createTime = createTime;
 	}
+	
+	@ApiModelProperty("所属组ID")
+	@Column(name = "createtime")
+	public Integer getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(Integer groupId) {
+		this.groupId = groupId;
+	}
 
 	@ApiModelProperty("依赖")
 	@Transient
@@ -150,6 +162,10 @@ public class Job {
 
 	public void setDependencies(Set<JobDependency> dependencies) {
 		this.dependencies = dependencies;
+	}
+	
+	public boolean hasDependencies() {
+		return ! (dependencies == null || dependencies.isEmpty());
 	}
 
 }

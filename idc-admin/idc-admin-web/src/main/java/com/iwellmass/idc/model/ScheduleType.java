@@ -22,5 +22,4 @@ public enum ScheduleType {
 	@ApiModelProperty("自定义 CRON 表达式")
 	CRON;
 	
-	
 }

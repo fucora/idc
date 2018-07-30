@@ -1,88 +1,50 @@
-package com.iwellmass.dispatcher.admin.web.controller;
+package com.iwellmass.idc.controller;
 
-import java.util.Calendar;
-
-import org.apache.commons.lang.time.FastDateFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.common.util.Utils;
 import com.iwellmass.dispatcher.admin.dao.IDCPager;
-import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
-import com.iwellmass.dispatcher.admin.dao.model.DdcTaskUpdateHistory;
-import com.iwellmass.dispatcher.admin.service.IExecuteStatisticService;
-import com.iwellmass.dispatcher.admin.service.ITaskService;
-import com.iwellmass.dispatcher.common.constants.Constants;
+import com.iwellmass.dispatcher.admin.web.vo.JobQuery;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/job")
-public class TaskController {
-
-	private static Logger logger = LoggerFactory.getLogger(TaskController.class);
+public class JobController {
 
 	@Autowired
-	private ITaskService taskService;
-
-	@Autowired
-	private IExecuteStatisticService executeStatisticService;
+	private JobService jobService;
 
 	@PostMapping
 	@ApiOperation("新增调度任务")
 	public ServiceResult<String> addJob(@RequestBody Job job) throws DDCException {
-		
-		
-		
-		
-		
-		DdcTask task = new DdcTask();
-		task.setClassName(job.getTaskType());
-		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
-		// 统一使用 workflow 引擎
-		task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
-		task.setTaskType(Constants.TASK_TYPE_SUBTASK);
-		
-		taskService.createOrUpdateTask(task.getAppId(), task);
+		jobService.addJob(job);
 		return ServiceResult.success("success");
 	}
 
-	@RequestMapping(value = "taskTable", method = RequestMethod.POST)
-	@ResponseBody
-	public ServiceResult<PageData<DdcTask>> taskTable(DdcTask task, IDCPager page) {
-		return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
+	@PostMapping(value = "/query")
+	@ApiOperation("查询调度任务")
+	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQuery query, IDCPager page) {
+		return ServiceResult.failure("not supported yet");
+		//return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
 	}
 
-	@RequestMapping(value = "modifyTaskStatus", method = RequestMethod.POST)
-	@ResponseBody
-	public ServiceResult modifyTaskStatus(int appId, int taskId, boolean enable) {
-		ServiceResult result = new ServiceResult();
-		try {
-			if (enable) {
-				taskService.enableTask(appId, taskId);
-			} else {
-				taskService.disableTask(appId, taskId);
-			}
-		} catch (Exception e) {
-			logger.error("改变任务状态失败！", e);
-			result.setState(ServiceResult.STATE_APP_EXCEPTION);
-			result.setError(e.getMessage());
-		}
-		return result;
+	@RequestMapping(value = "/{id}/lock-status", method = RequestMethod.POST)
+	@ApiOperation("冻结/恢复 Job")
+	public ServiceResult<String> lock(int appId, int taskId, boolean enable) {
+		return ServiceResult.failure("not supported yet.");
 	}
 
-	@RequestMapping(value = "executeTask", method = RequestMethod.POST)
+	/*@RequestMapping(value = "executeTask", method = RequestMethod.POST)
 	@ResponseBody
 	public ServiceResult executeTask(int appId, int taskId) {
 
@@ -174,6 +136,6 @@ public class TaskController {
 	@ResponseBody
 	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, IDCPager page) {
 		return ServiceResult.success(taskService.taskUpdateHistoryTable(history, page));
-	}
+	}*/
 
 }
