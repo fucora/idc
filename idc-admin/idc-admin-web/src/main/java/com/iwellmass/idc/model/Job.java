@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 import io.swagger.annotations.ApiModelProperty;
 
 @Entity
-@Table(name = "t_idc_job")
+@Table(name = "t_idc_job")// DDC_TASK
 public class Job {
 
 	private Integer id;
@@ -27,6 +27,8 @@ public class Job {
 	private String taskId;
 
 	private String taskType;
+	
+	private JobType jobType;
 	
 	private ScheduleType scheduleType;
 
@@ -164,6 +166,17 @@ public class Job {
 		this.dependencies = dependencies;
 	}
 	
+	
+	@ApiModelProperty("依赖")
+	@Transient
+	public JobType getJobType() {
+		return jobType;
+	}
+
+	public void setJobType(JobType jobType) {
+		this.jobType = jobType;
+	}
+
 	public boolean hasDependencies() {
 		return ! (dependencies == null || dependencies.isEmpty());
 	}
