@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.dispatcher.admin.dao.IDCPager;
-import com.iwellmass.dispatcher.admin.web.vo.JobQuery;
-import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.service.JobService;
 
@@ -26,7 +24,7 @@ public class JobController {
 
 	@PostMapping
 	@ApiOperation("新增调度任务")
-	public ServiceResult<String> addJob(@RequestBody Job job) throws DDCException {
+	public ServiceResult<String> addJob(@RequestBody Job job){
 		jobService.addJob(job);
 		return ServiceResult.success("success");
 	}
