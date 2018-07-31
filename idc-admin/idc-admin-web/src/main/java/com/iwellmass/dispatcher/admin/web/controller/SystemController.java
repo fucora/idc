@@ -7,9 +7,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.service.IApplicationService;
 import com.iwellmass.dispatcher.admin.service.IPermissionService;
+import com.iwellmass.dispatcher.admin.service.domain.DataResult;
 
 
 /**
@@ -34,16 +34,16 @@ public class SystemController {
      */
     @RequestMapping("getLoginUser")
     @ResponseBody
-    public ServiceResult getLoginUser() {
-        ServiceResult result = new ServiceResult();
+    public DataResult getLoginUser() {
+        DataResult result = new DataResult();
         try {
-            result.setResult(applicationService.confirmUserInTable(1));
-            result.setResult(applicationService.listApplication(1));
-            result.setResult(permissionService.hasAdminPermission());
+            result.addAttribute("loginUser", applicationService.confirmUserInTable(1));
+            result.addAttribute("apps",applicationService.listApplication(1));
+            result.addAttribute("isAdmin",permissionService.hasAdminPermission());
         } catch (Exception e) {
             logger.error("获取登录用户的相关信息失败！", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }

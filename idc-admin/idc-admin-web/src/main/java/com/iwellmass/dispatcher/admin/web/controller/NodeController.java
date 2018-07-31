@@ -1,10 +1,11 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.IDCPager;
+import static com.iwellmass.dispatcher.admin.web.ResultAdapter.asTableDataResult;
+import com.iwellmass.dispatcher.admin.dao.Page;
 import com.iwellmass.dispatcher.admin.dao.model.DdcNode;
 import com.iwellmass.dispatcher.admin.service.INodeService;
+import com.iwellmass.dispatcher.admin.service.domain.DataResult;
+import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,17 @@ public class NodeController {
 
     @RequestMapping(value = "/queryAllNodeTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcNode>> queryAllNode(int appId, IDCPager page) {
+    public TableDataResult queryAllNode(int appId, Page page) {
 
-    	return ServiceResult.success(nodeService.queryAllNodeTable(appId, page));
+        TableDataResult result = new TableDataResult();
+        try {
+            result = asTableDataResult(nodeService.queryAllNodeTable(appId, page));
+        } catch (Exception e) {
+            logger.error("获取实例失败", e);
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
+        }
+        return result;
     }
 
     @RequestMapping(value = "/queryNodeByApp", method = RequestMethod.GET)
@@ -39,41 +48,41 @@ public class NodeController {
 
     @RequestMapping(value = "/modifyNodeStatus")
     @ResponseBody
-    public ServiceResult modifyNodeStatus(int appId, int id, int status) {
-        ServiceResult result = new ServiceResult();
+    public DataResult modifyNodeStatus(int appId, int id, int status) {
+        DataResult result = new DataResult();
         try {
             nodeService.modifyNodeStatus(appId, id, status);
         } catch (Exception e) {
             logger.error("改变实例状态失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }
 
     @RequestMapping(value = "getRencentActiveNode", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult getRencentActiveNode(int appId) {
-        ServiceResult result = new ServiceResult();
+    public DataResult getRencentActiveNode(int appId) {
+        DataResult result = new DataResult();
         try {
-            result.setResult(nodeService.getRencentActiveNode(appId));
+            result.addAttribute("node", nodeService.getRencentActiveNode(appId));
         } catch (Exception e) {
             logger.error("获取最近活动node失败！！！", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }
 
     @RequestMapping(value = "/deleteNode", method = RequestMethod.POST)
-    @ResponseBody public ServiceResult deleteNode(DdcNode node) {
-        ServiceResult result = new ServiceResult();
+    @ResponseBody public DataResult deleteNode(DdcNode node) {
+        DataResult result = new DataResult();
         try {
             nodeService.deleteNode(node.getAppId(),node.getId());
         } catch (Exception e) {
             logger.error("删除实例失败！！！", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }

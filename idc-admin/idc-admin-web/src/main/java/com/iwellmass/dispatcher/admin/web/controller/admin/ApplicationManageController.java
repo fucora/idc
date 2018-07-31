@@ -1,10 +1,12 @@
 package com.iwellmass.dispatcher.admin.web.controller.admin;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.IDCPager;
+import static com.iwellmass.dispatcher.admin.web.ResultAdapter.asTableDataResult;
+
+import com.iwellmass.dispatcher.admin.dao.Page;
 import com.iwellmass.dispatcher.admin.dao.model.DdcApplication;
 import com.iwellmass.dispatcher.admin.service.IApplicationService;
+import com.iwellmass.dispatcher.admin.service.domain.DataResult;
+import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +42,16 @@ public class ApplicationManageController {
      */
     @RequestMapping(value = "/listAppTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcApplication>> listAppTable(DdcApplication application,IDCPager page) {
-    	PageData<DdcApplication> listApplicationTable = applicationService.listApplicationTable(application,page);
-    	return ServiceResult.success(listApplicationTable);
+    public TableDataResult listAppTable(DdcApplication application,Page page) {
+        TableDataResult result = new TableDataResult();
+        try {
+            result = asTableDataResult(applicationService.listApplicationTable(application,page));
+        } catch (Exception e) {
+            logger.error("获取应用列表失败", e);
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
+        }
+        return result;
     }
 
     /**
@@ -53,14 +62,14 @@ public class ApplicationManageController {
      */
     @RequestMapping(value = "/joinApplication", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult joinApplication(int appId) {
-        ServiceResult result = new ServiceResult();
+    public DataResult joinApplication(int appId) {
+        DataResult result = new DataResult();
         try {
             applicationService.joinApplication(appId);
         } catch (Exception e) {
             logger.error("加入应用失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }
@@ -73,14 +82,14 @@ public class ApplicationManageController {
      */
     @RequestMapping(value = "/leaveApplication", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult leaveApplication(int appId) {
-        ServiceResult result = new ServiceResult();
+    public DataResult leaveApplication(int appId) {
+        DataResult result = new DataResult();
         try {
             applicationService.leaveApplication(appId);
         } catch (Exception e) {
             logger.error("加入应用失败", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }

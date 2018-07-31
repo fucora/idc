@@ -1,9 +1,9 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.common.util.PageData;
-import com.iwellmass.dispatcher.admin.dao.IDCPager;
+import static com.iwellmass.dispatcher.admin.web.ResultAdapter.asTableDataResult;
+import com.iwellmass.dispatcher.admin.dao.Page;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteStatus;
+import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 import com.iwellmass.dispatcher.admin.service.impl.TaskStatusService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class TaskStatusController {
 
     @RequestMapping(value = "taskStatusTable",method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcTaskExecuteStatus>> taskStatusTable(DdcTaskExecuteStatus status, IDCPager page) {
-        return ServiceResult.success(statusService.taskStatusTable(status, page));
+    public TableDataResult taskStatusTable(DdcTaskExecuteStatus status, Page page) {
+        return asTableDataResult(statusService.taskStatusTable(status, page));
     }
 }

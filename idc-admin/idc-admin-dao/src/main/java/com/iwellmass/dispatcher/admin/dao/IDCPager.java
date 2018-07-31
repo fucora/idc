@@ -10,7 +10,7 @@ import com.iwellmass.common.util.Pager;
  * @author pan.wei
  * @date 2011-12-1 上午11:36:12
  */
-public final class IDCPager extends Pager {
+public class IDCPager extends Pager {
 
 	public IDCPager() {}
 
