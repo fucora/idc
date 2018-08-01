@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.iwellmass.common.ServiceResult;
 import com.iwellmass.dispatcher.admin.service.IAlarmHistoryService;
 import com.iwellmass.dispatcher.admin.service.IExecuteStatisticService;
 import com.iwellmass.dispatcher.admin.service.INodeService;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
+import com.iwellmass.dispatcher.admin.service.domain.DataResult;
 
 import java.util.Calendar;
 
@@ -37,20 +37,20 @@ public class DashboardController {
     private IExecuteStatisticService executeStatisticService;
     @RequestMapping(value = "/dashboard", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult dashboard(int appId) {
-        ServiceResult result = new ServiceResult();
+    public DataResult dashboard(int appId) {
+        DataResult result = new DataResult();
         try {
-            result.setResult(nodeService.nodeInfo(appId));
-            result.setResult(taskService.taskInfo(appId));
-            result.setResult(alarmHistoryService.alarmHistoryInfo(appId));
+            result.addAttribute("node",nodeService.nodeInfo(appId));
+            result.addAttribute("task",taskService.taskInfo(appId));
+            result.addAttribute("alarm",alarmHistoryService.alarmHistoryInfo(appId));
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.DATE,-1);
             FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
-            result.setResult(executeStatisticService.aggregateByAppId(appId,dateFormat.format(cal)));
+            result.addAttribute("executeStatistic",executeStatisticService.aggregateByAppId(appId,dateFormat.format(cal)));
         } catch (Exception e) {
             logger.error("获取总览信息失败！！", e);
-            result.setState(ServiceResult.STATE_APP_EXCEPTION);
-            result.setError(e.getMessage());
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
         }
         return result;
     }

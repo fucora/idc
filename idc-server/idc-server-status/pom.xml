@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.iwellmass</groupId>
 		<artifactId>idc-server</artifactId>
-		<version>1.0.0</version>
+		<version>1.2.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>idc-server-dag</artifactId>
-			<version>1.0.0</version>
+			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>

@@ -1,10 +1,11 @@
 package com.iwellmass.dispatcher.admin.web.controller;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.common.util.PageData;
+import static com.iwellmass.dispatcher.admin.web.ResultAdapter.asTableDataResult;
 import com.iwellmass.dispatcher.admin.dao.model.DdcSubtaskExecuteHistoryEx;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteHistoryEx;
 import com.iwellmass.dispatcher.admin.service.ITaskExecuteHistory;
+import com.iwellmass.dispatcher.admin.service.domain.DataResult;
+import com.iwellmass.dispatcher.admin.service.domain.TableDataResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +28,39 @@ public class TaskHistoryController {
 
     @RequestMapping(value = "taskHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcTaskExecuteHistoryEx>> taskHistoryTable(@RequestBody DdcTaskExecuteHistoryEx history) {
-    	return ServiceResult.success(taskExecuteHistory.taskHistoryTable(history.getTask().getAppId(), history));
+    public TableDataResult taskHistoryTable(@RequestBody DdcTaskExecuteHistoryEx history) {
+
+//    	MethodInfo methodInfo = Monitor.methodStart("com.dmall.dispatcher.admin.web.controller.TaskHistoryController.taskHistoryTable");
+        TableDataResult result = new TableDataResult();
+        try {
+            result = asTableDataResult(taskExecuteHistory.taskHistoryTable(history.getTask().getAppId(), history));
+        } catch (Exception e) {
+            logger.error("获取任务执行历史列表数据失败！", e);
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
+//            Monitor.methodFail(methodInfo);
+        } finally {
+//        	Monitor.methodFinish(methodInfo);
+        }
+        return result;
     }
 
     @RequestMapping(value = "subTaskHistoryTable", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResult<PageData<DdcSubtaskExecuteHistoryEx>> subTaskHistoryTable(@RequestBody DdcSubtaskExecuteHistoryEx history) {
+    public TableDataResult subTaskHistoryTable(@RequestBody DdcSubtaskExecuteHistoryEx history) {
     	
-    	return ServiceResult.success(taskExecuteHistory.subTaskHistoryTable(history.getTask().getAppId(), history));
+//    	MethodInfo methodInfo = Monitor.methodStart("com.dmall.dispatcher.admin.web.controller.TaskHistoryController.subTaskHistoryTable");
+        TableDataResult result = new TableDataResult();
+        try {
+            result = asTableDataResult(taskExecuteHistory.subTaskHistoryTable(history.getTask().getAppId(), history));
+        } catch (Exception e) {
+            logger.error("获取子任务执行历史列表数据失败！", e);
+            result.setStatusCode(DataResult.STATUS_CODE.FAILURE);
+            result.setMsg(e.getMessage());
+//            Monitor.methodFail(methodInfo);
+        } finally {
+//        	Monitor.methodFinish(methodInfo);
+        }
+        return result;
     }
 }
