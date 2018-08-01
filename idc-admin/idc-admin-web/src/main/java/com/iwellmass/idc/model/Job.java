@@ -43,7 +43,9 @@ public class Job {
 	private Integer groupId;
 	
 	private Integer workflowId;
-	
+
+	private String assignee;
+
 	private Set<JobDependency> dependencies;
 	
 	@Id
@@ -193,4 +195,11 @@ public class Job {
 		return ! (dependencies == null || dependencies.isEmpty());
 	}
 
+	public String getAssignee() {
+		return assignee;
+	}
+
+	public void setAssignee(String assignee) {
+		this.assignee = assignee;
+	}
 }

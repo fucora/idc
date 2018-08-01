@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper" >
+    <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.Job" >
+        <id column="TASK_ID" property="id" jdbcType="INTEGER" />
+        <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
+        <result column="TASK_NAME" property="name" jdbcType="VARCHAR" />
+        <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+        <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
+        <result column="WORKFLOW_ID" property="groupId" jdbcType="INTEGER" />
+        <result column="CREATE_TIME" property="createTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+        TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME
+    </sql>
+    <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+        select
+        <include refid="Base_Column_List" />
+        from DDC_TASK
+        where TASK_ID = #{taskId,jdbcType=INTEGER}
+    </select>
+
+    <select id="findByTaskName" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from DDC_TASK
+        where TASK_NAME = #{taskName,jdbcType=VARCHAR}
+    </select>
+
+    <select id="findByTaskType" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from DDC_TASK
+        where CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+    </select>
+
+    <select id="findByOwner" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from DDC_TASK
+        where OWNER= #{owner,jdbcType=VARCHAR}
+    </select>
+
+    <select id="findTasksByCondition" resultMap="BaseResultMap" parameterType="com.iwellmass.idc.model.JobQuery">
+        select
+        <include refid="Base_Column_List" />
+        from DDC_TASK
+        <where>
+            <if test="job.name !=null and job.name != '' ">
+                and TASK_NAME = #{job.name,jdbcType=VARCHAR}
+            </if>
+            <if test="job.taskType !=null and job.taskType != ''">
+                and CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+            </if>
+            <if test="job.assignee !=null and job.assignee != ''">
+               and OWNER= #{job.assignee,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>
