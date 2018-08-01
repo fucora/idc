@@ -59,6 +59,7 @@ import com.iwellmass.dispatcher.thrift.bvo.TaskStatus;
 import com.iwellmass.dispatcher.thrift.model.CommandResult;
 import com.iwellmass.dispatcher.thrift.model.TaskEntity;
 import com.iwellmass.dispatcher.thrift.sdk.AgentService;
+import com.iwellmass.idc.lookup.SourceLookupManager;
 
 /**
  * 定时任务实现
@@ -210,6 +211,16 @@ public class DmallTask implements Job {
 				isContinue = true;
 			}
 			
+			// TODO 这里检查是否需要等待触发执行
+			if (isWaitable(ddcTask)) {
+				SourceLookupManager sourceLookupManager = SpringContext.getApplicationContext().getBean(SourceLookupManager.class);
+				if (!sourceLookupManager.isSourceReady(ddcTask.getTaskId())) {
+					// 更新DDC 任务为等待状态
+					insertDdcTaskExecuteStatus(TaskStatus.WAITING, "任务等待");
+					return;
+				}
+			}
+			
 			//是否允许并行执行
 			if(ddcTask.getConcurrency() != null && !ddcTask.getConcurrency()) {
 				DdcRunningTaskExample example = new DdcRunningTaskExample();
@@ -358,6 +369,10 @@ public class DmallTask implements Job {
 		} else {
 			ExceptionUtils.dealErrorInfo("任务的分配策略无效，任务编号：{%d}，分配策略：{%s}", taskId, strategyType);
 		}
+	}
+
+	private boolean isWaitable(DdcTask task) {
+		return true;
 	}
 
 	/**

@@ -30,6 +30,8 @@
 
 	<bean class="com.iwellmass.dispatcher.server.ServerStarter" />
 	
+	<bean class="com.iwellmass.dispatcher.server.SourceLookupManagerImpl" />
+	
 	<bean id="statusServerService" class="com.iwellmass.dispatcher.server.thrift.impl.StatusServerServiceImpl" />
 	
 	<bean id="thriftService" class="com.iwellmass.dispatcher.server.thrift.StatusThriftServer">

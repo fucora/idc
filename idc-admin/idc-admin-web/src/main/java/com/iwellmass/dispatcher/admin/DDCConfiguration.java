@@ -8,7 +8,4 @@ import org.springframework.context.annotation.Configuration;
 @MapperScan("com.iwellmass.dispatcher.admin.dao.mapper")
 @ComponentScan("com.iwellmass.dispatcher.admin")
 public class DDCConfiguration {
-
-	public static final int DEFAULT_APP = 3;
-	public static final String DEFAULT_APP_KEY = "default";
 }

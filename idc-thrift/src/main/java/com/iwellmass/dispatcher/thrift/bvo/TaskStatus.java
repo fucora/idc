@@ -1,6 +1,11 @@
 package com.iwellmass.dispatcher.thrift.bvo;
 
 public class TaskStatus {
+	
+	/**
+	 * 因为前置条件不满足而等待
+	 */
+	public final static String WAITING = "WAITING";
     
 	public final static String DISPATCHED = "DISPATCHED"; //客户端接收到任务
 	

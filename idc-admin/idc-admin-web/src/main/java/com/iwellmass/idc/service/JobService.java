@@ -13,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
+import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.Job;
@@ -33,8 +34,8 @@ public class JobService {
 		DdcTask task = new DdcTask();
 		
 		task.setTaskName(job.getName());
-		task.setAppId(DDCConfiguration.DEFAULT_APP);
-		task.setAppKey(DDCConfiguration.DEFAULT_APP_KEY);
+		task.setAppId(DDCContext.DEFAULT_APP);
+		task.setAppKey(DDCContext.DEFAULT_APP_KEY);
 		task.setClassName(classNameOfTaskType(job.getTaskType()));
 		task.setCreateTime(now);
 		task.setCreateUser("admin");
@@ -55,7 +56,7 @@ public class JobService {
 		task.setTaskType(Constants.TASK_TYPE_SUBTASK);
 		
 		try {
-			taskService.createOrUpdateTask(DDCConfiguration.DEFAULT_APP, task);
+			taskService.createOrUpdateTask(DDCContext.DEFAULT_APP, task);
 		} catch (DDCException e) {
 			LOGGER.error(e.getMessage(), e);
 		}

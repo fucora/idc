@@ -2,11 +2,13 @@ package com.iwellmass.idc.lookup;
 
 import org.junit.Test;
 
+import com.iwellmass.dispatcher.server.SourceLookupManagerImpl;
+
 public class SourceLookupManagerTest {
 
 	@Test
 	public void test() {
-		SourceLookupManager slm = new SourceLookupManager();
+		SourceLookupManagerImpl slm = new SourceLookupManagerImpl();
 		
 	}
 }
