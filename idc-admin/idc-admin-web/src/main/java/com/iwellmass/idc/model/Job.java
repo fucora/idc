@@ -42,6 +42,8 @@ public class Job {
 
 	private Integer groupId;
 	
+	private Integer workflowId;
+	
 	private Set<JobDependency> dependencies;
 	
 	@Id
@@ -146,14 +148,24 @@ public class Job {
 		this.createTime = createTime;
 	}
 	
-	@ApiModelProperty("所属组ID")
-	@Column(name = "createtime")
+	@ApiModelProperty("资源组")
+	@Column(name = "group_id")
 	public Integer getGroupId() {
 		return groupId;
 	}
 
 	public void setGroupId(Integer groupId) {
 		this.groupId = groupId;
+	}
+	
+	@Column(name = "workflow_id")
+	@ApiModelProperty("所属工作流 ID")
+	public Integer getWorkflowId() {
+		return workflowId;
+	}
+
+	public void setWorkflowId(Integer workflowId) {
+		this.workflowId = workflowId;
 	}
 
 	@ApiModelProperty("依赖")
