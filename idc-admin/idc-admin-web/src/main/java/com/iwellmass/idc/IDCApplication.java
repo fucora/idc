@@ -1,5 +1,6 @@
 package com.iwellmass.idc;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
@@ -13,6 +14,7 @@ import com.iwellmass.dispatcher.admin.DDCConfiguration;
 
 @SpringBootApplication
 @Import(DDCConfiguration.class)
+@MapperScan("com.iwellmass.idc.mapper")
 public class IDCApplication {
 
 	public static void main(String[] args) {

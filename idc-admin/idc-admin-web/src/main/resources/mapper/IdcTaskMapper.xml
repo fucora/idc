@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper" >
+<mapper namespace="com.iwellmass.idc.mapper.IdcTaskMapper" >
     <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.Job" >
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
         <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
@@ -42,7 +42,7 @@
         where OWNER= #{owner,jdbcType=VARCHAR}
     </select>
 
-    <select id="findTasksByCondition" resultMap="BaseResultMap" parameterType="com.iwellmass.idc.model.JobQuery">
+    <select id="findTasksByCondition" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List" />
         from DDC_TASK
@@ -57,6 +57,7 @@
                and OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
         </where>
+              limit #{pager.page},#{pager.limit}
     </select>
 
 
