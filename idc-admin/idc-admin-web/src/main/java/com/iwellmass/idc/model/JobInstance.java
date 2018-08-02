@@ -103,4 +103,17 @@ public class JobInstance {
 		this.endTime = endTime;
 	}
 
+	@Override
+	public String toString() {
+		return "JobInstance{" +
+				"id=" + id +
+				", jobId=" + jobId +
+				", jobName='" + jobName + '\'' +
+				", taskType='" + taskType + '\'' +
+				", assignee='" + assignee + '\'' +
+				", loadDate=" + loadDate +
+				", startTime=" + startTime +
+				", endTime=" + endTime +
+				'}';
+	}
 }

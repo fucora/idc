@@ -1,13 +1,68 @@
 package com.iwellmass.idc.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+
+import io.swagger.annotations.ApiModelProperty;
+
+import java.util.Date;
 
 /**
  * 任务预警
  */
-@Entity
-@Table(name = "t_idc_job_alarm")
+
 public class JobAlarm {
 
+    @ApiModelProperty("任务的Id")
+    private Integer taskId;
+
+    @ApiModelProperty("任务名")
+    private String taskName;
+
+    @ApiModelProperty("报警的原因")
+    private String cause;
+
+    @ApiModelProperty("创建者")
+    private String creator;
+
+    @ApiModelProperty("报警时间")
+    private Date alarmTime;
+
+    public Integer getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Integer taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
+    public String getCause() {
+        return cause;
+    }
+
+    public void setCause(String cause) {
+        this.cause = cause;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public Date getAlarmTime() {
+        return alarmTime;
+    }
+
+    public void setAlarmTime(Date alarmTime) {
+        this.alarmTime = alarmTime;
+    }
 }

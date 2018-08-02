@@ -11,5 +11,5 @@ public enum JobType {
 	CRON,
 	
 	@ApiModelProperty("手动任务")
-	MANUAL;
+	MANUAL
 }

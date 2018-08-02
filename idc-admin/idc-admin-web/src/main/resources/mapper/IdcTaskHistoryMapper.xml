@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iwellmass.idc.mapper.IdcTaskHistoryMapper" >
+    <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.JobInstance" >
+        <id column="EXECUTE_ID" property="id" jdbcType="BIGINT" />
+        <result column="TASK_ID" property="jobId" jdbcType="INTEGER" />
+        <result column="FIRE_TIME" property="loadDate" jdbcType="TIMESTAMP" />
+        <result column="START_TIME" property="startTime" jdbcType="TIMESTAMP" />
+        <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
+        <result column="TASK_NAME" property="jobName" jdbcType="VARCHAR" />
+        <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
+        <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+      EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER
+    </sql>
+    <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
+        select
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        from DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+        <where>
+            <if test="job.name !=null and job.name != '' ">
+                and T.TASK_NAME = #{job.name,jdbcType=VARCHAR}
+            </if>
+            <if test="job.taskType !=null and job.taskType != ''">
+                and T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+            </if>
+            <if test="job.assignee !=null and job.assignee != ''">
+                and T.OWNER= #{job.assignee,jdbcType=VARCHAR}
+            </if>
+        </where>
+        limit #{pager.page},#{pager.limit}
+    </select>
+</mapper>
