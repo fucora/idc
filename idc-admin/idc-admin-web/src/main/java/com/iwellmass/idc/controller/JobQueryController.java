@@ -30,4 +30,10 @@ public class JobQueryController {
         return ServiceResult.success(tasks);
     }
 
+    @ApiOperation("通过groupId查询上游任务")
+    @GetMapping(path = "/findTaskByGroupId")
+    public ServiceResult<List<Job>> findTaskByGroupId(Integer groupId){
+        List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(groupId);
+        return ServiceResult.success(taskByGroupId);
+    }
 }

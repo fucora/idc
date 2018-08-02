@@ -30,4 +30,9 @@ public class JobQueryService {
         return  new PageData(allTasks.size(),allTasks,tasks);
     }
 
+    public List<Job> findTaskByGroupId(Integer id){
+     List<Job> taskByGroupId = idcTaskMapper.findTaskByGroupId(id);
+     return taskByGroupId;
+    }
+
 }

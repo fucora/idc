@@ -4,8 +4,6 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.JobAlarm;
-import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobQuery;
 import com.iwellmass.idc.service.JobAlarmService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
