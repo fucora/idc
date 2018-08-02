@@ -7,9 +7,13 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.thrift.TException;
@@ -33,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.sql.visitor.functions.Now;
+import com.alibaba.druid.support.json.JSONUtils;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.JVMContext;
 import com.iwellmass.dispatcher.common.context.QuartzContext;
@@ -204,23 +209,26 @@ public class DmallTask implements Job {
 					ExceptionUtils.dealErrorInfo("生成执行批次号异常，错误信息：{%s}", e.getMessage());
 				}
 			}
+
+			DdcTaskExecuteHistory executeHistory = null;
+			
 			if(ddcTask.getTaskType() == Constants.TASK_TYPE_CRON || ddcTask.getTaskType() == Constants.TASK_TYPE_SIMPLE) { //定时任务或简单任务
-				createDdcTaskExecuteHistory(ddcTask);
+				executeHistory = createDdcTaskExecuteHistory(ddcTask);
 			} else if(ddcTask.getTaskType() == Constants.TASK_TYPE_SUBTASK) { //流程子任务
 				createDdcSubtaskExecuteHistory(ddcTask);
 			} else if(ddcTask.getTaskType() == Constants.TASK_TYPE_FLOW) { //流程任务
-				createDdcTaskExecuteHistory(ddcTask);
+				executeHistory = createDdcTaskExecuteHistory(ddcTask);
 				workflowExecuteId = executeId;
 				workflowId = ddcTask.getWorkflowId();
 				isContinue = true;
 			}
 			
 			// TODO 这里检查是否需要等待触发执行
-			if (isWaitable(ddcTask)) {
+			if (executeHistory != null && isWaitable(ddcTask)) {
 				EventDriveScheduler sourceLookupManager = SpringContext.getApplicationContext().getBean(EventDriveScheduler.class);
 				// 更新DDC 任务为等待状态
 				insertDdcTaskExecuteStatus(TaskStatus.WAITING, "任务等待");
-				LocalDateTime loadDate = LocalDateTime.now();
+				LocalDateTime loadDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(executeHistory.getShouldFireTime()), ZoneId.systemDefault());
 				sourceLookupManager.scheduleOnSourceReady(ddcTask.getTaskId(), loadDate);
 				return;
 			}
@@ -256,7 +264,7 @@ public class DmallTask implements Job {
 			//流程任务不需要派发
 			if(ddcTask.getTaskType() != Constants.TASK_TYPE_FLOW) { 
 				//派发任务
-				dispatchTask(ddcTask);
+				dispatchTask(ddcTask, LocalDateTime.ofInstant(Instant.ofEpochMilli(ddcTaskExecuteHistory.getShouldFireTime()), ZoneId.systemDefault()));
 			}
 		} catch(Exception e) {
 			logger.error("doTask出错，错误信息：{}", e);
@@ -304,10 +312,10 @@ public class DmallTask implements Job {
 	 * @param ddcTask
 	 * @throws JobExecutionException
 	 */
-	private void dispatchTask(DdcTask ddcTask) throws DDCException {
+	private void dispatchTask(DdcTask ddcTask, LocalDateTime loadDate) throws DDCException {
 		
 		String strategyType = "random";
-		TaskEntity taskEntity = createTaskEntity(ddcTask);
+		TaskEntity taskEntity = createTaskEntity(ddcTask, loadDate);
 		List<DdcNode> nodes = getAvailableNodes(ddcTask);
 		if(nodes==null || nodes.size()==0) {
 			DdcApplication ddcApplication = ddcApplicationMapper.selectByPrimaryKey(ddcTask.getAppId());
@@ -401,7 +409,7 @@ public class DmallTask implements Job {
 	 * @return
 	 * @throws JobExecutionException
 	 */
-	private void createDdcTaskExecuteHistory(DdcTask ddcTask) throws DDCException {
+	private DdcTaskExecuteHistory createDdcTaskExecuteHistory(DdcTask ddcTask) throws DDCException {
 		//记录操作历史
 		//验证当前编号的任务是否存在
 		if(executeId != null) {
@@ -418,8 +426,10 @@ public class DmallTask implements Job {
 				ddcTaskExecuteHistory.setDispatcherIp(JVMContext.getIp());
 				ddcTaskExecuteHistory.setDispatcherPort(JVMContext.getPort());
 				ddcTaskExecuteHistoryMapper.updateByPrimaryKey(ddcTaskExecuteHistory);
+				return ddcTaskExecuteHistory;
 			} else {
 				ExceptionUtils.dealErrorInfo("系统错误：未找到执行编号{%d}在DDC_TASK_EXECUTE_HISTORY中的记录！", executeId);
+				return null;
 			}
 		} else {
 			//生成执行历史记录
@@ -446,6 +456,7 @@ public class DmallTask implements Job {
 			ddcTaskExecuteHistory.setTimeoutRetryTimes(ddcTask.getTimeoutRetryTimes());
 			ddcTaskExecuteHistoryMapper.insertSelective(ddcTaskExecuteHistory);
 			executeId = ddcTaskExecuteHistory.getExecuteId();
+			return ddcTaskExecuteHistory;
 		}
 	}
 	
@@ -526,7 +537,8 @@ public class DmallTask implements Job {
 	 * @param ddcTask
 	 * @return
 	 */
-	private TaskEntity createTaskEntity(DdcTask ddcTask) {
+	@SuppressWarnings("unchecked")
+	private TaskEntity createTaskEntity(DdcTask ddcTask, LocalDateTime loadDate) {
 		//构造thrift传输对象
 		TaskEntity taskEntity = new TaskEntity();
 		taskEntity.setExecuteId(executeId);
@@ -545,6 +557,29 @@ public class DmallTask implements Job {
 		taskEntity.setThreadCount(ddcTask.getThreads());
 		taskEntity.setDispatchCount(ddcTaskExecuteHistory != null ? ddcTaskExecuteHistory.getDispatchCount() : ddcSubtaskExecuteHistory.getDispatchCount());
 		taskEntity.setFireTime(context.getScheduledFireTime().getTime());
+		// idc 参数设置
+		Map<String, Object> idcParameters = new HashMap<>();
+		if (taskEntity.getParameters() != null) {
+			try {
+				Map<String, Object> args = (Map<String, Object>) JSONUtils.parse(taskEntity.getParameters());
+				idcParameters.putAll(args);
+			} catch (Throwable e) {
+				logger.warn("解析任务参数时出错 jobId {}, batchId {}", ddcTask.getTaskId(), executeBatchId);
+			}
+		}
+		// 任务 ID
+		String checkJobId = String.valueOf(idcParameters.get("jobId"));
+		idcParameters.put("jobId", ddcTask.getTaskId());
+		if (!"null".equals(checkJobId)) {
+			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkJobId, ddcTask.getTaskId());
+		}
+		// 任务批次
+		String checkLoadDate = String.valueOf(idcParameters.get("jobId"));
+		idcParameters.put("loadDate", loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
+		if (!"null".equals(checkLoadDate)) {
+			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkLoadDate, idcParameters.get("loadDate"));
+		}
+		taskEntity.setParameters(JSONUtils.toJSONString(idcParameters));
 		return taskEntity;
 	}
 	
