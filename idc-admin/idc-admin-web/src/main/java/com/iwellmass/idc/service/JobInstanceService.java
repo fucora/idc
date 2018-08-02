@@ -1,5 +1,6 @@
 package com.iwellmass.idc.service;
 
+import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
 import com.iwellmass.idc.model.JobInstance;
@@ -15,11 +16,13 @@ public class JobInstanceService {
     @Inject
     private IdcTaskHistoryMapper idcTaskHistoryMapper;
 
-    public List<JobInstance> findTaskInstanceByCondition(JobQuery query, Pager pager){
+    public PageData<List<JobInstance>>findTaskInstanceByCondition(JobQuery query, Pager pager){
         Pager pager1=new Pager();
         pager1.setPage(pager.getTo());
         pager1.setLimit(pager.getLimit());
-        return idcTaskHistoryMapper.findTaskInstanceByCondition(query,pager1);
+        List<JobInstance> allTaskInstance = idcTaskHistoryMapper.findAllTaskInstanceByCondition(query);
+        List<JobInstance> taskInstance = idcTaskHistoryMapper.findTaskInstanceByCondition(query, pager1);
+        return new PageData(allTaskInstance.size(),allTaskInstance,taskInstance);
     }
 
 }

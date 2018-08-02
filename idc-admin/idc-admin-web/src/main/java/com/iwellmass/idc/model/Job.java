@@ -202,4 +202,25 @@ public class Job {
 	public void setAssignee(String assignee) {
 		this.assignee = assignee;
 	}
+
+	@Override
+	public String toString() {
+		return "Job{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", description='" + description + '\'' +
+				", taskId='" + taskId + '\'' +
+				", taskType='" + taskType + '\'' +
+				", jobType=" + jobType +
+				", scheduleType=" + scheduleType +
+				", scheduleProperties=" + scheduleProperties +
+				", startTime=" + startTime +
+				", endTime=" + endTime +
+				", createTime=" + createTime +
+				", groupId=" + groupId +
+				", workflowId=" + workflowId +
+				", assignee='" + assignee + '\'' +
+				", dependencies=" + dependencies +
+				'}';
+	}
 }

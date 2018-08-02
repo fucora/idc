@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iwellmass.idc.mapper.IdcJobAlarmMapper" >
+    <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.JobAlarm" >
+        <id column="ID" property="id" jdbcType="BIGINT" />
+        <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
+        <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
+        <result column="CONTENT" property="cause" jdbcType="VARCHAR" />
+        <result column="CREATE_USER" property="creator" jdbcType="VARCHAR" />
+        <result column="RECEIVERS" property="receivers" jdbcType="VARCHAR" />
+        <result column="ALARM_DATE" property="alarmTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+       ID,TASK_ID,TASK_NAME,CONTENT,CREATE_USER,ALARM_DATE,RECEIVERS
+    </sql>
+    <select id="findJobAlarmByCondition" resultMap="BaseResultMap">
+        SELECT
+              AH.ID,AH.TASK_ID,T.TASK_NAME,AH.CONTENT,UA.CREATE_USER,AH.ALARM_DATE
+        FROM DDC_ALARM_HISTORY AS AH JOIN DDC_TASK AS T ON AH.TASK_ID=T.TASK_ID JOIN DDC_USER_ALARM AS UA ON AH.TASK_ID=UA.TASK_ID
+        <where>
+            <if test="alarm.taskName !=null and alarm.taskName != '' ">
+                AND T.TASK_NAME = #{alarm.taskName,jdbcType=VARCHAR}
+            </if>
+            <if test="alarm.creator !=null and alarm.creator != ''">
+                AND UA.CREATE_USER = #{alarm.creator,jdbcType=VARCHAR}
+            </if>
+            <if test="alarm.receivers !=null and alarm.receivers != ''">
+                AND AH.RECEIVERS = #{alarm.receivers,jdbcType=VARCHAR}
+            </if>
+            <if test="alarm.alarmTime !=null and alarm.alarmTime != ''">
+                AND AH.ALARM_DATE= #{alarm.alarmTime,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+        limit #{pager.page},#{pager.limit}
+    </select>
+    <select id="findAllJobAlarmByCondition" resultMap="BaseResultMap">
+        SELECT
+              AH.ID,AH.TASK_ID,T.TASK_NAME,AH.CONTENT,UA.CREATE_USER,AH.ALARM_DATE
+        FROM DDC_ALARM_HISTORY AS AH JOIN DDC_TASK AS T ON AH.TASK_ID=T.TASK_ID JOIN DDC_USER_ALARM AS UA ON AH.TASK_ID=UA.TASK_ID
+        <where>
+            <if test="taskName !=null and taskName != '' ">
+                AND T.TASK_NAME = #{taskName,jdbcType=VARCHAR}
+            </if>
+            <if test="creator !=null and creator != ''">
+                AND UA.CREATE_USER = #{creator,jdbcType=VARCHAR}
+            </if>
+            <if test="receivers !=null and receivers != ''">
+                AND AH.RECEIVERS = #{receivers,jdbcType=VARCHAR}
+            </if>
+            <if test="alarmTime !=null and alarmTime != ''">
+                AND AH.ALARM_DATE= #{alarmTime,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

@@ -31,7 +31,7 @@ public class JobController {
 
 	@PostMapping(value = "/query")
 	@ApiOperation("查询调度任务")
-	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQuery query, IDCPager page) {
+	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQueryController query, IDCPager page) {
 		return ServiceResult.failure("not supported yet");
 		//return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
 	}

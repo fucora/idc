@@ -12,4 +12,5 @@ import java.util.List;
 @Mapper
 public interface IdcTaskMapper {
     List<Job> findTasksByCondition(@Param(value = "job") JobQuery job, @Param(value = "pager") Pager pager);
+    List<Job> findAllTasksByCondition(JobQuery job);
 }

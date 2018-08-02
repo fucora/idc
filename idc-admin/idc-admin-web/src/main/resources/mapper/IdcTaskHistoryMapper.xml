@@ -15,20 +15,36 @@
       EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER
     </sql>
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
-        select
+        SELECT
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
-        from DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+        FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.name !=null and job.name != '' ">
-                and T.TASK_NAME = #{job.name,jdbcType=VARCHAR}
+                AND T.TASK_NAME = #{job.name,jdbcType=VARCHAR}
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
-                and T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+                AND T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
-                and T.OWNER= #{job.assignee,jdbcType=VARCHAR}
+                AND T.OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
         </where>
         limit #{pager.page},#{pager.limit}
+    </select>
+    <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
+        SELECT
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+        <where>
+            <if test="name !=null and name != '' ">
+                AND T.TASK_NAME = #{name,jdbcType=VARCHAR}
+            </if>
+            <if test="taskType !=null and taskType != ''">
+                AND T.CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+            </if>
+            <if test="assignee !=null and assignee != ''">
+                AND T.OWNER= #{assignee,jdbcType=VARCHAR}
+            </if>
+        </where>
     </select>
 </mapper>

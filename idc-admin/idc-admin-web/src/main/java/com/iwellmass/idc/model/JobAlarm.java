@@ -10,6 +10,7 @@ import java.util.Date;
  */
 
 public class JobAlarm {
+    private Integer id;
 
     @ApiModelProperty("任务的Id")
     private Integer taskId;
@@ -20,11 +21,22 @@ public class JobAlarm {
     @ApiModelProperty("报警的原因")
     private String cause;
 
+    @ApiModelProperty("接收者")
+    private String receivers;
+
     @ApiModelProperty("创建者")
     private String creator;
 
     @ApiModelProperty("报警时间")
     private Date alarmTime;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public Integer getTaskId() {
         return taskId;
@@ -64,5 +76,26 @@ public class JobAlarm {
 
     public void setAlarmTime(Date alarmTime) {
         this.alarmTime = alarmTime;
+    }
+
+    public String getReceivers() {
+        return receivers;
+    }
+
+    public void setReceivers(String receivers) {
+        this.receivers = receivers;
+    }
+
+    @Override
+    public String toString() {
+        return "JobAlarm{" +
+                "id=" + id +
+                ", taskId=" + taskId +
+                ", taskName='" + taskName + '\'' +
+                ", cause='" + cause + '\'' +
+                ", receivers='" + receivers + '\'' +
+                ", creator='" + creator + '\'' +
+                ", alarmTime=" + alarmTime +
+                '}';
     }
 }

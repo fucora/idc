@@ -2,8 +2,9 @@ package com.dmall.dispatcher.admin.web;
 
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.IDCApplication;
+import com.iwellmass.idc.model.JobAlarm;
 import com.iwellmass.idc.model.JobQuery;
-import com.iwellmass.idc.service.JobQueryService;
+import com.iwellmass.idc.service.JobAlarmService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -15,20 +16,19 @@ import javax.inject.Inject;
 
 @SpringBootTest(classes = IDCApplication.class)
 @RunWith(SpringRunner.class)
-public class JobQueryServiceTest {
+public class IdcAlarmSetviceTest {
 
-    private final static Logger logger= LoggerFactory.getLogger(JobQueryServiceTest.class);
+    private final static Logger logger= LoggerFactory.getLogger(IdcAlarmSetviceTest.class);
 
     @Inject
-    private JobQueryService jobQueryService;
+    private JobAlarmService jobAlarmService;
 
     @Test
-    public void findTasksByCondition(){
-        JobQuery jobQuery=new JobQuery();
+    public void findJobAlarmByCondition(){
+        JobAlarm jobAlarm=new JobAlarm();
         Pager pager=new Pager();
-        pager.setPage(2);
+        pager.setPage(0);
         pager.setLimit(3);
-        logger.info("========={}",jobQueryService.findTasksByCondition(jobQuery,pager).getRawData().toString());
+        logger.info("========={}",jobAlarmService.findJobAlarmByCondition(jobAlarm,pager).getRawData().toString());
     }
-
 }

@@ -3,10 +3,7 @@ package com.iwellmass.idc.controller;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.JobQuery;
 import com.iwellmass.idc.service.JobInstanceService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
@@ -26,13 +23,13 @@ public class JobInstanceController {
 
     @ApiOperation("通过条件检索实例（分页显示）")
     @GetMapping("/findTaskInstanceByCondition")
-    public ServiceResult<List<JobInstance>> findTaskInstanceByCondition(JobQuery query,
+    public ServiceResult<PageData<List<JobInstance>>> findTaskInstanceByCondition(@RequestBody JobQuery query,
                                                   @RequestParam(name = "page", defaultValue = "1") int page,
-                                                  @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+                                                  @RequestParam(name = "pageSize", defaultValue = "10") int pageSize){
         Pager pager = new Pager();
         pager.setPage(page);
         pager.setLimit(pageSize);
-        List<JobInstance> taskInstance = jobInstanceService.findTaskInstanceByCondition(query, pager);
+        PageData<List<JobInstance>> taskInstance = jobInstanceService.findTaskInstanceByCondition(query, pager);
         return ServiceResult.success(taskInstance);
     }
 }

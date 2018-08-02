@@ -29,6 +29,6 @@ public class JobInstanceServiceTest {
         Pager pager=new Pager();
         pager.setPage(0);
         pager.setLimit(3);
-        logger.info("========={}",jobInstanceService.findTaskInstanceByCondition(jobQuery,pager));
+        logger.info("========={}",jobInstanceService.findTaskInstanceByCondition(jobQuery,pager).getRawData().toString());
     }
 }

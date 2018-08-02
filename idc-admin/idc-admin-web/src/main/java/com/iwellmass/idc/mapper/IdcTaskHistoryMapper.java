@@ -10,4 +10,5 @@ import java.util.List;
 @Mapper
 public interface IdcTaskHistoryMapper {
     List<JobInstance> findTaskInstanceByCondition(@Param(value = "job") JobQuery job, @Param(value = "pager") Pager pager);
+    List<JobInstance> findAllTaskInstanceByCondition(JobQuery job);
 }

@@ -15,49 +15,66 @@
         TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME
     </sql>
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-        select
+        SELECT
         <include refid="Base_Column_List" />
-        from DDC_TASK
-        where TASK_ID = #{taskId,jdbcType=INTEGER}
+        FROM DDC_TASK
+        WHERE TASK_ID = #{taskId,jdbcType=INTEGER}
     </select>
 
     <select id="findByTaskName" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        select
+        SELECT
         <include refid="Base_Column_List" />
-        from DDC_TASK
-        where TASK_NAME = #{taskName,jdbcType=VARCHAR}
+        FROM DDC_TASK
+        WHERE TASK_NAME = #{taskName,jdbcType=VARCHAR}
     </select>
 
     <select id="findByTaskType" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        select
+        SELECT
         <include refid="Base_Column_List" />
-        from DDC_TASK
-        where CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+        FROM DDC_TASK
+        WHERE CLASS_NAME = #{taskType,jdbcType=VARCHAR}
     </select>
 
     <select id="findByOwner" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        select
+        SELECT
         <include refid="Base_Column_List" />
-        from DDC_TASK
-        where OWNER= #{owner,jdbcType=VARCHAR}
+        FROM DDC_TASK
+        WHERE OWNER= #{owner,jdbcType=VARCHAR}
     </select>
 
     <select id="findTasksByCondition" resultMap="BaseResultMap">
-        select
+        SELECT
         <include refid="Base_Column_List" />
-        from DDC_TASK
+        FROM DDC_TASK
         <where>
             <if test="job.name !=null and job.name != '' ">
-                and TASK_NAME = #{job.name,jdbcType=VARCHAR}
+                AND TASK_NAME = #{job.name,jdbcType=VARCHAR}
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
-                and CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+                AND CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
-               and OWNER= #{job.assignee,jdbcType=VARCHAR}
+               AND OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
         </where>
               limit #{pager.page},#{pager.limit}
+    </select>
+
+    <select id="findAllTasksByCondition" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM DDC_TASK
+        <where>
+            <if test="name !=null and name != '' ">
+                AND TASK_NAME = #{name,jdbcType=VARCHAR}
+            </if>
+            <if test="taskType !=null and taskType != ''">
+                AND CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+            </if>
+            <if test="assignee !=null and assignee != ''">
+                AND OWNER= #{assignee,jdbcType=VARCHAR}
+            </if>
+        </where>
     </select>
 
 
