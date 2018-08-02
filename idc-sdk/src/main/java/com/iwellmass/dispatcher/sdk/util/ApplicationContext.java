@@ -1,11 +1,13 @@
 package com.iwellmass.dispatcher.sdk.util;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import com.iwellmass.dispatcher.sdk.service.ITaskService;
+import com.iwellmass.idc.lookup.SourceLookup;
 
 public class ApplicationContext {
 	
@@ -16,6 +18,8 @@ public class ApplicationContext {
 	private static String nodeCode = NetUtils.NODE_CODE;
 	
 	private static Map<String, ITaskService> taskMap;
+	
+	private static Map<String, SourceLookup> sourceLookupMap;
 	
 	private static String serverUrl = "ss.ddc.dmall.com";
 	
@@ -107,6 +111,17 @@ public class ApplicationContext {
 	 */
 	public static Collection<ExecutorService> getAllExecutorServices() {
 		return executorServiceMap.values();
+	}
+
+	public static Map<String, SourceLookup> getSourceLookupMap() {
+		if (sourceLookupMap == null) {
+			synchronized (ApplicationContext.class) {
+				if (sourceLookupMap == null) {
+					sourceLookupMap = new HashMap<>();
+				}
+			}
+		}
+		return sourceLookupMap;
 	}
 
 }

@@ -29,6 +29,7 @@ import com.iwellmass.dispatcher.thrift.model.NodeInfo;
 import com.iwellmass.dispatcher.thrift.model.ServerAddress;
 import com.iwellmass.dispatcher.thrift.sdk.AgentService;
 import com.iwellmass.dispatcher.thrift.server.StatusServerService;
+import com.iwellmass.idc.lookup.SourceLookup;
 
 /**
  * SDK Thrift服务类
@@ -86,6 +87,49 @@ public class AgentThriftService {
 		return server;
 	}
 	
+	/**
+	 * 注册执行器
+	 * 1. 获取当前状态服务器地址列表（随机列表）
+	 * 2. 轮询服务器地址进行注册，成功就返回
+	 * 3. 若所有服务器地址都注册失败，重新获取最新服务器地址重复步骤2
+	 * @param projectCode
+	 * @param modelCode
+	 * @param taskMap
+	 * @return
+	 */
+	public ExecutorRegisterResult registerSourceLookup(String appKey, Map<String, SourceLookup> taskMap) throws DDCException {
+		
+		//执行器对象
+		NodeInfo nodeInfo = new NodeInfo();
+		nodeInfo.setAppKey(appKey);
+		nodeInfo.setNodeCode(NetUtils.NODE_CODE);
+		nodeInfo.setPath(NetUtils.APPLICATION_PATH);
+		nodeInfo.setIp(NetUtils.CURRENT_HOST_IP);
+		nodeInfo.setPort(port);
+		Set<String> classNames = taskMap.keySet();
+		nodeInfo.setClassNames(StringUtils.join(classNames, ","));
+		nodeInfo.setOsName(System.getProperty("os.name"));
+		nodeInfo.setCoreSize(Runtime.getRuntime().availableProcessors());
+		nodeInfo.setVersion(Constants.SDK_VERSION);
+		
+		//状态服务器地址列表
+		List<ServerAddress> serverList = ServerAddressUtils.getServerList();
+		if(serverList == null || serverList.isEmpty()) {
+			log.error("DDC-注册任务执行客户端失败！最新状态服务器地址列表为空!");
+			throw new DDCException("DDC-注册任务执行客户端失败！最新状态服务器地址列表为空!");
+		}
+		ExecutorRegisterResult result = registerExecutorWithRetry(nodeInfo, serverList);
+		if(result == null || !result.isSucceed()) {
+			serverList = ServerAddressUtils.getLatestServerList();
+			if(serverList == null || serverList.isEmpty()) {
+				log.error("DDC-注册任务执行客户端失败！最新状态服务器地址列表为空!");
+				throw new DDCException("DDC-注册任务执行客户端失败！最新状态服务器地址列表为空!");
+			}
+			result = registerExecutorWithRetry(nodeInfo, serverList);
+		}
+		return result;
+		
+	}
 	/**
 	 * 注册执行器
 	 * 1. 获取当前状态服务器地址列表（随机列表）

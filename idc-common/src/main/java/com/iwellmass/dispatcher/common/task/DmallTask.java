@@ -4,6 +4,9 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +32,7 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.druid.sql.visitor.functions.Now;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.JVMContext;
 import com.iwellmass.dispatcher.common.context.QuartzContext;
@@ -59,7 +63,7 @@ import com.iwellmass.dispatcher.thrift.bvo.TaskStatus;
 import com.iwellmass.dispatcher.thrift.model.CommandResult;
 import com.iwellmass.dispatcher.thrift.model.TaskEntity;
 import com.iwellmass.dispatcher.thrift.sdk.AgentService;
-import com.iwellmass.idc.lookup.SourceLookupManager;
+import com.iwellmass.idc.lookup.EventDriveScheduler;
 
 /**
  * 定时任务实现
@@ -213,12 +217,12 @@ public class DmallTask implements Job {
 			
 			// TODO 这里检查是否需要等待触发执行
 			if (isWaitable(ddcTask)) {
-				SourceLookupManager sourceLookupManager = SpringContext.getApplicationContext().getBean(SourceLookupManager.class);
-				if (!sourceLookupManager.isSourceReady(ddcTask.getTaskId())) {
-					// 更新DDC 任务为等待状态
-					insertDdcTaskExecuteStatus(TaskStatus.WAITING, "任务等待");
-					return;
-				}
+				EventDriveScheduler sourceLookupManager = SpringContext.getApplicationContext().getBean(EventDriveScheduler.class);
+				// 更新DDC 任务为等待状态
+				insertDdcTaskExecuteStatus(TaskStatus.WAITING, "任务等待");
+				LocalDateTime loadDate = LocalDateTime.now();
+				sourceLookupManager.scheduleOnSourceReady(ddcTask.getTaskId(), loadDate);
+				return;
 			}
 			
 			//是否允许并行执行

@@ -68,6 +68,7 @@ import com.iwellmass.dispatcher.thrift.model.ServerAddress;
 import com.iwellmass.dispatcher.thrift.model.TaskEntity;
 import com.iwellmass.dispatcher.thrift.model.TaskStatusInfo;
 import com.iwellmass.dispatcher.thrift.server.StatusServerService;
+import com.iwellmass.idc.lookup.EventDriveScheduler;
 
 public class StatusServerServiceImpl implements StatusServerService.Iface {
 	
@@ -104,6 +105,8 @@ public class StatusServerServiceImpl implements StatusServerService.Iface {
 	@Autowired
 	private SchedulingEngine engine;
 	
+	@Autowired EventDriveScheduler manager;
+	
 	private volatile boolean serverIsRunning = true;
 	
 	private final static Logger logger = LoggerFactory.getLogger(StatusServerServiceImpl.class);
@@ -115,6 +118,32 @@ public class StatusServerServiceImpl implements StatusServerService.Iface {
 	public ExecutorRegisterResult registerExecutor(NodeInfo nodeInfo) throws TException {
 		
 		isServerRunning();
+		
+		if ("SourceLookup".equals(nodeInfo.getAppKey())) {
+			logger.info("注册数据发现执行器");
+			
+			// manager.register(nodeInfo.getClassNames(), sourceLookup);
+			DdcNode node = new DdcNode();
+			node.setNodeCode(nodeInfo.getNodeCode());
+			node.setNodePath(nodeInfo.getPath());
+			node.setClassNames(nodeInfo.getClassNames());
+			node.setLastStartTime(new Date()); //未设置heartbeat时间，SDK有一个正常的heartbeat之后调度中心再对其进行任务派发
+			node.setCpuCores(nodeInfo.getCoreSize());
+			node.setOsName(nodeInfo.getOsName());
+			node.setSdkVersion(nodeInfo.getVersion()); //更新SDK版本信息
+			
+			node.setAppId(1234567);
+			node.setNodeIp(nodeInfo.getIp());
+			node.setNodePort(nodeInfo.getPort());
+			node.setNodeStatus(Constants.ENABLED); //启用
+			
+			manager.register(node);
+			
+			ExecutorRegisterResult result = new ExecutorRegisterResult();
+			result.setSucceed(true);
+			result.setAppId(1234567);
+			return result;
+		}
 		
 		ExecutorRegisterResult result = new ExecutorRegisterResult();
 		try {

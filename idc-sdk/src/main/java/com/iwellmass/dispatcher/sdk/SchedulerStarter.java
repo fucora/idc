@@ -27,6 +27,7 @@ import com.iwellmass.dispatcher.sdk.util.StringUtils;
 import com.iwellmass.dispatcher.sdk.util.TaskThreadFactory;
 import com.iwellmass.dispatcher.thrift.model.ExecutorRegisterResult;
 import com.iwellmass.dispatcher.thrift.sdk.AgentService;
+import com.iwellmass.idc.lookup.SourceLookup;
 
 public class SchedulerStarter {
 
@@ -49,6 +50,11 @@ public class SchedulerStarter {
 		ApplicationContext.setAppkey(appKey);
 		ApplicationContext.setTaskMap(taskMap);
 		ApplicationContext.setServerUrl(serverUrl);
+	}
+	
+	public SchedulerStarter withSourceLookup(String className, SourceLookup lookup) {
+		ApplicationContext.getSourceLookupMap().put(className, lookup);
+		return this;
 	}
 
 	/**
@@ -96,6 +102,15 @@ public class SchedulerStarter {
 		if(result==null || !result.isSucceed()) {
 			log.error("DDC-注册任务执行客户端失败！appKey={}, 错误信息：{}", appKey, result==null?null:result.getMessage());
 			throw new DDCException("DDC-注册任务执行客户端失败！appKey={%s}, 错误信息：{%s}", appKey, result==null?null:result.getMessage());
+		}
+		// 注册当前 SourceLookup，复用上面逻辑
+		Map<String, SourceLookup> sourceLookupMap = ApplicationContext.getSourceLookupMap();
+		if (!(sourceLookupMap == null || sourceLookupMap.isEmpty())) {
+			ExecutorRegisterResult sourceLookupResult = agentThriftService.registerSourceLookup("SourceLookup", sourceLookupMap);
+			if(sourceLookupResult==null || !sourceLookupResult.isSucceed()) {
+				log.error("DDC-注册数据发现客户端失败！appKey={}, 错误信息：{}", appKey, result==null?null:result.getMessage());
+				throw new DDCException("DDC-注册数据发现执行客户端失败！appKey={%s}, 错误信息：{%s}", appKey, result==null?null:result.getMessage());
+			}
 		}
 		ApplicationContext.setAppId(result.getAppId());
 

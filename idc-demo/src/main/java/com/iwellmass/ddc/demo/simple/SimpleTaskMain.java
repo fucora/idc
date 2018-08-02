@@ -1,5 +1,8 @@
 package com.iwellmass.ddc.demo.simple;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -7,13 +10,25 @@ import com.google.common.collect.Sets;
 import com.iwellmass.dispatcher.sdk.SchedulerStarter;
 import com.iwellmass.dispatcher.sdk.model.DDCException;
 import com.iwellmass.dispatcher.sdk.service.ITaskService;
+import com.iwellmass.idc.lookup.SourceLookup;
 
 public class SimpleTaskMain {
 
 	public static void main(String[] args) {
 		Set<ITaskService> tasks = Sets.newHashSet();
 		tasks.add(new SimpleTask());
-		SchedulerStarter starter = new SchedulerStarter("651fa1182b674cc0ac31142b4d1f7800", tasks, "127.0.0.1");
+		SchedulerStarter starter = new SchedulerStarter("default", tasks, "127.0.0.1");
+		
+		
+		SourceLookup lookup = new SourceLookup() {
+			public boolean lookup(String jobId, LocalDateTime loadDate) {
+				System.out.println("检查到了");
+				return false;
+			}
+		};
+		
+		starter.withSourceLookup("com.iwellmass.datafactory.job.DataProcessJob", lookup);
+		
 		try {
 			starter.start();
 			
