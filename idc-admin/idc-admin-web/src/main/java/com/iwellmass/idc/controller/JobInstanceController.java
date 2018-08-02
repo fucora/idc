@@ -24,7 +24,7 @@ public class JobInstanceController {
     @ApiOperation("通过条件检索实例（分页显示）")
     @GetMapping("/findTaskInstanceByCondition")
     public ServiceResult<PageData<List<JobInstance>>> findTaskInstanceByCondition(@RequestBody JobQuery query,
-                                                  @RequestParam(name = "page", defaultValue = "1") int page,
+                                                  @RequestParam(name = "page", defaultValue = "0") int page,
                                                   @RequestParam(name = "pageSize", defaultValue = "10") int pageSize){
         Pager pager = new Pager();
         pager.setPage(page);
