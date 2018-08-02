@@ -1,14 +1,19 @@
 package com.iwellmass.dispatcher.server;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TSocket;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -17,128 +22,236 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.SpringContext;
 import com.iwellmass.dispatcher.common.dao.DdcTaskMapper;
 import com.iwellmass.dispatcher.common.dao.DdcTaskUpdateHistoryMapper;
+import com.iwellmass.dispatcher.common.model.DdcNode;
 import com.iwellmass.dispatcher.common.model.DdcTask;
 import com.iwellmass.dispatcher.common.model.DdcTaskExample;
 import com.iwellmass.dispatcher.common.model.DdcTaskUpdateHistory;
-import com.iwellmass.idc.lookup.LookupContextImpl;
+import com.iwellmass.dispatcher.thrift.model.CommandResult;
+import com.iwellmass.dispatcher.thrift.model.TaskEntity;
+import com.iwellmass.dispatcher.thrift.sdk.AgentService;
+import com.iwellmass.idc.lookup.EventDriveScheduler;
 import com.iwellmass.idc.lookup.SourceEvent;
 import com.iwellmass.idc.lookup.SourceLookup;
-import com.iwellmass.idc.lookup.SourceLookupManager;
 
-public class SourceLookupManagerImpl implements SourceLookupManager{
+public class SourceLookupManagerImpl implements EventDriveScheduler {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SourceLookupManagerImpl.class);
 
 	private ScheduledExecutorService schExecutor = Executors.newSingleThreadScheduledExecutor();
+
+	public Map<String, SourceLookup> lookupMap = new HashMap<>();
 	
-	
-	public void start() {
-		
-		
-		
-	}
-
-	public void schedule(SourceLookup sourceLookup) {
-		LookupTask task = new LookupTask();
-		task.lookup = sourceLookup;
-		schedule0(task);
-	}
-	
-	private void schedule0(LookupTask task) {
-		schExecutor.schedule(task, task.lookup.getInterval(), TimeUnit.MILLISECONDS);
-	}
-
-	class LookupTask implements Runnable {
-
-		private SourceLookup lookup;
-
-		@Override
-		public void run() {
-			// 停止检测
-			if( lookup.isHalt()) {
-				LOGGER.info("停止检测进程 {} ", lookup);
-			}
-			try {
-				
-				LookupContextImpl ctx = new LookupContextImpl();
-				
-				// TODO 初始化 context
-				lookup.lookup(ctx);
-				SourceEvent event = null;
-				fireSourceEvent(event);
-			} catch (Throwable e) {
-				LOGGER.error("检测失败, ERROR: {}", e.getMessage(), e);
-			} finally {
-				if (!lookup.isHalt()) {
-					schedule0(this);
-				}
-			}
+	@Override
+	public void register(DdcNode node) {
+		LOGGER.info("注册 SourceLookup {}", node);
+		for ( String className : node.getClassNames().split(",")) {
+			SourceLookupRPC lookup = new SourceLookupRPC();
+			lookup.node = node;
+			lookup.taskClassName = className;
+			lookupMap.put(className, lookup);
 		}
 	}
 
 	@Override
-	public boolean isSourceReady(int checkTaskId) {
-		return false;
+	public void scheduleOnSourceReady(Integer jobId, LocalDateTime loadDate) {
+		DdcTaskMapper mapper = SpringContext.getApplicationContext().getBean(DdcTaskMapper.class);
+		DdcTask ddcTask = mapper.selectByPrimaryKey(jobId);
+		LookupTask task = new LookupTask();
+		task.jobId = jobId + "";
+		task.loadDate = loadDate;
+		task.ddcTask = ddcTask;
+		// 循环调度，给个延时让事务提交 
+		schExecutor.schedule(() -> {
+			schedule0(task);
+		}, 1000 * 10, TimeUnit.MILLISECONDS);
 	}
 
+	private void schedule0(LookupTask task) {
+		boolean fired = false;
+		try {
+			// A: 跨周期依赖 和  B:数据源依赖都要满足才能执行
+			// TODO check A
+			if ("前至周期任务还在等待".isEmpty()) {
+				fired = false;
+			} 
+			// check B
+			else {
+				
+			}
+		} catch (Throwable e) {
+			LOGGER.info("服务不可用，返回 false");
+		} finally {
+			if (!fired) {
+				schExecutor.schedule(task, task.getInterval(), TimeUnit.MILLISECONDS);
+			}
+		}
+	}
+	
+
 	public void fireSourceEvent(SourceEvent event) {
-		
 		ApplicationContext ctx = SpringContext.getApplicationContext();
-		
 		Scheduler scheduler = ctx.getBean(Scheduler.class);
 		DdcTaskUpdateHistoryMapper taskUpdateMapper = ctx.getBean(DdcTaskUpdateHistoryMapper.class);
 
 		int taskId = Integer.parseInt(event.getJobId());
-		
-        DdcTask task = selectByTaskIdAndAppId(DDCContext.DEFAULT_APP, taskId);
 
-        JobDataMap map = new JobDataMap();
-        JobKey jobKey = buildJobKey(task);
-        map.put("triggerType", Constants.TASK_EXECUTE_TYPE_MANUAL);
-        map.put("user", "admin");
+		DdcTask task = selectByTaskIdAndAppId(DDCContext.DEFAULT_APP, taskId);
 
-        try {
-            scheduler.triggerJob(jobKey, map);
-        } catch (SchedulerException e) {
-            LOGGER.error("任务失败，任务名称{}，错误信息{}", task.getTaskName(), e);
-        }
-        
-        try{
-        	DdcTaskUpdateHistory record = new DdcTaskUpdateHistory();
-            String user = "admin";
-        	record.setTaskId(taskId);
-        	record.setUpdateUser(user);
-        	record.setUpdateTime(new Date());
-        	record.setUpdateDetail(String.format("{%s} 执行任务！", "SourceLookup"));
-        	taskUpdateMapper.insertSelective(record);
-        } catch(Throwable e) {
-        	LOGGER.error("插入任务执行记录失败，错误信息：{}", e);
-        }
+		JobDataMap map = new JobDataMap();
+		JobKey jobKey = buildJobKey(task);
+		map.put("triggerType", Constants.TASK_EXECUTE_TYPE_MANUAL);
+		map.put("user", "admin");
+
+		try {
+			scheduler.triggerJob(jobKey, map);
+			DdcTaskUpdateHistory record = new DdcTaskUpdateHistory();
+			String user = "admin";
+			record.setTaskId(taskId);
+			record.setUpdateUser(user);
+			record.setUpdateTime(new Date());
+			record.setUpdateDetail(String.format("{%s} 执行任务！", "SourceLookup"));
+			taskUpdateMapper.insertSelective(record);
+		} catch (SchedulerException e) {
+			LOGGER.error("任务失败，任务名称{}，错误信息{}", task.getTaskName(), e);
+		} catch (Throwable e) {
+			LOGGER.error("插入任务执行记录失败，错误信息：{}", e);
+		}
+	}
+
+	private JobKey buildJobKey(DdcTask task) {
+
+		JobKey jobKey = new JobKey(Constants.JOB_PREFIX + task.getTaskId(), task.getAppKey());
+		return jobKey;
+	}
+
+	private DdcTask selectByTaskIdAndAppId(int appId, int taskId) {
+
+		DdcTaskMapper taskMapper = SpringContext.getApplicationContext().getBean(DdcTaskMapper.class);
+
+		DdcTaskExample taskExample = new DdcTaskExample();
+		DdcTaskExample.Criteria taskCriteria = taskExample.createCriteria();
+		taskCriteria.andAppIdEqualTo(appId);
+		taskCriteria.andTaskIdEqualTo(taskId);
+		List<DdcTask> ddcTaskList = taskMapper.selectByExample(taskExample);
+		if (ddcTaskList == null || ddcTaskList.size() != 1) {
+			throw new RuntimeException("查询task数据异常");
+		}
+		return ddcTaskList.get(0);
+	}
+
+	class LookupTask implements Runnable {
+
+		private DdcTask ddcTask;
+		private String jobId;
+		private LocalDateTime loadDate;
+
+		@Override
+		public void run() {
+			if (this.isHalt()) {
+				LOGGER.info("停止检测: {}", ddcTask.getClassName());
+				return;
+			}
+			try {
+				SourceLookup lookup = lookupMap.get(ddcTask.getClassName());
+				// 停止检测
+				if (lookup != null) {
+					boolean test = lookup.lookup(jobId, loadDate);
+					if (test) {
+						SourceEvent event = new SourceEvent();
+						event.setJobId(jobId);
+						event.setLoadDate(loadDate);
+						fireSourceEvent(event);
+					}
+				}
+			} catch (Throwable e) {
+				LOGGER.error("检测失败, ERROR: {}", e.getMessage(), e);
+			} finally {
+				if (!this.isHalt()) {
+					schedule0(this);
+				}
+			}
+		}
+
+		public long getInterval() {
+			return 5000;
+		}
+
+		public boolean isHalt() {
+			return false;
+		}
 	}
 	
+	class SourceLookupRPC implements SourceLookup {
+		
+		private DdcNode node;
+		private String taskClassName;
 
-    private JobKey buildJobKey(DdcTask task) {
+		@Override
+		public boolean lookup(String jobId, LocalDateTime loadDate) {
+			
+			JSONObject jo = new JSONObject();
+			jo.put("jobId", jobId);
+			jo.put("loadDate", loadDate.format(DateTimeFormatter.ISO_DATE_TIME));
+			
+			TaskEntity taskEntity = new TaskEntity();
+			// public int appId; // required
+			taskEntity.setAppId(1234567);
+			// public String className; // required
+			taskEntity.setClassName(taskClassName);
+			// public int taskId; // required
+			taskEntity.setTaskId(Integer.parseInt(jobId));
+			// public long executeId; // required
+			taskEntity.setExecuteId(1L);
+			// public int dispatchCount; // required
+			taskEntity.setDispatchCount(1);
+			// public String executeBatchId; // required
+			taskEntity.setExecuteBatchId(loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
+			// public int threadCount; // required
+			taskEntity.setThreadCount(1);
+			// public boolean needRetry; // required
+			taskEntity.setNeedRetry(false);
+			taskEntity.setParameters(jo.toJSONString());
+			
+			try (TFramedTransport transport = new TFramedTransport(new TSocket(node.getNodeIp(), node.getNodePort(), Constants.TIME_OUT));) {
+				TProtocol protocol = new TBinaryProtocol(transport);
+				transport.open();
+				AgentService.Client client = new AgentService.Client(protocol);
+				// 每次派发更新派发时间
 
-        JobKey jobKey = new JobKey(Constants.JOB_PREFIX + task.getTaskId(), task.getAppKey());
-        return jobKey;
-    }
-    private DdcTask selectByTaskIdAndAppId(int appId, int taskId) {
-    	
-    	DdcTaskMapper taskMapper = SpringContext.getApplicationContext().getBean(DdcTaskMapper.class);
-    	
-        DdcTaskExample taskExample = new DdcTaskExample();
-        DdcTaskExample.Criteria taskCriteria = taskExample.createCriteria();
-        taskCriteria.andAppIdEqualTo(appId);
-        taskCriteria.andTaskIdEqualTo(taskId);
-        List<DdcTask> ddcTaskList = taskMapper.selectByExample(taskExample);
-        if (ddcTaskList == null || ddcTaskList.size() != 1) {
-            throw new RuntimeException("查询task数据异常");
-        }
-        return ddcTaskList.get(0);
-    }
+				CommandResult result = client.executeTask(taskEntity);
+				if (result.succeed) {
+					LOGGER.debug("执行成功");
+					String flag = result.getMessage().trim();
+					return Boolean.parseBoolean(flag);
+				}
+			} catch (Exception e) {
+				LOGGER.error("RPC Exceptoion, but what ever :)");
+			}
+			return false;
+		}
+	}
+	
+	/**
+	 * 记录任务历史
+	 * @param status
+	 * @param message
+	 */
+	private void insertDdcTaskExecuteStatus(String status, String message) {
+		/*DdcTaskExecuteStatus ddcTaskExecuteStatus = new DdcTaskExecuteStatus();
+		ddcTaskExecuteStatus.setTaskId(taskId);
+		ddcTaskExecuteStatus.setExecuteId(executeId);
+		ddcTaskExecuteStatus.setExecuteBatchId(executeBatchId);
+		ddcTaskExecuteStatus.setWorkflowId(ddcTaskExecuteHistory != null ? ddcTaskExecuteHistory.getWorkflowId() : ddcSubtaskExecuteHistory.getWorkflowId());
+		ddcTaskExecuteStatus.setWorkflowExecuteId(workflowExecuteId);
+		ddcTaskExecuteStatus.setStatus(status);
+		ddcTaskExecuteStatus.setMessage(message);
+		ddcTaskExecuteStatus.setTimestamp(new Date());
+		ddcTaskExecuteStatusMapper.insertSelective(ddcTaskExecuteStatus);*/
+	}
 }

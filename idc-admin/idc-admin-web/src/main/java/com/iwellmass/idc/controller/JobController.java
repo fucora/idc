@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
+import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.dao.IDCPager;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.service.JobService;
@@ -31,7 +32,12 @@ public class JobController {
 
 	@PostMapping(value = "/query")
 	@ApiOperation("查询调度任务")
-	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQuery query, IDCPager page) {
+	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQuery query, Pager page) {
+		
+		
+		
+		
+		
 		return ServiceResult.failure("not supported yet");
 		//return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
 	}
@@ -40,6 +46,10 @@ public class JobController {
 	@ApiOperation("冻结/恢复 Job")
 	public ServiceResult<String> lock(int appId, int taskId, boolean enable) {
 		return ServiceResult.failure("not supported yet.");
+	}
+	
+	public void test() {
+		
 	}
 
 	/*@RequestMapping(value = "executeTask", method = RequestMethod.POST)
