@@ -1,8 +1,10 @@
 package com.iwellmass.idc.service;
 
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
+import com.iwellmass.idc.mapper.JobInstanceMapper;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobQuery;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,17 @@ public class JobInstanceService {
 
     @Inject
     private IdcTaskHistoryMapper idcTaskHistoryMapper;
+    
+    @Inject
+    private JobInstanceMapper jobInstanceMapper;
+    
+    public JobInstance save(JobInstance instance){
+        int insert = jobInstanceMapper.insert(instance);
+        if(0==insert||-1==insert){
+            throw new AppException("保存失败");
+        }
+        return instance;
+    }
 
     public PageData<List<JobInstance>>findTaskInstanceByCondition(JobQuery query, Pager pager){
         Pager pager1=new Pager();

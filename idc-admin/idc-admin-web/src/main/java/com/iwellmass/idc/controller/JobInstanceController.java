@@ -21,6 +21,13 @@ public class JobInstanceController {
     @Inject
     private JobInstanceService jobInstanceService;
 
+    @ApiOperation("补数")
+    @PostMapping("/complement")
+    public ServiceResult save(@RequestBody JobInstance instance){
+        JobInstance jobInstance = jobInstanceService.save(instance);
+        return ServiceResult.success(jobInstance);
+    }
+
     @ApiOperation("通过条件检索实例（分页显示）")
     @PostMapping("/findTaskInstanceByCondition")
     public ServiceResult<PageData<List<JobInstance>>> findTaskInstanceByCondition(@RequestBody JobQuery query,
