@@ -2,7 +2,7 @@ stages:
   - maven-build
 
 variables:
-  data_factory_latest: data-factory:latest
+  idc_latest: idc:latest
 
 dev maven package build:
   stage: maven-build

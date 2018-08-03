@@ -1,15 +1,15 @@
 version: '3'
 services:
-  sys-server:
-    image: $data_factory_latest
-    container_name: data-factory
+  idc-server:
+    image: $idc_latest
+    container_name: idc
     build:
       context: .
       args:
         - profile=dev
     network_mode: "host"
     ports:
-      - "9304:9304"
+      - "9306:9306"
     environment:
       - profile=dev
     volumes:

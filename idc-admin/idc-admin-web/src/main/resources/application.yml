@@ -30,6 +30,9 @@ security:
            -----END PUBLIC KEY-----
         id: openid
         serviceId: ${PREFIX:}resource
+  user:
+    password: password
+  ignored: /css/**,/images/**,/js/**,/favicon.ico,/webjars/**,/static/**,*.html,/swagger-resources/**,/v2/api-docs,*.json
 
 feign:
   hystirx:
@@ -50,6 +53,9 @@ mybatis:
   configuration:
     default-fetch-size: 100
     default-statement-timeout: 30
+---
+spring:
+  profiles: dev
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 1
@@ -63,4 +69,3 @@ eureka:
       enabled: true
     lease:
       duration: 5
-
