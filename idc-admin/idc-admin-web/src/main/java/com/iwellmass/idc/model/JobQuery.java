@@ -50,15 +50,15 @@ public class JobQuery {
         return loadTime;
     }
 
+    public void setLoadTime(Timestamp loadTime) {
+        this.loadTime = loadTime;
+    }
 
-    @Override
-    public String toString() {
-        return "JobQuery{" +
-                "name='" + name + '\'' +
-                ", taskType='" + taskType + '\'' +
-                ", assignee='" + assignee + '\'' +
-                ", loadTime=" + loadTime +
-                ", excuteTime=" + excuteTime +
-                '}';
+    public Timestamp getExcuteTime() {
+        return excuteTime;
+    }
+
+    public void setExcuteTime(Timestamp excuteTime) {
+        this.excuteTime = excuteTime;
     }
 }
