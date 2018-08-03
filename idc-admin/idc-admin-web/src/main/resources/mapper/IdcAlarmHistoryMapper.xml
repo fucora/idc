@@ -19,7 +19,7 @@
         FROM DDC_ALARM_HISTORY AS AH JOIN DDC_TASK AS T ON AH.TASK_ID=T.TASK_ID JOIN DDC_USER_ALARM AS UA ON AH.TASK_ID=UA.TASK_ID
         <where>
             <if test="alarm.taskName !=null and alarm.taskName != '' ">
-                AND T.TASK_NAME = #{alarm.taskName,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{alarm.taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="alarm.creator !=null and alarm.creator != ''">
                 AND UA.CREATE_USER = #{alarm.creator,jdbcType=VARCHAR}
@@ -39,7 +39,7 @@
         FROM DDC_ALARM_HISTORY AS AH JOIN DDC_TASK AS T ON AH.TASK_ID=T.TASK_ID JOIN DDC_USER_ALARM AS UA ON AH.TASK_ID=UA.TASK_ID
         <where>
             <if test="taskName !=null and taskName != '' ">
-                AND T.TASK_NAME = #{taskName,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="creator !=null and creator != ''">
                 AND UA.CREATE_USER = #{creator,jdbcType=VARCHAR}

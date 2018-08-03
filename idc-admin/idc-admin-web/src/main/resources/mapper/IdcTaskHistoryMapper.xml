@@ -28,7 +28,7 @@
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.name !=null and job.name != '' ">
-                AND T.TASK_NAME = #{job.name,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
                 AND T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
@@ -51,7 +51,7 @@
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="name !=null and name != '' ">
-                AND T.TASK_NAME = #{name,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="taskType !=null and taskType != ''">
                 AND T.CLASS_NAME = #{taskType,jdbcType=VARCHAR}
