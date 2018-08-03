@@ -78,7 +78,7 @@ public class JobInstance {
 		this.assignee = assignee;
 	}
 
-	@ApiModelProperty("责任人")
+	@ApiModelProperty("业务时间")
 	public Timestamp getLoadDate() {
 		return loadDate;
 	}
