@@ -20,7 +20,7 @@ public class JobQueryController {
 
     @ApiOperation("通过条件检索任务（分页显示）")
     @GetMapping(path = "/findTasksByCondition")
-    public ServiceResult<PageData<List<Job>>> findTasksByCondition(@RequestBody JobQuery query,
+    public ServiceResult<PageData<List<Job>>> findTasksByCondition(JobQuery query,
                                          @RequestParam(name = "page",defaultValue = "0") int page,
                                          @RequestParam(name = "pageSize",defaultValue = "10") int pageSize){
         Pager pager=new Pager();
