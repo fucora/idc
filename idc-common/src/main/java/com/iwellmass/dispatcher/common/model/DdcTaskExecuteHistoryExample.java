@@ -533,6 +533,66 @@ public class DdcTaskExecuteHistoryExample {
 			return (Criteria) this;
 		}
 
+		public Criteria andNextFireTimeIsNull() {
+			addCriterion("NEXT_FIRE_TIME is null");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeIsNotNull() {
+			addCriterion("NEXT_FIRE_TIME is not null");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeEqualTo(Date value) {
+			addCriterion("NEXT_FIRE_TIME =", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeNotEqualTo(Date value) {
+			addCriterion("NEXT_FIRE_TIME <>", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeGreaterThan(Date value) {
+			addCriterion("NEXT_FIRE_TIME >", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeGreaterThanOrEqualTo(Date value) {
+			addCriterion("NEXT_FIRE_TIME >=", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeLessThan(Date value) {
+			addCriterion("NEXT_FIRE_TIME <", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeLessThanOrEqualTo(Date value) {
+			addCriterion("NEXT_FIRE_TIME <=", value, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeIn(List<Date> values) {
+			addCriterion("NEXT_FIRE_TIME in", values, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeNotIn(List<Date> values) {
+			addCriterion("NEXT_FIRE_TIME not in", values, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeBetween(Date value1, Date value2) {
+			addCriterion("NEXT_FIRE_TIME between", value1, value2, "nextFireTime");
+			return (Criteria) this;
+		}
+
+		public Criteria andNextFireTimeNotBetween(Date value1, Date value2) {
+			addCriterion("NEXT_FIRE_TIME not between", value1, value2, "nextFireTime");
+			return (Criteria) this;
+		}
+		
 		public Criteria andShouldFireTimeIsNull() {
 			addCriterion("SHOULD_FIRE_TIME is null");
 			return (Criteria) this;

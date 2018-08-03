@@ -606,7 +606,7 @@ public class TaskServiceImpl implements ITaskService {
     		}
     		
     	} else { //Cron任务
-    		builder = newTrigger().withIdentity(triggerKey).withSchedule(cronSchedule(task.getCron()));
+    		builder = newTrigger().withIdentity(triggerKey).withSchedule(cronSchedule(task.getCron()).withMisfireHandlingInstructionIgnoreMisfires());
     	}
         return builder.build();
     }

@@ -29,7 +29,7 @@
 	  WHERE
 	  DATA_TIME >= #{startTime}
 	  AND DATA_TIME <![CDATA[ < ]]> #{endTime}
-	  GROUP BY TASK_ID
+	  GROUP BY TASK_ID, APP_ID
   </select>
 
 	<insert id="insertList">

@@ -10,8 +10,11 @@ public class TaskTypeHelper {
 
 	private static final List<String> LIST = new ArrayList<>();
 
+	public static final String SPARK_SQL = "SPARK_SQL";
+	public static final String DATA_SYNC = "同步任务";
+	
 	static {
-		LIST.add("SPQRK_SQL=com.iwellmass.idc.XXX");
+		LIST.add("SPARK_SQL=com.iwellmass.datafactory.job.DataProcessJob");
 		LIST.add("同步任务=com.iwellmass.idc.YYY");
 	}
 
@@ -36,9 +39,7 @@ public class TaskTypeHelper {
 		return sb.toString();
 	}
 
-	public static void main(String[] args) {
-		System.out.println(classTypeOf("SPQRK_SQL"));
-		System.out.println(taskTypeOf("com.iwellmass.idc.YYY"));
+	public static boolean isDataSyncJob(String taskType) {
+		return DATA_SYNC.equals(taskType);
 	}
-
 }

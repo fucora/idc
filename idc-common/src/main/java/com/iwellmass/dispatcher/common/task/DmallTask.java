@@ -65,6 +65,7 @@ import com.iwellmass.dispatcher.common.utils.AlarmUtils;
 import com.iwellmass.dispatcher.common.utils.DateUtils;
 import com.iwellmass.dispatcher.common.utils.ExceptionUtils;
 import com.iwellmass.dispatcher.thrift.bvo.TaskStatus;
+import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.dispatcher.thrift.model.CommandResult;
 import com.iwellmass.dispatcher.thrift.model.TaskEntity;
 import com.iwellmass.dispatcher.thrift.sdk.AgentService;
@@ -384,7 +385,7 @@ public class DmallTask implements Job {
 	}
 
 	private boolean isWaitable(DdcTask task) {
-		return true;
+		return TaskTypeHelper.isDataSyncJob(TaskTypeHelper.taskTypeOf(task.getClassName()));
 	}
 
 	/**
@@ -417,6 +418,7 @@ public class DmallTask implements Job {
 			if(ddcTaskExecuteHistory != null) {
 				//重置相关时间
 				ddcTaskExecuteHistory.setFireTime(context.getFireTime());
+				ddcTaskExecuteHistory.setNextFireTime(context.getNextFireTime());
 				ddcTaskExecuteHistory.setShouldFireTime(context.getScheduledFireTime().getTime());
 				ddcTaskExecuteHistory.setActualFireTime(context.getFireTime().getTime());
 				ddcTaskExecuteHistory.setDispatchTime(new Date());	
@@ -439,6 +441,7 @@ public class DmallTask implements Job {
 			ddcTaskExecuteHistory.setWorkflowId(ddcTask.getWorkflowId());
 			ddcTaskExecuteHistory.setTriggerType(triggerType);
 			ddcTaskExecuteHistory.setFireTime(context.getFireTime());
+			ddcTaskExecuteHistory.setNextFireTime(context.getNextFireTime());
 			ddcTaskExecuteHistory.setShouldFireTime(context.getScheduledFireTime().getTime());
 			ddcTaskExecuteHistory.setActualFireTime(context.getFireTime().getTime());
 			ddcTaskExecuteHistory.setDispatchTime(new Date());	

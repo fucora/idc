@@ -1,11 +1,13 @@
 package com.iwellmass.dispatcher.server;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -23,14 +25,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import com.alibaba.fastjson.JSONObject;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.SpringContext;
+import com.iwellmass.dispatcher.common.dao.DdcTaskExecuteHistoryMapper;
 import com.iwellmass.dispatcher.common.dao.DdcTaskMapper;
 import com.iwellmass.dispatcher.common.dao.DdcTaskUpdateHistoryMapper;
 import com.iwellmass.dispatcher.common.model.DdcNode;
 import com.iwellmass.dispatcher.common.model.DdcTask;
 import com.iwellmass.dispatcher.common.model.DdcTaskExample;
+import com.iwellmass.dispatcher.common.model.DdcTaskExecuteHistory;
+import com.iwellmass.dispatcher.common.model.DdcTaskExecuteHistoryExample;
 import com.iwellmass.dispatcher.common.model.DdcTaskUpdateHistory;
 import com.iwellmass.dispatcher.thrift.model.CommandResult;
 import com.iwellmass.dispatcher.thrift.model.TaskEntity;
@@ -45,7 +51,7 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 
 	private ScheduledExecutorService schExecutor = Executors.newSingleThreadScheduledExecutor();
 
-	public Map<String, SourceLookup> lookupMap = new HashMap<>();
+	public Map<String, LookupTask> lookupMap = new ConcurrentHashMap<>();
 	
 	@Override
 	public void register(DdcNode node) {
@@ -54,7 +60,11 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 			SourceLookupRPC lookup = new SourceLookupRPC();
 			lookup.node = node;
 			lookup.taskClassName = className;
-			lookupMap.put(className, lookup);
+			lookupMap.computeIfAbsent(className, key -> {
+				LookupTask task = new LookupTask();
+				task.lookup = lookup;
+				return task;
+			});
 		}
 	}
 
@@ -62,38 +72,24 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 	public void scheduleOnSourceReady(Integer jobId, LocalDateTime loadDate) {
 		DdcTaskMapper mapper = SpringContext.getApplicationContext().getBean(DdcTaskMapper.class);
 		DdcTask ddcTask = mapper.selectByPrimaryKey(jobId);
-		LookupTask task = new LookupTask();
-		task.jobId = jobId + "";
-		task.loadDate = loadDate;
-		task.ddcTask = ddcTask;
+		
+		LookupTask lookupTask = lookupMap.computeIfAbsent(ddcTask.getClassName(), key -> {
+			LookupTask task = new LookupTask();
+			task.jobId = jobId + "";
+			task.loadDate = loadDate;
+			task.ddcTask = ddcTask;
+			return task;
+		});
 		// 循环调度，给个延时让事务提交 
 		schExecutor.schedule(() -> {
-			schedule0(task);
+			schedule0(lookupTask);
 		}, 1000 * 10, TimeUnit.MILLISECONDS);
 	}
 
 	private void schedule0(LookupTask task) {
-		boolean fired = false;
-		try {
-			// A: 跨周期依赖 和  B:数据源依赖都要满足才能执行
-			// TODO check A
-			if ("前至周期任务还在等待".isEmpty()) {
-				fired = false;
-			} 
-			// check B
-			else {
-				
-			}
-		} catch (Throwable e) {
-			LOGGER.info("服务不可用，返回 false");
-		} finally {
-			if (!fired) {
-				schExecutor.schedule(task, task.getInterval(), TimeUnit.MILLISECONDS);
-			}
-		}
+		schExecutor.schedule(task, task.getInterval(), TimeUnit.MILLISECONDS);
 	}
 	
-
 	public void fireSourceEvent(SourceEvent event) {
 		ApplicationContext ctx = SpringContext.getApplicationContext();
 		Scheduler scheduler = ctx.getBean(Scheduler.class);
@@ -150,15 +146,24 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 		private DdcTask ddcTask;
 		private String jobId;
 		private LocalDateTime loadDate;
-
+		private SourceLookup lookup;
+		
 		@Override
 		public void run() {
+			// 检测是否停止
 			if (this.isHalt()) {
 				LOGGER.info("停止检测: {}", ddcTask.getClassName());
 				return;
 			}
+			// 触发调度标识
+			boolean fired = false;
 			try {
-				SourceLookup lookup = lookupMap.get(ddcTask.getClassName());
+				// A: 跨周期依赖 和  B:数据源依赖都要满足才能执行
+				// check A
+				if (!isPrevSuccessed()) {
+					LOGGER.debug("前置任务未完成，等待调度 {} - {} ", ddcTask.getTaskId(), loadDate);
+					return;
+				} 
 				// 停止检测
 				if (lookup != null) {
 					boolean test = lookup.lookup(jobId, loadDate);
@@ -173,8 +178,37 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 				LOGGER.error("检测失败, ERROR: {}", e.getMessage(), e);
 			} finally {
 				if (!this.isHalt()) {
-					schedule0(this);
+					if (fired) {
+						LOGGER.info("任务 {} - {} 已触发", ddcTask.getTaskId(), loadDate);
+					} else {
+						// 继续调度
+						schedule0(this);
+					}
+				} else {
+					LOGGER.info("停止检测: {}", ddcTask.getClassName());
 				}
+			}
+		}
+		
+		private boolean isPrevSuccessed() {
+			// 不支持并发
+			Instant instant = loadDate.atZone(ZoneId.systemDefault()).toInstant();
+			Date prev = new Date(instant.toEpochMilli());
+			DdcTaskExecuteHistoryMapper historyMapper = SpringContext.getApplicationContext().getBean(DdcTaskExecuteHistoryMapper.class);
+			DdcTaskExecuteHistoryExample example = new DdcTaskExecuteHistoryExample();
+			example.createCriteria()
+				.andTaskIdEqualTo(ddcTask.getTaskId())
+				.andNextFireTimeEqualTo(prev);
+			List<DdcTaskExecuteHistory> list = historyMapper.selectByExample(example);
+			
+			if (list == null || list.size() == 0) {
+				return true;
+			}
+			if (list.size() == 1) {
+				DdcTaskExecuteHistory prevTask = list.get(0);
+				return prevTask.getExecuteResult() == "";
+			} else {
+				throw new AppException("不允许相同周期的任务出现两个");
 			}
 		}
 
@@ -187,11 +221,11 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 		}
 	}
 	
-	class SourceLookupRPC implements SourceLookup {
+	class SourceLookupRPC implements  SourceLookup {
 		
 		private DdcNode node;
 		private String taskClassName;
-
+		
 		@Override
 		public boolean lookup(String jobId, LocalDateTime loadDate) {
 			
@@ -236,6 +270,7 @@ public class SourceLookupManagerImpl implements EventDriveScheduler {
 			return false;
 		}
 	}
+	
 	
 	/**
 	 * 记录任务历史
