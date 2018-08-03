@@ -1,12 +1,9 @@
 package com.iwellmass.idc.controller;
 
 import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.service.JobQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
@@ -15,6 +12,9 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
+
+import javax.inject.Inject;
+import java.util.List;
 
 @RestController
 @RequestMapping("/job")
@@ -30,17 +30,6 @@ public class JobController {
 		return ServiceResult.success("success");
 	}
 
-	@PostMapping(value = "/query")
-	@ApiOperation("查询调度任务")
-	public ServiceResult<PageData<Job>> queryJobs(@RequestBody JobQuery query, Pager page) {
-		
-		
-		
-		
-		
-		return ServiceResult.failure("not supported yet");
-		//return ServiceResult.success(taskService.taskTable(task.getAppId(), task, page));
-	}
 
 	@RequestMapping(value = "/{id}/lock-status", method = RequestMethod.POST)
 	@ApiOperation("冻结/恢复 Job")
@@ -145,5 +134,37 @@ public class JobController {
 	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, IDCPager page) {
 		return ServiceResult.success(taskService.taskUpdateHistoryTable(history, page));
 	}*/
+
+
+	@Inject
+	private JobQueryService jobQueryService;
+
+	@ApiOperation("通过条件检索任务（分页显示）")
+	@PostMapping(path = "/query")
+	public ServiceResult<PageData<List<Job>>> findTasksByCondition(@RequestBody(required = false) JobQuery query,Pager pager){
+		PageData<List<Job>> tasks = jobQueryService.findTasksByCondition(query, pager);
+		return ServiceResult.success(tasks);
+	}
+
+	@ApiOperation("通过groupId查询上游任务")
+	@GetMapping(path = "/workflow-jobs")
+	public ServiceResult<List<Job>> findTaskByGroupId(Integer groupId){
+		List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(groupId);
+		return ServiceResult.success(taskByGroupId);
+	}
+
+	@ApiOperation("获取所有实例类型")
+	@GetMapping(path = "/task-type")
+	public ServiceResult<List<JobQuery>> getAllTypes(){
+		List<JobQuery> allTypes =jobQueryService.getAllTypes();
+		return ServiceResult.success(allTypes);
+	}
+
+	@ApiOperation("获取任务所有负责人")
+	@GetMapping(path ="/assignee" )
+	public ServiceResult<List<JobQuery>> getAllAssignee(){
+		List<JobQuery> allAssignee = jobQueryService.getAllAssignee();
+		return ServiceResult.success(allAssignee);
+	}
 
 }

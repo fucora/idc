@@ -29,26 +29,14 @@ public class JobInstanceController {
     }
 
     @ApiOperation("通过条件检索实例（分页显示）")
-    @PostMapping("/findTaskInstanceByCondition")
-    public ServiceResult<PageData<List<JobInstance>>> findTaskInstanceByCondition(@RequestBody JobQuery query,
-                                                  @RequestParam(name = "page", defaultValue = "0") int page,
-                                                  @RequestParam(name = "pageSize", defaultValue = "10") int pageSize){
-        Pager pager = new Pager();
-        pager.setPage(page);
-        pager.setLimit(pageSize);
+    @PostMapping("/query")
+    public ServiceResult<PageData<List<JobInstance>>> findTaskInstanceByCondition(@RequestBody(required = false) JobQuery query,Pager pager){
         PageData<List<JobInstance>> taskInstance = jobInstanceService.findTaskInstanceByCondition(query, pager);
         return ServiceResult.success(taskInstance);
     }
 
-    @ApiOperation("获取所有实例类型")
-    @GetMapping(path = "/getAllTypes")
-    public ServiceResult<List<JobQuery>> getAllTypes(){
-        List<JobQuery> allTypes = jobInstanceService.getAllTypes();
-        return ServiceResult.success(allTypes);
-    }
-
     @ApiOperation("获取所有负责人")
-    @GetMapping(path ="/getAllAssignee" )
+    @GetMapping(path ="/assignee" )
     public ServiceResult<List<JobQuery>> getAllAssignee(){
         List<JobQuery> allAssignee = jobInstanceService.getAllAssignee();
         return ServiceResult.success(allAssignee);
