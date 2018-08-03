@@ -14,5 +14,5 @@ public interface IdcTaskMapper {
     List<Job> findTasksByCondition(@Param(value = "job") JobQuery job, @Param(value = "pager") Pager pager);
     List<Job> findAllTasksByCondition(JobQuery job);
     List<Job> findTaskByGroupId(Integer id);
-    List<Job> findAllTask();
+    List<Job> findAllTasks();
 }

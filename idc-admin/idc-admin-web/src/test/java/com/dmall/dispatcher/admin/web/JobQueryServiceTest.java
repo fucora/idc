@@ -31,4 +31,8 @@ public class JobQueryServiceTest {
         logger.info("========={}",jobQueryService.findTasksByCondition(jobQuery,pager).getRawData().toString());
     }
 
+    @Test
+    public void getAllTypes(){
+        logger.info("========={}",jobQueryService.getAllTypes().toString());
+    }
 }

@@ -39,10 +39,12 @@ public class JobQueryService {
     public List<JobQuery> getAllTypes(){
         List<JobQuery> list = new ArrayList<>();
         List<JobQuery> list1 = new ArrayList<>();
-        idcTaskMapper.findAllTask().forEach(i -> {
+        idcTaskMapper.findAllTasks().forEach(i -> {
             JobQuery query=new JobQuery();
-            query.setTaskType(i.getTaskType());
-            list.add(query);
+            if((null!=i.getTaskType())&&(!i.getTaskType().equals(""))){
+                query.setTaskType(i.getTaskType());
+                list.add(query);
+            }
         });
         for (JobQuery type : list) {
             boolean is = list1.stream().anyMatch(t -> t.getTaskType().equals(type.getTaskType()));
@@ -56,7 +58,7 @@ public class JobQueryService {
     public List<JobQuery> getAllAssignee(){
         List<JobQuery> list = new ArrayList<>();
         List<JobQuery> list1 = new ArrayList<>();
-       idcTaskMapper.findAllTask().forEach(i -> {
+       idcTaskMapper.findAllTasks().forEach(i -> {
             JobQuery query=new JobQuery();
             query.setAssignee(i.getAssignee());
             list.add(query);
