@@ -1,0 +1,8 @@
+192.168.10.201 neo4j.iwellmass.com
+192.168.10.201 db.iwellmass.com
+192.168.10.201 elastic.iwellmass.com
+192.168.10.203 oracle.iwellmass.com
+192.168.10.201 block.iwellmass.com
+192.168.10.201 job.iwellmass.com
+192.168.10.201 eureka.iwellmass.com
+124.207.118.197  zeppelin.iwellmass.com
