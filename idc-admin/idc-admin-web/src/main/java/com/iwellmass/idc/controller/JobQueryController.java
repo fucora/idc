@@ -19,8 +19,8 @@ public class JobQueryController {
     private JobQueryService jobQueryService;
 
     @ApiOperation("通过条件检索任务（分页显示）")
-    @GetMapping(path = "/findTasksByCondition")
-    public ServiceResult<PageData<List<Job>>> findTasksByCondition(JobQuery query,
+    @PostMapping(path = "/findTasksByCondition")
+    public ServiceResult<PageData<List<Job>>> findTasksByCondition(@RequestBody JobQuery query,
                                          @RequestParam(name = "page",defaultValue = "0") int page,
                                          @RequestParam(name = "pageSize",defaultValue = "10") int pageSize){
         Pager pager=new Pager();
@@ -35,5 +35,19 @@ public class JobQueryController {
     public ServiceResult<List<Job>> findTaskByGroupId(Integer groupId){
         List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(groupId);
         return ServiceResult.success(taskByGroupId);
+    }
+
+    @ApiOperation("获取所有实例类型")
+    @GetMapping(path = "/getAllTypes")
+    public ServiceResult<List<JobQuery>> getAllTypes(){
+        List<JobQuery> allTypes =jobQueryService.getAllTypes();
+        return ServiceResult.success(allTypes);
+    }
+
+    @ApiOperation("获取所有负责人")
+    @GetMapping(path ="/getAllAssignee" )
+    public ServiceResult<List<JobQuery>> getAllAssignee(){
+        List<JobQuery> allAssignee = jobQueryService.getAllAssignee();
+        return ServiceResult.success(allAssignee);
     }
 }

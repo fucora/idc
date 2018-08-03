@@ -2,6 +2,9 @@ package com.iwellmass.idc.model;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.sql.Timestamp;
+import java.util.Date;
+
 public class JobQuery {
 
     @ApiModelProperty("任务名")
@@ -12,6 +15,12 @@ public class JobQuery {
 
     @ApiModelProperty("负责人")
     private String assignee;
+
+    @ApiModelProperty("业务时期")
+    private Timestamp loadTime;
+
+    @ApiModelProperty("运行时期")
+    private Timestamp excuteTime;
 
     public String getName() {
         return name;
@@ -35,5 +44,21 @@ public class JobQuery {
 
     public void setAssignee(String assignee) {
         this.assignee = assignee;
+    }
+
+    public Date getLoadTime() {
+        return loadTime;
+    }
+
+
+    @Override
+    public String toString() {
+        return "JobQuery{" +
+                "name='" + name + '\'' +
+                ", taskType='" + taskType + '\'' +
+                ", assignee='" + assignee + '\'' +
+                ", loadTime=" + loadTime +
+                ", excuteTime=" + excuteTime +
+                '}';
     }
 }

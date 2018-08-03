@@ -24,6 +24,8 @@ public class JobInstance {
 
 	private String assignee;
 
+	private Timestamp excuteTime;
+
 	private Timestamp loadDate;
 
 	private Timestamp startTime;
@@ -103,17 +105,12 @@ public class JobInstance {
 		this.endTime = endTime;
 	}
 
-	@Override
-	public String toString() {
-		return "JobInstance{" +
-				"id=" + id +
-				", jobId=" + jobId +
-				", jobName='" + jobName + '\'' +
-				", taskType='" + taskType + '\'' +
-				", assignee='" + assignee + '\'' +
-				", loadDate=" + loadDate +
-				", startTime=" + startTime +
-				", endTime=" + endTime +
-				'}';
+	@ApiModelProperty("运行时间")
+	public Timestamp getExcuteTime() {
+		return excuteTime;
+	}
+
+	public void setExcuteTime(Timestamp excuteTime) {
+		this.excuteTime = excuteTime;
 	}
 }

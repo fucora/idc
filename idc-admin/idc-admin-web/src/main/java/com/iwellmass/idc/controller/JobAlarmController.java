@@ -20,8 +20,8 @@ public class JobAlarmController {
     private JobAlarmService jobAlarmService;
 
     @ApiOperation("通过条件检索实例（分页显示）")
-    @GetMapping("/findJobAlarmByCondition")
-    public ServiceResult<PageData<List<JobAlarm>>> findJobAlarmByCondition(JobAlarm alarm,
+    @PostMapping("/findJobAlarmByCondition")
+    public ServiceResult<PageData<List<JobAlarm>>> findJobAlarmByCondition(@RequestBody JobAlarm alarm,
                                                         @RequestParam(name = "page", defaultValue = "0") int page,
                                                         @RequestParam(name = "pageSize", defaultValue = "10") int pageSize){
         Pager pager = new Pager();

@@ -21,6 +21,13 @@
         WHERE TASK_ID = #{taskId,jdbcType=INTEGER}
     </select>
 
+    <select id="findAllTasks" resultMap="BaseResultMap" >
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM DDC_TASK
+        WHERE 1 = 1
+    </select>
+
     <select id="findTaskByGroupId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
         SELECT
         <include refid="Base_Column_List" />

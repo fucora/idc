@@ -3,6 +3,7 @@ package com.iwellmass.idc.model;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -28,7 +29,7 @@ public class JobAlarm {
     private String creator;
 
     @ApiModelProperty("报警时间")
-    private Date alarmTime;
+    private Timestamp alarmTime;
 
     public Integer getId() {
         return id;
@@ -74,7 +75,7 @@ public class JobAlarm {
         return alarmTime;
     }
 
-    public void setAlarmTime(Date alarmTime) {
+    public void setAlarmTime(Timestamp alarmTime) {
         this.alarmTime = alarmTime;
     }
 
@@ -86,16 +87,4 @@ public class JobAlarm {
         this.receivers = receivers;
     }
 
-    @Override
-    public String toString() {
-        return "JobAlarm{" +
-                "id=" + id +
-                ", taskId=" + taskId +
-                ", taskName='" + taskName + '\'' +
-                ", cause='" + cause + '\'' +
-                ", receivers='" + receivers + '\'' +
-                ", creator='" + creator + '\'' +
-                ", alarmTime=" + alarmTime +
-                '}';
-    }
 }
