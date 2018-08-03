@@ -28,7 +28,7 @@ public class JobQueryService {
         pager1.setLimit(pager.getLimit());
         List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
         List<Job> tasks= idcTaskMapper.findTasksByCondition(query, pager1);
-        return  new PageData(allTasks.size(),allTasks,tasks);
+        return  new PageData(allTasks.size(),tasks);
     }
 
     public List<Job> findTaskByGroupId(Integer id){

@@ -23,7 +23,7 @@ public class JobInstanceService {
         pager1.setLimit(pager.getLimit());
         List<JobInstance> allTaskInstance = idcTaskHistoryMapper.findAllTaskInstanceByCondition(query);
         List<JobInstance> taskInstance = idcTaskHistoryMapper.findTaskInstanceByCondition(query, pager1);
-        return new PageData(allTaskInstance.size(),allTaskInstance,taskInstance);
+        return new PageData(allTaskInstance.size(),taskInstance);
     }
 
     public List<JobQuery> getAllTypes(){
