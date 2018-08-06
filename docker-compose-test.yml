@@ -1,0 +1,20 @@
+version: '2'
+services:
+  idc-server:
+    image: $idc
+    container_name: idc
+    build:
+      context: .
+      args:
+        - profile=gray
+    network_mode: "host"
+    ports:
+      - "9306:9306"
+    environment:
+      - profile=gray
+    volumes:
+      - /web/logs:/web/logs
+networks:
+  default:
+    external:
+      name: mast_nw

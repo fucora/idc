@@ -40,6 +40,8 @@ public class Job {
 	
 	private Timestamp createTime;
 
+	private Timestamp updateTime;
+
 	private Integer groupId;
 	
 	private Integer workflowId;
@@ -203,24 +205,12 @@ public class Job {
 		this.assignee = assignee;
 	}
 
-	@Override
-	public String toString() {
-		return "Job{" +
-				"id=" + id +
-				", name='" + name + '\'' +
-				", description='" + description + '\'' +
-				", taskId='" + taskId + '\'' +
-				", taskType='" + taskType + '\'' +
-				", jobType=" + jobType +
-				", scheduleType=" + scheduleType +
-				", scheduleProperties=" + scheduleProperties +
-				", startTime=" + startTime +
-				", endTime=" + endTime +
-				", createTime=" + createTime +
-				", groupId=" + groupId +
-				", workflowId=" + workflowId +
-				", assignee='" + assignee + '\'' +
-				", dependencies=" + dependencies +
-				'}';
+	@ApiModelProperty("更新时间")
+	public Timestamp getUpdateTime() {
+		return updateTime;
+	}
+
+	public void setUpdateTime(Timestamp updateTime) {
+		this.updateTime = updateTime;
 	}
 }

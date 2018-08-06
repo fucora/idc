@@ -17,18 +17,28 @@ import javax.inject.Inject;
 @RunWith(SpringRunner.class)
 public class JobInstanceServiceTest {
 
-    private final static Logger logger= LoggerFactory.getLogger(JobInstanceServiceTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(JobInstanceServiceTest.class);
 
     @Inject
     private JobInstanceService jobInstanceService;
 
     @Test
-    public void findJobHistoryByCondition(){
-        JobQuery jobQuery=new JobQuery();
+    public void findJobHistoryByCondition() {
+        JobQuery jobQuery = new JobQuery();
         jobQuery.setName("简单任务");
-        Pager pager=new Pager();
+        Pager pager = new Pager();
         pager.setPage(0);
         pager.setLimit(3);
-        logger.info("========={}",jobInstanceService.findTaskInstanceByCondition(jobQuery,pager).getRawData().toString());
+        logger.info("========={}", jobInstanceService.findTaskInstanceByCondition(jobQuery, pager).getRawData().toString());
+    }
+
+    @Test
+    public void getAllTypes() {
+        logger.info("========={}", jobInstanceService.getAllTypes().toString());
+    }
+
+    @Test
+    public void getAllAssignee(){
+        logger.info("========={}", jobInstanceService.getAllAssignee());
     }
 }

@@ -8,6 +8,7 @@ import com.iwellmass.idc.model.JobQuery;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,12 +28,48 @@ public class JobQueryService {
         pager1.setLimit(pager.getLimit());
         List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
         List<Job> tasks= idcTaskMapper.findTasksByCondition(query, pager1);
-        return  new PageData(allTasks.size(),allTasks,tasks);
+        return  new PageData(allTasks.size(),tasks);
     }
 
     public List<Job> findTaskByGroupId(Integer id){
      List<Job> taskByGroupId = idcTaskMapper.findTaskByGroupId(id);
      return taskByGroupId;
+    }
+
+    public List<JobQuery> getAllTypes(){
+        List<JobQuery> list = new ArrayList<>();
+        List<JobQuery> list1 = new ArrayList<>();
+        idcTaskMapper.findAllTasks().forEach(i -> {
+            JobQuery query=new JobQuery();
+            if((null!=i.getTaskType())&&(!i.getTaskType().equals(""))){
+                query.setTaskType(i.getTaskType());
+                list.add(query);
+            }
+        });
+        for (JobQuery type : list) {
+            boolean is = list1.stream().anyMatch(t -> t.getTaskType().equals(type.getTaskType()));
+            if (!is) {
+                list1.add(type);
+            }
+        }
+        return list1;
+    }
+
+    public List<JobQuery> getAllAssignee(){
+        List<JobQuery> list = new ArrayList<>();
+        List<JobQuery> list1 = new ArrayList<>();
+       idcTaskMapper.findAllTasks().forEach(i -> {
+            JobQuery query=new JobQuery();
+            query.setAssignee(i.getAssignee());
+            list.add(query);
+        });
+        for (JobQuery query : list) {
+            boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));
+            if (!is) {
+                list1.add(query);
+            }
+        }
+        return list1;
     }
 
 }

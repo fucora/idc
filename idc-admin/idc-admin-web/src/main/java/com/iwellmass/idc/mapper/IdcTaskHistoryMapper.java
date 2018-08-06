@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 @Mapper
 public interface IdcTaskHistoryMapper {
+    List<JobInstance> findAllTaskInstance();
     List<JobInstance> findTaskInstanceByCondition(@Param(value = "job") JobQuery job, @Param(value = "pager") Pager pager);
     List<JobInstance> findAllTaskInstanceByCondition(JobQuery job);
 }

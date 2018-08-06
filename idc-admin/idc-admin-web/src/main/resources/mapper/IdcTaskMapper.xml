@@ -10,15 +10,23 @@
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="WORKFLOW_ID" property="groupId" jdbcType="INTEGER" />
         <result column="CREATE_TIME" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="UPDATE_TIME" property="updateTime" jdbcType="TIMESTAMP" />
     </resultMap>
     <sql id="Base_Column_List" >
-        TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME
+        TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME
     </sql>
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
         SELECT
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         WHERE TASK_ID = #{taskId,jdbcType=INTEGER}
+    </select>
+
+    <select id="findAllTasks" resultMap="BaseResultMap" >
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM DDC_TASK
+        WHERE 1 = 1
     </select>
 
     <select id="findTaskByGroupId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
@@ -55,7 +63,7 @@
         FROM DDC_TASK
         <where>
             <if test="job.name !=null and job.name != '' ">
-                AND TASK_NAME = #{job.name,jdbcType=VARCHAR}
+                AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
                 AND CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}

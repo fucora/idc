@@ -21,6 +21,6 @@ public class JobAlarmService {
         pager1.setLimit(pager.getLimit());
         List<JobAlarm> allJobAlarm = idcJobAlarmMapper.findAllJobAlarmByCondition(alarm);
         List<JobAlarm> jobAlarm = idcJobAlarmMapper.findJobAlarmByCondition(alarm, pager1);
-        return new PageData(allJobAlarm.size(),allJobAlarm,jobAlarm);
+        return new PageData(allJobAlarm.size(),jobAlarm);
     }
 }

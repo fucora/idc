@@ -6,6 +6,7 @@
         <result column="TASK_ID" property="jobId" jdbcType="INTEGER" />
         <result column="FIRE_TIME" property="loadDate" jdbcType="TIMESTAMP" />
         <result column="START_TIME" property="startTime" jdbcType="TIMESTAMP" />
+        <result column="ACTUAL_FIRE_TIME" property="excuteTime" jdbcType="TIMESTAMP" />
         <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
         <result column="TASK_NAME" property="jobName" jdbcType="VARCHAR" />
         <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
@@ -14,19 +15,32 @@
     <sql id="Base_Column_List" >
       EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER
     </sql>
+
+    <select id="findAllTaskInstance" resultMap="BaseResultMap">
+        SELECT
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+    </select>
+
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.name !=null and job.name != '' ">
-                AND T.TASK_NAME = #{job.name,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
                 AND T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
                 AND T.OWNER= #{job.assignee,jdbcType=VARCHAR}
+            </if>
+            <if test="job.loadTime !=null and job.loadTime != ''">
+                AND T.FIRE_TIME= #{job.loadTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="job.excuteTime !=null and job.excuteTime != ''">
+                AND T.ACTUAL_FIRE_TIME= #{job.excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
         limit #{pager.page},#{pager.limit}
@@ -37,13 +51,19 @@
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="name !=null and name != '' ">
-                AND T.TASK_NAME = #{name,jdbcType=VARCHAR}
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="taskType !=null and taskType != ''">
                 AND T.CLASS_NAME = #{taskType,jdbcType=VARCHAR}
             </if>
             <if test="assignee !=null and assignee != ''">
                 AND T.OWNER= #{assignee,jdbcType=VARCHAR}
+            </if>
+            <if test="loadTime !=null and loadTime != ''">
+                AND T.FIRE_TIME= #{job.loadTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="excuteTime !=null and excuteTime != ''">
+                AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
     </select>

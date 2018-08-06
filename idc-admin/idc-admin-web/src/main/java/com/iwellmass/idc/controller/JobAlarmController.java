@@ -16,17 +16,12 @@ import java.util.List;
 public class JobAlarmController {
 
     @Inject
-
     private JobAlarmService jobAlarmService;
 
-    @ApiOperation("通过条件检索实例（分页显示）")
-    @GetMapping("/findJobAlarmByCondition")
-    public ServiceResult<PageData<List<JobAlarm>>> findJobAlarmByCondition(@RequestBody JobAlarm alarm,
-                                                        @RequestParam(name = "page", defaultValue = "0") int page,
-                                                        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize){
-        Pager pager = new Pager();
-        pager.setPage(page);
-        pager.setLimit(pageSize);
+    @ApiOperation("通过条件检索实例警告（分页显示）")
+    @PostMapping("/query")
+    public ServiceResult<PageData<List<JobAlarm>>> findJobAlarmByCondition(@RequestBody(required = false) JobAlarm alarm,
+                                                                           Pager pager){
         PageData<List<JobAlarm>> jobAlarm = jobAlarmService.findJobAlarmByCondition(alarm, pager);
         return ServiceResult.success(jobAlarm);
     }
