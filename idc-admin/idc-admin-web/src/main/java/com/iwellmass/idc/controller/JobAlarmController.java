@@ -16,7 +16,6 @@ import java.util.List;
 public class JobAlarmController {
 
     @Inject
-
     private JobAlarmService jobAlarmService;
 
     @ApiOperation("通过条件检索实例警告（分页显示）")
