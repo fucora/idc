@@ -30,10 +30,10 @@ public class JobController {
 		return ServiceResult.success("success");
 	}
 
-
 	@RequestMapping(value = "/{id}/lock-status", method = RequestMethod.POST)
 	@ApiOperation("冻结/恢复 Job")
 	public ServiceResult<String> lock(int appId, int taskId, boolean enable) {
+
 		return ServiceResult.failure("not supported yet.");
 	}
 	

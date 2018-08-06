@@ -4,7 +4,7 @@
     <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.Job" >
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
         <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
-        <result column="TASK_NAME" property="name" jdbcType="VARCHAR" />
+        <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
         <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
         <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />

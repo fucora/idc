@@ -18,9 +18,11 @@ public class JobInstance {
 
 	private Integer jobId;
 
-	private String jobName;
+	private String taskName;
 
 	private String taskType;
+
+	private String status;
 
 	private String assignee;
 
@@ -52,12 +54,12 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("JOB 名称")
-	public String getJobName() {
-		return jobName;
+	public String getTaskName() {
+		return taskName;
 	}
 
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
 	}
 
 	@ApiModelProperty("任务类型")
@@ -112,5 +114,14 @@ public class JobInstance {
 
 	public void setExcuteTime(Timestamp excuteTime) {
 		this.excuteTime = excuteTime;
+	}
+
+	@ApiModelProperty("状态")
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 }

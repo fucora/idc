@@ -20,7 +20,7 @@ public class Job {
 
 	private Integer id;
 
-	private String name;
+	private String taskName;
 
 	private String description;
 
@@ -63,12 +63,12 @@ public class Job {
 
 	@ApiModelProperty("任务名称")
 	@Column(name = "name")
-	public String getName() {
-		return name;
+	public String getJobName() {
+		return taskName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setJobName(String taskName) {
+		this.taskName = taskName;
 	}
 
 	@ApiModelProperty("任务描述")
