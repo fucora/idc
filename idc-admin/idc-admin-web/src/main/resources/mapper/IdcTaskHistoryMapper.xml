@@ -28,7 +28,7 @@
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
-            <if test="job.name !=null and job.name != '' ">
+            <if test="job.taskName !=null and job.taskName != '' ">
                 AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
@@ -51,7 +51,7 @@
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
-            <if test="name !=null and name != '' ">
+            <if test="taskName !=null and taskName != '' ">
                 AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="taskType !=null and taskType != ''">

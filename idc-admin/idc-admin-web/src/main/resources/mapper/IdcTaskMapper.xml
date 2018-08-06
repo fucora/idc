@@ -62,7 +62,7 @@
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         <where>
-            <if test="job.name !=null and job.name != '' ">
+            <if test="job.taskName !=null and job.taskName != '' ">
                 AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.taskType !=null and job.taskType != ''">
@@ -80,7 +80,7 @@
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         <where>
-            <if test="name !=null and name != '' ">
+            <if test="taskName !=null and taskName != '' ">
                 AND TASK_NAME = #{name,jdbcType=VARCHAR}
             </if>
             <if test="taskType !=null and taskType != ''">
