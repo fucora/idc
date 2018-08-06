@@ -8,7 +8,7 @@ import java.util.Date;
 public class JobQuery {
 
     @ApiModelProperty("任务名")
-    private String name;
+    private String taskName;
 
     @ApiModelProperty("任务类型")
     private String taskType;
@@ -22,12 +22,12 @@ public class JobQuery {
     @ApiModelProperty("运行时期")
     private Timestamp excuteTime;
 
-    public String getName() {
-        return name;
+    public String getTaskName() {
+        return taskName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 
     public String getTaskType() {
