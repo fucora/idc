@@ -3,6 +3,7 @@ package com.iwellmass.idc.service;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
 import com.iwellmass.idc.mapper.JobInstanceMapper;
 import com.iwellmass.idc.model.JobInstance;
@@ -30,13 +31,21 @@ public class JobInstanceService {
         return instance;
     }
 
-    public PageData<List<JobInstance>>findTaskInstanceByCondition(JobQuery query, Pager pager){
+    public PageData<JobInstance>findTaskInstanceByCondition(JobQuery query, Pager pager){
         Pager pager1=new Pager();
         pager1.setPage(pager.getTo());
         pager1.setLimit(pager.getLimit());
+        
+        if (query != null && query.getContentType() != null	) {
+        	query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
+        }
+        
         List<JobInstance> allTaskInstance = idcTaskHistoryMapper.findAllTaskInstanceByCondition(query);
         List<JobInstance> taskInstance = idcTaskHistoryMapper.findTaskInstanceByCondition(query, pager1);
-        return new PageData(allTaskInstance.size(),taskInstance);
+        taskInstance.forEach(t -> {
+        	t.setContentType(TaskTypeHelper.contentTypeOf(t.getContentType()));
+        });
+        return new PageData<JobInstance>(allTaskInstance.size(),taskInstance);
     }
 
     public List<JobQuery> getAllTypes(){
@@ -44,13 +53,13 @@ public class JobInstanceService {
         List<JobQuery> list1 = new ArrayList<>();
         idcTaskHistoryMapper.findAllTaskInstance().forEach(i -> {
            JobQuery query=new JobQuery();
-           if(!(null==i.getTaskType()||i.getTaskType().equals(""))){
-               query.setTaskType(i.getTaskType());
+           if(!(null==i.getContentType()||i.getContentType().equals(""))){
+               query.setContentType(i.getContentType());
                list.add(query);
            }
         });
         for (JobQuery type : list) {
-            boolean is = list1.stream().anyMatch(t -> t.getTaskType().equals(type.getTaskType()));
+            boolean is = list1.stream().anyMatch(t -> t.getContentType().equals(type.getContentType()));
             if (!is) {
                 list1.add(type);
             }

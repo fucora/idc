@@ -59,7 +59,7 @@ public class JobService {
 		task.setTaskName(job.getJobName());
 		task.setAppId(DDCContext.DEFAULT_APP);
 		task.setAppKey(DDCContext.DEFAULT_APP_KEY);
-		task.setClassName(TaskTypeHelper.classNameOf(job.getContentType()));
+		task.setClassName(TaskTypeHelper.classNameOf(job.getContentType().toString()));
 		task.setCreateTime(now);
 		task.setCreateUser(job.getAssignee());
 		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
@@ -213,6 +213,9 @@ public class JobService {
 		Pager pager1 = new Pager();
 		pager1.setPage(pager.getTo());
 		pager1.setLimit(pager.getLimit());
+		if (query != null && query.getContentType() != null) {
+			query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
+		}
 		List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
 		List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
 		tasks.forEach(j -> {

@@ -5,7 +5,7 @@
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
         <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
-        <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
+        <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
         <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="WORKFLOW_ID" property="groupId" jdbcType="INTEGER" />
@@ -15,6 +15,7 @@
     <sql id="Base_Column_List" >
         TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME
     </sql>
+    
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
         SELECT
         <include refid="Base_Column_List" />
@@ -30,38 +31,6 @@
         ORDER BY TASK_ID DESC
     </select>
 
-    <select id="findTaskByWorkflowId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-        SELECT
-        <include refid="Base_Column_List" />
-        FROM DDC_TASK
-        WHERE WORKFLOW_ID = #{id,jdbcType=INTEGER}
-        ORDER BY TASK_ID DESC
-    </select>
-
-    <select id="findByTaskName" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        SELECT
-        <include refid="Base_Column_List" />
-        FROM DDC_TASK
-        WHERE TASK_NAME = #{taskName,jdbcType=VARCHAR}
-        ORDER BY TASK_ID DESC
-    </select>
-
-    <select id="findByTaskType" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        SELECT
-        <include refid="Base_Column_List" />
-        FROM DDC_TASK
-        WHERE CLASS_NAME = #{taskType,jdbcType=VARCHAR}
-        ORDER BY TASK_ID DESC
-    </select>
-
-    <select id="findByOwner" resultMap="BaseResultMap" parameterType="java.lang.String" >
-        SELECT
-        <include refid="Base_Column_List" />
-        FROM DDC_TASK
-        WHERE OWNER= #{owner,jdbcType=VARCHAR}
-        ORDER BY TASK_ID DESC
-    </select>
-
     <select id="findTasksByCondition" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List" />
@@ -70,15 +39,15 @@
             <if test="job.taskName !=null and job.taskName != '' ">
                 AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
-            <if test="job.taskType !=null and job.taskType != ''">
-                AND CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+            <if test="job.contentType !=null and job.contentType != ''">
+                AND CLASS_NAME = #{job.contentType,jdbcType=VARCHAR}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
                AND OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
         </where>
         ORDER BY TASK_ID DESC
-              limit #{pager.page},#{pager.limit}
+        limit #{pager.page},#{pager.limit}
     </select>
 
     <select id="findAllTasksByCondition" resultMap="BaseResultMap">
@@ -89,8 +58,8 @@
             <if test="taskName !=null and taskName != '' ">
                 AND TASK_NAME = #{name,jdbcType=VARCHAR}
             </if>
-            <if test="taskType !=null and taskType != ''">
-                AND CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+            <if test="contentType !=null and contentType != ''">
+                AND CLASS_NAME = #{contentType,jdbcType=VARCHAR}
             </if>
             <if test="assignee !=null and assignee != ''">
                 AND OWNER= #{assignee,jdbcType=VARCHAR}

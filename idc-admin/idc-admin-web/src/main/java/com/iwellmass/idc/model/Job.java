@@ -28,7 +28,7 @@ public class Job {
 
 	private String taskId;
 
-	private TaskType taskType;
+	private String taskType;
 
 	private String contentType;
 
@@ -97,15 +97,15 @@ public class Job {
 
 	@ApiModelProperty("任务类型，工作流任务，节点任务")
 	@Column(name = "task_type")
-	public TaskType getTaskType() {
+	public String getTaskType() {
 		return taskType;
 	}
 
-	public void setTaskType(TaskType taskType) {
+	public void setTaskType(String taskType) {
 		this.taskType = taskType;
 	}
 
-	@ApiModelProperty("业务类型，数据同步、SPARK_SQL")
+	@ApiModelProperty("业务类型，DATA_SYNC、SPARK_SQL")
 	@Column(name = "content_type")
 	public String getContentType() {
 		return contentType;

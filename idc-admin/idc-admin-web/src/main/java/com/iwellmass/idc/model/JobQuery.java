@@ -11,7 +11,7 @@ public class JobQuery {
     private String taskName;
 
     @ApiModelProperty("任务类型")
-    private String taskType;
+    private String contentType;
 
     @ApiModelProperty("负责人")
     private String assignee;
@@ -30,12 +30,12 @@ public class JobQuery {
         this.taskName = taskName;
     }
 
-    public String getTaskType() {
-        return taskType;
+    public String getContentType() {
+        return contentType;
     }
 
-    public void setTaskType(String taskType) {
-        this.taskType = taskType;
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public String getAssignee() {
