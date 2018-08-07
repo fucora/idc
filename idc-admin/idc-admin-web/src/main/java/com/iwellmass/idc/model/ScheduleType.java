@@ -20,6 +20,9 @@ public enum ScheduleType {
 	HOURLY,
 
 	@ApiModelProperty("自定义 CRON 表达式")
-	CRON;
+	CRON,
+	
+	@ApiModelProperty("手动调度")
+	MANUAL;
 	
 }
