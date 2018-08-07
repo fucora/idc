@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import com.iwellmass.dispatcher.common.entry.DDCException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,11 +39,11 @@ public class JobController {
 		return ServiceResult.success("success");
 	}
 
-	@RequestMapping(value = "/{id}/lock-status/{newStatus}", method = RequestMethod.POST)
+	@RequestMapping(value = "/{taskId}/lock-status", method = RequestMethod.POST)
 	@ApiOperation("冻结/恢复 Job")
-	public ServiceResult<String> lock(@PathVariable("newStatus") JobStatus newStatus) {
-
-		return ServiceResult.failure("not supported yet.");
+	public ServiceResult<String> lock(@PathVariable("taskId") int taskId) throws DDCException {
+		jobService.lockStatus(taskId);
+		return ServiceResult.success("success");
 	}
 	
 	/*@RequestMapping(value = "executeTask", method = RequestMethod.POST)

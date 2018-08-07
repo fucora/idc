@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.dispatcher.admin.DDCConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -178,7 +179,11 @@ public class JobService {
 		}
 		taskService.saveWorkFlow(workflow.toJSONString());
 	}
-	
+
+
+	public void lockStatus(int taskId) throws DDCException {
+    	taskService.disableTask(DDCConfiguration.DEFAULT_APP,taskId);
+	}
 	
 	private Job newJob(DdcTask task) {
 		Job job = new Job();
@@ -190,4 +195,6 @@ public class JobService {
 		job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
 		return job;
 	}
+
+
 }
