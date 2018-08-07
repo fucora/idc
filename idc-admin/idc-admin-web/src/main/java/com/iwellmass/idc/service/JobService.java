@@ -53,43 +53,90 @@ public class JobService {
 		// 统一使用 workflow 引擎
 		task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
 		task.setTaskType(Constants.TASK_TYPE_SUBTASK);
+		task.setWorkflowId(job.getWorkflowId());
 		
 		try {
 			taskService.createOrUpdateTask(DDCContext.DEFAULT_APP, task);
+			job.setId(task.getTaskId());
+			updateDependency(job);
 		} catch (DDCException e) {
 			LOGGER.error(e.getMessage(), e);
 		}
+	}
+	
+	private void updateDependency(Job job) {
 		
-		
-		Integer newTaskId = task.getTaskId();
+		Integer newTaskId = job.getId();
 		
 		// 这里我们要更新我们的依赖图
 		
 		// 获取工作流
 		JSONObject workflow = (JSONObject) taskService.getWorkFlow(job.getWorkflowId());
+		
+		if(workflow == null) {
+			workflow = new JSONObject();
+
+			// 初始化 workflow
+			workflow.put("nodeKeyProperty", "id");
+			workflow.put("taskId", newTaskId);
+			workflow.put("nodeDataArray", new JSONArray());
+			workflow.put("linkDataArray", new JSONArray());
+			
+			// 初始化开始、结束节点
+			JSONObject startNode = new JSONObject();
+			startNode.put("id", -1);
+			startNode.put("key", -1);
+			startNode.put("category", "Start");
+			startNode.put("loc", "-932");
+			startNode.put("text", "开始");
+			workflow.getJSONArray("nodeDataArray").add(startNode);
+			JSONObject endNode = new JSONObject();
+			endNode.put("id", -2);
+			endNode.put("key", -2);
+			endNode.put("category", "End");
+			endNode.put("loc", "-281");
+			endNode.put("text", "结束");
+			workflow.getJSONArray("nodeDataArray").add(endNode);
+		}
+		
+		
 		LOGGER.debug("获取所属 workflow {}", workflow);
 		
 		// 添加节点
-		JSONArray nodes = (JSONArray) workflow.get("nodeDataArray");
-		JSONObject jo = new JSONObject();
-		jo.put("loc", "123 456");
-		jo.put("figure", "Octagon");
-		jo.put("createTime", System.currentTimeMillis());
-		jo.put("text", task.getTaskName());
-		jo.put("id", newTaskId);
-		jo.put("key", newTaskId);
-		nodes.add(jo);
+		JSONObject newNode = new JSONObject();
+		newNode.put("id", newTaskId);
+		newNode.put("key", newTaskId);
+		newNode.put("createTime", System.currentTimeMillis());
+		newNode.put("loc", "123 456");
+		newNode.put("figure", "Octagon");
+		newNode.put("text", job.getJobName());
+		workflow.getJSONArray("nodeDataArray").add(newNode);
 		
-		// 处理依赖
-		JSONArray deps = (JSONArray) workflow.get("linkDataArray");
-		job.getDependencies().stream().forEach(dep -> {
+		// 处理依赖，有下游
+		if (job.hasDependencies()) {
+			JSONArray array = workflow.getJSONArray("linkDataArray");
+			job.getDependencies().stream().forEach(dep -> {
+				JSONObject t = new JSONObject();
+				t.put("from", dep.getDependencyId());
+				t.put("to", newTaskId);
+				array.add(t);
+			});
+		} 
+		// 无下游，从开始到结束
+		else {
+			JSONArray array = workflow.getJSONArray("linkDataArray");
+			// 本节点 开始 -> 本节点
 			JSONObject t = new JSONObject();
-			t.put("from", dep.getDependencyId());
+			t.put("from", -1);
 			t.put("to", newTaskId);
-			deps.add(t);
-		});
+			array.add(t);
+			// 本节点 -> 结束
+			JSONObject t2 = new JSONObject();
+			t2.put("from", newTaskId);
+			t2.put("to", -2);
+			array.add(t2);
+		}
 		taskService.saveWorkFlow(workflow.toJSONString());
-		
 	}
 	
 }
