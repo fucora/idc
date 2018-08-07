@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 import io.swagger.annotations.ApiModelProperty;
 
 @Entity
-@Table(name = "t_idc_job")// DDC_TASK
+@Table(name = "t_idc_job") // DDC_TASK
 public class Job {
 
 	private Integer id;
@@ -27,9 +27,11 @@ public class Job {
 	private String taskId;
 
 	private String taskType;
-	
+
+	private String contentType;
+
 	private JobType jobType;
-	
+
 	private ScheduleType scheduleType;
 
 	private ScheduleProperties scheduleProperties;
@@ -37,19 +39,19 @@ public class Job {
 	private Timestamp startTime;
 
 	private Timestamp endTime;
-	
+
 	private Timestamp createTime;
 
 	private Timestamp updateTime;
 
 	private Integer groupId;
-	
+
 	private Integer workflowId;
 
 	private String assignee;
 
 	private Set<JobDependency> dependencies;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@ApiModelProperty("任务ID")
@@ -91,7 +93,7 @@ public class Job {
 		this.taskId = taskId;
 	}
 
-	@ApiModelProperty("业务类型")
+	@ApiModelProperty("任务类型，工作流任务，节点任务")
 	@Column(name = "task_type")
 	public String getTaskType() {
 		return taskType;
@@ -99,6 +101,16 @@ public class Job {
 
 	public void setTaskType(String taskType) {
 		this.taskType = taskType;
+	}
+
+	@ApiModelProperty("业务类型，数据同步、SPARK_SQL")
+	@Column(name = "content_type")
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 
 	@ApiModelProperty("调度类型")
@@ -141,7 +153,7 @@ public class Job {
 	public void setEndTime(Timestamp endTime) {
 		this.endTime = endTime;
 	}
-	
+
 	@ApiModelProperty("创建日期")
 	@Column(name = "createtime")
 	public Timestamp getCreateTime() {
@@ -151,7 +163,7 @@ public class Job {
 	public void setCreateTime(Timestamp createTime) {
 		this.createTime = createTime;
 	}
-	
+
 	@ApiModelProperty("资源组")
 	@Column(name = "group_id")
 	public Integer getGroupId() {
@@ -161,7 +173,7 @@ public class Job {
 	public void setGroupId(Integer groupId) {
 		this.groupId = groupId;
 	}
-	
+
 	@Column(name = "workflow_id")
 	@ApiModelProperty("所属工作流 ID")
 	public Integer getWorkflowId() {
@@ -181,8 +193,7 @@ public class Job {
 	public void setDependencies(Set<JobDependency> dependencies) {
 		this.dependencies = dependencies;
 	}
-	
-	
+
 	@ApiModelProperty("依赖")
 	@Transient
 	public JobType getJobType() {
@@ -194,7 +205,7 @@ public class Job {
 	}
 
 	public boolean hasDependencies() {
-		return ! (dependencies == null || dependencies.isEmpty());
+		return !(dependencies == null || dependencies.isEmpty());
 	}
 
 	public String getAssignee() {

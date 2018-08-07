@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.iwellmass.dispatcher.admin.DDCConfiguration;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
+import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.model.Job;
 
 @Service
@@ -36,10 +36,9 @@ public class JobService {
 		task.setTaskName(job.getName());
 		task.setAppId(DDCContext.DEFAULT_APP);
 		task.setAppKey(DDCContext.DEFAULT_APP_KEY);
-		task.setClassName(classNameOfTaskType(job.getTaskType()));
+		task.setClassName(TaskTypeHelper.classNameOf(job.getContentType()));
 		task.setCreateTime(now);
-		task.setCreateUser("admin");
-		task.setTaskName(job.getName());
+		task.setCreateUser(job.getAssignee());
 		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
 		
 		if (job.hasDependencies()) {
@@ -64,7 +63,7 @@ public class JobService {
 		
 		Integer newTaskId = task.getTaskId();
 		
-		// 这里我们要更新我们的额依赖图
+		// 这里我们要更新我们的依赖图
 		
 		// 获取工作流
 		JSONObject workflow = (JSONObject) taskService.getWorkFlow(job.getGroupId());
@@ -91,11 +90,6 @@ public class JobService {
 		});
 		taskService.saveWorkFlow(workflow.toJSONString());
 		
-	}
-	
-	
-	private static final String classNameOfTaskType(String taskType) {
-		return "com.iwellmass.idc.demo.MyTask";
 	}
 	
 }

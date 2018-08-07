@@ -1,15 +1,18 @@
 package com.iwellmass.idc.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class JobQueryService {
@@ -28,6 +31,9 @@ public class JobQueryService {
         pager1.setLimit(pager.getLimit());
         List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
         List<Job> tasks= idcTaskMapper.findTasksByCondition(query, pager1);
+        tasks.forEach(j -> {
+        	j.setTaskType(TaskTypeHelper.contentTypeOf(j.getTaskType()));
+        });
         return  new PageData(allTasks.size(),tasks);
     }
 

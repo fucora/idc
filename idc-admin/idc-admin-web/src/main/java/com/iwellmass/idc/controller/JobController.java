@@ -1,20 +1,27 @@
 package com.iwellmass.idc.controller;
 
-import com.iwellmass.idc.model.JobQuery;
-import com.iwellmass.idc.service.JobQueryService;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.service.JobQueryService;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
-
-import javax.inject.Inject;
-import java.util.List;
 
 @RestController
 @RequestMapping("/job")
@@ -153,13 +160,6 @@ public class JobController {
 	public ServiceResult<List<Job>> findTaskByGroupId(@PathVariable("workflowId") Integer workflowId){
 		List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(workflowId);
 		return ServiceResult.success(taskByGroupId);
-	}
-
-	@ApiOperation("获取所有实例类型")
-	@GetMapping(path = "/task-type")
-	public ServiceResult<List<JobQuery>> getAllTypes(){
-		List<JobQuery> allTypes =jobQueryService.getAllTypes();
-		return ServiceResult.success(allTypes);
 	}
 
 	@ApiOperation("获取任务所有负责人")

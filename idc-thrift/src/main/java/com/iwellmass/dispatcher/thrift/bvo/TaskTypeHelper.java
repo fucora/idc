@@ -11,25 +11,29 @@ public class TaskTypeHelper {
 	private static final List<String> LIST = new ArrayList<>();
 
 	public static final String SPARK_SQL = "SPARK_SQL";
-	public static final String DATA_SYNC = "同步任务";
+	public static final String SCALA = "SCALA";
+	public static final String SPARK_APP = "SPARK_APP";
+	public static final String DATA_SYNC = "DATA_SYNC";
 	
 	static {
 		LIST.add("SPARK_SQL=com.iwellmass.datafactory.job.DataProcessJob");
-		LIST.add("同步任务=com.iwellmass.idc.YYY");
+		LIST.add("SCALA=com.iwellmass.datafactory.job.DataProcessJob");
+		LIST.add("SPARK_APP=com.iwellmass.datafactory.job.DataProcessJob");
+		LIST.add("DATA_SYNC=com.iwellmass.datafactory.job.DataSyncJob");
 	}
 
-	public static final String classTypeOf(String taskType) {
+	public static final String classNameOf(String contentType) {
 
 		StringBuilder sb = new StringBuilder();
 
-		LIST.stream().filter(s -> s.startsWith(taskType + "=")).findFirst().ifPresent(s -> {
+		LIST.stream().filter(s -> s.startsWith(contentType + "=")).findFirst().ifPresent(s -> {
 			sb.append(s.trim().substring(s.indexOf("=") + 1));
 		});
 
 		return sb.toString();
 	}
 
-	public static final String taskTypeOf(String className) {
+	public static final String contentTypeOf(String className) {
 		StringBuilder sb = new StringBuilder();
 
 		LIST.stream().filter(s -> s.endsWith("=" + className)).findFirst().ifPresent(s -> {

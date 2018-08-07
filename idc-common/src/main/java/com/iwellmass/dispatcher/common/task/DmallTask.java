@@ -385,7 +385,7 @@ public class DmallTask implements Job {
 	}
 
 	private boolean isWaitable(DdcTask task) {
-		return TaskTypeHelper.isDataSyncJob(TaskTypeHelper.taskTypeOf(task.getClassName()));
+		return TaskTypeHelper.isDataSyncJob(TaskTypeHelper.contentTypeOf(task.getClassName()));
 	}
 
 	/**
