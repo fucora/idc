@@ -191,6 +191,9 @@ public class JobService {
 	public void lockStatus(int taskId) throws DDCException {
 		taskService.disableTask(DDCConfiguration.DEFAULT_APP, taskId);
 	}
+	public void unlockStatus(int taskId) throws DDCException {
+		taskService.enableTask(DDCConfiguration.DEFAULT_APP,taskId);
+	}
 
 	private Job newJob(DdcTask task) {
 		Job job = new Job();

@@ -64,7 +64,7 @@ public class JobController {
 	}
 
 	@RequestMapping(value = "/{taskId}/lock-status", method = RequestMethod.POST)
-	@ApiOperation("冻结/恢复 Job")
+	@ApiOperation("冻结 Job")
 	public ServiceResult<String> lock(@PathVariable("taskId") int taskId) {
 		try {
 			jobService.lockStatus(taskId);
@@ -73,5 +73,17 @@ public class JobController {
 		}
 		return ServiceResult.success("success");
 	}
+	@RequestMapping(value = "/{taskId}/unlock-status", method = RequestMethod.POST)
+	@ApiOperation("恢复 Job")
+	public ServiceResult<String> unlock(@PathVariable("taskId") int taskId) {
+		try {
+			jobService.unlockStatus(taskId);
+		} catch (DDCException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
+		return ServiceResult.success("success");
+	}
+
+
 
 }
