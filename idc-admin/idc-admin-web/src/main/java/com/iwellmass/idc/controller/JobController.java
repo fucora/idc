@@ -18,6 +18,7 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.model.JobStatus;
 import com.iwellmass.idc.service.JobQueryService;
 import com.iwellmass.idc.service.JobService;
 
@@ -37,9 +38,9 @@ public class JobController {
 		return ServiceResult.success("success");
 	}
 
-	@RequestMapping(value = "/{id}/lock-status", method = RequestMethod.POST)
+	@RequestMapping(value = "/{id}/lock-status/{newStatus}", method = RequestMethod.POST)
 	@ApiOperation("冻结/恢复 Job")
-	public ServiceResult<String> lock(int appId, int taskId, boolean enable) {
+	public ServiceResult<String> lock(@PathVariable("newStatus") JobStatus newStatus) {
 
 		return ServiceResult.failure("not supported yet.");
 	}
