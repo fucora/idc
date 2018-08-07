@@ -1,6 +1,10 @@
 package com.iwellmass.idc.service;
 
+import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -8,9 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
+import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskWorkflowMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExample;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTaskWorkflowWithBLOBs;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
@@ -26,6 +35,11 @@ public class JobService {
 	@Inject
 	private ITaskService taskService;
 	
+	@Inject
+	private DdcTaskWorkflowMapper ddcTaskWorkflowMapper;
+	
+	@Inject
+	private DdcTaskMapper ddcTaskMapper;
 	
 	public void addJob(Job job) {
 		
@@ -40,6 +54,8 @@ public class JobService {
 		task.setCreateTime(now);
 		task.setCreateUser(job.getAssignee());
 		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
+		task.setOwner(job.getAssignee());
+		task.setTimeout(60L);
 		
 		if (job.hasDependencies()) {
 			task.setTaskCategoty(Constants.TASK_CATEGORY_WORKFLOW);
@@ -64,6 +80,30 @@ public class JobService {
 		}
 	}
 	
+	
+    public List<Job> getWorkflowJob(Integer taskId){
+    	
+    	DdcTask task = ddcTaskMapper.selectByPrimaryKey(taskId);
+    	
+        DdcTaskWorkflowWithBLOBs workflow = ddcTaskWorkflowMapper.selectByPrimaryKey(task.getWorkflowId());
+        
+        if (workflow == null) {
+        	return Collections.emptyList();
+        }
+        
+        JSONObject jo = (JSONObject) JSON.parse(workflow.getJson());
+        
+        
+        JSONArray nodeDataArray = jo.getJSONArray("nodeDataArray");
+
+        List<Integer> list = nodeDataArray.stream().map(t -> ((JSONObject) t).getInteger("id")).filter(id -> id > 0).collect(Collectors.toList());
+        
+        DdcTaskExample example = new DdcTaskExample();
+        example.createCriteria().andTaskIdIn(list);
+        
+        return ddcTaskMapper.selectByExample(example).stream().map(this::newJob).collect(Collectors.toList());
+       }
+	
 	private void updateDependency(Job job) {
 		
 		Integer newTaskId = job.getId();
@@ -78,7 +118,7 @@ public class JobService {
 
 			// 初始化 workflow
 			workflow.put("nodeKeyProperty", "id");
-			workflow.put("taskId", newTaskId);
+			workflow.put("taskId", job.getWorkflowId());
 			workflow.put("nodeDataArray", new JSONArray());
 			workflow.put("linkDataArray", new JSONArray());
 			
@@ -139,4 +179,15 @@ public class JobService {
 		taskService.saveWorkFlow(workflow.toJSONString());
 	}
 	
+	
+	private Job newJob(DdcTask task) {
+		Job job = new Job();
+		job.setJobName(task.getTaskName());
+		job.setId(task.getTaskId());
+		job.setDescription(task.getDescription());
+		job.setAssignee(task.getOwner());
+		job.setWorkflowId(task.getWorkflowId());
+		job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
+		return job;
+	}
 }

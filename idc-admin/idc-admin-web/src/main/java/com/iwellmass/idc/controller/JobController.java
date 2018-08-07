@@ -159,7 +159,7 @@ public class JobController {
 	@ApiOperation("获取工作流子任务")
 	@GetMapping(path = "/workflow-job/{workflowId}")
 	public ServiceResult<List<Job>> findTaskByGroupId(@PathVariable("workflowId") Integer workflowId){
-		List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(workflowId);
+		List<Job> taskByGroupId = jobService.getWorkflowJob(workflowId);
 		return ServiceResult.success(taskByGroupId);
 	}
 
