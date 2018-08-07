@@ -29,7 +29,7 @@
         WHERE 1 = 1
     </select>
 
-    <select id="findTaskByGroupId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    <select id="findTaskByWorkflowId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
         SELECT
         <include refid="Base_Column_List" />
         FROM DDC_TASK
@@ -96,7 +96,7 @@
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         WHERE
-        	WORKFLOW_ID IS NOT NULL
+        	TASK_CATEGOTY = 2
     </select>
 
 

@@ -37,8 +37,8 @@ public class JobQueryService {
         return  new PageData(allTasks.size(),tasks);
     }
 
-    public List<Job> findTaskByGroupId(Integer id){
-     List<Job> taskByGroupId = idcTaskMapper.findTaskByGroupId(id);
+    public List<Job> findTaskByWorkflowId(Integer id){
+     List<Job> taskByGroupId = idcTaskMapper.findTaskByWorkflowId(id);
      return taskByGroupId;
     }
 
