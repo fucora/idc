@@ -50,7 +50,7 @@ public class Job {
 
 	private String assignee;
 
-	private String status;
+	private Integer status;
 
 	private Set<JobDependency> dependencies;
 
@@ -229,11 +229,11 @@ public class Job {
 	}
 
 	@ApiModelProperty("任务状态")
-	public String getStatus() {
+	public Integer getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(Integer status) {
 		this.status = status;
 	}
 }
