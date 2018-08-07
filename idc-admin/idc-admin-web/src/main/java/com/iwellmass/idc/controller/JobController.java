@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
-import com.iwellmass.idc.model.JobStatus;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
@@ -37,9 +37,9 @@ public class JobController {
 
 	@ApiOperation("通过条件检索任务（分页显示）")
 	@PostMapping(path = "/query")
-	public ServiceResult<PageData<List<Job>>> findTasksByCondition(@RequestBody(required = false) JobQuery query,
+	public ServiceResult<PageData<Job>> findTasksByCondition(@RequestBody(required = false) JobQuery query,
 			Pager pager) {
-		PageData<List<Job>> tasks = jobService.findTasksByCondition(query, pager);
+		PageData<Job> tasks = jobService.findTasksByCondition(query, pager);
 		return ServiceResult.success(tasks);
 	}
 
@@ -63,11 +63,15 @@ public class JobController {
 		return ServiceResult.success(allAssignee);
 	}
 
-	@RequestMapping(value = "/{id}/lock-status/{newStatus}", method = RequestMethod.POST)
+	@RequestMapping(value = "/{taskId}/lock-status", method = RequestMethod.POST)
 	@ApiOperation("冻结/恢复 Job")
-	public ServiceResult<String> lock(@PathVariable("newStatus") JobStatus newStatus) {
-
-		return ServiceResult.failure("not supported yet.");
+	public ServiceResult<String> lock(@PathVariable("taskId") int taskId) {
+		try {
+			jobService.lockStatus(taskId);
+		} catch (DDCException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
+		return ServiceResult.success("success");
 	}
 
 }
