@@ -25,7 +25,7 @@ public class JobInstanceServiceTest {
     @Test
     public void findJobHistoryByCondition() {
         JobQuery jobQuery = new JobQuery();
-        jobQuery.setName("简单任务");
+        jobQuery.setTaskName("简单任务");
         Pager pager = new Pager();
         pager.setPage(0);
         pager.setLimit(3);

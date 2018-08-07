@@ -33,7 +33,7 @@ public class JobService {
 		
 		DdcTask task = new DdcTask();
 		
-		task.setTaskName(job.getName());
+		task.setTaskName(job.getJobName());
 		task.setAppId(DDCContext.DEFAULT_APP);
 		task.setAppKey(DDCContext.DEFAULT_APP_KEY);
 		task.setClassName(TaskTypeHelper.classNameOf(job.getContentType()));

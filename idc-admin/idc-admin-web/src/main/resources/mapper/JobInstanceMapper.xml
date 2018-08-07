@@ -4,11 +4,11 @@
   <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.JobInstance" >
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="job_id" property="jobId" jdbcType="INTEGER" />
-    <result column="job_name" property="jobName" jdbcType="VARCHAR" />
+    <result column="job_name" property="taskName" jdbcType="VARCHAR" />
     <result column="task_type" property="taskType" jdbcType="VARCHAR" />
     <result column="assignee" property="assignee" jdbcType="VARCHAR" />
     <result column="excute_time" property="excuteTime" jdbcType="TIMESTAMP" />
-    <result column="load_time" property="loadTime" jdbcType="TIMESTAMP" />
+    <result column="load_time" property="loadDate" jdbcType="TIMESTAMP" />
     <result column="start_time" property="startTime" jdbcType="TIMESTAMP" />
     <result column="end_time" property="endTime" jdbcType="TIMESTAMP" />
   </resultMap>
