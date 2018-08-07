@@ -72,4 +72,8 @@ public class JobQueryService {
         return list1;
     }
 
+	public List<Job> getWorkflowJob() {
+		return idcTaskMapper.findAllWorkflowJob();
+	}
+
 }

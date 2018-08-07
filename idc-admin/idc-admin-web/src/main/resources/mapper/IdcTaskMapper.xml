@@ -91,6 +91,13 @@
             </if>
         </where>
     </select>
+    <select id="findAllWorkflowJob" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM DDC_TASK
+        WHERE
+        	WORKFLOW_ID IS NOT NULL
+    </select>
 
 
 </mapper>

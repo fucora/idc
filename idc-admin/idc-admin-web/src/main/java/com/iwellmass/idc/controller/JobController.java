@@ -37,10 +37,6 @@ public class JobController {
 		return ServiceResult.failure("not supported yet.");
 	}
 	
-	public void test() {
-		
-	}
-
 	/*@RequestMapping(value = "executeTask", method = RequestMethod.POST)
 	@ResponseBody
 	public ServiceResult executeTask(int appId, int taskId) {
@@ -146,10 +142,16 @@ public class JobController {
 		return ServiceResult.success(tasks);
 	}
 
-	@ApiOperation("通过groupId查询上游任务")
-	@GetMapping(path = "/workflow-jobs")
-	public ServiceResult<List<Job>> findTaskByGroupId(Integer groupId){
-		List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(groupId);
+	@ApiOperation("获取所有 workflow job")
+	@GetMapping(path = "/workflow-job")
+	public ServiceResult<List<Job>> getWorkflowJob(){
+		return ServiceResult.success(jobQueryService.getWorkflowJob());
+	}
+	
+	@ApiOperation("获取工作流子任务")
+	@GetMapping(path = "/workflow-job/{workflowId}")
+	public ServiceResult<List<Job>> findTaskByGroupId(@PathVariable("workflowId") Integer workflowId){
+		List<Job> taskByGroupId = jobQueryService.findTaskByGroupId(workflowId);
 		return ServiceResult.success(taskByGroupId);
 	}
 

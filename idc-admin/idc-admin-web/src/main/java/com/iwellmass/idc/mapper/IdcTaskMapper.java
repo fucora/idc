@@ -15,4 +15,5 @@ public interface IdcTaskMapper {
     List<Job> findAllTasksByCondition(JobQuery job);
     List<Job> findTaskByGroupId(Integer id);
     List<Job> findAllTasks();
+	List<Job> findAllWorkflowJob();
 }
