@@ -9,7 +9,7 @@
         <result column="ACTUAL_FIRE_TIME" property="excuteTime" jdbcType="TIMESTAMP" />
         <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
-        <result column="CLASS_NAME" property="taskType" jdbcType="VARCHAR" />
+        <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="EXECUTE_RESULT" property="status" jdbcType="VARCHAR" />
     </resultMap>
@@ -21,6 +21,7 @@
         SELECT
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+        ORDER BY EXECUTE_ID DESC
     </select>
 
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
@@ -31,8 +32,8 @@
             <if test="job.taskName !=null and job.taskName != '' ">
                 AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
             </if>
-            <if test="job.taskType !=null and job.taskType != ''">
-                AND T.CLASS_NAME = #{job.taskType,jdbcType=VARCHAR}
+            <if test="job.contentType !=null and job.contentType != ''">
+                AND T.CLASS_NAME = #{job.contentType,jdbcType=VARCHAR}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
                 AND T.OWNER= #{job.assignee,jdbcType=VARCHAR}
@@ -44,7 +45,8 @@
                 AND T.ACTUAL_FIRE_TIME= #{job.excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
-        limit #{pager.page},#{pager.limit}
+        ORDER BY EXECUTE_ID DESC
+        LIMIT #{pager.page},#{pager.limit}
     </select>
     <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
@@ -54,8 +56,8 @@
             <if test="taskName !=null and taskName != '' ">
                 AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{name,jdbcType=VARCHAR},'%'))
             </if>
-            <if test="taskType !=null and taskType != ''">
-                AND T.CLASS_NAME = #{taskType,jdbcType=VARCHAR}
+            <if test="contentType !=null and contentType != ''">
+                AND T.CLASS_NAME = #{contentType,jdbcType=VARCHAR}
             </if>
             <if test="assignee !=null and assignee != ''">
                 AND T.OWNER= #{assignee,jdbcType=VARCHAR}
@@ -67,5 +69,6 @@
                 AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
+       ORDER BY EXECUTE_ID DESC
     </select>
 </mapper>

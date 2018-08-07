@@ -105,7 +105,7 @@ public class Job {
 		this.taskType = taskType;
 	}
 
-	@ApiModelProperty("业务类型，数据同步、SPARK_SQL")
+	@ApiModelProperty("业务类型，DATA_SYNC、SPARK_SQL")
 	@Column(name = "content_type")
 	public String getContentType() {
 		return contentType;

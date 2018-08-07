@@ -5,7 +5,7 @@
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="job_id" property="jobId" jdbcType="INTEGER" />
     <result column="job_name" property="taskName" jdbcType="VARCHAR" />
-    <result column="task_type" property="taskType" jdbcType="VARCHAR" />
+    <result column="task_type" property="contentType" jdbcType="VARCHAR" />
     <result column="assignee" property="assignee" jdbcType="VARCHAR" />
     <result column="excute_time" property="excuteTime" jdbcType="TIMESTAMP" />
     <result column="load_time" property="loadDate" jdbcType="TIMESTAMP" />
@@ -31,7 +31,7 @@
       load_time, start_time, end_time
       )
     values (#{id,jdbcType=INTEGER}, #{jobId,jdbcType=INTEGER}, #{jobName,jdbcType=VARCHAR}, 
-      #{taskType,jdbcType=VARCHAR}, #{assignee,jdbcType=VARCHAR}, #{excuteTime,jdbcType=TIMESTAMP}, 
+      #{contentType,jdbcType=VARCHAR}, #{assignee,jdbcType=VARCHAR}, #{excuteTime,jdbcType=TIMESTAMP}, 
       #{loadTime,jdbcType=TIMESTAMP}, #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}
       )
   </insert>
@@ -47,7 +47,7 @@
       <if test="jobName != null" >
         job_name,
       </if>
-      <if test="taskType != null" >
+      <if test="contentType != null" >
         task_type,
       </if>
       <if test="assignee != null" >
@@ -76,8 +76,8 @@
       <if test="jobName != null" >
         #{jobName,jdbcType=VARCHAR},
       </if>
-      <if test="taskType != null" >
-        #{taskType,jdbcType=VARCHAR},
+      <if test="contentType != null" >
+        #{contentType,jdbcType=VARCHAR},
       </if>
       <if test="assignee != null" >
         #{assignee,jdbcType=VARCHAR},
@@ -105,8 +105,8 @@
       <if test="jobName != null" >
         job_name = #{jobName,jdbcType=VARCHAR},
       </if>
-      <if test="taskType != null" >
-        task_type = #{taskType,jdbcType=VARCHAR},
+      <if test="contentType != null" >
+        task_type = #{contentType,jdbcType=VARCHAR},
       </if>
       <if test="assignee != null" >
         assignee = #{assignee,jdbcType=VARCHAR},
@@ -130,7 +130,7 @@
     update t_idc_job_instance
     set job_id = #{jobId,jdbcType=INTEGER},
       job_name = #{jobName,jdbcType=VARCHAR},
-      task_type = #{taskType,jdbcType=VARCHAR},
+      task_type = #{contentType,jdbcType=VARCHAR},
       assignee = #{assignee,jdbcType=VARCHAR},
       excute_time = #{excuteTime,jdbcType=TIMESTAMP},
       load_time = #{loadTime,jdbcType=TIMESTAMP},
