@@ -12,6 +12,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import io.swagger.annotations.ApiModelProperty;
 
 @Entity
@@ -134,7 +136,8 @@ public class Job {
 		this.scheduleProperties = scheduleProperties;
 	}
 
-	@ApiModelProperty("生效日期始")
+	@ApiModelProperty("生效日期始 yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd")
 	@Column(name = "start_time")
 	public Timestamp getStartTime() {
 		return startTime;
@@ -144,7 +147,8 @@ public class Job {
 		this.startTime = startTime;
 	}
 
-	@ApiModelProperty("生效日期止")
+	@ApiModelProperty("生效日期止, yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd")
 	@Column(name = "end_time")
 	public Timestamp getEndTime() {
 		return endTime;

@@ -66,7 +66,7 @@ public class JobService {
 		// 这里我们要更新我们的依赖图
 		
 		// 获取工作流
-		JSONObject workflow = (JSONObject) taskService.getWorkFlow(job.getGroupId());
+		JSONObject workflow = (JSONObject) taskService.getWorkFlow(job.getWorkflowId());
 		LOGGER.debug("获取所属 workflow {}", workflow);
 		
 		// 添加节点

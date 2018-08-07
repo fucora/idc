@@ -1,6 +1,7 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,8 +20,7 @@ public class ScheduleProperties {
 	private List<Integer> daysOfWeek;
 
 	@ApiModelProperty("具体时间")
-	@JsonFormat(pattern = "hh:mm:ss")
-	private LocalTime duetime = LocalTime.of(0, 0, 0);
+	private String duetime = "00:00:00";
 
 	public List<Integer> getDaysOfMonth() {
 		return daysOfMonth;
@@ -38,15 +38,17 @@ public class ScheduleProperties {
 		this.daysOfWeek = daysOfWeek;
 	}
 
-	public LocalTime getDuetime() {
+	public String getDuetime() {
 		return duetime;
 	}
 
-	public void setDuetime(LocalTime duetime) {
+	public void setDuetime(String duetime) {
 		this.duetime = duetime;
 	}
 
 	public String toCronExpr(ScheduleType type) {
+		
+		LocalTime duetime = LocalTime.parse(this.duetime, DateTimeFormatter.ISO_TIME);
 		switch (type) {
 		case MONTHLY:
 			Assert.isFalse(Utils.isNullOrEmpty(daysOfMonth), "月调度配置不能为空");
@@ -62,6 +64,5 @@ public class ScheduleProperties {
 			throw new UnsupportedOperationException("not supported yet.");
 		}
 	}
-	
 	
 }
