@@ -28,7 +28,7 @@ public class Job {
 
 	private String taskId;
 
-	private String taskType;
+	private TaskType taskType;
 
 	private String contentType;
 
@@ -97,11 +97,11 @@ public class Job {
 
 	@ApiModelProperty("任务类型，工作流任务，节点任务")
 	@Column(name = "task_type")
-	public String getTaskType() {
+	public TaskType getTaskType() {
 		return taskType;
 	}
 
-	public void setTaskType(String taskType) {
+	public void setTaskType(TaskType taskType) {
 		this.taskType = taskType;
 	}
 

@@ -1,6 +1,7 @@
 package com.iwellmass.idc.service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskWorkflowMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
@@ -25,7 +28,9 @@ import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
+import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobQuery;
 
 @Service
 public class JobService {
@@ -74,7 +79,9 @@ public class JobService {
 		try {
 			taskService.createOrUpdateTask(DDCContext.DEFAULT_APP, task);
 			job.setId(task.getTaskId());
-			updateDependency(job);
+			if (job.hasDependencies()) {
+				updateDependency(job);
+			}
 		} catch (DDCException e) {
 			LOGGER.error(e.getMessage(), e);
 		}
@@ -190,4 +197,55 @@ public class JobService {
 		job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
 		return job;
 	}
+	
+
+
+	@Inject
+	private IdcTaskMapper idcTaskMapper;
+
+	/**
+	 * 通过条件查询job
+	 * 
+	 * @param query
+	 * @return
+	 */
+	public PageData<List<Job>> findTasksByCondition(JobQuery query, Pager pager) {
+		Pager pager1 = new Pager();
+		pager1.setPage(pager.getTo());
+		pager1.setLimit(pager.getLimit());
+		List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
+		List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
+		tasks.forEach(j -> {
+			j.setContentType(TaskTypeHelper.contentTypeOf(j.getContentType()));
+		});
+		return new PageData(allTasks.size(), tasks);
+	}
+
+	public List<Job> findTaskByWorkflowId(Integer id) {
+		List<Job> taskByGroupId = idcTaskMapper.findTaskByWorkflowId(id);
+		return taskByGroupId;
+	}
+
+	public List<JobQuery> getAllAssignee() {
+		List<JobQuery> list = new ArrayList<>();
+		List<JobQuery> list1 = new ArrayList<>();
+		idcTaskMapper.findAllTasks().forEach(i -> {
+			JobQuery query = new JobQuery();
+			query.setAssignee(i.getAssignee());
+			list.add(query);
+		});
+		for (JobQuery query : list) {
+			boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));
+			if (!is) {
+				list1.add(query);
+			}
+		}
+		return list1;
+	}
+
+	public List<Job> getWorkflowJob() {
+		return idcTaskMapper.findAllWorkflowJob();
+	}
+
+
 }

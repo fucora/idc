@@ -21,6 +21,7 @@
         SELECT
         TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
+        ORDER BY EXECUTE_ID DESC
     </select>
 
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
@@ -44,7 +45,8 @@
                 AND T.ACTUAL_FIRE_TIME= #{job.excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
-        limit #{pager.page},#{pager.limit}
+        ORDER BY EXECUTE_ID DESC
+        LIMIT #{pager.page},#{pager.limit}
     </select>
     <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
@@ -67,5 +69,6 @@
                 AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}
             </if>
         </where>
+       ORDER BY EXECUTE_ID DESC
     </select>
 </mapper>
