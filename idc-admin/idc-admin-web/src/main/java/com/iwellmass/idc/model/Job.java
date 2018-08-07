@@ -32,8 +32,6 @@ public class Job {
 
 	private String contentType;
 
-	private JobType jobType;
-
 	private ScheduleType scheduleType;
 
 	private ScheduleProperties scheduleProperties;
@@ -198,16 +196,6 @@ public class Job {
 
 	public void setDependencies(Set<JobDependency> dependencies) {
 		this.dependencies = dependencies;
-	}
-
-	@ApiModelProperty("依赖")
-	@Transient
-	public JobType getJobType() {
-		return jobType;
-	}
-
-	public void setJobType(JobType jobType) {
-		this.jobType = jobType;
 	}
 
 	public boolean hasDependencies() {
