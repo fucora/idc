@@ -19,7 +19,6 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
-import com.iwellmass.idc.model.JobStatus;
 import com.iwellmass.idc.service.JobQueryService;
 import com.iwellmass.idc.service.JobService;
 
@@ -31,6 +30,9 @@ public class JobController {
 
 	@Autowired
 	private JobService jobService;
+
+	@Inject
+	private JobQueryService jobQueryService;
 
 	@PostMapping
 	@ApiOperation("新增调度任务")
@@ -139,10 +141,6 @@ public class JobController {
 	public ServiceResult<PageData<DdcTaskUpdateHistory>> taskUpdateHistoryTable(DdcTaskUpdateHistory history, IDCPager page) {
 		return ServiceResult.success(taskService.taskUpdateHistoryTable(history, page));
 	}*/
-
-
-	@Inject
-	private JobQueryService jobQueryService;
 
 	@ApiOperation("通过条件检索任务（分页显示）")
 	@PostMapping(path = "/query")

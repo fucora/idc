@@ -37,8 +37,8 @@ public class JobQueryService {
         return  new PageData(allTasks.size(),tasks);
     }
 
-    public List<Job> findTaskByWorkflowId(Integer id){
-     List<Job> taskByGroupId = idcTaskMapper.findTaskByWorkflowId(id);
+    public List<Job> findTaskByGroupId(Integer id){
+     List<Job> taskByGroupId = idcTaskMapper.findTaskByGroupId(id);
      return taskByGroupId;
     }
 
@@ -66,10 +66,9 @@ public class JobQueryService {
         List<JobQuery> list1 = new ArrayList<>();
        idcTaskMapper.findAllTasks().forEach(i -> {
             JobQuery query=new JobQuery();
-            if(!(null==i.getAssignee()||i.getAssignee().equals(""))){
-                query.setAssignee(i.getAssignee());
-                list.add(query);
-            }
+            if(i.getAssignee().equals())
+            query.setAssignee(i.getAssignee());
+            list.add(query);
         });
         for (JobQuery query : list) {
             boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));
