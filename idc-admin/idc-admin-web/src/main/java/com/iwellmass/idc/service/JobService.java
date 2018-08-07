@@ -1,6 +1,7 @@
 package com.iwellmass.idc.service;
 
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,6 +54,8 @@ public class JobService {
 		task.setCreateTime(now);
 		task.setCreateUser(job.getAssignee());
 		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
+		task.setOwner(job.getAssignee());
+		task.setTimeout(60L);
 		
 		if (job.hasDependencies()) {
 			task.setTaskCategoty(Constants.TASK_CATEGORY_WORKFLOW);
@@ -83,6 +86,10 @@ public class JobService {
     	DdcTask task = ddcTaskMapper.selectByPrimaryKey(taskId);
     	
         DdcTaskWorkflowWithBLOBs workflow = ddcTaskWorkflowMapper.selectByPrimaryKey(task.getWorkflowId());
+        
+        if (workflow == null) {
+        	return Collections.emptyList();
+        }
         
         JSONObject jo = (JSONObject) JSON.parse(workflow.getJson());
         
