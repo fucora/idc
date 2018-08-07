@@ -66,8 +66,10 @@ public class JobQueryService {
         List<JobQuery> list1 = new ArrayList<>();
        idcTaskMapper.findAllTasks().forEach(i -> {
             JobQuery query=new JobQuery();
-            query.setAssignee(i.getAssignee());
-            list.add(query);
+            if(!(null==i.getAssignee()||i.getAssignee().equals(""))){
+                query.setAssignee(i.getAssignee());
+                list.add(query);
+            }
         });
         for (JobQuery query : list) {
             boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));

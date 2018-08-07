@@ -35,4 +35,9 @@ public class JobQueryServiceTest {
     public void getAllTypes(){
         logger.info("========={}",jobQueryService.getAllTypes().toString());
     }
+
+    @Test
+    public void get(){
+        logger.info("========={}",jobQueryService.getAllAssignee().toString());
+    }
 }
