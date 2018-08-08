@@ -66,6 +66,10 @@ public class JobService {
 		task.setOwner(job.getAssignee());
 		task.setTimeout(60L);
 
+		JSONObject jo = new JSONObject();
+		jo.put("taskId", job.getTaskId());
+		task.setParameters(jo.toJSONString());
+
 		if (job.hasDependencies()) {
 			task.setTaskCategoty(Constants.TASK_CATEGORY_WORKFLOW);
 			task.setTaskType(Constants.TASK_TYPE_SUBTASK);

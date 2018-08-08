@@ -202,7 +202,7 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @DdcPermission
-    public void executeTask(int appId, int taskId) throws DDCException {
+    public void executeTask(int appId, int taskId, int triggerType) throws DDCException {
 
         DdcTask task = selectByTaskIdAndAppId(appId, taskId);
         if (task == null || task.getTaskStatus() == Constants.TASK_STATUS_DISABLED) {
@@ -220,7 +220,7 @@ public class TaskServiceImpl implements ITaskService {
             logger.error("任务名称{}，不支持的任务大类{}", task.getTaskName(), task.getTaskCategoty());
             throw new DDCException("任务名称{%s}，不支持的任务大类{%d}", task.getTaskName(), task.getTaskCategoty());
         }
-        map.put("triggerType", Constants.TASK_EXECUTE_TYPE_MANUAL);
+        map.put("triggerType", triggerType);
         map.put("user", "admin");
 
         try {

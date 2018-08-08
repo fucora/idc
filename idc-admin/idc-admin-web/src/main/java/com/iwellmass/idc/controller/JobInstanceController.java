@@ -24,9 +24,10 @@ public class JobInstanceController {
 
     @ApiOperation("补数")
     @PostMapping("/complement")
-    public ServiceResult save(@RequestBody JobInstance instance){
-        JobInstance jobInstance = jobInstanceService.save(instance);
-        return ServiceResult.success(jobInstance);
+    public ServiceResult<String> save(@RequestBody ComplementRequest request){
+    	
+    	
+        return ServiceResult.success("success");
     }
 
     @ApiOperation("通过条件检索实例（分页显示）")

@@ -22,6 +22,8 @@ public class Constants {
 	
 	public static final int TASK_TRIGGER_TYPE_MAN = 1;
 	
+	public static final int TASK_TRIGGER_TYPE_MAN_COMPLEMENT = 0x10;
+	
 	public static final int THREE_SERVER_HEARTBEAT = 3 * 5 * 1000;
 	
 	public static final int THREE_NODE_HEARTBEAT = 3 * 15 * 1000;

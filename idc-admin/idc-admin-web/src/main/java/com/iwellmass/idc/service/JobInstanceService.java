@@ -5,6 +5,7 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
+import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
@@ -93,7 +94,7 @@ public class JobInstanceService {
     }
 
     public void restart(int taskId) throws DDCException {
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,taskId);
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,taskId, Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
     }
 
 }
