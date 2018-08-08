@@ -24,16 +24,18 @@ public class JobInstanceController {
 
     @ApiOperation("补数")
     @PostMapping("/complement")
-    public ServiceResult<String> save(@RequestBody ComplementRequest request){
-    	
-    	
+    public ServiceResult<String> complement(@RequestBody ComplementRequest request){
+        try {
+            jobInstanceService.complement(request);
+        } catch (DDCException e) {
+           return ServiceResult.failure(e.getMessage());
+        }
         return ServiceResult.success("success");
     }
 
     @ApiOperation("通过条件检索实例（分页显示）")
     @PostMapping("/query")
     public ServiceResult<PageData<JobInstance>> findTaskInstanceByCondition(@RequestBody(required = false) JobQuery query,Pager pager){
-    	
         PageData<JobInstance> taskInstance = jobInstanceService.findTaskInstanceByCondition(query, pager);
         return ServiceResult.success(taskInstance);
     }
@@ -44,6 +46,7 @@ public class JobInstanceController {
         List<JobQuery> allAssignee = jobInstanceService.getAllAssignee();
         return ServiceResult.success(allAssignee);
     }
+
     @ApiOperation("重跑任务")
     @PostMapping("/{taskId}/restart")
     public ServiceResult<String> restart(@PathVariable(name = "taskId") int taskId){

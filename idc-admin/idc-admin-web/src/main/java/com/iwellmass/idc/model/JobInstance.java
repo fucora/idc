@@ -34,6 +34,8 @@ public class JobInstance {
 
 	private Timestamp endTime;
 
+	private Integer type;
+
 	@Id
 	@ApiModelProperty("执行ID")
 	public Integer getId() {
@@ -123,5 +125,14 @@ public class JobInstance {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	@ApiModelProperty("实例类型")
+	public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
 	}
 }

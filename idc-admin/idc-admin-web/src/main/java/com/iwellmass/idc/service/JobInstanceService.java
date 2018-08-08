@@ -1,13 +1,18 @@
 package com.iwellmass.idc.service;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
+import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
+import com.iwellmass.idc.controller.ComplementRequest;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
 import com.iwellmass.idc.mapper.JobInstanceMapper;
 import com.iwellmass.idc.model.JobInstance;
@@ -23,30 +28,26 @@ public class JobInstanceService {
 
     @Inject
     private IdcTaskHistoryMapper idcTaskHistoryMapper;
-    
-    @Inject
-    private JobInstanceMapper jobInstanceMapper;
 
     @Inject
     private ITaskService iTaskService;
+
+    @Inject
+    private DdcTaskMapper ddcTaskMapper;
     
-    public JobInstance save(JobInstance instance){
-        int insert = jobInstanceMapper.insert(instance);
-        if(0==insert||-1==insert){
-            throw new AppException("保存失败");
-        }
-        return instance;
+    public void complement(ComplementRequest request) throws DDCException {
+        DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(request.getJobId());
+        //TODO 业务时间
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,ddcTask.getTaskId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
     }
 
     public PageData<JobInstance>findTaskInstanceByCondition(JobQuery query, Pager pager){
         Pager pager1=new Pager();
         pager1.setPage(pager.getTo());
         pager1.setLimit(pager.getLimit());
-        
         if (query != null && query.getContentType() != null	) {
         	query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
         }
-        
         List<JobInstance> allTaskInstance = idcTaskHistoryMapper.findAllTaskInstanceByCondition(query);
         List<JobInstance> taskInstance = idcTaskHistoryMapper.findTaskInstanceByCondition(query, pager1);
         taskInstance.forEach(t -> {

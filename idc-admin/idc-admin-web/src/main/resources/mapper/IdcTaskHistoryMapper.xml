@@ -12,21 +12,22 @@
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="EXECUTE_RESULT" property="status" jdbcType="VARCHAR" />
+        <result column="TRIGGER_TYPE" property="type" jdbcType="INTEGER" />
     </resultMap>
     <sql id="Base_Column_List" >
-      EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER
+      EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER,TRIGGER_TYPE
     </sql>
 
     <select id="findAllTaskInstance" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         ORDER BY EXECUTE_ID DESC
     </select>
 
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.taskName !=null and job.taskName != '' ">
@@ -50,7 +51,7 @@
     </select>
     <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER
+        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="taskName !=null and taskName != '' ">
