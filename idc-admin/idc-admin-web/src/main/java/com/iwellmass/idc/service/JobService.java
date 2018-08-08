@@ -32,6 +32,7 @@ import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.model.TaskType;
 
 @Service
 public class JobService {
@@ -50,7 +51,7 @@ public class JobService {
 	@Inject
 	private IdcTaskMapper idcTaskMapper;
 
-	public void addJob(Job job) {
+	public void schedule(Job job) {
 
 		Date now = new Date();
 
@@ -65,30 +66,28 @@ public class JobService {
 		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
 		task.setOwner(job.getAssignee());
 		task.setTimeout(60L);
+		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
 
 		JSONObject jo = new JSONObject();
 		jo.put("taskId", job.getTaskId());
 		task.setParameters(jo.toJSONString());
 
-		if (job.hasDependencies()) {
-			task.setTaskCategoty(Constants.TASK_CATEGORY_WORKFLOW);
+		// 使用 workflow 引擎
+		if (job.getTaskType() == TaskType.WORKFLOW_TASK) {
+			// category == Constants.TASK_CATEGORY_BASIC && type == Constants.TASK_TYPE_SUBTASK
+			task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
 			task.setTaskType(Constants.TASK_TYPE_SUBTASK);
 		} else {
 			task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
 			task.setTaskType(Constants.TASK_TYPE_CRON);
 		}
-		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
-//		category == Constants.TASK_CATEGORY_BASIC && type == Constants.TASK_TYPE_SUBTASK
-		// 统一使用 workflow 引擎
-		task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
-		task.setTaskType(Constants.TASK_TYPE_SUBTASK);
-		task.setWorkflowId(job.getWorkflowId());
+		
 
 		try {
 			taskService.createOrUpdateTask(DDCContext.DEFAULT_APP, task);
 			job.setId(task.getTaskId());
-			if (job.hasDependencies()) {
-				updateDependency(job);
+			if (job.getTaskType() == TaskType.WORKFLOW_TASK) {
+				updateDependency(job.getWorkflowId(), job);
 			}
 		} catch (DDCException e) {
 			LOGGER.error(e.getMessage(), e);
@@ -118,21 +117,21 @@ public class JobService {
 		return ddcTaskMapper.selectByExample(example).stream().map(this::newJob).collect(Collectors.toList());
 	}
 
-	private void updateDependency(Job job) {
+	private void updateDependency(Integer workflowId, Job subJob) {
 
-		Integer newTaskId = job.getId();
+		Integer subTaskId = subJob.getId();
 
 		// 这里我们要更新我们的依赖图
 
 		// 获取工作流
-		JSONObject workflow = (JSONObject) taskService.getWorkFlow(job.getWorkflowId());
+		JSONObject workflow = (JSONObject) taskService.getWorkFlow(subJob.getWorkflowId());
 
 		if (workflow == null) {
 			workflow = new JSONObject();
 
 			// 初始化 workflow
 			workflow.put("nodeKeyProperty", "id");
-			workflow.put("taskId", job.getWorkflowId());
+			workflow.put("taskId", workflowId);
 			workflow.put("nodeDataArray", new JSONArray());
 			workflow.put("linkDataArray", new JSONArray());
 
@@ -157,21 +156,21 @@ public class JobService {
 
 		// 添加节点
 		JSONObject newNode = new JSONObject();
-		newNode.put("id", newTaskId);
-		newNode.put("key", newTaskId);
+		newNode.put("id", subTaskId);
+		newNode.put("key", subTaskId);
 		newNode.put("createTime", System.currentTimeMillis());
 		newNode.put("loc", "123 456");
 		newNode.put("figure", "Octagon");
-		newNode.put("text", job.getJobName());
+		newNode.put("text", subJob.getJobName());
 		workflow.getJSONArray("nodeDataArray").add(newNode);
 
 		// 处理依赖，有下游
-		if (job.hasDependencies()) {
+		if (subJob.hasDependencies()) {
 			JSONArray array = workflow.getJSONArray("linkDataArray");
-			job.getDependencies().stream().forEach(dep -> {
+			subJob.getDependencies().stream().forEach(dep -> {
 				JSONObject t = new JSONObject();
 				t.put("from", dep.getDependencyId());
-				t.put("to", newTaskId);
+				t.put("to", subTaskId);
 				array.add(t);
 			});
 		}
@@ -181,11 +180,11 @@ public class JobService {
 			// 本节点 开始 -> 本节点
 			JSONObject t = new JSONObject();
 			t.put("from", -1);
-			t.put("to", newTaskId);
+			t.put("to", subTaskId);
 			array.add(t);
 			// 本节点 -> 结束
 			JSONObject t2 = new JSONObject();
-			t2.put("from", newTaskId);
+			t2.put("from", subTaskId);
 			t2.put("to", -2);
 			array.add(t2);
 		}

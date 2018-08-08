@@ -31,7 +31,7 @@ public class JobController {
 	@PostMapping
 	@ApiOperation("新增调度任务")
 	public ServiceResult<String> addJob(@RequestBody Job job) {
-		jobService.addJob(job);
+		jobService.schedule(job);
 		return ServiceResult.success("success");
 	}
 

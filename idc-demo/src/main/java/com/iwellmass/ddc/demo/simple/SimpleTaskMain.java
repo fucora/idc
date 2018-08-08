@@ -7,6 +7,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.iwellmass.datafactory.job.DataProcessJob;
 import com.iwellmass.dispatcher.sdk.SchedulerStarter;
 import com.iwellmass.dispatcher.sdk.model.DDCException;
 import com.iwellmass.dispatcher.sdk.service.ITaskService;
@@ -16,14 +17,14 @@ public class SimpleTaskMain {
 
 	public static void main(String[] args) {
 		Set<ITaskService> tasks = Sets.newHashSet();
-		tasks.add(new SimpleTask());
+		tasks.add(new DataProcessJob());
 		SchedulerStarter starter = new SchedulerStarter("default", tasks, "127.0.0.1");
 		
 		
 		SourceLookup lookup = new SourceLookup() {
 			public boolean lookup(String jobId, LocalDateTime loadDate) {
 				System.out.println("检查到了");
-				return false;
+				return true;
 			}
 		};
 		

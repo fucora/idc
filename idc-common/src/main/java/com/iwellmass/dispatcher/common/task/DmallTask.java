@@ -84,6 +84,9 @@ public class DmallTask implements Job {
 
 	private Integer taskId;
 	
+	// 业务日期
+	private Long loadDate;
+	
 	private Long executeId;
 	
 	private String executeBatchId;
@@ -132,6 +135,22 @@ public class DmallTask implements Job {
 		//将logger放入线程对象，保证后续打印的日志都所属同一线程
 		loggers.set(logger);
 		isContinue = false;
+		
+		// CRON 调度，计算业务日期
+		if (triggerType == Constants.TASK_TRIGGER_TYPE_SYSTEM) {
+			Date sdf = context.getScheduledFireTime();
+			this.executeBatchId =  formatSimple(sdf == null ? new Date() : sdf);
+			this.loadDate = sdf.getTime();
+		} 
+		// 手动执行，我们默认必须传入业务日期
+		else {
+			if (this.loadDate == null) {
+				throw new JobExecutionException("未指定业务日期");
+			}
+			this.executeBatchId = formatSimple(new Date());
+		}
+		
+		// 保存到数据库
 		doTask();
 		
 		if(isContinue) {			
@@ -152,6 +171,7 @@ public class DmallTask implements Job {
 					map.put("executeBatchId", executeBatchId);
 					map.put("workflowExecuteId", workflowExecuteId);
 					map.put("workflowId", workflowId);
+					map.put("loadDate", loadDate);
 
 					try {
 						JobKey jobKey = buildJobKey(subTask, executeId);
@@ -202,15 +222,6 @@ public class DmallTask implements Job {
 				ddcTaskMapper.updateByPrimaryKeySelective(record);				
 			}
 			
-			//生成本次的执行结果编号
-			if(StringUtils.isEmpty(executeBatchId)) {
-				try {
-					executeBatchId = DateUtils.formatDate(new Date(), DateUtils.FORMAT_DATETIME_SIMPLE);
-				} catch (Exception e) {
-					ExceptionUtils.dealErrorInfo("生成执行批次号异常，错误信息：{%s}", e.getMessage());
-				}
-			}
-
 			DdcTaskExecuteHistory executeHistory = null;
 			
 			if(ddcTask.getTaskType() == Constants.TASK_TYPE_CRON || ddcTask.getTaskType() == Constants.TASK_TYPE_SIMPLE) { //定时任务或简单任务
@@ -577,7 +588,7 @@ public class DmallTask implements Job {
 			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkJobId, ddcTask.getTaskId());
 		}
 		// 任务批次
-		String checkLoadDate = String.valueOf(idcParameters.get("jobId"));
+		String checkLoadDate = String.valueOf(idcParameters.get("loadDate"));
 		idcParameters.put("loadDate", loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
 		if (!"null".equals(checkLoadDate)) {
 			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkLoadDate, idcParameters.get("loadDate"));
@@ -714,6 +725,14 @@ public class DmallTask implements Job {
 
 	public void setWorkflowId(Integer workflowId) {
 		this.workflowId = workflowId;
+	}
+	
+	private static final String formatSimple(Date date) {
+		try {
+			return DateUtils.formatDate(date, DateUtils.FORMAT_DATETIME_SIMPLE);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
 	}
 	
 }
