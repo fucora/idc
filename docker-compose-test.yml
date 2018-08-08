@@ -1,7 +1,7 @@
 version: '2'
 services:
   idc-server:
-    image: $idc
+    image: $idc_latest
     container_name: idc
     build:
       context: ./idc-admin/idc-admin-web

@@ -13,6 +13,9 @@ public class JobQuery {
     @ApiModelProperty("任务类型")
     private String contentType;
 
+    @ApiModelProperty("实例类型")
+    private Integer type;
+
     @ApiModelProperty("负责人")
     private String assignee;
 
@@ -60,5 +63,13 @@ public class JobQuery {
 
     public void setExcuteTime(Timestamp excuteTime) {
         this.excuteTime = excuteTime;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
     }
 }
