@@ -37,12 +37,8 @@ public class JobInstanceService {
     
     public void complement(ComplementRequest request) throws DDCException {
         DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(request.getJobId());
-        JSONObject object = JSON.parseObject(ddcTask.getParameters());
-        String taskId = object.getString("taskId");
-        DdcTask ddcTask1 = ddcTaskMapper.selectByPrimaryKey(Integer.valueOf(taskId));
-        ddcTask1.setSimpleStartTime(request.getStart().toString());
-        ddcTaskMapper.updateByPrimaryKey(ddcTask1);
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,ddcTask1.getTaskId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
+        //TODO 业务时间
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,ddcTask.getTaskId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
     }
 
     public PageData<JobInstance>findTaskInstanceByCondition(JobQuery query, Pager pager){
