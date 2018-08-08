@@ -223,6 +223,9 @@ public class JobService {
 		if (query != null && query.getContentType() != null) {
 			query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
 		}
+		if(null==query.getContentType()||query.getContentType().equals("")){
+			query.setContentType("xxx");
+		}
 		List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
 		List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
 		tasks.forEach(j -> {
