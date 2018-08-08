@@ -82,3 +82,20 @@ eureka:
       enabled: true
     lease:
       duration: 5
+
+---
+spring:
+  profiles: gray
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://grayeureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
