@@ -32,13 +32,10 @@ public class JobInstanceService {
     @Inject
     private ITaskService iTaskService;
 
-    @Inject
-    private DdcTaskMapper ddcTaskMapper;
-    
+
     public void complement(ComplementRequest request) throws DDCException {
-        DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(request.getJobId());
         //TODO 业务时间
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,ddcTask.getTaskId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,request.getJobId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
     }
 
     public PageData<JobInstance>findTaskInstanceByCondition(JobQuery query, Pager pager){
