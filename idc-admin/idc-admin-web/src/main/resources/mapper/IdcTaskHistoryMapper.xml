@@ -31,7 +31,7 @@
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.taskName !=null and job.taskName != '' ">
-                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{job.taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.contentType !=null and job.contentType != ''">
                 AND T.CLASS_NAME = #{job.contentType,jdbcType=VARCHAR}
@@ -58,7 +58,7 @@
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="taskName !=null and taskName != '' ">
-                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{name,jdbcType=VARCHAR},'%'))
+                AND T.TASK_NAME LIKE CONCAT(CONCAT('%',#{taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="contentType !=null and contentType != ''">
                 AND T.CLASS_NAME = #{contentType,jdbcType=VARCHAR}
@@ -67,7 +67,7 @@
                 AND T.OWNER= #{assignee,jdbcType=VARCHAR}
             </if>
             <if test="loadTime !=null and loadTime != ''">
-                AND T.FIRE_TIME= #{job.loadTime,jdbcType=TIMESTAMP}
+                AND T.FIRE_TIME= #{loadTime,jdbcType=TIMESTAMP}
             </if>
             <if test="excuteTime !=null and excuteTime != ''">
                 AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}

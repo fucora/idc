@@ -37,25 +37,25 @@ import com.iwellmass.idc.model.TaskType;
 @Service
 public class JobService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
-	@Inject
-	private ITaskService taskService;
+    @Inject
+    private ITaskService taskService;
 
-	@Inject
-	private DdcTaskWorkflowMapper ddcTaskWorkflowMapper;
+    @Inject
+    private DdcTaskWorkflowMapper ddcTaskWorkflowMapper;
 
-	@Inject
-	private DdcTaskMapper ddcTaskMapper;
+    @Inject
+    private DdcTaskMapper ddcTaskMapper;
 
-	@Inject
-	private IdcTaskMapper idcTaskMapper;
+    @Inject
+    private IdcTaskMapper idcTaskMapper;
 
 	public void schedule(Job job) {
 
-		Date now = new Date();
+        Date now = new Date();
 
-		DdcTask task = new DdcTask();
+        DdcTask task = new DdcTask();
 
 		task.setTaskName(job.getJobName());
 		task.setAppId(DDCContext.DEFAULT_APP);
@@ -68,9 +68,9 @@ public class JobService {
 		task.setTimeout(60L);
 		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
 
-		JSONObject jo = new JSONObject();
-		jo.put("taskId", job.getTaskId());
-		task.setParameters(jo.toJSONString());
+        JSONObject jo = new JSONObject();
+        jo.put("taskId", job.getTaskId());
+        task.setParameters(jo.toJSONString());
 
 		// 使用 workflow 引擎
 		if (job.getTaskType() == TaskType.WORKFLOW_TASK) {
@@ -94,40 +94,40 @@ public class JobService {
 		}
 	}
 
-	public List<Job> getWorkflowJob(Integer taskId) {
+    public List<Job> getWorkflowJob(Integer taskId) {
 
-		DdcTask task = ddcTaskMapper.selectByPrimaryKey(taskId);
+        DdcTask task = ddcTaskMapper.selectByPrimaryKey(taskId);
 
-		DdcTaskWorkflowWithBLOBs workflow = ddcTaskWorkflowMapper.selectByPrimaryKey(task.getWorkflowId());
+        DdcTaskWorkflowWithBLOBs workflow = ddcTaskWorkflowMapper.selectByPrimaryKey(task.getWorkflowId());
 
-		if (workflow == null) {
-			return Collections.emptyList();
-		}
+        if (workflow == null) {
+            return Collections.emptyList();
+        }
 
-		JSONObject jo = (JSONObject) JSON.parse(workflow.getJson());
+        JSONObject jo = (JSONObject) JSON.parse(workflow.getJson());
 
-		JSONArray nodeDataArray = jo.getJSONArray("nodeDataArray");
+        JSONArray nodeDataArray = jo.getJSONArray("nodeDataArray");
 
-		List<Integer> list = nodeDataArray.stream().map(t -> ((JSONObject) t).getInteger("id")).filter(id -> id > 0)
-				.collect(Collectors.toList());
+        List<Integer> list = nodeDataArray.stream().map(t -> ((JSONObject) t).getInteger("id")).filter(id -> id > 0)
+                .collect(Collectors.toList());
 
-		DdcTaskExample example = new DdcTaskExample();
-		example.createCriteria().andTaskIdIn(list);
+        DdcTaskExample example = new DdcTaskExample();
+        example.createCriteria().andTaskIdIn(list);
 
-		return ddcTaskMapper.selectByExample(example).stream().map(this::newJob).collect(Collectors.toList());
-	}
+        return ddcTaskMapper.selectByExample(example).stream().map(this::newJob).collect(Collectors.toList());
+    }
 
 	private void updateDependency(Integer workflowId, Job subJob) {
 
 		Integer subTaskId = subJob.getId();
 
-		// 这里我们要更新我们的依赖图
+        // 这里我们要更新我们的依赖图
 
 		// 获取工作流
 		JSONObject workflow = (JSONObject) taskService.getWorkFlow(subJob.getWorkflowId());
 
-		if (workflow == null) {
-			workflow = new JSONObject();
+        if (workflow == null) {
+            workflow = new JSONObject();
 
 			// 初始化 workflow
 			workflow.put("nodeKeyProperty", "id");
@@ -135,24 +135,24 @@ public class JobService {
 			workflow.put("nodeDataArray", new JSONArray());
 			workflow.put("linkDataArray", new JSONArray());
 
-			// 初始化开始、结束节点
-			JSONObject startNode = new JSONObject();
-			startNode.put("id", -1);
-			startNode.put("key", -1);
-			startNode.put("category", "Start");
-			startNode.put("loc", "-932");
-			startNode.put("text", "开始");
-			workflow.getJSONArray("nodeDataArray").add(startNode);
-			JSONObject endNode = new JSONObject();
-			endNode.put("id", -2);
-			endNode.put("key", -2);
-			endNode.put("category", "End");
-			endNode.put("loc", "-281");
-			endNode.put("text", "结束");
-			workflow.getJSONArray("nodeDataArray").add(endNode);
-		}
+            // 初始化开始、结束节点
+            JSONObject startNode = new JSONObject();
+            startNode.put("id", -1);
+            startNode.put("key", -1);
+            startNode.put("category", "Start");
+            startNode.put("loc", "-932");
+            startNode.put("text", "开始");
+            workflow.getJSONArray("nodeDataArray").add(startNode);
+            JSONObject endNode = new JSONObject();
+            endNode.put("id", -2);
+            endNode.put("key", -2);
+            endNode.put("category", "End");
+            endNode.put("loc", "-281");
+            endNode.put("text", "结束");
+            workflow.getJSONArray("nodeDataArray").add(endNode);
+        }
 
-		LOGGER.debug("获取所属 workflow {}", workflow);
+        LOGGER.debug("获取所属 workflow {}", workflow);
 
 		// 添加节点
 		JSONObject newNode = new JSONObject();
@@ -191,69 +191,74 @@ public class JobService {
 		taskService.saveWorkFlow(workflow.toJSONString());
 	}
 
-	public void lockStatus(int taskId) throws DDCException {
-		taskService.disableTask(DDCConfiguration.DEFAULT_APP, taskId);
-	}
-	public void unlockStatus(int taskId) throws DDCException {
-		taskService.enableTask(DDCConfiguration.DEFAULT_APP,taskId);
-	}
+    public void lockStatus(int taskId) throws DDCException {
+        taskService.disableTask(DDCConfiguration.DEFAULT_APP, taskId);
+    }
 
-	private Job newJob(DdcTask task) {
-		Job job = new Job();
-		job.setJobName(task.getTaskName());
-		job.setId(task.getTaskId());
-		job.setDescription(task.getDescription());
-		job.setAssignee(task.getOwner());
-		job.setWorkflowId(task.getWorkflowId());
-		job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
-		return job;
-	}
+    public void unlockStatus(int taskId) throws DDCException {
+        taskService.enableTask(DDCConfiguration.DEFAULT_APP, taskId);
+    }
 
-	/**
-	 * 通过条件查询job
-	 * 
-	 * @param query
-	 * @return
-	 */
-	public PageData<Job> findTasksByCondition(JobQuery query, Pager pager) {
-		Pager pager1 = new Pager();
-		pager1.setPage(pager.getTo());
-		pager1.setLimit(pager.getLimit());
-		if (query != null && query.getContentType() != null) {
-			query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
-		}
-		List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
-		List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
-		tasks.forEach(j -> {
-			j.setContentType(TaskTypeHelper.contentTypeOf(j.getContentType()));
-		});
-		return new PageData<Job>(allTasks.size(), tasks);
-	}
+    private Job newJob(DdcTask task) {
+        Job job = new Job();
+        job.setJobName(task.getTaskName());
+        job.setId(task.getTaskId());
+        job.setDescription(task.getDescription());
+        job.setAssignee(task.getOwner());
+        job.setWorkflowId(task.getWorkflowId());
+        job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
+        return job;
+    }
 
-	public List<Job> findTaskByWorkflowId(Integer id) {
-		List<Job> taskByGroupId = idcTaskMapper.findTaskByWorkflowId(id);
-		return taskByGroupId;
-	}
+    /**
+     * 通过条件查询job
+     *
+     * @param query
+     * @return
+     */
+    public PageData<Job> findTasksByCondition(JobQuery query, Pager pager) {
+        Pager pager1 = new Pager();
+        pager1.setPage(pager.getTo());
+        pager1.setLimit(pager.getLimit());
+        if (query != null && query.getContentType() != null) {
+            if (null == TaskTypeHelper.classNameOf(query.getContentType()) || TaskTypeHelper.classNameOf(query.getContentType()).equals("")) {
+                query.setContentType("XXXXX");
+            } else {
+                query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
+            }
+        }
+        List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
+        List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
+        tasks.forEach(j -> {
+            j.setContentType(TaskTypeHelper.contentTypeOf(j.getContentType()));
+        });
+        return new PageData<Job>(allTasks.size(), tasks);
+    }
 
-	public List<JobQuery> getAllAssignee() {
-		List<JobQuery> list = new ArrayList<>();
-		List<JobQuery> list1 = new ArrayList<>();
-		idcTaskMapper.findAllTasks().forEach(i -> {
-			JobQuery query = new JobQuery();
-			query.setAssignee(i.getAssignee());
-			list.add(query);
-		});
-		for (JobQuery query : list) {
-			boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));
-			if (!is) {
-				list1.add(query);
-			}
-		}
-		return list1;
-	}
+    public List<Job> findTaskByWorkflowId(Integer id) {
+        List<Job> taskByGroupId = idcTaskMapper.findTaskByWorkflowId(id);
+        return taskByGroupId;
+    }
 
-	public List<Job> getWorkflowJob() {
-		return idcTaskMapper.findAllWorkflowJob();
-	}
+    public List<JobQuery> getAllAssignee() {
+        List<JobQuery> list = new ArrayList<>();
+        List<JobQuery> list1 = new ArrayList<>();
+        idcTaskMapper.findAllTasks().forEach(i -> {
+            JobQuery query = new JobQuery();
+            query.setAssignee(i.getAssignee());
+            list.add(query);
+        });
+        for (JobQuery query : list) {
+            boolean is = list1.stream().anyMatch(t -> t.getAssignee().equals(query.getAssignee()));
+            if (!is) {
+                list1.add(query);
+            }
+        }
+        return list1;
+    }
+
+    public List<Job> getWorkflowJob() {
+        return idcTaskMapper.findAllWorkflowJob();
+    }
 
 }

@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -26,6 +27,7 @@ public class JobInstance {
 
 	private String assignee;
 
+	@JsonFormat(pattern = "yyyyMMdd")
 	private Timestamp excuteTime;
 
 	private Timestamp loadDate;
