@@ -45,6 +45,9 @@
             <if test="job.excuteTime !=null and job.excuteTime != ''">
                 AND T.ACTUAL_FIRE_TIME= #{job.excuteTime,jdbcType=TIMESTAMP}
             </if>
+            <if test="job.type !=null and job.type != ''">
+                AND TH.TRIGGER_TYPE= #{job.type,jdbcType=INTEGER}
+            </if>
         </where>
         ORDER BY EXECUTE_ID DESC
         LIMIT #{pager.page},#{pager.limit}
@@ -68,6 +71,9 @@
             </if>
             <if test="excuteTime !=null and excuteTime != ''">
                 AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="type !=null and type != ''">
+                AND TH.TRIGGER_TYPE= #{type,jdbcType=INTEGER}
             </if>
         </where>
        ORDER BY EXECUTE_ID DESC
