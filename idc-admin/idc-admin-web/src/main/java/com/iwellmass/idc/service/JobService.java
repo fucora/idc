@@ -221,10 +221,11 @@ public class JobService {
 		pager1.setPage(pager.getTo());
 		pager1.setLimit(pager.getLimit());
 		if (query != null && query.getContentType() != null) {
-			query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
-		}
-		if(null==query.getContentType()||query.getContentType().equals("")){
-			query.setContentType("xxx");
+			if(null== TaskTypeHelper.classNameOf(query.getContentType())|| TaskTypeHelper.classNameOf(query.getContentType()).equals("")){
+				query.setContentType("XXXXX");
+			}else {
+				query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
+			}
 		}
 		List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
 		List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
