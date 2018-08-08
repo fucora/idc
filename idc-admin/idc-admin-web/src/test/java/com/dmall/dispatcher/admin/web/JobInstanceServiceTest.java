@@ -25,11 +25,11 @@ public class JobInstanceServiceTest {
     @Test
     public void findJobHistoryByCondition() {
         JobQuery jobQuery = new JobQuery();
-        jobQuery.setTaskName("简单任务");
+        jobQuery.setType(0);
         Pager pager = new Pager();
         pager.setPage(0);
         pager.setLimit(3);
-        logger.info("========={}", jobInstanceService.findTaskInstanceByCondition(jobQuery, pager).getRawData().toString());
+        logger.info("========={}", jobInstanceService.findTaskInstanceByCondition(jobQuery, pager).getData().toString());
     }
 
     @Test
