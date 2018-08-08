@@ -3,6 +3,9 @@ package com.iwellmass.idc.service;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.dispatcher.admin.DDCConfiguration;
+import com.iwellmass.dispatcher.admin.service.ITaskService;
+import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
 import com.iwellmass.idc.mapper.JobInstanceMapper;
@@ -22,6 +25,9 @@ public class JobInstanceService {
     
     @Inject
     private JobInstanceMapper jobInstanceMapper;
+
+    @Inject
+    private ITaskService iTaskService;
     
     public JobInstance save(JobInstance instance){
         int insert = jobInstanceMapper.insert(instance);
@@ -84,6 +90,10 @@ public class JobInstanceService {
             }
         }
         return list1;
+    }
+
+    public void restart(int taskId) throws DDCException {
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,taskId);
     }
 
 }

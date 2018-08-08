@@ -1,6 +1,7 @@
 package com.iwellmass.idc.controller;
 
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.JobQuery;
 import com.iwellmass.idc.service.JobInstanceService;
 import org.springframework.web.bind.annotation.*;
@@ -41,5 +42,15 @@ public class JobInstanceController {
     public ServiceResult<List<JobQuery>> getAllAssignee(){
         List<JobQuery> allAssignee = jobInstanceService.getAllAssignee();
         return ServiceResult.success(allAssignee);
+    }
+    @ApiOperation("重跑任务")
+    @PostMapping("/{taskId}/restart")
+    public ServiceResult<String> restart(@PathVariable(name = "taskId") int taskId){
+        try {
+            jobInstanceService.restart(taskId);
+        } catch (DDCException e) {
+            return ServiceResult.failure(e.getMessage());
+        }
+        return ServiceResult.success("success");
     }
 }
