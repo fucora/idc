@@ -38,7 +38,7 @@
         FROM DDC_TASK
         <where>
             <if test="job.taskName !=null and job.taskName != '' ">
-                AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.name,jdbcType=VARCHAR},'%'))
+                AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.contentType !=null and job.contentType != ''">
                 AND CLASS_NAME = #{job.contentType,jdbcType=VARCHAR}
@@ -57,7 +57,7 @@
         FROM DDC_TASK
         <where>
             <if test="taskName !=null and taskName != '' ">
-                AND TASK_NAME = #{name,jdbcType=VARCHAR}
+                AND TASK_NAME = #{taskName,jdbcType=VARCHAR}
             </if>
             <if test="contentType !=null and contentType != ''">
                 AND CLASS_NAME = #{contentType,jdbcType=VARCHAR}
