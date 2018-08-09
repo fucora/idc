@@ -27,12 +27,16 @@ public class JobInstance {
 
 	private String assignee;
 
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
 	private Timestamp excuteTime;
 
+	@JsonFormat(pattern = "yyyyMMdd")
 	private Timestamp loadDate;
 
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
 	private Timestamp startTime;
 
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
 	private Timestamp endTime;
 
 	private Integer type;

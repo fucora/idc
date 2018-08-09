@@ -1,7 +1,6 @@
 package com.iwellmass.idc.model;
 
 import java.sql.Timestamp;
-import java.time.ZoneId;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -25,19 +24,19 @@ public class JobQuery {
 	@ApiModelProperty("业务时期")
 	private Timestamp loadTime;
 
-	@ApiModelProperty("业务日期始")
+	@ApiModelProperty("业务日期始， yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
 	private Timestamp loadDateFrom;
 
-	@ApiModelProperty("业务时期止")
+	@ApiModelProperty("业务时期止， yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
 	private Timestamp loadDateTo;
 
-	@ApiModelProperty("运行时间始")
+	@ApiModelProperty("运行时间始， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp excuteTimeFrom;
 	
-	@ApiModelProperty("运行时间止")
+	@ApiModelProperty("运行时间止， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp excuteTimeTo;
 
