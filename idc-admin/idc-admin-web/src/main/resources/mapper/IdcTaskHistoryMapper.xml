@@ -5,7 +5,7 @@
         <id column="EXECUTE_ID" property="id" jdbcType="BIGINT" />
         <result column="TASK_ID" property="jobId" jdbcType="INTEGER" />
         <result column="SHOULD_FIRE_TIME" property="loadDate" jdbcType="BIGINT" typeHandler="com.iwellmass.dispatcher.admin.MillsHandler"/>
-        <result column="ACTUAL_FIRE_TIME" property="excuteTime" jdbcType="BIGINT" typeHandler="com.iwellmass.dispatcher.admin.MillsHandler" />
+        <result column="ACTUAL_FIRE_TIME" property="executeTime" jdbcType="BIGINT" typeHandler="com.iwellmass.dispatcher.admin.MillsHandler" />
         <result column="FIRE_TIME" property="startTime" jdbcType="TIMESTAMP" />
         <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
@@ -46,11 +46,11 @@
             <if test="job.loadDateTo !=null">
                 AND TH.SHOULD_FIRE_TIME &lt;= #{job.loadDateTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="job.excuteTimeFrom !=null">
-                AND TH.ACTUAL_FIRE_TIME &gt;= #{job.excuteTimeFrom,jdbcType=TIMESTAMP}
+            <if test="job.executeTimeFrom !=null">
+                AND TH.ACTUAL_FIRE_TIME &gt;= #{job.executeTimeFrom,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="job.excuteTimeTo !=null">
-                AND TH.ACTUAL_FIRE_TIME &lt;= #{job.excuteTimeTo,jdbcType=TIMESTAMP}
+            <if test="job.executeTimeTo !=null">
+                AND TH.ACTUAL_FIRE_TIME &lt;= #{job.executeTimeTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
             <if test="job.type !=null">
                 AND TH.TRIGGER_TYPE= #{job.type,jdbcType=INTEGER}
@@ -79,11 +79,11 @@
             <if test="loadDateTo !=null">
                 AND TH.SHOULD_FIRE_TIME &lt;= #{loadDateTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="excuteTimeFrom !=null">
-                AND TH.ACTUAL_FIRE_TIME &gt;= #{excuteTimeFrom,jdbcType=TIMESTAMP}
+            <if test="executeTimeFrom !=null">
+                AND TH.ACTUAL_FIRE_TIME &gt;= #{executeTimeFrom,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="excuteTimeTo !=null">
-                AND TH.ACTUAL_FIRE_TIME &lt;= #{excuteTimeTo,jdbcType=TIMESTAMP}
+            <if test="executeTimeTo !=null">
+                AND TH.ACTUAL_FIRE_TIME &lt;= #{executeTimeTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
             <if test="type !=null">
                 AND TH.TRIGGER_TYPE= #{type,jdbcType=INTEGER}

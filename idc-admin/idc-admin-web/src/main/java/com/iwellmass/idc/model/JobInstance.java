@@ -30,7 +30,7 @@ public class JobInstance {
 	private String assignee;
 
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
-	private Timestamp excuteTime;
+	private Timestamp executeTime;
 
 	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	private Timestamp loadDate;
@@ -117,12 +117,12 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("运行时间")
-	public Timestamp getExcuteTime() {
-		return excuteTime;
+	public Timestamp getExecuteTime() {
+		return executeTime;
 	}
 
-	public void setExcuteTime(Timestamp excuteTime) {
-		this.excuteTime = excuteTime;
+	public void setExecuteTime(Timestamp executeTime) {
+		this.executeTime = executeTime;
 	}
 
 	@ApiModelProperty("状态")

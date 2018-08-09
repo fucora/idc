@@ -1,7 +1,6 @@
 package com.iwellmass.idc.model;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -21,24 +20,22 @@ public class JobQuery {
 	@ApiModelProperty("负责人")
 	private String assignee;
 
-	@ApiModelProperty("业务时期")
-	private Timestamp loadTime;
-
 	@ApiModelProperty("业务日期始， yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	private Timestamp loadDateFrom;
 
-	@ApiModelProperty("业务时期止， yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd")
+	@ApiModelProperty("业务日期止， yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	private Timestamp loadDateTo;
 
 	@ApiModelProperty("运行时间始， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
-	private Timestamp excuteTimeFrom;
+	private Timestamp executeTimeFrom;
 	
 	@ApiModelProperty("运行时间止， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
-	private Timestamp excuteTimeTo;
+	private Timestamp executeTimeTo;
+	
 
 	public String getTaskName() {
 		return taskName;
@@ -62,14 +59,6 @@ public class JobQuery {
 
 	public void setAssignee(String assignee) {
 		this.assignee = assignee;
-	}
-
-	public Date getLoadTime() {
-		return loadTime;
-	}
-
-	public void setLoadTime(Timestamp loadTime) {
-		this.loadTime = loadTime;
 	}
 
 	public Integer getType() {
@@ -96,20 +85,20 @@ public class JobQuery {
 		this.loadDateTo = loadDateTo;
 	}
 
-	public Timestamp getExcuteTimeFrom() {
-		return excuteTimeFrom;
+	public Timestamp getExecuteTimeFrom() {
+		return executeTimeFrom;
 	}
 
-	public void setExcuteTimeFrom(Timestamp excuteTimeFrom) {
-		this.excuteTimeFrom = excuteTimeFrom;
+	public void setExecuteTimeFrom(Timestamp executeTimeFrom) {
+		this.executeTimeFrom = executeTimeFrom;
 	}
 
-	public Timestamp getExcuteTimeTo() {
-		return excuteTimeTo;
+	public Timestamp getExecuteTimeTo() {
+		return executeTimeTo;
 	}
 
-	public void setExcuteTimeTo(Timestamp excuteTimeTo) {
-		this.excuteTimeTo = excuteTimeTo;
+	public void setExecuteTimeTo(Timestamp executeTimeTo) {
+		this.executeTimeTo = executeTimeTo;
 	}
-	
+
 }
