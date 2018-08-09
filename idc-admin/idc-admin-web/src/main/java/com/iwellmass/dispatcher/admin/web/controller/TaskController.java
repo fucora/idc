@@ -132,7 +132,7 @@ public class TaskController {
 
         DataResult result = new DataResult();
         try {
-            taskService.executeTask(appId, taskId, Constants.TASK_EXECUTE_TYPE_MANUAL);
+            taskService.executeTask(appId, taskId, Constants.TASK_EXECUTE_TYPE_MANUAL, null);
         } catch (Exception e) {
             logger.error("执行任务失败！", e);
             result.setStatusCode(DataResult.STATUS_CODE.FAILURE);

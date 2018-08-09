@@ -49,7 +49,7 @@ public interface ITaskService {
      *
      * @param task
      */
-    void executeTask(int appId,int taskId, int triggerType) throws DDCException;
+    void executeTask(int appId,int taskId, int triggerType, Map<String, Object> parameters) throws DDCException;
 
     /**
      * 分页查询所有任务

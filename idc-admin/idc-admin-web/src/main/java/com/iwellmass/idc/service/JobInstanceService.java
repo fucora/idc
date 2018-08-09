@@ -1,27 +1,26 @@
 package com.iwellmass.idc.service;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.iwellmass.common.exception.AppException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
-import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
-import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
+import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskExecuteHistoryMapper;
+import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteHistory;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
-import com.iwellmass.idc.controller.ComplementRequest;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
-import com.iwellmass.idc.mapper.JobInstanceMapper;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobQuery;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class JobInstanceService {
@@ -31,12 +30,10 @@ public class JobInstanceService {
 
     @Inject
     private ITaskService iTaskService;
+    
+    @Inject
+    private DdcTaskExecuteHistoryMapper histroyMapper;
 
-
-    public void complement(ComplementRequest request) throws DDCException {
-        //TODO 业务时间
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,request.getJobId(),Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
-    }
 
     public PageData<JobInstance>findTaskInstanceByCondition(JobQuery query, Pager pager){
         Pager pager1=new Pager();
@@ -91,8 +88,16 @@ public class JobInstanceService {
         return list1;
     }
 
-    public void restart(int taskId) throws DDCException {
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,taskId, Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
+    public void redo(int id) throws DDCException {
+    	
+    	DdcTaskExecuteHistory history = histroyMapper.selectByPrimaryKey(Long.valueOf(id));
+    	String batchId = history.getExecuteBatchId();
+    	Long loadDate = history.getShouldFireTime();
+    	Map<String, Object> parameters = new HashMap<>();
+    	parameters.put("executeBatchId", batchId);
+    	parameters.put("loadDate", loadDate);
+    	
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,id, Constants.TASK_TRIGGER_TYPE_MAN, parameters);
     }
 
 }

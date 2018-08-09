@@ -85,5 +85,12 @@ public class JobController {
 	}
 
 
+    @ApiOperation("补数")
+    @PostMapping("/{id}/complement")
+    public ServiceResult<String> complement(@PathVariable("id") Integer id, @RequestBody ComplementRequest request){
+    	request.setJobId(id);
+    	jobService.complement(request);
+        return ServiceResult.success("success");
+    }
 
 }

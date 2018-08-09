@@ -202,7 +202,7 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @DdcPermission
-    public void executeTask(int appId, int taskId, int triggerType) throws DDCException {
+    public void executeTask(int appId, int taskId, int triggerType, Map<String, Object> jobParams) throws DDCException {
 
         DdcTask task = selectByTaskIdAndAppId(appId, taskId);
         if (task == null || task.getTaskStatus() == Constants.TASK_STATUS_DISABLED) {
@@ -222,6 +222,9 @@ public class TaskServiceImpl implements ITaskService {
         }
         map.put("triggerType", triggerType);
         map.put("user", "admin");
+        if (jobParams != null) {
+        	map.putAll(jobParams);
+        }
 
         try {
             scheduler.triggerJob(jobKey, map);

@@ -1,6 +1,8 @@
 package com.iwellmass.idc.service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -9,6 +11,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
@@ -29,6 +36,7 @@ import com.iwellmass.dispatcher.common.DDCContext;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
+import com.iwellmass.idc.controller.ComplementRequest;
 import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
@@ -50,6 +58,9 @@ public class JobService {
 
     @Inject
     private IdcTaskMapper idcTaskMapper;
+    
+    @Inject
+    private Scheduler scheduler;
 
 	public void schedule(Job job) {
 
@@ -67,6 +78,7 @@ public class JobService {
 		task.setOwner(job.getAssignee());
 		task.setTimeout(60L);
 		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
+		task.setConcurrency(Boolean.FALSE);
 
         JSONObject jo = new JSONObject();
         jo.put("taskId", job.getTaskId());
@@ -94,6 +106,46 @@ public class JobService {
 		}
 	}
 
+	
+    public void complement(ComplementRequest request) {
+    	
+    	Integer jobId = request.getJobId();
+    	
+    	DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(jobId);
+    	JobKey jobKey = buildJobKey(ddcTask);
+    	
+    	try {
+			List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+			
+			if (triggers.isEmpty()) {
+				throw new AppException("任务未正确提交");
+			} else {
+				LocalDate start = request.getStart();
+				LocalDate end = request.getEnd();
+				
+				Date startDate = new Date(start.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond());
+				Date endDate = new Date(end.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond());
+				
+				Trigger trigger = triggers.stream().filter(t ->  t.getKey().getName().matches(
+						Constants.TRIGGER_PREFIX + "_ \\d+.+")
+				).findFirst().orElseThrow( () -> new AppException(""));
+				
+				if (trigger == null) {
+					throw new AppException("任务未正确提交");
+				}
+				// 调起来
+				Trigger complementTrigger = trigger.getTriggerBuilder()
+					.withIdentity(buildComplementTriggerKey(ddcTask))
+					.startAt(startDate).endAt(endDate).build();
+				complementTrigger.getJobDataMap().put("triggerType", Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
+				complementTrigger.getJobDataMap().put("user", "admin");
+				scheduler.scheduleJob(complementTrigger);
+			}
+		} catch (Exception e1) {
+			throw new AppException("补数失败" + e1.getMessage());
+		}
+    }
+	
     public List<Job> getWorkflowJob(Integer taskId) {
 
         DdcTask task = ddcTaskMapper.selectByPrimaryKey(taskId);
@@ -260,5 +312,17 @@ public class JobService {
     public List<Job> getWorkflowJob() {
         return idcTaskMapper.findAllWorkflowJob();
     }
+    
+    private JobKey buildJobKey(DdcTask task) {
+
+        JobKey jobKey = new JobKey(Constants.JOB_PREFIX + task.getTaskId(), task.getAppKey());
+        return jobKey;
+    }
+    
+    private TriggerKey buildComplementTriggerKey(DdcTask task) {
+        TriggerKey triggerKey = new TriggerKey(Constants.TRIGGER_PREFIX + "_complement_" + task.getTaskId(), task.getAppKey());
+        return triggerKey;
+    }
+
 
 }
