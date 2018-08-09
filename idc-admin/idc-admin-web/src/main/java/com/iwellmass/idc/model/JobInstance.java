@@ -1,10 +1,12 @@
 package com.iwellmass.idc.model;
 
 import java.sql.Timestamp;
+import java.util.TimeZone;
 
 import javax.persistence.Id;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -27,16 +29,16 @@ public class JobInstance {
 
 	private String assignee;
 
-	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp excuteTime;
 
-	@JsonFormat(pattern = "yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	private Timestamp loadDate;
 
-	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp startTime;
 
-	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp endTime;
 
 	private Integer type;
@@ -139,5 +141,9 @@ public class JobInstance {
 
 	public void setType(Integer type) {
 		this.type = type;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(TimeZone.getDefault().toString());
 	}
 }
