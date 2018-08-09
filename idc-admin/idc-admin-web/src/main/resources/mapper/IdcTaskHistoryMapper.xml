@@ -4,9 +4,9 @@
     <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.JobInstance" >
         <id column="EXECUTE_ID" property="id" jdbcType="BIGINT" />
         <result column="TASK_ID" property="jobId" jdbcType="INTEGER" />
-        <result column="FIRE_TIME" property="loadDate" jdbcType="TIMESTAMP" />
-        <result column="START_TIME" property="startTime" jdbcType="TIMESTAMP" />
-        <result column="ACTUAL_FIRE_TIME" property="excuteTime" jdbcType="TIMESTAMP" />
+        <result column="SHOULD_FIRE_TIME" property="loadDate" jdbcType="BIGINT" typeHandler="com.iwellmass.dispatcher.admin.MillsHandler"/>
+        <result column="ACTUAL_FIRE_TIME" property="excuteTime" jdbcType="BIGINT" typeHandler="com.iwellmass.dispatcher.admin.MillsHandler" />
+        <result column="FIRE_TIME" property="startTime" jdbcType="TIMESTAMP" />
         <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
@@ -14,20 +14,21 @@
         <result column="EXECUTE_RESULT" property="status" jdbcType="VARCHAR" />
         <result column="TRIGGER_TYPE" property="type" jdbcType="INTEGER" />
     </resultMap>
+    
     <sql id="Base_Column_List" >
-      EXECUTE_ID,TASK_ID,FIRE_TIME,START_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER,TRIGGER_TYPE
+      EXECUTE_ID,TASK_ID,SHOULD_FIRE_TIME,FIRE_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER,TRIGGER_TYPE
     </sql>
 
     <select id="findAllTaskInstance" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         ORDER BY EXECUTE_ID DESC
     </select>
 
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.ACTUAL_FIRE_TIME,TH.FIRE_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.taskName !=null and job.taskName != '' ">
@@ -39,11 +40,17 @@
             <if test="job.assignee !=null and job.assignee != ''">
                 AND T.OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
-            <if test="job.loadTime !=null and job.loadTime != ''">
-                AND T.FIRE_TIME= #{job.loadTime,jdbcType=TIMESTAMP}
+            <if test="job.loadDateFrom !=null">
+                AND TH.SHOULD_FIRE_TIME &gt;= #{job.loadDateFrom,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="job.excuteTime !=null and job.excuteTime != ''">
-                AND T.ACTUAL_FIRE_TIME= #{job.excuteTime,jdbcType=TIMESTAMP}
+            <if test="job.loadDateTo !=null">
+                AND TH.SHOULD_FIRE_TIME &lt;= #{job.loadDateTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
+            </if>
+            <if test="job.excuteTimeFrom !=null">
+                AND TH.ACTUAL_FIRE_TIME &gt;= #{job.excuteTimeFrom,jdbcType=TIMESTAMP}
+            </if>
+            <if test="job.excuteTimeTo !=null">
+                AND TH.ACTUAL_FIRE_TIME &lt;= #{job.excuteTimeTo,jdbcType=TIMESTAMP}
             </if>
             <if test="job.type !=null">
                 AND TH.TRIGGER_TYPE= #{job.type,jdbcType=INTEGER}
@@ -54,7 +61,7 @@
     </select>
     <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.FIRE_TIME,TH.START_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.ACTUAL_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="taskName !=null and taskName != '' ">
@@ -66,11 +73,17 @@
             <if test="assignee !=null and assignee != ''">
                 AND T.OWNER= #{assignee,jdbcType=VARCHAR}
             </if>
-            <if test="loadTime !=null and loadTime != ''">
-                AND T.FIRE_TIME= #{loadTime,jdbcType=TIMESTAMP}
+       		<if test="loadDateFrom !=null">
+                AND TH.SHOULD_FIRE_TIME &gt;= #{loadDateFrom,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="excuteTime !=null and excuteTime != ''">
-                AND T.ACTUAL_FIRE_TIME= #{excuteTime,jdbcType=TIMESTAMP}
+            <if test="loadDateTo !=null">
+                AND TH.SHOULD_FIRE_TIME &lt;= #{loadDateTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
+            </if>
+            <if test="excuteTimeFrom !=null">
+                AND TH.ACTUAL_FIRE_TIME &gt;= #{excuteTimeFrom,jdbcType=TIMESTAMP}
+            </if>
+            <if test="excuteTimeTo !=null">
+                AND TH.ACTUAL_FIRE_TIME &lt;= #{excuteTimeTo,jdbcType=TIMESTAMP}
             </if>
             <if test="type !=null">
                 AND TH.TRIGGER_TYPE= #{type,jdbcType=INTEGER}

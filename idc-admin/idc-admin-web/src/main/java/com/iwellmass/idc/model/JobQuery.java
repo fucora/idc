@@ -1,75 +1,116 @@
 package com.iwellmass.idc.model;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import io.swagger.annotations.ApiModelProperty;
 
 public class JobQuery {
 
-    @ApiModelProperty("任务名")
-    private String taskName;
+	@ApiModelProperty("任务名")
+	private String taskName;
 
-    @ApiModelProperty("任务类型")
-    private String contentType;
+	@ApiModelProperty("任务类型")
+	private String contentType;
 
-    @ApiModelProperty("实例类型")
-    private Integer type;
+	@ApiModelProperty("实例类型")
+	private Integer type;
 
-    @ApiModelProperty("负责人")
-    private String assignee;
+	@ApiModelProperty("负责人")
+	private String assignee;
 
-    @ApiModelProperty("业务时期")
-    private Timestamp loadTime;
+	@ApiModelProperty("业务时期")
+	private Timestamp loadTime;
 
-    @ApiModelProperty("运行时期")
-    private Timestamp excuteTime;
+	@ApiModelProperty("业务日期始")
+	@JsonFormat(pattern = "yyyyMMdd")
+	private Timestamp loadDateFrom;
 
-    public String getTaskName() {
-        return taskName;
-    }
+	@ApiModelProperty("业务时期止")
+	@JsonFormat(pattern = "yyyyMMdd")
+	private Timestamp loadDateTo;
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
-    }
+	@ApiModelProperty("运行时间始")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+	private Timestamp excuteTimeFrom;
+	
+	@ApiModelProperty("运行时间止")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
+	private Timestamp excuteTimeTo;
 
-    public String getContentType() {
-        return contentType;
-    }
+	public String getTaskName() {
+		return taskName;
+	}
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
 
-    public String getAssignee() {
-        return assignee;
-    }
+	public String getContentType() {
+		return contentType;
+	}
 
-    public void setAssignee(String assignee) {
-        this.assignee = assignee;
-    }
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
 
-    public Date getLoadTime() {
-        return loadTime;
-    }
+	public String getAssignee() {
+		return assignee;
+	}
 
-    public void setLoadTime(Timestamp loadTime) {
-        this.loadTime = loadTime;
-    }
+	public void setAssignee(String assignee) {
+		this.assignee = assignee;
+	}
 
-    public Timestamp getExcuteTime() {
-        return excuteTime;
-    }
+	public Date getLoadTime() {
+		return loadTime;
+	}
 
-    public void setExcuteTime(Timestamp excuteTime) {
-        this.excuteTime = excuteTime;
-    }
+	public void setLoadTime(Timestamp loadTime) {
+		this.loadTime = loadTime;
+	}
 
-    public Integer getType() {
-        return type;
-    }
+	public Integer getType() {
+		return type;
+	}
 
-    public void setType(Integer type) {
-        this.type = type;
-    }
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+	public Timestamp getLoadDateFrom() {
+		return loadDateFrom;
+	}
+
+	public void setLoadDateFrom(Timestamp loadDateFrom) {
+		this.loadDateFrom = loadDateFrom;
+	}
+
+	public Timestamp getLoadDateTo() {
+		return loadDateTo;
+	}
+
+	public void setLoadDateTo(Timestamp loadDateTo) {
+		this.loadDateTo = loadDateTo;
+	}
+
+	public Timestamp getExcuteTimeFrom() {
+		return excuteTimeFrom;
+	}
+
+	public void setExcuteTimeFrom(Timestamp excuteTimeFrom) {
+		this.excuteTimeFrom = excuteTimeFrom;
+	}
+
+	public Timestamp getExcuteTimeTo() {
+		return excuteTimeTo;
+	}
+
+	public void setExcuteTimeTo(Timestamp excuteTimeTo) {
+		this.excuteTimeTo = excuteTimeTo;
+	}
+	
 }

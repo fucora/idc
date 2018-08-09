@@ -27,7 +27,6 @@ public class JobInstance {
 
 	private String assignee;
 
-	@JsonFormat(pattern = "yyyyMMdd")
 	private Timestamp excuteTime;
 
 	private Timestamp loadDate;

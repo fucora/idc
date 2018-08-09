@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +35,6 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.druid.sql.visitor.functions.Now;
 import com.alibaba.druid.support.json.JSONUtils;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.JVMContext;
@@ -136,20 +134,6 @@ public class DmallTask implements Job {
 		loggers.set(logger);
 		isContinue = false;
 		
-		// CRON 调度，计算业务日期
-		if (triggerType == Constants.TASK_TRIGGER_TYPE_SYSTEM) {
-			Date sdf = context.getScheduledFireTime();
-			this.executeBatchId =  formatSimple(sdf == null ? new Date() : sdf);
-			this.loadDate = sdf.getTime();
-		} 
-		// 手动执行，我们默认必须传入业务日期
-		else {
-			if (this.loadDate == null) {
-				throw new JobExecutionException("未指定业务日期");
-			}
-			this.executeBatchId = formatSimple(new Date());
-		}
-		
 		// 保存到数据库
 		doTask();
 		
@@ -206,7 +190,26 @@ public class DmallTask implements Job {
 	private void doTask() {
 
 		try {
+			
 			DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(taskId);
+			
+			// 非流程子任务
+			if(ddcTask.getTaskType() != Constants.TASK_TYPE_SUBTASK) {
+				// CRON 调度，计算业务日期
+				if (triggerType == Constants.TASK_TRIGGER_TYPE_SYSTEM) {
+					Date sdf = context.getScheduledFireTime();
+					this.executeBatchId =  formatSimple(sdf == null ? new Date() : sdf);
+					this.loadDate = sdf.getTime();
+				} 
+			}
+			
+			if (this.loadDate == null) {
+				throw new JobExecutionException("任务" + taskId + "未指定业务日期");
+			}
+			
+			if (this.executeBatchId == null) {
+				this.executeBatchId = formatSimple(new Date());
+			}
 
 			if(ddcTask == null || ddcTask.getTaskStatus() == null || ddcTask.getTaskStatus() != Constants.TASK_STATUS_ENABLED) {
 				AlarmUtils.sendAndRecordAlarm(Constants.ALARM_KEY_NOTASK, taskId, "任务编号" + taskId + "对应的任务不存在或者未启用，不能进行任务调度！");
@@ -276,7 +279,7 @@ public class DmallTask implements Job {
 			//流程任务不需要派发
 			if(ddcTask.getTaskType() != Constants.TASK_TYPE_FLOW) { 
 				//派发任务
-				dispatchTask(ddcTask, LocalDateTime.ofInstant(Instant.ofEpochMilli(ddcTaskExecuteHistory.getShouldFireTime()), ZoneId.systemDefault()));
+				dispatchTask(ddcTask);
 			}
 		} catch(Exception e) {
 			logger.error("doTask出错，错误信息：{}", e);
@@ -324,10 +327,10 @@ public class DmallTask implements Job {
 	 * @param ddcTask
 	 * @throws JobExecutionException
 	 */
-	private void dispatchTask(DdcTask ddcTask, LocalDateTime loadDate) throws DDCException {
+	private void dispatchTask(DdcTask ddcTask) throws DDCException {
 		
 		String strategyType = "random";
-		TaskEntity taskEntity = createTaskEntity(ddcTask, loadDate);
+		TaskEntity taskEntity = createTaskEntity(ddcTask, LocalDateTime.ofInstant(Instant.ofEpochMilli(this.loadDate), ZoneId.systemDefault()));
 		List<DdcNode> nodes = getAvailableNodes(ddcTask);
 		if(nodes==null || nodes.size()==0) {
 			DdcApplication ddcApplication = ddcApplicationMapper.selectByPrimaryKey(ddcTask.getAppId());
@@ -571,6 +574,7 @@ public class DmallTask implements Job {
 		taskEntity.setThreadCount(ddcTask.getThreads());
 		taskEntity.setDispatchCount(ddcTaskExecuteHistory != null ? ddcTaskExecuteHistory.getDispatchCount() : ddcSubtaskExecuteHistory.getDispatchCount());
 		taskEntity.setFireTime(context.getScheduledFireTime().getTime());
+		
 		// idc 参数设置
 		Map<String, Object> idcParameters = new HashMap<>();
 		if (taskEntity.getParameters() != null) {
@@ -582,17 +586,9 @@ public class DmallTask implements Job {
 			}
 		}
 		// 任务 ID
-		String checkJobId = String.valueOf(idcParameters.get("jobId"));
-		idcParameters.put("jobId", ddcTask.getTaskId());
-		if (!"null".equals(checkJobId)) {
-			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkJobId, ddcTask.getTaskId());
-		}
+		idcParameters.put("jobId", taskId);
 		// 任务批次
-		String checkLoadDate = String.valueOf(idcParameters.get("loadDate"));
 		idcParameters.put("loadDate", loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
-		if (!"null".equals(checkLoadDate)) {
-			logger.warn("系统参数不能被手动设置，已覆盖 {} -> {}", checkLoadDate, idcParameters.get("loadDate"));
-		}
 		taskEntity.setParameters(JSONUtils.toJSONString(idcParameters));
 		return taskEntity;
 	}
@@ -727,6 +723,15 @@ public class DmallTask implements Job {
 		this.workflowId = workflowId;
 	}
 	
+	
+	public Long getLoadDate() {
+		return loadDate;
+	}
+
+	public void setLoadDate(Long loadDate) {
+		this.loadDate = loadDate;
+	}
+
 	private static final String formatSimple(Date date) {
 		try {
 			return DateUtils.formatDate(date, DateUtils.FORMAT_DATETIME_SIMPLE);
