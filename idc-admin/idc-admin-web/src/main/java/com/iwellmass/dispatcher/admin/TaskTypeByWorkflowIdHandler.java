@@ -42,7 +42,9 @@ public class TaskTypeByWorkflowIdHandler implements TypeHandler<TaskType> {
 	}
 
 	private static final TaskType ofDDCTaskType(int ddcTaskType) {
-		if (ddcTaskType > 0) {
+		if (ddcTaskType < 0) {
+			return TaskType.WORKFLOW_TASK;
+		} else if (ddcTaskType > 0) {
 			return TaskType.WORKFLOW;
 		} else {
 			return TaskType.NODE_TASK;
