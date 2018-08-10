@@ -12,4 +12,5 @@ public interface IdcTaskHistoryMapper {
     List<JobInstance> findAllTaskInstance();
     List<JobInstance> findTaskInstanceByCondition(@Param(value = "job") JobQuery job, @Param(value = "pager") Pager pager);
     List<JobInstance> findAllTaskInstanceByCondition(JobQuery job);
+	List<JobInstance> findWorkflowTask(@Param("workflowId") Integer workflowId, @Param("executeBatchId") String batchId);
 }

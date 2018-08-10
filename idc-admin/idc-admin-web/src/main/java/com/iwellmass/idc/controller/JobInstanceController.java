@@ -28,6 +28,14 @@ public class JobInstanceController {
         PageData<JobInstance> taskInstance = jobInstanceService.findTaskInstanceByCondition(query, pager);
         return ServiceResult.success(taskInstance);
     }
+    
+    @ApiOperation("获取工作流实例")
+    @GetMapping("/{id}/workflow-job")
+    public ServiceResult<List<JobInstance>> getWorkflowTask(@PathVariable("id") Integer id) {
+    	List<JobInstance> result = jobInstanceService.getWorkflowTask(id);
+		return ServiceResult.success(result);
+    }
+    
 
     @ApiOperation("获取所有负责人")
     @GetMapping(path ="/assignee" )

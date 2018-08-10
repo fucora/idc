@@ -1,6 +1,7 @@
 package com.iwellmass.idc.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,5 +86,19 @@ public class JobInstanceService {
     	
         iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,id, Constants.TASK_TRIGGER_TYPE_MAN, parameters);
     }
+
+	public List<JobInstance> getWorkflowTask(Integer id) {
+
+		DdcTaskExecuteHistory histroy = histroyMapper.selectByPrimaryKey(id.longValue());
+		
+		if (histroy == null	) {
+			return Collections.emptyList();
+		}
+		
+		Integer workflowId = histroy.getWorkflowId();
+		String batchId = histroy.getExecuteBatchId();
+		
+		return idcTaskHistoryMapper.findWorkflowTask(workflowId, batchId);
+	}
 
 }

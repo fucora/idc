@@ -93,4 +93,23 @@
         </where>
        ORDER BY EXECUTE_ID DESC
     </select>
+    <select id="findWorkflowTask" resultMap="BaseResultMap">
+    SELECT
+		TH.EXECUTE_ID,
+		TH.TASK_ID,
+		TH.WORKFLOW_ID,
+		TH.ACTUAL_FIRE_TIME,
+		TH.FIRE_TIME,
+		TH.COMPLETE_TIME,
+		TH.EXECUTE_RESULT,
+		T.TASK_NAME,
+		T.CLASS_NAME,
+		T.OWNER
+	FROM
+		DDC_SUBTASK_EXECUTE_HISTORY AS TH
+		JOIN DDC_TASK AS T ON TH.TASK_ID = T.TASK_ID 
+	WHERE
+		TH.EXECUTE_BATCH_ID = ${executeBatchId}
+		AND TH.WORKFLOW_ID =  ${workflowId}
+    </select>
 </mapper>
