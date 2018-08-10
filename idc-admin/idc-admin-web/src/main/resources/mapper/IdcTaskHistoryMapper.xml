@@ -9,6 +9,7 @@
         <result column="FIRE_TIME" property="startTime" jdbcType="TIMESTAMP" />
         <result column="COMPLETE_TIME" property="endTime" jdbcType="TIMESTAMP" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
+        <result column="WORKFLOW_ID" property="taskType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.TaskTypeByWorkflowIdHandler"/>
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.ContentTypeHandler"/>
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="EXECUTE_RESULT" property="status" jdbcType="VARCHAR" />
@@ -16,12 +17,12 @@
     </resultMap>
     
     <sql id="Base_Column_List" >
-      EXECUTE_ID,TASK_ID,SHOULD_FIRE_TIME,FIRE_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER,TRIGGER_TYPE
+      EXECUTE_ID,TASK_ID,SHOULD_FIRE_TIME,FIRE_TIME,COMPLETE_TIME, TASK_NAME,CLASS_NAME,OWNER,TRIGGER_TYPE,WORKFLOW_ID
     </sql>
 
     <select id="findAllTaskInstance" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE,TH.WORKFLOW_ID
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         ORDER BY EXECUTE_ID DESC
     </select>
@@ -29,6 +30,7 @@
     <select id="findTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
         TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.ACTUAL_FIRE_TIME,TH.FIRE_TIME,TH.EXECUTE_RESULT,TH.COMPLETE_TIME,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        ,TH.WORKFLOW_ID
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="job.taskName !=null and job.taskName != '' ">
@@ -61,7 +63,7 @@
     </select>
     <select id="findAllTaskInstanceByCondition" resultMap="BaseResultMap">
         SELECT
-        TH.EXECUTE_ID,TH.TASK_ID,TH.SHOULD_FIRE_TIME,TH.ACTUAL_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
+        TH.EXECUTE_ID,TH.TASK_ID,TH.WORKFLOW_ID,TH.SHOULD_FIRE_TIME,TH.ACTUAL_FIRE_TIME,TH.FIRE_TIME,TH.COMPLETE_TIME,TH.EXECUTE_RESULT,TH.EXECUTE_RESULT,T.TASK_NAME,T.CLASS_NAME,T.OWNER,TH.TRIGGER_TYPE
         FROM DDC_TASK_EXECUTE_HISTORY AS TH JOIN DDC_TASK AS T ON TH.TASK_ID=T.TASK_ID
         <where>
             <if test="taskName !=null and taskName != '' ">

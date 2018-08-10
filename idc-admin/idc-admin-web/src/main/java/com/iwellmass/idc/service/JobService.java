@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -37,6 +38,7 @@ import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.controller.ComplementRequest;
+import com.iwellmass.idc.controller.ExecutionRequest;
 import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
@@ -79,17 +81,18 @@ public class JobService {
 		task.setOwner(job.getAssignee());
 		task.setTimeout(60L);
 		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
-		task.setConcurrency(Boolean.FALSE);
 
         JSONObject jo = new JSONObject();
         
         // 调度类型
         if (ScheduleType.MANUAL == job.getScheduleType()) {
         	jo.put("triggerType",  JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.MANUAL));
+        	task.setConcurrency(Boolean.TRUE);
         }
         else {
         	task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
         	jo.put("triggerType", JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.CRON));
+        	task.setConcurrency(Boolean.FALSE);
         }
         
         JSONObject map = new JSONObject();
@@ -322,4 +325,20 @@ public class JobService {
     }
 
 
+	/**
+	 * 立即调度
+	 */
+	public void execute(ExecutionRequest request) {
+		int jobId = request.getJobId();
+		DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(jobId);
+		try {
+			Map<String, Object> parameters = null;
+			if (request != null && request.getJobParameter() != null) {
+				parameters = JSON.parseObject(request.getJobParameter());
+			}
+			taskService.executeTask(ddcTask.getAppId(), ddcTask.getTaskId(), Constants.TASK_TRIGGER_TYPE_MAN, parameters);
+		} catch (DDCException e) {
+			throw new AppException("执行失败："+ e.getMessage(), e);
+		}
+	}
 }

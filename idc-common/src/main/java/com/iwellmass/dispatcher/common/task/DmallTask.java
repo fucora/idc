@@ -190,6 +190,7 @@ public class DmallTask implements Job {
 	 */
 	private void doTask() {
 
+		Date now = new Date();
 		try {
 			
 			DdcTask ddcTask = ddcTaskMapper.selectByPrimaryKey(taskId);
@@ -199,9 +200,11 @@ public class DmallTask implements Job {
 				// CRON 调度，计算业务日期
 				if (triggerType == Constants.TASK_TRIGGER_TYPE_SYSTEM) {
 					Date sdf = context.getScheduledFireTime();
-					this.executeBatchId =  formatSimple(sdf == null ? new Date() : sdf);
+					this.executeBatchId =  formatSimple(sdf == null ? now : sdf);
 					this.loadDate = sdf.getTime();
-				} 
+				} else if (triggerType == Constants.TASK_TRIGGER_TYPE_MAN) {
+					this.loadDate = now.getTime();
+				}
 			}
 			
 			if (this.loadDate == null) {
@@ -209,7 +212,7 @@ public class DmallTask implements Job {
 			}
 			
 			if (this.executeBatchId == null) {
-				this.executeBatchId = formatSimple(new Date());
+				this.executeBatchId = formatSimple(now);
 			}
 
 			if(ddcTask == null || ddcTask.getTaskStatus() == null || ddcTask.getTaskStatus() != Constants.TASK_STATUS_ENABLED) {

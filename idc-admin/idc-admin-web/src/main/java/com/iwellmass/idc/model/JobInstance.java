@@ -21,6 +21,8 @@ public class JobInstance {
 	private Integer jobId;
 
 	private String taskName;
+	
+	private TaskType taskType;
 
 	private ContentType contentType;
 
@@ -59,6 +61,15 @@ public class JobInstance {
 
 	public void setJobId(Integer jobId) {
 		this.jobId = jobId;
+	}
+	
+	@ApiModelProperty("节点类型")
+	public TaskType getTaskType() {
+		return taskType;
+	}
+
+	public void setTaskType(TaskType taskType) {
+		this.taskType = taskType;
 	}
 
 	@ApiModelProperty("JOB 名称")

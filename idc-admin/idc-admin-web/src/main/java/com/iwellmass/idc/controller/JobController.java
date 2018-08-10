@@ -101,5 +101,13 @@ public class JobController {
     	jobService.complement(request);
         return ServiceResult.success("success");
     }
+    
+    @ApiOperation("手动执行任务")
+    @PostMapping("/{id}/execution")
+    public ServiceResult<String> execution(@PathVariable("id") Integer id, @RequestBody(required = false) ExecutionRequest request){
+    	request.setJobId(id);
+    	jobService.execute(request);
+    	return ServiceResult.success("success");
+    }
 
 }

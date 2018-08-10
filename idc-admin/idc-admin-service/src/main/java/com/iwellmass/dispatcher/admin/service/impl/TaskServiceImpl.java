@@ -123,6 +123,26 @@ public class TaskServiceImpl implements ITaskService {
         record.setUpdateTime(now);
         record.setUpdateDetail("任务被启用！");
         taskUpdateMapper.insertSelective(record);
+        
+        
+        String params = task.getParameters();
+        if (params != null) {
+        	try {
+        		JSONObject p = JSON.parseObject(params);
+        		// 手动实例就等待手动触发
+        		if (p.getInteger("triggerType") == Constants.TASK_TRIGGER_TYPE_MAN) {
+        	        JobDataMap map = new JobDataMap();
+        	        map.put("taskId", taskId);
+        	        JobKey jobKey = buildJobKey(task);
+        	        JobDetail job = buildJob(task, jobKey, map);
+        			scheduler.addJob(job, true);
+        			return;
+        		}
+        	} catch (Throwable e) {
+        		// ignore
+        	}
+        }
+        
 
         JobDataMap map = new JobDataMap();
 
@@ -314,6 +334,11 @@ public class TaskServiceImpl implements ITaskService {
         		JSONObject p = JSON.parseObject(params);
         		// 手动实例就等待手动触发
         		if (p.getInteger("triggerType") == Constants.TASK_TRIGGER_TYPE_MAN) {
+        	        JobDataMap map = new JobDataMap();
+        	        map.put("taskId", taskId);
+        	        JobKey jobKey = buildJobKey(task);
+        	        JobDetail job = buildJob(task, jobKey, map);
+        			scheduler.addJob(job, true);
         			return;
         		}
         	} catch (Throwable e) {
