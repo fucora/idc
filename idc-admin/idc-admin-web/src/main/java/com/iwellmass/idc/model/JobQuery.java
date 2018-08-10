@@ -35,11 +35,11 @@ public class JobQuery {
 	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	private Timestamp loadDateTo;
 
-	@ApiModelProperty("运行时间始， yyyy-MM-dd hh:mm:ss")
+	@ApiModelProperty("运行时间始， yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp executeTimeFrom;
 
-	@ApiModelProperty("运行时间止， yyyy-MM-dd hh:mm:ss")
+	@ApiModelProperty("运行时间止， yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp executeTimeTo;
 
