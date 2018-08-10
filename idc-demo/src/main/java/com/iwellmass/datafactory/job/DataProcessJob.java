@@ -13,9 +13,7 @@ public class DataProcessJob implements ITaskService {
 	@SuppressWarnings("unchecked")
 	public void execute(String params, IBasicExecuteContext iBasicExecuteContext) {
 		Map<String, String> ps = JSON.parseObject(params, Map.class);
-		Long taskId = Long.parseLong(ps.get("taskId"));
-		String loadDate = ps.get("loadDate");
-		System.out.println(taskId + loadDate);
+		System.out.println(ps);
 		iBasicExecuteContext.executeSucceed("success");
 	}
 

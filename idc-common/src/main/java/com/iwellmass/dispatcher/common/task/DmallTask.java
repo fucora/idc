@@ -584,7 +584,10 @@ public class DmallTask implements Job {
 		if (taskEntity.getParameters() != null) {
 			try {
 				Map<String, Object> args = (Map<String, Object>) JSONUtils.parse(taskEntity.getParameters());
-				idcParameters.putAll(args);
+				Map<String, Object> task = (Map<String, Object>) args.get("task");
+				if (task != null) {
+					idcParameters.putAll(task);
+				}
 			} catch (Throwable e) {
 				logger.warn("解析任务参数时出错 jobId {}, batchId {}", ddcTask.getTaskId(), executeBatchId);
 			}

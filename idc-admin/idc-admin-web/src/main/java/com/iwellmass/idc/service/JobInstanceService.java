@@ -84,7 +84,7 @@ public class JobInstanceService {
     	parameters.put("executeBatchId", batchId);
     	parameters.put("loadDate", loadDate);
     	
-        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,id, Constants.TASK_TRIGGER_TYPE_MAN, parameters);
+        iTaskService.executeTask(DDCConfiguration.DEFAULT_APP,history.getTaskId(), Constants.TASK_TRIGGER_TYPE_MAN, parameters);
     }
 
 	public List<JobInstance> getWorkflowTask(Integer id) {
