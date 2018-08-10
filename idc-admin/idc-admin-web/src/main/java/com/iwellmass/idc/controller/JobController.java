@@ -1,5 +1,6 @@
 package com.iwellmass.idc.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
@@ -17,6 +17,7 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.common.entry.DDCException;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
@@ -39,6 +40,14 @@ public class JobController {
 	@PostMapping(path = "/query")
 	public ServiceResult<PageData<Job>> findTasksByCondition(@RequestBody(required = false) JobQuery query,
 			Pager pager) {
+		
+		if (query == null) {
+			query = new JobQuery();
+		}
+		if (query.getTaskTypes() == null) {
+			query.setTaskTypes(Arrays.asList(TaskType.NODE_TASK, TaskType.WORKFLOW));
+		}
+		
 		PageData<Job> tasks = jobService.findTasksByCondition(query, pager);
 		return ServiceResult.success(tasks);
 	}
@@ -63,27 +72,27 @@ public class JobController {
 		return ServiceResult.success(allAssignee);
 	}
 
-	@RequestMapping(value = "/{taskId}/lock-status", method = RequestMethod.POST)
+	@PostMapping(value = "/{id}/lock")
 	@ApiOperation("冻结 Job")
-	public ServiceResult<String> lock(@PathVariable("taskId") int taskId) {
+	public ServiceResult<String> lock(@PathVariable("id") int jobId) {
 		try {
-			jobService.lockStatus(taskId);
+			jobService.lockStatus(jobId);
 		} catch (DDCException e) {
 			return ServiceResult.failure(e.getMessage());
 		}
 		return ServiceResult.success("success");
 	}
-	@RequestMapping(value = "/{taskId}/unlock-status", method = RequestMethod.POST)
+	
+	@PostMapping(value = "/{id}/unlock")
 	@ApiOperation("恢复 Job")
-	public ServiceResult<String> unlock(@PathVariable("taskId") int taskId) {
+	public ServiceResult<String> unlock(@PathVariable("id") int jobId) {
 		try {
-			jobService.unlockStatus(taskId);
+			jobService.unlockStatus(jobId);
 		} catch (DDCException e) {
 			return ServiceResult.failure(e.getMessage());
 		}
 		return ServiceResult.success("success");
 	}
-
 
     @ApiOperation("补数")
     @PostMapping("/{id}/complement")

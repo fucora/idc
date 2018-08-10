@@ -137,7 +137,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("生效日期始 yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	@Column(name = "start_time")
 	public Timestamp getStartTime() {
 		return startTime;
@@ -148,7 +148,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("生效日期止, yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	@Column(name = "end_time")
 	public Timestamp getEndTime() {
 		return endTime;
@@ -160,6 +160,7 @@ public class Job {
 
 	@ApiModelProperty("创建日期")
 	@Column(name = "createtime")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	public Timestamp getCreateTime() {
 		return createTime;
 	}
@@ -211,6 +212,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("更新时间")
+	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	public Timestamp getUpdateTime() {
 		return updateTime;
 	}

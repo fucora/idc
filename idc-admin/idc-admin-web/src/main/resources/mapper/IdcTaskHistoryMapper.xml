@@ -12,7 +12,7 @@
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="EXECUTE_RESULT" property="status" jdbcType="VARCHAR" />
-        <result column="TRIGGER_TYPE" property="type" jdbcType="INTEGER" />
+        <result column="TRIGGER_TYPE" property="type" jdbcType="INTEGER" typeHandler="com.iwellmass.dispatcher.admin.JobInstanceTypeHandler"/>
     </resultMap>
     
     <sql id="Base_Column_List" >
@@ -52,8 +52,8 @@
             <if test="job.executeTimeTo !=null">
                 AND TH.ACTUAL_FIRE_TIME &lt;= #{job.executeTimeTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="job.type !=null">
-                AND TH.TRIGGER_TYPE= #{job.type,jdbcType=INTEGER}
+            <if test="job.instanceType !=null">
+                AND TH.TRIGGER_TYPE= #{job.instanceType,jdbcType=INTEGER,typeHandler=com.iwellmass.dispatcher.admin.JobInstanceTypeHandler}
             </if>
         </where>
         ORDER BY EXECUTE_ID DESC
@@ -85,8 +85,8 @@
             <if test="executeTimeTo !=null">
                 AND TH.ACTUAL_FIRE_TIME &lt;= #{executeTimeTo,jdbcType=BIGINT,typeHandler=com.iwellmass.dispatcher.admin.MillsHandler}
             </if>
-            <if test="type !=null">
-                AND TH.TRIGGER_TYPE= #{type,jdbcType=INTEGER}
+            <if test="instanceType !=null">
+                AND TH.TRIGGER_TYPE= #{instanceType,jdbcType=INTEGER,typeHandler=com.iwellmass.dispatcher.admin.JobInstanceTypeHandler}
             </if>
         </where>
        ORDER BY EXECUTE_ID DESC

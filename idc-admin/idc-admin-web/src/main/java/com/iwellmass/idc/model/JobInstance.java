@@ -1,7 +1,6 @@
 package com.iwellmass.idc.model;
 
 import java.sql.Timestamp;
-import java.util.TimeZone;
 
 import javax.persistence.Id;
 
@@ -41,7 +40,7 @@ public class JobInstance {
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp endTime;
 
-	private Integer type;
+	private JobInstanceType type;
 
 	@Id
 	@ApiModelProperty("执行ID")
@@ -135,15 +134,11 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("实例类型")
-	public Integer getType() {
+	public JobInstanceType getType() {
 		return type;
 	}
 
-	public void setType(Integer type) {
+	public void setType(JobInstanceType type) {
 		this.type = type;
-	}
-	
-	public static void main(String[] args) {
-		System.out.println(TimeZone.getDefault().toString());
 	}
 }

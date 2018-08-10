@@ -1,6 +1,7 @@
 package com.iwellmass.idc.model;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -14,8 +15,10 @@ public class JobQuery {
 	@ApiModelProperty("任务类型")
 	private String contentType;
 
-	@ApiModelProperty("实例类型")
-	private Integer type;
+	private JobInstanceType instanceType;
+
+	@ApiModelProperty("节点类型")
+	private List<TaskType> taskTypes;
 
 	@ApiModelProperty("负责人")
 	private String assignee;
@@ -31,11 +34,10 @@ public class JobQuery {
 	@ApiModelProperty("运行时间始， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp executeTimeFrom;
-	
+
 	@ApiModelProperty("运行时间止， yyyy-MM-dd hh:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private Timestamp executeTimeTo;
-	
 
 	public String getTaskName() {
 		return taskName;
@@ -61,12 +63,12 @@ public class JobQuery {
 		this.assignee = assignee;
 	}
 
-	public Integer getType() {
-		return type;
+	public List<TaskType> getTaskTypes() {
+		return taskTypes;
 	}
 
-	public void setType(Integer type) {
-		this.type = type;
+	public void setTaskTypes(List<TaskType> taskTypes) {
+		this.taskTypes = taskTypes;
 	}
 
 	public Timestamp getLoadDateFrom() {
@@ -99,6 +101,14 @@ public class JobQuery {
 
 	public void setExecuteTimeTo(Timestamp executeTimeTo) {
 		this.executeTimeTo = executeTimeTo;
+	}
+
+	public JobInstanceType getInstanceType() {
+		return instanceType;
+	}
+
+	public void setInstanceType(JobInstanceType instanceType) {
+		this.instanceType = instanceType;
 	}
 
 }

@@ -122,7 +122,7 @@
 	<distributionManagement>
 		<repository>
 			<id>center</id>
-			<url>http://192.168.10.201:8081/repository/maven-private/</url>
+			<url>http://maven.iwellmass.com:8081/repository/maven-private/</url>
 		</repository>
 	</distributionManagement>
 

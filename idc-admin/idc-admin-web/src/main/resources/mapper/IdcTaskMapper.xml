@@ -5,6 +5,7 @@
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
         <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
+        <result column="TASK_TYPE" property="taskType" jdbcType="INTEGER" typeHandler="com.iwellmass.dispatcher.admin.TaskTypeHandler" />
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
         <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
@@ -13,8 +14,9 @@
         <result column="UPDATE_TIME" property="updateTime" jdbcType="TIMESTAMP" />
         <result column="TASK_STATUS" property="status" jdbcType="INTEGER" />
     </resultMap>
+    
     <sql id="Base_Column_List" >
-        TASK_ID, TASK_NAME,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS
+        TASK_ID, TASK_NAME,TASK_TYPE,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS
     </sql>
     
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
@@ -37,6 +39,12 @@
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         <where>
+            <if test="job.taskTypes !=null and job.taskTypes.size() > 0">
+                AND TASK_TYPE IN 
+               <foreach collection="job.taskTypes" index="index" item="item" open="(" separator="," close=")">
+	                #{item,jdbcType=INTEGER,typeHandler=com.iwellmass.dispatcher.admin.TaskTypeHandler}
+          		</foreach>
+            </if>
             <if test="job.taskName !=null and job.taskName != '' ">
                 AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.taskName,jdbcType=VARCHAR},'%'))
             </if>
@@ -56,6 +64,12 @@
         <include refid="Base_Column_List" />
         FROM DDC_TASK
         <where>
+            <if test="taskTypes !=null and taskTypes.size() > 0">
+                AND TASK_TYPE IN 
+               <foreach collection="taskTypes" index="index" item="item" open="(" separator="," close=")">
+	                #{item,jdbcType=INTEGER,typeHandler=com.iwellmass.dispatcher.admin.TaskTypeHandler}
+          		</foreach>
+            </if>
             <if test="taskName !=null and taskName != '' ">
                 AND TASK_NAME = #{taskName,jdbcType=VARCHAR}
             </if>
@@ -67,6 +81,7 @@
             </if>
         </where>
     </select>
+    
     <select id="findAllWorkflowJob" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List" />
@@ -74,6 +89,5 @@
         WHERE
         	TASK_CATEGOTY = 2
     </select>
-
-
+    
 </mapper>
