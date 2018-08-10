@@ -15,6 +15,10 @@ public class JobQuery {
 	@ApiModelProperty("任务类型")
 	private ContentType contentType;
 
+	@ApiModelProperty("调度类型类型")
+	private ScheduleType scheduleType;
+	
+	@ApiModelProperty("实例类型")
 	private JobInstanceType instanceType;
 
 	@ApiModelProperty("节点类型")
@@ -111,4 +115,11 @@ public class JobQuery {
 		this.instanceType = instanceType;
 	}
 
+	public ScheduleType getScheduleType() {
+		return scheduleType;
+	}
+
+	public void setScheduleType(ScheduleType scheduleType) {
+		this.scheduleType = scheduleType;
+	}
 }

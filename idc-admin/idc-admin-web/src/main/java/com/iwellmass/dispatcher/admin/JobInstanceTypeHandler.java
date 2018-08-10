@@ -17,7 +17,7 @@ public class JobInstanceTypeHandler implements TypeHandler<JobInstanceType> {
 	@Override
 	public void setParameter(PreparedStatement ps, int i, JobInstanceType parameter, JdbcType jdbcType)
 			throws SQLException {
-		ps.setInt(i, values[parameter.ordinal()]);
+		ps.setInt(i, asDDCTriggerType(parameter));
 	}
 
 	@Override
@@ -35,7 +35,7 @@ public class JobInstanceTypeHandler implements TypeHandler<JobInstanceType> {
 		return ofDDCTriggerType(cs.getInt(columnIndex));
 	}
 
-	private static final JobInstanceType ofDDCTriggerType(int i) {
+	public static final JobInstanceType ofDDCTriggerType(int i) {
 
 		// public static final int TASK_TRIGGER_TYPE_SYSTEM = 0;
 		// public static final int TASK_TRIGGER_TYPE_MAN = 1;
@@ -57,5 +57,8 @@ public class JobInstanceTypeHandler implements TypeHandler<JobInstanceType> {
 			return JobInstanceType.COMPLEMENT;
 		}
 		return JobInstanceType.CRON;
+	}
+	public static final int asDDCTriggerType(JobInstanceType type) {
+		return values[type.ordinal()];
 	}
 }

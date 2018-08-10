@@ -15,7 +15,7 @@ public class TaskIdTypeHandler implements TypeHandler<String>{
 
 	@Override
 	public void setParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType) throws SQLException {
-		ps.setString(i, null);
+		throw new UnsupportedOperationException("should never happen");
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class TaskIdTypeHandler implements TypeHandler<String>{
 			return null;
 		}
 		try {
-			JSONObject jo = JSON.parseObject(parameters);
+			JSONObject jo = JSON.parseObject(parameters).getJSONObject("task");
 			return jo.getString("taskId");
 		} catch (Throwable e) {
 			return null;

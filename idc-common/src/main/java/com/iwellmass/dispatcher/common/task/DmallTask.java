@@ -80,6 +80,7 @@ public class DmallTask implements Job {
 	
 	private static ThreadLocal<Logger> loggers = new ThreadLocal<Logger>();
 
+	// job id
 	private Integer taskId;
 	
 	// 业务日期

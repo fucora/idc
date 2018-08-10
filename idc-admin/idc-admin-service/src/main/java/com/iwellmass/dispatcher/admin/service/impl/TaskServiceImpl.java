@@ -302,11 +302,25 @@ public class TaskServiceImpl implements ITaskService {
 
         taskMapper.insertSelective(task); //插入新任务到数据库表DDC_TASK
         int taskId = task.getTaskId(); //数据库自增的id
-
+        
         if (task.getTaskStatus() == Constants.TASK_STATUS_DISABLED || (category == Constants.TASK_CATEGORY_BASIC && type == Constants.TASK_TYPE_SUBTASK)) { //停用的任务、流程子任务
             return;
         }
-
+        
+        String params = task.getParameters();
+        
+        if (params != null) {
+        	try {
+        		JSONObject p = JSON.parseObject(params);
+        		// 手动实例就等待手动触发
+        		if (p.getInteger("triggerType") == Constants.TASK_TRIGGER_TYPE_MAN) {
+        			return;
+        		}
+        	} catch (Throwable e) {
+        		// ignore
+        	}
+        }
+        
         JobDataMap map = new JobDataMap();
 
         if (category == Constants.TASK_CATEGORY_BASIC || category == Constants.TASK_CATEGORY_WORKFLOW) {

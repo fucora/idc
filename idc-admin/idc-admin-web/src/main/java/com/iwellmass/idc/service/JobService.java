@@ -25,6 +25,7 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.dispatcher.admin.DDCConfiguration;
+import com.iwellmass.dispatcher.admin.JobInstanceTypeHandler;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskMapper;
 import com.iwellmass.dispatcher.admin.dao.mapper.DdcTaskWorkflowMapper;
 import com.iwellmass.dispatcher.admin.dao.model.DdcTask;
@@ -38,7 +39,9 @@ import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.controller.ComplementRequest;
 import com.iwellmass.idc.mapper.IdcTaskMapper;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobQuery;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
 
 @Service
@@ -73,27 +76,43 @@ public class JobService {
 		task.setClassName(TaskTypeHelper.classNameOf(job.getContentType().toString()));
 		task.setCreateTime(now);
 		task.setCreateUser(job.getAssignee());
-		task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
 		task.setOwner(job.getAssignee());
 		task.setTimeout(60L);
 		task.setTaskStatus(Constants.TASK_STATUS_ENABLED);
 		task.setConcurrency(Boolean.FALSE);
 
         JSONObject jo = new JSONObject();
-        jo.put("taskId", job.getTaskId());
+        
+        // 调度类型
+        if (ScheduleType.MANUAL == job.getScheduleType()) {
+        	jo.put("triggerType",  JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.MANUAL));
+        }
+        else {
+        	task.setCron(job.getScheduleProperties().toCronExpr(job.getScheduleType()));
+        	jo.put("triggerType", JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.CRON));
+        }
+        
+        JSONObject map = new JSONObject();
+        map.put("taskId", job.getTaskId());
+        
+        jo.put("task", map);
         task.setParameters(jo.toJSONString());
 
-		// 使用 workflow 引擎
-		if (job.getTaskType() == TaskType.WORKFLOW_TASK) {
+		// 单节点任务
+		if (job.getTaskType() == TaskType.NODE_TASK) {
+			task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
+			task.setTaskType(Constants.TASK_TYPE_CRON);
+		} 
+		// 流程主任务
+		else if (job.getTaskType() == TaskType.WORKFLOW) {
+			// TODO
+		} 
+		// 工作流子任务
+		else if (job.getTaskType() == TaskType.WORKFLOW_TASK) {
 			// category == Constants.TASK_CATEGORY_BASIC && type == Constants.TASK_TYPE_SUBTASK
 			task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
 			task.setTaskType(Constants.TASK_TYPE_SUBTASK);
-		} else {
-			task.setTaskCategoty(Constants.TASK_CATEGORY_BASIC);
-			task.setTaskType(Constants.TASK_TYPE_CRON);
 		}
-		
-
 		try {
 			taskService.createOrUpdateTask(DDCContext.DEFAULT_APP, task);
 			job.setId(task.getTaskId());
@@ -136,7 +155,7 @@ public class JobService {
 				Trigger complementTrigger = trigger.getTriggerBuilder()
 					.withIdentity(buildComplementTriggerKey(ddcTask))
 					.startAt(startDate).endAt(endDate).build();
-				complementTrigger.getJobDataMap().put("triggerType", Constants.TASK_TRIGGER_TYPE_MAN_COMPLEMENT);
+				complementTrigger.getJobDataMap().put("triggerType", JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.COMPLEMENT));
 				complementTrigger.getJobDataMap().put("user", "admin");
 				scheduler.scheduleJob(complementTrigger);
 			}

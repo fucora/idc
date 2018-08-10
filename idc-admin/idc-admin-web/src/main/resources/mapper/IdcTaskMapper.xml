@@ -5,6 +5,7 @@
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
         <result column="PARAMETERS" property="taskId" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.TaskIdTypeHandler"/>
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
+        <result column="CRON" property="scheduleType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.ScheduleTypeHandler"/>
         <result column="TASK_TYPE" property="taskType" jdbcType="INTEGER" typeHandler="com.iwellmass.dispatcher.admin.TaskTypeHandler" />
         <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.ContentTypeHandler" />
         <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
@@ -16,7 +17,7 @@
     </resultMap>
     
     <sql id="Base_Column_List" >
-        TASK_ID, TASK_NAME,PARAMETERS,TASK_TYPE,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS
+        TASK_ID, TASK_NAME,PARAMETERS,TASK_TYPE,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS,CRON
     </sql>
     
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
@@ -54,6 +55,17 @@
             <if test="job.assignee !=null and job.assignee != ''">
                AND OWNER= #{job.assignee,jdbcType=VARCHAR}
             </if>
+            <choose>
+			    <when test="job.scheduleType == null">
+			    	AND 1 = 1
+			    </when>
+			    <when test="job.scheduleType.toString() == 'MANUAL'">
+					 AND CRON IS NULL			    	
+			    </when>
+			    <otherwise>
+			    	 AND CRON IS NOT NULL
+			    </otherwise>
+			</choose>
         </where>
         ORDER BY TASK_ID DESC
         limit #{pager.page},#{pager.limit}
@@ -79,6 +91,17 @@
             <if test="assignee !=null and assignee != ''">
                 AND OWNER= #{assignee,jdbcType=VARCHAR}
             </if>
+            <choose>
+			    <when test="scheduleType == null">
+			    	AND 1 = 1
+			    </when>
+			    <when test="scheduleType.toString() == 'MANUAL'">
+					 AND CRON IS NULL			    	
+			    </when>
+			    <otherwise>
+			    	 AND CRON IS NOT NULL
+			    </otherwise>
+			</choose>
         </where>
     </select>
     
