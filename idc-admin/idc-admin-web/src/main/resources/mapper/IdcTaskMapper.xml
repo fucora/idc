@@ -49,7 +49,7 @@
             <if test="job.taskName !=null and job.taskName != '' ">
                 AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.taskName,jdbcType=VARCHAR},'%'))
             </if>
-            <if test="job.contentType !=null and job.contentType != ''">
+            <if test="job.contentType !=null">
                 AND CLASS_NAME = #{job.contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
@@ -85,7 +85,7 @@
             <if test="taskName !=null and taskName != '' ">
                 AND TASK_NAME = #{taskName,jdbcType=VARCHAR}
             </if>
-            <if test="contentType !=null and contentType != ''">
+            <if test="contentType !=null">
                 AND CLASS_NAME = #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler}
             </if>
             <if test="assignee !=null and assignee != ''">
