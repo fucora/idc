@@ -17,7 +17,6 @@ import com.iwellmass.dispatcher.admin.dao.model.DdcTaskExecuteHistory;
 import com.iwellmass.dispatcher.admin.service.ITaskService;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.entry.DDCException;
-import com.iwellmass.dispatcher.thrift.bvo.TaskTypeHelper;
 import com.iwellmass.idc.mapper.IdcTaskHistoryMapper;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobQuery;
@@ -39,27 +38,14 @@ public class JobInstanceService {
         Pager pager1=new Pager();
         pager1.setPage(pager.getTo());
         pager1.setLimit(pager.getLimit());
-        if (query != null && query.getContentType() != null	) {
-        	query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
-        }
         List<JobInstance> allTaskInstance = idcTaskHistoryMapper.findAllTaskInstanceByCondition(query);
         List<JobInstance> taskInstance = idcTaskHistoryMapper.findTaskInstanceByCondition(query, pager1);
-        taskInstance.forEach(t -> {
-        	t.setContentType(TaskTypeHelper.contentTypeOf(t.getContentType()));
-        });
         return new PageData<JobInstance>(allTaskInstance.size(),taskInstance);
     }
 
     public List<JobQuery> getAllTypes(){
         List<JobQuery> list = new ArrayList<>();
         List<JobQuery> list1 = new ArrayList<>();
-        idcTaskHistoryMapper.findAllTaskInstance().forEach(i -> {
-           JobQuery query=new JobQuery();
-           if(!(null==i.getContentType()||i.getContentType().equals(""))){
-               query.setContentType(i.getContentType());
-               list.add(query);
-           }
-        });
         for (JobQuery type : list) {
             boolean is = list1.stream().anyMatch(t -> t.getContentType().equals(type.getContentType()));
             if (!is) {

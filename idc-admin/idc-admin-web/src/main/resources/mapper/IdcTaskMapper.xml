@@ -3,10 +3,10 @@
 <mapper namespace="com.iwellmass.idc.mapper.IdcTaskMapper" >
     <resultMap id="BaseResultMap" type="com.iwellmass.idc.model.Job" >
         <id column="TASK_ID" property="id" jdbcType="INTEGER" />
-        <result column="TASK_ID" property="taskId" jdbcType="INTEGER" />
+        <result column="PARAMETERS" property="taskId" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.TaskIdTypeHandler"/>
         <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" />
         <result column="TASK_TYPE" property="taskType" jdbcType="INTEGER" typeHandler="com.iwellmass.dispatcher.admin.TaskTypeHandler" />
-        <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" />
+        <result column="CLASS_NAME" property="contentType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.ContentTypeHandler" />
         <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
         <result column="OWNER" property="assignee" jdbcType="VARCHAR" />
         <result column="WORKFLOW_ID" property="groupId" jdbcType="INTEGER" />
@@ -16,7 +16,7 @@
     </resultMap>
     
     <sql id="Base_Column_List" >
-        TASK_ID, TASK_NAME,TASK_TYPE,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS
+        TASK_ID, TASK_NAME,PARAMETERS,TASK_TYPE,CLASS_NAME,DESCRIPTION,OWNER, WORKFLOW_ID, CREATE_TIME,UPDATE_TIME,TASK_STATUS
     </sql>
     
     <select id="findByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
@@ -49,7 +49,7 @@
                 AND TASK_NAME LIKE CONCAT(CONCAT('%',#{job.taskName,jdbcType=VARCHAR},'%'))
             </if>
             <if test="job.contentType !=null and job.contentType != ''">
-                AND CLASS_NAME = #{job.contentType,jdbcType=VARCHAR}
+                AND CLASS_NAME = #{job.contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler}
             </if>
             <if test="job.assignee !=null and job.assignee != ''">
                AND OWNER= #{job.assignee,jdbcType=VARCHAR}
@@ -74,7 +74,7 @@
                 AND TASK_NAME = #{taskName,jdbcType=VARCHAR}
             </if>
             <if test="contentType !=null and contentType != ''">
-                AND CLASS_NAME = #{contentType,jdbcType=VARCHAR}
+                AND CLASS_NAME = #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler}
             </if>
             <if test="assignee !=null and assignee != ''">
                 AND OWNER= #{assignee,jdbcType=VARCHAR}
@@ -88,6 +88,16 @@
         FROM DDC_TASK
         WHERE
         	TASK_CATEGOTY = 2
+    </select>
+    <select id="findWorkflowJob" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM DDC_TASK
+        WHERE
+        	TASK_ID IN
+        <foreach collection="taskIds" index="index" item="item" open="(" separator="," close=")">
+        	 #{item,jdbcType=INTEGER}
+  		</foreach>
     </select>
     
 </mapper>

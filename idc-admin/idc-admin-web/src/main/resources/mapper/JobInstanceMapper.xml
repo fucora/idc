@@ -5,7 +5,7 @@
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="job_id" property="jobId" jdbcType="INTEGER" />
     <result column="job_name" property="taskName" jdbcType="VARCHAR" />
-    <result column="task_type" property="contentType" jdbcType="VARCHAR" />
+    <result column="task_type" property="contentType" jdbcType="VARCHAR" typeHandler="com.iwellmass.dispatcher.admin.ContentTypeHandler" />
     <result column="assignee" property="assignee" jdbcType="VARCHAR" />
     <result column="excute_time" property="excuteTime" jdbcType="TIMESTAMP" />
     <result column="load_time" property="loadDate" jdbcType="TIMESTAMP" />
@@ -31,7 +31,7 @@
       load_time, start_time, end_time
       )
     values (#{id,jdbcType=INTEGER}, #{jobId,jdbcType=INTEGER}, #{jobName,jdbcType=VARCHAR}, 
-      #{contentType,jdbcType=VARCHAR}, #{assignee,jdbcType=VARCHAR}, #{excuteTime,jdbcType=TIMESTAMP}, 
+      #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler}, #{assignee,jdbcType=VARCHAR}, #{excuteTime,jdbcType=TIMESTAMP}, 
       #{loadTime,jdbcType=TIMESTAMP}, #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}
       )
   </insert>
@@ -77,7 +77,7 @@
         #{jobName,jdbcType=VARCHAR},
       </if>
       <if test="contentType != null" >
-        #{contentType,jdbcType=VARCHAR},
+        #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler},
       </if>
       <if test="assignee != null" >
         #{assignee,jdbcType=VARCHAR},
@@ -106,7 +106,7 @@
         job_name = #{jobName,jdbcType=VARCHAR},
       </if>
       <if test="contentType != null" >
-        task_type = #{contentType,jdbcType=VARCHAR},
+        task_type = #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler},
       </if>
       <if test="assignee != null" >
         assignee = #{assignee,jdbcType=VARCHAR},
@@ -130,7 +130,7 @@
     update t_idc_job_instance
     set job_id = #{jobId,jdbcType=INTEGER},
       job_name = #{jobName,jdbcType=VARCHAR},
-      task_type = #{contentType,jdbcType=VARCHAR},
+      task_type = #{contentType,jdbcType=VARCHAR,typeHandler=com.iwellmass.dispatcher.admin.ContentTypeHandler},
       assignee = #{assignee,jdbcType=VARCHAR},
       excute_time = #{excuteTime,jdbcType=TIMESTAMP},
       load_time = #{loadTime,jdbcType=TIMESTAMP},

@@ -11,11 +11,11 @@ public class ComplementRequest {
 	@ApiModelProperty("任务ID")
 	private Integer jobId;
 
-	@ApiModelProperty("开始时间")
+	@ApiModelProperty("开始时间，yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
 	private LocalDate start;
 	
-	@ApiModelProperty("截至时间")
+	@ApiModelProperty("截至时间，yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
 	private LocalDate end;
 	

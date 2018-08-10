@@ -16,4 +16,5 @@ public interface IdcTaskMapper {
     List<Job> findTaskByWorkflowId(Integer id);
     List<Job> findAllTasks();
 	List<Job> findAllWorkflowJob();
+	List<Job> findWorkflowJob(@Param(value = "taskIds") List<Integer> taskIds);
 }

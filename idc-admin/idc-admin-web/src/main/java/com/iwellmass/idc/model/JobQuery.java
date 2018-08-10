@@ -13,7 +13,7 @@ public class JobQuery {
 	private String taskName;
 
 	@ApiModelProperty("任务类型")
-	private String contentType;
+	private ContentType contentType;
 
 	private JobInstanceType instanceType;
 
@@ -47,11 +47,11 @@ public class JobQuery {
 		this.taskName = taskName;
 	}
 
-	public String getContentType() {
+	public ContentType getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(ContentType contentType) {
 		this.contentType = contentType;
 	}
 

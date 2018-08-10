@@ -22,7 +22,7 @@ public class JobInstance {
 
 	private String taskName;
 
-	private String contentType;
+	private ContentType contentType;
 
 	private String status;
 
@@ -71,11 +71,11 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("任务类型")
-	public String getContentType() {
+	public ContentType getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(ContentType contentType) {
 		this.contentType = contentType;
 	}
 

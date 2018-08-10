@@ -1,6 +1,5 @@
 package com.iwellmass.idc.service;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -166,7 +165,7 @@ public class JobService {
         DdcTaskExample example = new DdcTaskExample();
         example.createCriteria().andTaskIdIn(list);
 
-        return ddcTaskMapper.selectByExample(example).stream().map(this::newJob).collect(Collectors.toList());
+        return idcTaskMapper.findWorkflowJob(list);
     }
 
 	private void updateDependency(Integer workflowId, Job subJob) {
@@ -251,17 +250,6 @@ public class JobService {
         taskService.enableTask(DDCConfiguration.DEFAULT_APP, taskId);
     }
 
-    private Job newJob(DdcTask task) {
-        Job job = new Job();
-        job.setJobName(task.getTaskName());
-        job.setId(task.getTaskId());
-        job.setDescription(task.getDescription());
-        job.setAssignee(task.getOwner());
-        job.setWorkflowId(task.getWorkflowId());
-        job.setCreateTime(new Timestamp(task.getCreateTime().getTime()));
-        return job;
-    }
-
     /**
      * 通过条件查询job
      *
@@ -272,18 +260,8 @@ public class JobService {
         Pager pager1 = new Pager();
         pager1.setPage(pager.getTo());
         pager1.setLimit(pager.getLimit());
-        if (query != null && query.getContentType() != null) {
-            if (null == TaskTypeHelper.classNameOf(query.getContentType()) || TaskTypeHelper.classNameOf(query.getContentType()).equals("")) {
-                query.setContentType("XXXXX");
-            } else {
-                query.setContentType(TaskTypeHelper.classNameOf(query.getContentType()));
-            }
-        }
         List<Job> allTasks = idcTaskMapper.findAllTasksByCondition(query);
         List<Job> tasks = idcTaskMapper.findTasksByCondition(query, pager1);
-        tasks.forEach(j -> {
-            j.setContentType(TaskTypeHelper.contentTypeOf(j.getContentType()));
-        });
         return new PageData<Job>(allTasks.size(), tasks);
     }
 

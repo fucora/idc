@@ -30,7 +30,7 @@ public class Job {
 
 	private TaskType taskType;
 
-	private String contentType;
+	private ContentType contentType;
 
 	private ScheduleType scheduleType;
 
@@ -107,11 +107,11 @@ public class Job {
 
 	@ApiModelProperty("业务类型，DATA_SYNC、SPARK_SQL")
 	@Column(name = "content_type")
-	public String getContentType() {
+	public ContentType getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(ContentType contentType) {
 		this.contentType = contentType;
 	}
 
