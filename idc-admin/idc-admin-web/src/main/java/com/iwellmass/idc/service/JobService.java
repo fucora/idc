@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
+import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,29 +142,42 @@ public class JobService {
 			if (triggers.isEmpty()) {
 				throw new AppException("任务未正确提交");
 			} else {
-				LocalDate start = request.getStart();
-				LocalDate end = request.getEnd();
+				LocalDate start = request.getStartTime();
+				LocalDate end = request.getEndTime();
 				
-				Date startDate = new Date(start.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond());
-				Date endDate = new Date(end.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().getEpochSecond());
+				Date startDate = new Date(start.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+				Date endDate = new Date(end.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 				
 				Trigger trigger = triggers.stream().filter(t ->  t.getKey().getName().matches(
-						Constants.TRIGGER_PREFIX + "_ \\d+.+")
-				).findFirst().orElseThrow( () -> new AppException(""));
+						Constants.TRIGGER_PREFIX + "\\d+.+")
+				).findFirst().orElseThrow( () -> new AppException("任务未正确提交"));
 				
 				if (trigger == null) {
 					throw new AppException("任务未正确提交");
 				}
 				// 调起来
+				TriggerKey triggerKey = buildComplementTriggerKey(ddcTask);
 				Trigger complementTrigger = trigger.getTriggerBuilder()
-					.withIdentity(buildComplementTriggerKey(ddcTask))
+					.withIdentity(triggerKey)
 					.startAt(startDate).endAt(endDate).build();
 				complementTrigger.getJobDataMap().put("triggerType", JobInstanceTypeHandler.asDDCTriggerType(JobInstanceType.COMPLEMENT));
 				complementTrigger.getJobDataMap().put("user", "admin");
-				scheduler.scheduleJob(complementTrigger);
+				
+				if (scheduler.getTrigger(triggerKey) != null) {
+					TriggerState triggerState = scheduler.getTriggerState(triggerKey);
+					if (triggerState == TriggerState.COMPLETE) {
+						scheduler.rescheduleJob(triggerKey, complementTrigger);
+					} else {
+						throw new AppException("补数失败: 存在的正在执行的补数任务");
+					}
+				} else {
+					scheduler.scheduleJob(complementTrigger);
+				}
 			}
-		} catch (Exception e1) {
-			throw new AppException("补数失败" + e1.getMessage());
+		} catch (AppException e) {
+			throw e;
+		}catch (Exception e1) {
+			throw new AppException("补数失败: " + e1.getMessage());
 		}
     }
 	
@@ -320,7 +334,7 @@ public class JobService {
     }
     
     private TriggerKey buildComplementTriggerKey(DdcTask task) {
-        TriggerKey triggerKey = new TriggerKey(Constants.TRIGGER_PREFIX + "_complement_" + task.getTaskId(), task.getAppKey());
+        TriggerKey triggerKey = new TriggerKey(Constants.TRIGGER_PREFIX + "complement_" + task.getTaskId(), task.getAppKey());
         return triggerKey;
     }
 

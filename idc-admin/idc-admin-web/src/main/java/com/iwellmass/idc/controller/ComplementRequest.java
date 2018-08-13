@@ -7,18 +7,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 
 public class ComplementRequest {
-	
+
 	@ApiModelProperty("任务ID")
 	private Integer jobId;
 
 	@ApiModelProperty("开始时间，yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
-	private LocalDate start;
-	
+	private LocalDate startTime;
+
 	@ApiModelProperty("截至时间，yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
-	private LocalDate end;
-	
+	private LocalDate endTime;
+
 	public Integer getJobId() {
 		return jobId;
 	}
@@ -27,20 +27,20 @@ public class ComplementRequest {
 		this.jobId = jobId;
 	}
 
-	public LocalDate getStart() {
-		return start;
+	public LocalDate getStartTime() {
+		return startTime;
 	}
 
-	public void setStart(LocalDate start) {
-		this.start = start;
+	public void setStartTime(LocalDate startTime) {
+		this.startTime = startTime;
 	}
 
-	public LocalDate getEnd() {
-		return end;
+	public LocalDate getEndTime() {
+		return endTime;
 	}
 
-	public void setEnd(LocalDate end) {
-		this.end = end;
+	public void setEndTime(LocalDate endTime) {
+		this.endTime = endTime;
 	}
 
 }
