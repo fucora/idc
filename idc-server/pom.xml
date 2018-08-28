@@ -5,13 +5,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.iwellmass</groupId>
 	<artifactId>idc-server</artifactId>
-	<packaging>pom</packaging>
 	<name>idc server module</name>
-	<version>1.2.0-SNAPSHOT</version>
-	<modules>
-		<module>idc-server-status</module>
-		<module>idc-server-dag</module>
-	</modules>
+	<version>2.0.0-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,26 +22,32 @@
 	</distributionManagement>
 
 	<dependencyManagement>
+
 		<dependencies>
+			<!-- wac-model -->
 			<dependency>
 				<groupId>com.iwellmass</groupId>
 				<artifactId>idc-thrift</artifactId>
-				<version>1.2.0-SNAPSHOT</version>
+				<version>2.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.iwellmass</groupId>
 				<artifactId>idc-common</artifactId>
-				<version>1.2.0-SNAPSHOT</version>
+				<version>2.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.google.inject</groupId>
-				<artifactId>guice</artifactId>
-				<version>4.0</version>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>wac-common</artifactId>
+				<version>2.0-SNAPSHOT</version>
 			</dependency>
+
+			<!-- 3rd -->
 			<dependency>
-				<groupId>com.google.inject.extensions</groupId>
-				<artifactId>guice-multibindings</artifactId>
-				<version>4.0</version>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>iwellmass-dependencies</artifactId>
+				<version>2.0-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 
 			<!-- log -->
@@ -63,40 +64,70 @@
 				<version>0.9.2</version>
 			</dependency>
 
-			<dependency>
-				<groupId>org.mybatis</groupId>
-				<artifactId>mybatis</artifactId>
-				<version>3.3.0</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mybatis</groupId>
-				<artifactId>mybatis-spring</artifactId>
-				<version>1.2.3</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>19.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.alibaba</groupId>
-				<artifactId>fastjson</artifactId>
-				<version>1.2.8</version>
-			</dependency>
-			<!-- test dependency -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.12</version>
-			</dependency>
-			<dependency>
-				<groupId>org.testng</groupId>
-				<artifactId>testng</artifactId>
-				<version>6.9.10</version>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	<dependencies>
+
+		<dependency>
+			<groupId>com.iwellmass</groupId>
+			<artifactId>idc-thrift</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.persistence</groupId>
+			<artifactId>javax.persistence-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.iwellmass</groupId>
+			<artifactId>wac-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.iwellmass</groupId>
+			<artifactId>idc-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.iwellmass</groupId>
+			<artifactId>idc-server-dag</artifactId>
+			<version>1.2.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.iwellmass</groupId>
+			<artifactId>idc-common</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jgrapht</groupId>
+			<artifactId>jgrapht-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<!-- test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>

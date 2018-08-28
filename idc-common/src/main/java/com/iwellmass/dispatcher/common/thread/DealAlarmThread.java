@@ -3,8 +3,7 @@ package com.iwellmass.dispatcher.common.thread;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.iwellmass.common.util.Utils;
 import com.iwellmass.dispatcher.common.context.JVMContext;
 import com.iwellmass.dispatcher.common.context.SpringContext;
 import com.iwellmass.dispatcher.common.dao.DdcAlarmHistoryMapper;
@@ -77,7 +76,7 @@ public class DealAlarmThread implements Runnable {
 		record.setTaskId(taskId);
 		record.setAlarmKey(jvmContext.getAlarmKeys().get(alarmKey));
 		record.setContent(remarks);
-		record.setReceivers(StringUtils.isNotEmpty(receivers) ? receivers : null);
+		record.setReceivers(!Utils.isNullOrEmpty(receivers) ? receivers : null);
 		record.setAlarmDate(new Date());
 		ddcAlarmHistoryMapper.insert(record);
 	}

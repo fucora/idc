@@ -1,7 +1,6 @@
 package com.iwellmass.dispatcher.common.strategy;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.iwellmass.common.util.Utils;
 import com.iwellmass.dispatcher.common.constants.Constants;
 
 /**
@@ -12,7 +11,7 @@ import com.iwellmass.dispatcher.common.constants.Constants;
 public class DispatchStrategyFactory {
 
 	public static AbstractDispatchStrategy getDispatchStrategy(String strategyType) {
-		if(StringUtils.isNotEmpty(strategyType)) {
+		if(!Utils.isNullOrEmpty(strategyType)) {
 			if(strategyType.equals(Constants.STRATEGY_TYPE_RANDOM)) {
 				return new RandomDispatchStrategy();
 			}

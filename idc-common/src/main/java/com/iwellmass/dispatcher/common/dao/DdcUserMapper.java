@@ -2,8 +2,6 @@ package com.iwellmass.dispatcher.common.dao;
 
 import java.util.List;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.iwellmass.dispatcher.common.model.DdcUser;
 import com.iwellmass.dispatcher.common.model.DdcUserAlarm;
 import com.iwellmass.dispatcher.common.model.DdcUserExample;

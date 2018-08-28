@@ -3,7 +3,7 @@ package com.iwellmass.dispatcher.common.utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import com.iwellmass.common.util.Utils;
 
 /**
  * 高并发日期处理工具类
@@ -52,7 +52,7 @@ public class DateUtils {
 	 */
 	public static Date parseDate(String dateStr, String pattern) throws Exception {
 		Date formatDate = null;
-		if (StringUtils.isNotEmpty(dateStr)) {
+		if (!Utils.isNullOrEmpty(dateStr)) {
 			try {
 				formatDate = getDateFormat(pattern).parse(dateStr);
 			} catch (Exception e) {

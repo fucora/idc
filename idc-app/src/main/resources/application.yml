@@ -1,0 +1,101 @@
+spring:
+  application:
+    name: idc
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+  datasource:
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+    driverClassName: com.mysql.jdbc.Driver
+    filters: stat,wall,log4j
+    initialSize: 5
+    maxActive: 20
+    maxWait: 60000
+    minIdle: 5
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8
+    username: root
+    password: zjhz2017
+spring.data.jpa.repositories.enabled: false
+server:
+  port: 9306
+
+security:
+  oauth2:
+    resource:
+      jwt:
+        keyValue: |
+           -----BEGIN PUBLIC KEY-----
+           MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnGp/Q5lh0P8nPL21oMMrt2RrkT9AW5jgYwLfSUnJVc9G6uR3cXRRDCjHqWU5WYwivcF180A6CWp/ireQFFBNowgc5XaA0kPpzEtgsA5YsNX7iSnUibB004iBTfU9hZ2Rbsc8cWqynT0RyN4TP1RYVSeVKvMQk4GT1r7JCEC+TNu1ELmbNwMQyzKjsfBXyIOCFU/E94ktvsTZUHF4Oq44DBylCDsS1k7/sfZC2G5EU7Oz0mhG8+Uz6MSEQHtoIi6mc8u64Rwi3Z3tscuWG2ShtsUFuNSAFNkY7LkLn+/hxLCu2bNISMaESa8dG22CIMuIeRLVcAmEWEWH5EEforTg+QIDAQAB
+           -----END PUBLIC KEY-----
+        id: openid
+        serviceId: ${PREFIX:}resource
+  user:
+    password: password
+  ignored: /**
+
+feign:
+  hystirx:
+    enable: false
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+        requestInterceptors:
+        - com.iwellmass.auth.config.OAuth2FeignRequestInterceptor
+        decode404: false
+
+mybatis:
+  mapper-locations: "classpath:mapper/*.xml"
+  type-aliases-package: com.iwellmass.dispatcher.admin.dao.model
+  configuration:
+    default-fetch-size: 100
+    default-statement-timeout: 30
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://eureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
+---
+spring:
+  profiles: dev
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://eureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
+
+---
+spring:
+  profiles: gray
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://grayeureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5

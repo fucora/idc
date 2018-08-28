@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -36,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.support.json.JSONUtils;
+import com.iwellmass.common.util.Utils;
 import com.iwellmass.dispatcher.common.constants.Constants;
 import com.iwellmass.dispatcher.common.context.JVMContext;
 import com.iwellmass.dispatcher.common.context.QuartzContext;
@@ -466,7 +466,7 @@ public class DmallTask implements Job {
 			ddcTaskExecuteHistory.setDispatchCount(1);
 			ddcTaskExecuteHistory.setDispatcherIp(JVMContext.getIp());
 			ddcTaskExecuteHistory.setDispatcherPort(JVMContext.getPort());
-			ddcTaskExecuteHistory.setExecuteUser(StringUtils.isNotEmpty(user) ? user : null);
+			ddcTaskExecuteHistory.setExecuteUser(!Utils.isNullOrEmpty(user) ? user : null);
 			ddcTaskExecuteHistory.setTimeout(ddcTask.getTimeout());
 			if(ddcTask.getTimeout() != null && ddcTask.getTimeout() > 0) {
 				ddcTaskExecuteHistory.setTimeoutTime(new Date(System.currentTimeMillis() + ddcTask.getTimeout() * 1000));				
