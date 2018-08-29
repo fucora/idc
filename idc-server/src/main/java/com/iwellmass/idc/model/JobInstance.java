@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -20,8 +18,7 @@ import io.swagger.annotations.ApiModelProperty;
 @Table(name = "t_idc_job_instance")
 public class JobInstance {
 
-	// 实例类型
-	private String id;
+	private Integer id;
 
 	private String taskId;
 
@@ -44,17 +41,17 @@ public class JobInstance {
 	private JobInstanceType type;
 
 	@ApiModelProperty("执行ID")
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Id
-	public String getId() {
+	@Column(name = "id")
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
 	@ApiModelProperty("任务 ID")
+	@Id
 	@Column(name = "task_id")
 	public String getTaskId() {
 		return taskId;
@@ -64,6 +61,7 @@ public class JobInstance {
 		this.taskId = taskId;
 	}
 
+	@Id
 	@Column(name = "groupId", length = 50)
 	public String getGroupId() {
 		return groupId;
@@ -74,8 +72,9 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("业务日期")
-	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
+	@Id
 	@Column(name = "load_date")
+	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
 	public LocalDateTime getLoadDate() {
 		return loadDate;
 	}

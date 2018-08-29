@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public interface IDCConstants {
 
 	// ~~ IDC quartz plugin ~~
+	public static final String VERSION = "2.0";
 	public static final String TABLE_SENTINEL = "t_idc_sentinel";
 	public static final String COL_SENTINEL_TASK_ID = "task_id";
 	public static final String COL_SENTINEL_GROUP_ID = "groud_id";
@@ -13,7 +14,7 @@ public interface IDCConstants {
 	
 	// ~~ context value keys ~~
 	/** 实例 ID */
-	public static final IDCContextKey<String> CONTEXT_INSTANCE_ID = IDCContextKey.def("job.context.instanceId", String.class);
+	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = IDCContextKey.def("job.context.instanceId", Integer.class);
 	/** 获取业务日期 */
 	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = IDCContextKey.def("job.context.loadDate", LocalDateTime.class);
 	/** 是否跳过本次执行 */

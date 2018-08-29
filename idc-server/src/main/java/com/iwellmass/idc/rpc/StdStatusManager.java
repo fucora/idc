@@ -3,7 +3,6 @@ package com.iwellmass.idc.rpc;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -18,9 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.CompleteEvent;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.Sentinel;
 import com.iwellmass.idc.model.ExecutionLog;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobInstanceType;
@@ -28,10 +26,10 @@ import com.iwellmass.idc.model.JobStatusEvent;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.StartEvent;
 import com.iwellmass.idc.quartz.IDCPlugin;
-import com.iwellmass.idc.repo.SentinelRepository;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
+import com.iwellmass.idc.repo.SentinelRepository;
 
 @Component
 public class StdStatusManager implements JobStatusManager {
@@ -103,7 +101,6 @@ public class StdStatusManager implements JobStatusManager {
 		}
 	}
 
-	@Override
 	public void fireJobStart(StartEvent event) {
 		// 更新实例状态
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
@@ -125,7 +122,6 @@ public class StdStatusManager implements JobStatusManager {
 		jobLogRepository.save(log);
 	}
 
-	@Override
 	public void fireJobActived(JobStatusEvent event) {
 		
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
@@ -177,7 +173,6 @@ public class StdStatusManager implements JobStatusManager {
 		resumeJob(jobInstance);
 	}
 
-	@Override
 	public void fireJobBlocked(JobStatusEvent event) {
 		// 重新计算 barrier 信息
 		fireJobActived(event);

@@ -46,6 +46,9 @@ public class IDCTriggerListener extends TriggerListenerSupport implements Applic
 
 	@Inject
 	private SentinelRepository sentinelRepository;
+	
+	@Inject
+	private PluginVersionService pluginVersionService;
 
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
@@ -69,7 +72,7 @@ public class IDCTriggerListener extends TriggerListenerSupport implements Applic
 
 		// 生成实例
 		Job job = jobRepository.findOne(taskId, groupId);
-		String instanceId = buildInstanceId(taskId, groupId, loadDate);
+		Integer instanceId = pluginVersionService.generateInstanceId();
 		JobInstance jobInstance = new JobInstance();
 		jobInstance.setId(instanceId);
 		jobInstance.setTaskId(taskId);

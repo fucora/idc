@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 public class ExecutionRequest {
 
-	private String instanceId;
+	private Integer instanceId;
 	
 	private String taskId;
 
@@ -31,11 +31,11 @@ public class ExecutionRequest {
 		this.group = groupId;
 	}
 
-	public String getInstanceId() {
+	public Integer getInstanceId() {
 		return instanceId;
 	}
 
-	public void setInstanceId(String instanceId) {
+	public void setInstanceId(Integer instanceId) {
 		this.instanceId = instanceId;
 	}
 

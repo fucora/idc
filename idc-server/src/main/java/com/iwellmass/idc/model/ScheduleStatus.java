@@ -2,8 +2,10 @@ package com.iwellmass.idc.model;
 
 import io.swagger.annotations.ApiModelProperty;
 
+// copy-of-quartz TriggerState
 public enum ScheduleStatus {
 
+	
 	
 	@ApiModelProperty("NONE")
 	NONE,
@@ -25,5 +27,5 @@ public enum ScheduleStatus {
 	
 	
 	
-	// NONE, NORMAL, PAUSED, COMPLETE, ERROR, BLOCKED 
+	
 }

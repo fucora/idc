@@ -32,7 +32,7 @@ public class LocalJobExecutorService implements JobExecutorService{
 		startEvent.setInstanceId(executionRequest.getInstanceId());
 		startEvent.setMessage("开始执行任务...");
 		
-		statusManager.fireJobStart(startEvent);
+		// statusManager.fireJobStart(startEvent);
 		
 		LOGGER.info("execution request: {}", executionRequest);
 		LOGGER.info("execution parameters: {}", executionRequest.getParameters());

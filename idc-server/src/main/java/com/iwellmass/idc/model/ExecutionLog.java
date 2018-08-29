@@ -1,8 +1,6 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalDateTime;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,7 +13,7 @@ public class ExecutionLog {
 
 	private Long id;
 	
-	private String instanceId;
+	private Integer instanceId;
 	
 	private LocalDateTime time;
 	
@@ -35,11 +33,11 @@ public class ExecutionLog {
 	}
 
 	@Column(name = "instance_id")
-	public String getInstanceId() {
+	public Integer getInstanceId() {
 		return instanceId;
 	}
 
-	public void setInstanceId(String instanceId) {
+	public void setInstanceId(Integer instanceId) {
 		this.instanceId = instanceId;
 	}
 
@@ -62,7 +60,7 @@ public class ExecutionLog {
 	}
 	
 	
-	public static ExecutionLog createLog(String instanceId, String message, Object...args) {
+	public static ExecutionLog createLog(Integer instanceId, String message, Object...args) {
 		ExecutionLog log = new ExecutionLog();
 		log.setInstanceId(instanceId);
 		log.setMessage(message);

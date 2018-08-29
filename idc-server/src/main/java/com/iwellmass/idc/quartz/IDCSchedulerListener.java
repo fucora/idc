@@ -29,15 +29,11 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	@Override
 	public void jobScheduled(Trigger trigger) {
 		JobKey jobKey = trigger.getJobKey();
-
-		LocalDateTime loadDate = Optional.ofNullable(trigger.getNextFireTime()).map(IDCPlugin::toLocalDateTime)
-				.orElse(null);
-
+		LocalDateTime loadDate = Optional.ofNullable(trigger.getNextFireTime()).map(IDCPlugin::toLocalDateTime).orElse(null);
+		
 		if (loadDate != null) {
 			LOGGER.info("处理 {}.{}.{}", jobKey.getName(), jobKey.getGroup(), loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
-			LOGGER.info("123");
 		}
-
 	}
 	
 	@Override

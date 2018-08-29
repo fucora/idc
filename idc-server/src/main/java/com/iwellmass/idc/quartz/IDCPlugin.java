@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.sql.DataSource;
 
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -25,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
+import com.iwellmass.idc.model.PluginVersion;
 
 @Component
 public class IDCPlugin implements SchedulerPlugin, IDCConstants {
@@ -35,8 +35,6 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	public static final DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
 
-	public IDCPlugin() {}
-	
 	@Inject
 	private IDCSchedulerListener idcSchedulerListener;
 	
@@ -46,16 +44,23 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	@Inject
 	private IDCJobListener idcJobListener;
 	
-	@SuppressWarnings("unused")
-	private DataSource dataSource; // new SpringConnectionProviderDelegate()
-
+	@Inject
+	private PluginVersionService pluginService;
+	
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
-		LOGGER.info("加载 IDCPlugin");
+		LOGGER.info("加载 IDCPlugin...");
+		PluginVersion version = null;
+		try {
+			version = pluginService.init();
+		} catch (Exception e) {
+			throw new SchedulerException("初始化 IDCPlugin 时出错: " + String.valueOf(e.getMessage()), e);
+		}
 		// listeners
 		scheduler.getListenerManager().addSchedulerListener(idcSchedulerListener);
 		scheduler.getListenerManager().addTriggerListener(idcTriggerListener);
 		scheduler.getListenerManager().addJobListener(idcJobListener);
+		LOGGER.info("IDCPlugin 已加载, VERSION: {}", version.getVersion());
 	}
 
 	public static final <T> List<T> nullable(List<T> list) {
@@ -127,5 +132,4 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		TriggerKey key = new TriggerKey(type.toString() + "_" + taskId, groupId);
 		return key;
 	}
-
 }

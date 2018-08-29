@@ -3,8 +3,6 @@ package com.iwellmass.idc.dag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.model.CompleteEvent;
-
 public class DAGScheduler {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DAGScheduler.class);

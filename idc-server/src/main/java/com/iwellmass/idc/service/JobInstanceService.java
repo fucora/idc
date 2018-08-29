@@ -34,13 +34,13 @@ public class JobInstanceService {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
 
-	public JobInstance getJobInstance(String id) {
+	public JobInstance getJobInstance(Integer id) {
 		JobInstance instance = repository.findOne(id);
 		Assert.isTrue(instance != null, "任务实例 %s 不存在", id);
 		return instance;
 	}
 
-	public void redo(String id) {
+	public void redo(Integer id) {
 		
 		JobInstance instance = getJobInstance(id);
 		TriggerKey triggerKey = IDCPlugin.buildTriggerKey(instance.getType(), instance.getTaskId(), instance.getGroupId());

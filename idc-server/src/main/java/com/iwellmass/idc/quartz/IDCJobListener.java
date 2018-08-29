@@ -24,14 +24,14 @@ public class IDCJobListener extends JobListenerSupport {
 
 	@Override
 	public void jobExecutionVetoed(JobExecutionContext context) {
-		String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 		ExecutionLog log = ExecutionLog.createLog(instanceId, "任务被否决");
 		executionLogRepository.save(log);
 	}
 
 	@Override
 	public void jobToBeExecuted(JobExecutionContext context) {
-		String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 		ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务...");
 		executionLogRepository.save(log);
 	}
@@ -39,12 +39,12 @@ public class IDCJobListener extends JobListenerSupport {
 	@Override
 	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 		if (jobException != null) {
-			String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+			Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 			ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务失败: " + jobException.getMessage());
 			executionLogRepository.save(log);
 			LOGGER.warn(jobException.getMessage(), jobException);
 		} else {
-			String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+			Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 			ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务成功");
 			executionLogRepository.save(log);
 		}
