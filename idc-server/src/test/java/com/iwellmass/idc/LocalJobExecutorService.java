@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import com.iwellmass.idc.model.CompleteEvent;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.StartEvent;
-import com.iwellmass.idc.server.JobStatusManager;
+import com.iwellmass.idc.server.rpc.JobStatusManager;
 import com.iwellmass.idc.service.ExecutionRequest;
 import com.iwellmass.idc.service.JobExecutorService;
 

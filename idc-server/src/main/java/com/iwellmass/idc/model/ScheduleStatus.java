@@ -4,6 +4,10 @@ import io.swagger.annotations.ApiModelProperty;
 
 public enum ScheduleStatus {
 
+	
+	@ApiModelProperty("NONE")
+	NONE,
+	
 	@ApiModelProperty("正常")
 	NORMAL,
 	

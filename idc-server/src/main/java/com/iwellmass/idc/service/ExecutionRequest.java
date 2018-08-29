@@ -1,5 +1,8 @@
 package com.iwellmass.idc.service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class ExecutionRequest {
 
 	private String instanceId;
@@ -7,6 +10,8 @@ public class ExecutionRequest {
 	private String taskId;
 
 	private String group;
+	
+	private LocalDateTime loadDate;
 
 	private String parameters;
 
@@ -41,9 +46,17 @@ public class ExecutionRequest {
 	public void setParameters(String parameters) {
 		this.parameters = parameters;
 	}
+	
+	public LocalDateTime getLoadDate() {
+		return loadDate;
+	}
+
+	public void setLoadDate(LocalDateTime loadDate) {
+		this.loadDate = loadDate;
+	}
 
 	@Override
 	public String toString() {
-		return "ExecutionRequest [taskId=" + taskId + ", groupId=" + group + "]";
+		return "ExecutionRequest [taskId=" + taskId + ", group=" + group + ", loadDate=" + loadDate.format(DateTimeFormatter.BASIC_ISO_DATE) + "]";
 	}
 }

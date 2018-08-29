@@ -5,6 +5,8 @@ import org.quartz.SchedulerException;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 
+import com.iwellmass.idc.server.IDCServerConfiguration;
+
 public class SpringIDCPluginDelegate implements SchedulerPlugin{
 
 	// from properties
@@ -15,7 +17,7 @@ public class SpringIDCPluginDelegate implements SchedulerPlugin{
 	
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
-		this.delegate = SpringQuartzBootstrap.getSchedulerPlugin(delegateClassName);
+		this.delegate = IDCServerConfiguration.getIDCPlugin();
 		this.delegate.initialize(name, scheduler, loadHelper);
 	}
 

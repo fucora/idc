@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server;
+package com.iwellmass.idc.server.rpc;
 
 import com.iwellmass.idc.model.CompleteEvent;
 import com.iwellmass.idc.model.JobStatusEvent;

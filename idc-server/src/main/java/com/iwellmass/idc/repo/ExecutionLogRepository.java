@@ -3,9 +3,13 @@ package com.iwellmass.idc.repo;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import com.iwellmass.idc.model.JobExecutionLog;
+import com.iwellmass.idc.model.ExecutionLog;
 
 @Repository
-public interface JobExecuteLogRepository extends CrudRepository<JobExecutionLog, Long> {
+public interface ExecutionLogRepository extends CrudRepository<ExecutionLog, Long> {
+	
+	
+	
+	
 
 }

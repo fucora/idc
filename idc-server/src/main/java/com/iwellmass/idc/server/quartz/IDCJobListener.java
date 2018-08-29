@@ -1,49 +1,53 @@
 package com.iwellmass.idc.server.quartz;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import static com.iwellmass.idc.server.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
+
+import javax.inject.Inject;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
-import org.quartz.SchedulerException;
-import org.quartz.TriggerKey;
 import org.quartz.listeners.JobListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-@Component
-public class IDCJobListener extends JobListenerSupport{
+import com.iwellmass.idc.model.ExecutionLog;
+import com.iwellmass.idc.repo.ExecutionLogRepository;
+
+public class IDCJobListener extends JobListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobListener.class);
-	
+
+	@Inject
+	private ExecutionLogRepository executionLogRepository;
+
 	@Override
 	public void jobExecutionVetoed(JobExecutionContext context) {
-		JobKey jobKey = context.getJobDetail().getKey();
-		LocalDateTime ldt = IDCPlugin.toLocalDateTime(context.getScheduledFireTime());
-		LOGGER.info("否决任务 {}.{}.{}", jobKey.getGroup(), jobKey.getName(), ldt.format(DateTimeFormatter.BASIC_ISO_DATE));
+		String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+		ExecutionLog log = ExecutionLog.createLog(instanceId, "任务被否决");
+		executionLogRepository.save(log);
 	}
-	
+
+	@Override
+	public void jobToBeExecuted(JobExecutionContext context) {
+		String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+		ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务...");
+		executionLogRepository.save(log);
+	}
+
 	@Override
 	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-		
-		Object result = context.getResult();
-		
-		if (context.isRecovering()) {
-			// 恢复终端的任务，我们认为任务并没有执行
+		if (jobException != null) {
+			String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+			ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务失败: " + jobException.getMessage());
+			executionLogRepository.save(log);
+			LOGGER.warn(jobException.getMessage(), jobException);
 		} else {
-			// 异步任务
-			try {
-				TriggerKey tk = context.getTrigger().getKey();
-				LOGGER.debug("暂停 {}", tk);
-				context.getScheduler().pauseTrigger(tk);
-			} catch (SchedulerException e) {
-				LOGGER.error("", e);
-			}
+			String instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
+			ExecutionLog log = ExecutionLog.createLog(instanceId, "派发任务成功");
+			executionLogRepository.save(log);
 		}
 	}
-	
+
 	@Override
 	public String getName() {
 		return IDCJobListener.class.getSimpleName();

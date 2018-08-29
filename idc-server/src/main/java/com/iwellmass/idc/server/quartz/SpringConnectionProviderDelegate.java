@@ -9,6 +9,8 @@ import org.quartz.utils.ConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.idc.server.IDCServerConfiguration;
+
 public class SpringConnectionProviderDelegate implements ConnectionProvider {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionProvider.class);
@@ -16,7 +18,7 @@ public class SpringConnectionProviderDelegate implements ConnectionProvider {
 	public DataSource dataSource;
 	
 	public SpringConnectionProviderDelegate() {
-		this.dataSource = SpringQuartzBootstrap.getDataSource();
+		this.dataSource = IDCServerConfiguration.getDataSource();
 	}
 
 	@Override

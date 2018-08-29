@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server;
+package com.iwellmass.idc.server.rpc;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -19,16 +19,16 @@ import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.CompleteEvent;
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobExecutionBarrier;
-import com.iwellmass.idc.model.JobExecutionLog;
+import com.iwellmass.idc.model.Sentinel;
+import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobStatusEvent;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.StartEvent;
-import com.iwellmass.idc.repo.JobBarrierRepository;
-import com.iwellmass.idc.repo.JobExecuteLogRepository;
+import com.iwellmass.idc.repo.SentinelRepository;
+import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
 import com.iwellmass.idc.server.quartz.IDCPlugin;
@@ -45,10 +45,10 @@ public class StdStatusManager implements JobStatusManager {
 	private JobInstanceRepository jobInstanceRepository;
 
 	@Inject
-	private JobBarrierRepository jobExecutionBarrierRepository;
+	private SentinelRepository jobExecutionBarrierRepository;
 	
 	@Inject
-	private JobExecuteLogRepository jobLogRepository;
+	private ExecutionLogRepository jobLogRepository;
 	
 	private Scheduler scheduler;
 
@@ -70,7 +70,7 @@ public class StdStatusManager implements JobStatusManager {
 		jobRepository.save(job);
 
 		// 添加执行记录
-		JobExecutionLog log = new JobExecutionLog();
+		ExecutionLog log = new ExecutionLog();
 		log.setInstanceId(event.getInstanceId());
 		log.setMessage(event.getMessage());
 		log.setTime(LocalDateTime.now());
@@ -118,7 +118,7 @@ public class StdStatusManager implements JobStatusManager {
 		jobRepository.save(job);
 
 		// 添加执行记录
-		JobExecutionLog log = new JobExecutionLog();
+		ExecutionLog log = new ExecutionLog();
 		log.setInstanceId(event.getInstanceId());
 		log.setMessage(event.getMessage());
 		log.setTime(LocalDateTime.now());
@@ -169,7 +169,7 @@ public class StdStatusManager implements JobStatusManager {
 		jobRepository.save(job);
 
 		// 添加执行记录
-		JobExecutionLog log = new JobExecutionLog();
+		ExecutionLog log = new ExecutionLog();
 		log.setInstanceId(event.getInstanceId());
 		log.setMessage("激活任务");
 		log.setTime(LocalDateTime.now());

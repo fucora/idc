@@ -6,52 +6,20 @@ import java.util.Map;
 
 import org.quartz.JobExecutionContext;
 
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.service.JobExecutorService;
-
 public class IDCContextKey<T> {
-
-	// 组信息
-	public static final String GROUP_AUTO_INJECT = "AUTO_INJECT";
+	
 	// 缓存
 	private static final Map<String, IDCContextKey<?>> cache = new HashMap<>();
-	// 
+	// NULL_VALUE
 	private static final Object NULL_VALUE = new Object();
 	
-	// ~ key 信息 ~
-	/**
-	 * 获取 JOB 信息
-	 */
-	public static final IDCContextKey<Job> CONTEXT_JOB = IDCContextKey.def("job.context.job", null, Job.class);
-	/**
-	 * Job 实例
-	 */
-	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = IDCContextKey.def("job.context.instance", null, JobInstance.class);
-	/**
-	 * Job 日志组件
-	 */
-	public static final IDCContextKey<IDCJobLogger> CONTEXT_LOGGER = IDCContextKey.def("job.context.logger", null, IDCJobLogger.class);
-	/**
-	 * 执行组件
-	 */
-	public static final IDCContextKey<JobExecutorService> CONTEXT_EXECUTOR = IDCContextKey.def("job.context.executor", GROUP_AUTO_INJECT, JobExecutorService.class);
-	
-	// ~~ 运行时 ~~
-	/**
-	 * 是否跳过本次执行
-	 */
-	public static final IDCContextKey<Boolean> EXECUTION_BLOCK = IDCContextKey.def("job.execution.block", null, Boolean.class).defaultValue(false);
-	
 	private String key;
-	private String group;
 	private Class<T> type;
 	private Object defaultValue = NULL_VALUE;
 
 
-	private IDCContextKey(String key, String group, Class<T> valueType) {
+	private IDCContextKey(String key, Class<T> valueType) {
 		this.key = key;
-		this.group = group;
 		this.type = valueType;
 	}
 
@@ -59,9 +27,6 @@ public class IDCContextKey<T> {
 		return this.key;
 	}
 
-	public final String group() {
-		return group;
-	}
 
 	public Class<T> valueType() {
 		return this.type;
@@ -102,8 +67,8 @@ public class IDCContextKey<T> {
 		return key.hashCode();
 	}
 
-	public static final <T> IDCContextKey<T> def(String key, String group, Class<T> valueType) {
-		IDCContextKey<T> contextKey = new IDCContextKey<>(key, group, valueType);
+	public static final <T> IDCContextKey<T> def(String key, Class<T> valueType) {
+		IDCContextKey<T> contextKey = new IDCContextKey<>(key, valueType);
 		cache.put(key, contextKey);
 		return contextKey;
 	}

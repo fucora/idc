@@ -1,5 +1,6 @@
 package com.iwellmass.idc.server.quartz;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -9,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.sql.DataSource;
 
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -19,47 +21,39 @@ import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
-import com.iwellmass.idc.server.JobStatusManager;
-import com.iwellmass.idc.server.StdStatusManager;
 
-@Component
-public class IDCPlugin implements SchedulerPlugin {
+public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCPlugin.class);
 
-	private static final DateTimeFormatter SIMPLE = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	public static final SimpleDateFormat DEFAULT_LOAD_DATE_DF = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	public static final DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
 
-	private static IDCPlugin INSTANCE;
-
-	public IDCPlugin() {
-		INSTANCE = this;
-	}
-
+	public IDCPlugin() {}
+	
 	@Inject
-	private JobStatusManager eventManager;
-
+	private IDCSchedulerListener idcSchedulerListener;
+	
 	@Inject
-	private IDCSchedulerListener schedulerListener;
-
+	private IDCTriggerListener idcTriggerListener;
+	
 	@Inject
-	private IDCTriggerListener triggerListener;
-
-	@Inject
-	private IDCJobListener jobListener;
+	private IDCJobListener idcJobListener;
+	
+	@SuppressWarnings("unused")
+	private DataSource dataSource; // new SpringConnectionProviderDelegate()
 
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		LOGGER.info("加载 IDCPlugin");
 		// listeners
-		scheduler.getListenerManager().addSchedulerListener(schedulerListener);
-		scheduler.getListenerManager().addTriggerListener(triggerListener);
-		scheduler.getListenerManager().addJobListener(jobListener);
-		// 初始化 event manager
-		((StdStatusManager) eventManager).withScheduler(scheduler);
+		scheduler.getListenerManager().addSchedulerListener(idcSchedulerListener);
+		scheduler.getListenerManager().addTriggerListener(idcTriggerListener);
+		scheduler.getListenerManager().addJobListener(idcJobListener);
 	}
 
 	public static final <T> List<T> nullable(List<T> list) {
@@ -105,7 +99,7 @@ public class IDCPlugin implements SchedulerPlugin {
 	}
 
 	public static String buildInstanceId(String taskId, String groupId, LocalDateTime loadDate) {
-		return String.format("%s_%s_%s", groupId, taskId, loadDate.format(SIMPLE));
+		return String.format("%s_%s_%s", groupId, taskId, loadDate.format(DEFAULT_LOAD_DATE_DTF));
 	}
 
 	public static JobKey buildJobKey(String taskId) {
@@ -130,10 +124,6 @@ public class IDCPlugin implements SchedulerPlugin {
 		}
 		TriggerKey key = new TriggerKey(type.toString() + "_" + taskId, groupId);
 		return key;
-	}
-
-	public static JobStatusManager getStatusManager() {
-		return INSTANCE.eventManager;
 	}
 
 }

@@ -43,7 +43,7 @@ import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.server.quartz.IDCDispatcher;
+import com.iwellmass.idc.server.quartz.IDCJob;
 
 @Service
 public class JobService {
@@ -90,7 +90,7 @@ public class JobService {
 				.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())
 				.startAt(toDate(job.getStartTime())).endAt(toDate(job.getEndTime())).build();
 			
-			JobDetail jobDetail = JobBuilder.newJob(IDCDispatcher.class)
+			JobDetail jobDetail = JobBuilder.newJob(IDCJob.class)
 				.withIdentity(jobKey)
 				.requestRecovery()
 				.build();
