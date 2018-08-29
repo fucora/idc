@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server;
+package com.iwellmass.idc;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import com.iwellmass.idc.server.quartz.IDCPlugin;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @SpringBootApplication
 @EnableJpaRepositories("com.iwellmass.idc.repo")

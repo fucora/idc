@@ -9,8 +9,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.iwellmass.idc.IDCServerConfiguration;
 import com.iwellmass.idc.model.CompleteEvent;
-import com.iwellmass.idc.server.rpc.JobStatusManager;
+import com.iwellmass.idc.rpc.JobStatusManager;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @EnableAutoConfiguration

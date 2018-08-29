@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,11 +12,13 @@ import org.quartz.TriggerKey;
 import org.quartz.listeners.SchedulerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.repo.JobRepository;
 
+@Component
 public class IDCSchedulerListener extends SchedulerListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCSchedulerListener.class);

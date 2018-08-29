@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -21,10 +21,12 @@ import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 
+@Component
 public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCPlugin.class);

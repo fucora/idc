@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,7 +9,7 @@ import org.quartz.utils.ConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.server.IDCServerConfiguration;
+import com.iwellmass.idc.IDCServerConfiguration;
 
 public class SpringConnectionProviderDelegate implements ConnectionProvider {
 

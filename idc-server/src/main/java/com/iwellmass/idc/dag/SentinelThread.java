@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.dag;
+package com.iwellmass.idc.dag;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import com.iwellmass.idc.model.JobStatusEvent;
 import com.iwellmass.idc.repo.JobRepository;
 import com.iwellmass.idc.repo.SentinelRepository;
 import com.iwellmass.idc.repo.SentinelRepository.SentinelCheck;
-import com.iwellmass.idc.server.rpc.JobStatusManager;
+import com.iwellmass.idc.rpc.JobStatusManager;
 
 @Component
 public class SentinelThread implements Runnable {

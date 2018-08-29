@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.rpc;
+package com.iwellmass.idc.rpc;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -27,11 +27,11 @@ import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobStatusEvent;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.StartEvent;
+import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.SentinelRepository;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.server.quartz.IDCPlugin;
 
 @Component
 public class StdStatusManager implements JobStatusManager {

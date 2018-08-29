@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.rpc;
+package com.iwellmass.idc.rpc;
 
 import org.springframework.stereotype.Controller;
 

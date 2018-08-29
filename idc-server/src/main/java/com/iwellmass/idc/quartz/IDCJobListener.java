@@ -1,6 +1,6 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.server.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
+import static com.iwellmass.idc.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
 
 import javax.inject.Inject;
 
@@ -9,10 +9,12 @@ import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 
+@Component
 public class IDCJobListener extends JobListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobListener.class);

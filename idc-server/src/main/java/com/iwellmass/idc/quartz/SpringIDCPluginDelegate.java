@@ -1,11 +1,11 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 
-import com.iwellmass.idc.server.IDCServerConfiguration;
+import com.iwellmass.idc.IDCServerConfiguration;
 
 public class SpringIDCPluginDelegate implements SchedulerPlugin{
 

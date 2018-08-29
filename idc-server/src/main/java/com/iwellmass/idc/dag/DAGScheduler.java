@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.dag;
+package com.iwellmass.idc.dag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
 package com.iwellmass.idc.service;
 
-import static com.iwellmass.idc.server.quartz.IDCPlugin.buildJobKey;
-import static com.iwellmass.idc.server.quartz.IDCPlugin.buildTriggerKey;
-import static com.iwellmass.idc.server.quartz.IDCPlugin.toDate;
+import static com.iwellmass.idc.quartz.IDCPlugin.buildJobKey;
+import static com.iwellmass.idc.quartz.IDCPlugin.buildTriggerKey;
+import static com.iwellmass.idc.quartz.IDCPlugin.toDate;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -42,8 +42,8 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.quartz.IDCJob;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.server.quartz.IDCJob;
 
 @Service
 public class JobService {

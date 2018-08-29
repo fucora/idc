@@ -14,14 +14,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.iwellmass.idc.IDCServerConfiguration;
 import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.server.IDCServerConfiguration;
-import com.iwellmass.idc.server.quartz.IDCPlugin;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @EnableAutoConfiguration

@@ -1,10 +1,10 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.server.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.server.quartz.IDCConstants.CONTEXT_LOAD_DATE;
-import static com.iwellmass.idc.server.quartz.IDCPlugin.buildInstanceId;
-import static com.iwellmass.idc.server.quartz.IDCPlugin.getTriggerType;
-import static com.iwellmass.idc.server.quartz.IDCPlugin.toLocalDateTime;
+import static com.iwellmass.idc.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
+import static com.iwellmass.idc.quartz.IDCConstants.CONTEXT_LOAD_DATE;
+import static com.iwellmass.idc.quartz.IDCPlugin.buildInstanceId;
+import static com.iwellmass.idc.quartz.IDCPlugin.getTriggerType;
+import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
@@ -30,6 +31,7 @@ import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
 import com.iwellmass.idc.repo.SentinelRepository;
 
+@Component
 public class IDCTriggerListener extends TriggerListenerSupport implements ApplicationContextAware {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCTriggerListener.class);

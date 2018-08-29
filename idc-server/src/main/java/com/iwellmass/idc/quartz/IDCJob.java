@@ -1,4 +1,4 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
 import java.util.List;
 

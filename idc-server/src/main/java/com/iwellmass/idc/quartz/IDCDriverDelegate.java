@@ -1,7 +1,6 @@
-package com.iwellmass.idc.server.quartz;
+package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.server.quartz.IDCConstants.*;
-
+import static com.iwellmass.idc.quartz.IDCConstants.*;
 import static org.quartz.TriggerKey.triggerKey;
 
 import java.math.BigDecimal;

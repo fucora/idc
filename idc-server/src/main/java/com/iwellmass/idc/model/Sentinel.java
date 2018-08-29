@@ -6,7 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
-import com.iwellmass.idc.server.quartz.IDCPlugin;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Entity
 @IdClass(SentinelPK.class)
