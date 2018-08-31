@@ -1,7 +1,6 @@
 package com.iwellmass.idc.quartz;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -15,8 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleStatus;
+import com.iwellmass.idc.model.Sentinel;
+import com.iwellmass.idc.model.SentinelStatus;
 import com.iwellmass.idc.repo.JobRepository;
+import com.iwellmass.idc.repo.SentinelRepository;
 
 @Component
 public class IDCSchedulerListener extends SchedulerListenerSupport {
@@ -26,13 +29,23 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	@Inject
 	private JobRepository jobRepository;
 	
+	@Inject
+	private SentinelRepository sentinelRepository;
+	
 	@Override
 	public void jobScheduled(Trigger trigger) {
 		JobKey jobKey = trigger.getJobKey();
-		LocalDateTime loadDate = Optional.ofNullable(trigger.getNextFireTime()).map(IDCPlugin::toLocalDateTime).orElse(null);
-		
-		if (loadDate != null) {
-			LOGGER.info("处理 {}.{}.{}", jobKey.getName(), jobKey.getGroup(), loadDate.format(DateTimeFormatter.BASIC_ISO_DATE));
+		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
+		if (nextFireTime != null) {
+			JobInstanceType type = IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyGet(trigger.getJobDataMap());
+			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(type, jobKey.getName(), jobKey.getGroup());
+			Sentinel sentinel = new Sentinel();
+			sentinel.setTriggerName(triggerKey.getName());
+			sentinel.setTriggerGroup(triggerKey.getGroup());
+			sentinel.setShouldFireTime(nextFireTime.getTime());
+			sentinel.setStatus(SentinelStatus.WAITING);
+			sentinelRepository.save(sentinel);
+			LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
 		}
 	}
 	

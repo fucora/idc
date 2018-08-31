@@ -23,9 +23,9 @@ public class IDCDriverDelegate extends StdJDBCDelegate{
             + alias("T", COL_NEXT_FIRE_TIME) + ", " + alias("T", COL_PRIORITY) + " FROM "
             + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T"
             + " LEFT JOIN " + TABLE_SENTINEL + " S" 
-            + " ON "  + alias("T", COL_TRIGGER_NAME) + "=" + alias("S", COL_SENTINEL_TASK_ID)
-            + " AND " + alias("T", COL_TRIGGER_GROUP) + "=" + alias("S", COL_SENTINEL_GROUP_ID)
-            + " AND " + alias("T", COL_NEXT_FIRE_TIME) + "=" + alias("S", COL_SENTINEL_LOAD_DATE)
+            + " ON "  + alias("T", COL_TRIGGER_NAME) + "=" + alias("S", COL_SENTINEL_TRIGGER_NAME)
+            + " AND " + alias("T", COL_TRIGGER_GROUP) + "=" + alias("S", COL_SENTINEL_TRIGGER_GROUP)
+            + " AND " + alias("T", COL_NEXT_FIRE_TIME) + "=" + alias("S", COL_SENTINEL_SHOULD_FIRE_TIME)
             + " WHERE " + alias("T", COL_SCHEDULER_NAME) + " = " + SCHED_NAME_SUBST
             + " AND " + alias("T", COL_TRIGGER_STATE) + " = ? AND " + alias("T", COL_NEXT_FIRE_TIME) + " <= ? " 
             + "AND (" + alias("T", COL_MISFIRE_INSTRUCTION) + " = -1 OR (" +alias("T", COL_MISFIRE_INSTRUCTION) + " != -1 AND "+ alias("T", COL_NEXT_FIRE_TIME) + " >= ?)) "
@@ -71,6 +71,10 @@ public class IDCDriverDelegate extends StdJDBCDelegate{
 	
 	private static final String alias(String alias, String name) {
 		return alias + "." + name;
+	}
+	public static void main(String[] args) {
+		String query = org.quartz.impl.jdbcjobstore.Util.rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE, "QRTZ_", "'abc'");
+		System.out.println(query);
 	}
 	
 }

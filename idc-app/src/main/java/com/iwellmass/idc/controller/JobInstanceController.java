@@ -15,7 +15,7 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.service.JobInstanceQuery;
+import com.iwellmass.idc.model.JobInstanceQuery;
 import com.iwellmass.idc.service.JobInstanceService;
 
 import io.swagger.annotations.ApiOperation;

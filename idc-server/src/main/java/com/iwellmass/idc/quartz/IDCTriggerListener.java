@@ -2,7 +2,6 @@ package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCConstants.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCConstants.CONTEXT_LOAD_DATE;
-import static com.iwellmass.idc.quartz.IDCPlugin.buildInstanceId;
 import static com.iwellmass.idc.quartz.IDCPlugin.getTriggerType;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
@@ -14,6 +13,7 @@ import javax.inject.Inject;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,20 +61,21 @@ public class IDCTriggerListener extends TriggerListenerSupport implements Applic
 		// 生成业务哨兵
 		Date nextFireTime = context.getNextFireTime();
 		if (nextFireTime != null) {
+			TriggerKey triggerKey = trigger.getKey();
 			Sentinel sentinel = new Sentinel();
-			sentinel.setTaskId(jobKey.getName());
-			sentinel.setGroupId(jobKey.getGroup());
-			sentinel.setLoadDate(nextFireTime.getTime());
+			sentinel.setTriggerName(triggerKey.getName());
+			sentinel.setTriggerGroup(triggerKey.getGroup());
+			sentinel.setShouldFireTime(nextFireTime.getTime());
 			sentinel.setStatus(SentinelStatus.WAITING);
 			sentinelRepository.save(sentinel);
-			LOGGER.info("job instance {}'s sentinel created", buildInstanceId(taskId, groupId, toLocalDateTime(nextFireTime)));
+			LOGGER.info("create '{}.{}.{}' sentinel", groupId, taskId, loadDate.format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
 		}
 
 		// 生成实例
 		Job job = jobRepository.findOne(taskId, groupId);
 		Integer instanceId = pluginVersionService.generateInstanceId();
 		JobInstance jobInstance = new JobInstance();
-		jobInstance.setId(instanceId);
+		jobInstance.setInstanceId(instanceId);
 		jobInstance.setTaskId(taskId);
 		jobInstance.setGroupId(groupId);
 		jobInstance.setLoadDate(loadDate);

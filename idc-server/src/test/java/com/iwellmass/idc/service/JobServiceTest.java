@@ -30,21 +30,20 @@ public class JobServiceTest {
 
 	@Inject
 	JobService jobService;
-	
+
 	LocalDateTime _2017_12_31 = LocalDateTime.of(LocalDate.of(2017, 12, 31), LocalTime.MIN);
-	
+
 	LocalDateTime _2018_01_01 = LocalDateTime.of(LocalDate.of(2018, 1, 1), LocalTime.MIN);
 	LocalDateTime lastDay = LocalDateTime.of(LocalDate.now().plusDays(-1), LocalTime.MIN);
-	
+
 	LocalDateTime last3Day = LocalDateTime.of(LocalDate.now().plusDays(-3), LocalTime.MIN);
-	
-	
+
 	@Test
 	public void scheduleJob() throws InterruptedException {
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.DAILY);
 		sp.setDuetime("10:00:00");
-		
+
 		Job job1 = new Job();
 		job1.setTaskId("1");
 		job1.setTaskName("lqd_test");
@@ -55,9 +54,9 @@ public class JobServiceTest {
 		job1.setAssignee("lqd");
 		job1.setContentType(ContentType.SPARK_SQL);
 		job1.setStartTime(last3Day);
-		
+
 		jobService.schedule(job1);
-		
+
 		Job job2 = new Job();
 		job2.setTaskId("2");
 		job2.setTaskName("lqd_test_2");
@@ -68,46 +67,36 @@ public class JobServiceTest {
 		job2.setAssignee("lqd");
 		job2.setContentType(ContentType.SPARK_SQL);
 		job2.setStartTime(last3Day);
-		
+
 		jobService.schedule(job2);
-		
-		Thread.sleep(60 * 5 * 1000);
+
+		Thread.sleep(60 * 10 * 1000);
 	}
-	
+
 	@Inject
 	private Scheduler scheduler;
-	
+
 	@Test
 	public void mockResume() throws SchedulerException, InterruptedException {
 		scheduler.resumeTrigger(IDCPlugin.buildTriggerKey(JobInstanceType.CRON, "1"));
-		Thread.sleep(60* 1000);
+		Thread.sleep(60 * 1000);
 	}
-	
+
 	@Test
 	public void startOnly() throws InterruptedException {
-		Thread.sleep(60* 1000);
+		Thread.sleep(10 * 60 * 1000);
 	}
+
 	@Test
 	public void lock() throws InterruptedException {
 		jobService.lock("1", "datafactory");
 	}
-	
+
 	@Test
 	public void complement() throws InterruptedException {
-		
-		ComplementRequest request = new ComplementRequest();
-		
-		request.setTaskId("1");
-		request.setGroup("datafactory");
 
-		request.setStartTime(_2017_12_31.toLocalDate());
-		request.setEndTime(_2017_12_31.toLocalDate());
-		
-		jobService.complement(request);
-		
-		Thread.sleep(60* 1000);
 	}
-	
+
 	@Test
 	public void getAllJob() {
 		jobService.getJob("1", "datafactory");

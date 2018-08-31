@@ -105,10 +105,6 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return new Date(mill);
 	}
 
-	public static String buildInstanceId(String taskId, String groupId, LocalDateTime loadDate) {
-		return String.format("%s_%s_%s", groupId, taskId, loadDate.format(DEFAULT_LOAD_DATE_DTF));
-	}
-
 	public static JobKey buildJobKey(String taskId) {
 		return buildJobKey(taskId, null);
 	}

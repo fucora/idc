@@ -37,12 +37,16 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.common.util.Utils;
-import com.iwellmass.dispatcher.common.entry.DDCException;
+import com.iwellmass.idc.model.Assignee;
+import com.iwellmass.idc.model.ComplementRequest;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
+import com.iwellmass.idc.model.JobQuery;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.quartz.IDCJob;
+import com.iwellmass.idc.quartz.IDCConstants;
+import com.iwellmass.idc.quartz.IDCDispatcherJob;
+import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.JobRepository;
 
 @Service
@@ -66,35 +70,41 @@ public class JobService {
 	}
 
 	@Transactional
-	public void schedule(Job job) throws AppException{
-		
+	public void schedule(Job job) throws AppException {
+
 		LocalDateTime now = LocalDateTime.now();
 		job.setCreateTime(now);
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
 		}
-		
-		// 保存到 t_idc_job
-		jobRepository.save(job);
-		
+
 		try {
 			JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
-			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
-			
+			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(),
+					job.getGroupId());
+
 			ScheduleProperties sp = job.getScheduleProperties();
 			sp.setScheduleType(job.getScheduleType());
 			CronExpression cronExpr = new CronExpression(toCronExpression(sp));
-			
-			Trigger trigger = TriggerBuilder.newTrigger()
-				.withIdentity(triggerKey)
-				.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())
-				.startAt(toDate(job.getStartTime())).endAt(toDate(job.getEndTime())).build();
-			
-			JobDetail jobDetail = JobBuilder.newJob(IDCJob.class)
-				.withIdentity(jobKey)
-				.requestRecovery()
-				.build();
-			
+
+			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
+					.withSchedule(
+							CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())
+					.startAt(toDate(job.getStartTime())).endAt(toDate(job.getEndTime())).build();
+
+			IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyPut(trigger.getJobDataMap(), JobInstanceType.CRON);
+
+			JobDetail jobDetail = JobBuilder.newJob(IDCDispatcherJob.class).withIdentity(jobKey).requestRecovery()
+					.build();
+
+			LocalDateTime prevFireTime = Optional.ofNullable(trigger.getPreviousFireTime())
+					.map(IDCPlugin::toLocalDateTime).orElse(null);
+			LocalDateTime nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).map(IDCPlugin::toLocalDateTime)
+					.orElse(null);
+			job.setPrevLoadDate(prevFireTime);
+			job.setNextLoadDate(nextFireTime);
+			// 保存到 t_idc_job
+			jobRepository.save(job);
 			// 保存到 quartz
 			scheduler.scheduleJob(jobDetail, trigger);
 		} catch (ParseException e) {
@@ -113,28 +123,26 @@ public class JobService {
 
 			Trigger mainTrigger = scheduler.getTrigger(buildTriggerKey(JobInstanceType.CRON, taskId, groupId));
 			Assert.isTrue(mainTrigger != null, "任务未提交");
-			
+
 			ScheduleBuilder<? extends Trigger> sbt = mainTrigger.getScheduleBuilder();
 
 			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.COMPLEMENT, taskId, groupId);
-			
+
 			Trigger trigger = scheduler.getTrigger(triggerKey);
-			
+
 			Assert.isTrue(trigger == null || hasComplete(triggerKey), "存在正在执行的补数任务");
-			
-			TriggerBuilder<?> complementTriggerBuilder = TriggerBuilder.newTrigger()
-					.withIdentity(triggerKey)
-					.forJob(mainTrigger.getJobKey())
-					.withSchedule(sbt)
+
+			TriggerBuilder<?> complementTriggerBuilder = TriggerBuilder.newTrigger().withIdentity(triggerKey)
+					.forJob(mainTrigger.getJobKey()).withSchedule(sbt)
 					.startAt(toDate(LocalDateTime.of(request.getStartTime(), LocalTime.MIN)))
 					.endAt(toDate(LocalDateTime.of(request.getEndTime(), LocalTime.MAX)));
-			
+
 			if (trigger == null) {
 				scheduler.scheduleJob(complementTriggerBuilder.build());
 			} else {
 				scheduler.rescheduleJob(triggerKey, complementTriggerBuilder.build());
 			}
-				
+
 		} catch (SchedulerException e) {
 			throw new AppException("补数异常: " + e.getMessage());
 		}
@@ -154,7 +162,7 @@ public class JobService {
 		}
 	}
 
-	public void unlock(String taskId, String groupId) throws DDCException {
+	public void unlock(String taskId, String groupId) {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
 
@@ -174,7 +182,7 @@ public class JobService {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
 
-	public void execute(ExecutionRequest request) {
+	public void execute() {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
 

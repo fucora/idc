@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 
 public class IDCContextKey<T> {
@@ -36,17 +37,34 @@ public class IDCContextKey<T> {
 		this.defaultValue = t;
 		return this;
 	}
+	
+	public T applyGet(JobDataMap jobDataMap) {
+		Object o = jobDataMap.get(this.key);
+		return get0(o);
+	}
+	
+	public final void applyPut(JobDataMap map, T v) {
+		map.put(this.key, v);
+	}
 
-	@SuppressWarnings("unchecked")
 	public final T applyGet(JobExecutionContext context) {
  		Object o = context.get(this.key());
+ 		return get0(o);
+	}
+	
+	public final void applyPut(JobExecutionContext context, T v) {
+		context.put(this.key, v);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private T get0(Object o) {
 		if (o == null) {
 			if (defaultValue != NULL_VALUE) {
 				return (T) defaultValue;
 			}
 			throw new NullPointerException("未设置 " + this.key + " 值");
 		}
-		return (T) context.get(this.key());
+		return (T) o;
 	}
 	
 	@Override
@@ -77,7 +95,4 @@ public class IDCContextKey<T> {
 		return cache.values();
 	}
 
-	public final void applyPut(JobExecutionContext context, T v) {
-		context.put(this.key, v);
-	}
 }

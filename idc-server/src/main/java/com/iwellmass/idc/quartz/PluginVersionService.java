@@ -35,18 +35,22 @@ public class PluginVersionService {
 	}
 
 	public PluginVersion init() {
-		try {
-			PluginVersion version = new PluginVersion().asNew();
-			version.setVersion(IDCPlugin.VERSION);
-			version.setInstanceSeq(BASE_INSTANCE_SEQ.longValue());
-			pluginVersionRepository.save(version);
-			return version;
-		} catch (RuntimeException e) {
+		if (pluginVersionRepository.exists(IDCPlugin.VERSION)) {
+			return pluginVersionRepository.findOne(IDCPlugin.VERSION);
+		} else {
 			try {
-				PluginVersion version = pluginVersionRepository.findOne(IDCPlugin.VERSION);
+				PluginVersion version = new PluginVersion().asNew();
+				version.setVersion(IDCPlugin.VERSION);
+				version.setInstanceSeq(BASE_INSTANCE_SEQ.longValue());
+				pluginVersionRepository.save(version);
 				return version;
-			} catch (RuntimeException e2) {
-				throw e2;
+			} catch (RuntimeException e) {
+				try {
+					PluginVersion version = pluginVersionRepository.findOne(IDCPlugin.VERSION);
+					return version;
+				} catch (RuntimeException e2) {
+					throw e2;
+				}
 			}
 		}
 	}

@@ -13,7 +13,7 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.JobAlarm;
-import com.iwellmass.idc.service.JobAlarmQuery;
+import com.iwellmass.idc.model.JobAlarmQuery;
 import com.iwellmass.idc.service.JobAlarmService;
 
 import io.swagger.annotations.ApiOperation;

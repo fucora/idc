@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.model.JobAlarm;
+import com.iwellmass.idc.model.JobAlarmQuery;
 
 @Service
 public class JobAlarmService {

@@ -14,13 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.dispatcher.common.entry.DDCException;
+import com.iwellmass.idc.model.Assignee;
+import com.iwellmass.idc.model.ExecutionRequest;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobQuery;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.service.Assignee;
-import com.iwellmass.idc.service.ComplementRequest;
-import com.iwellmass.idc.service.ExecutionRequest;
-import com.iwellmass.idc.service.JobQuery;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
@@ -55,6 +54,39 @@ public class JobController {
 		return ServiceResult.success(tasks);
 	}
 
+	@ApiOperation("获取任务所有负责人")
+	@GetMapping(path = "/assignee")
+	public ServiceResult<List<Assignee>> getAllAssignee() {
+		List<Assignee> allAssignee = jobService.getAllAssignee();
+		return ServiceResult.success(allAssignee);
+	}
+
+	@PostMapping(value = "/lock")
+	@ApiOperation("冻结 Job")
+	public ServiceResult<String> lock(@RequestBody JobPK jobKey) {
+		// jobService.lock(jobKey, null);
+		return ServiceResult.success("success");
+	}
+
+	@PostMapping(value = "/unlock")
+	@ApiOperation("恢复 Job")
+	public ServiceResult<String> unlock(@RequestBody JobPK jobKey) {
+		// jobService.unlock(jobKey, null);
+		return ServiceResult.success("success");
+	}
+
+	@ApiOperation("补数")
+	@PostMapping("/complement")
+	public ServiceResult<String> complement(@RequestBody ComplementRequest request) {
+		return ServiceResult.success("success");
+	}
+
+	@ApiOperation("手动执行任务")
+	@PostMapping("/execution")
+	public ServiceResult<String> execution(@RequestBody(required = false) ExecutionRequest request) {
+		return ServiceResult.success("success");
+	}
+	
 	@ApiOperation("获取所有 workflow job")
 	@GetMapping(path = "/workflow-job")
 	public ServiceResult<List<Job>> getWorkflowJob() {
@@ -66,47 +98,6 @@ public class JobController {
 	public ServiceResult<List<Job>> findTaskByGroupId(@PathVariable("workflowId") Integer workflowId) {
 		List<Job> taskByGroupId = jobService.getWorkflowJob(workflowId);
 		return ServiceResult.success(taskByGroupId);
-	}
-
-	@ApiOperation("获取任务所有负责人")
-	@GetMapping(path = "/assignee")
-	public ServiceResult<List<Assignee>> getAllAssignee() {
-		List<Assignee> allAssignee = jobService.getAllAssignee();
-		return ServiceResult.success(allAssignee);
-	}
-
-	@PostMapping(value = "/{id}/lock")
-	@ApiOperation("冻结 Job")
-	public ServiceResult<String> lock(@PathVariable("id") String jobKey) {
-		jobService.lock(jobKey, null);
-		return ServiceResult.success("success");
-	}
-
-	@PostMapping(value = "/{id}/unlock")
-	@ApiOperation("恢复 Job")
-	public ServiceResult<String> unlock(@PathVariable("id") String jobKey) {
-		try {
-			jobService.unlock(jobKey, null);
-		} catch (DDCException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
-		return ServiceResult.success("success");
-	}
-
-	@ApiOperation("补数")
-	@PostMapping("/{id}/complement")
-	public ServiceResult<String> complement(@PathVariable("id") Integer id, @RequestBody ComplementRequest request) {
-		request.setTaskId(id + "");
-		jobService.complement(request);
-		return ServiceResult.success("success");
-	}
-
-	@ApiOperation("手动执行任务")
-	@PostMapping("/{id}/execution")
-	public ServiceResult<String> execution(@PathVariable("id") String jobKey, @RequestBody(required = false) ExecutionRequest request) {
-		request.setTaskId(jobKey);
-		jobService.execute(request);
-		return ServiceResult.success("success");
 	}
 
 }

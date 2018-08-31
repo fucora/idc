@@ -14,7 +14,7 @@ public interface PluginVersionRepository extends CrudRepository<PluginVersion, S
 
 	@Transactional
 	@Modifying
-	@Query("UPDATE PluginInfo set instanceSeq = instanceSeq + 1 where version = ?1")
+	@Query("UPDATE PluginVersion set instanceSeq = instanceSeq + 1 where version = ?1")
 	public int increaseInstanceSeqAndGet(String version);
 
 }

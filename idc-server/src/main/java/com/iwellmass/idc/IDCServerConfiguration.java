@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+import com.iwellmass.idc.quartz.IDCQuartzJobFactory;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @SpringBootApplication
@@ -36,9 +37,14 @@ public class IDCServerConfiguration implements ApplicationListener<ContextRefres
 	@Inject
 	private DataSource dataSource;
 	
+	@Inject
+	private IDCQuartzJobFactory idcJobFactory;
+	
 	@Bean
 	public Scheduler scheduler() throws SchedulerException {
 		this.scheduler = StdSchedulerFactory.getDefaultScheduler();
+		// 托管 job
+		this.scheduler.setJobFactory(idcJobFactory);
 		return scheduler;
 	}
 

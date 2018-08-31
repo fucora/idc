@@ -13,42 +13,42 @@ import com.iwellmass.idc.quartz.IDCPlugin;
 @Table(name = "t_idc_sentinel")
 public class Sentinel {
 
-	private String taskId;
+	private String triggerName;
 
-	private String groupId;
+	private String triggerGroup;
 
-	private Long loadDate;
+	private Long shouldFireTime;
 
 	private SentinelStatus status;
 
 	@Id
-	@Column(name = IDCPlugin.COL_SENTINEL_TASK_ID, length = 50)
-	public String getTaskId() {
-		return taskId;
+	@Column(name = IDCPlugin.COL_SENTINEL_TRIGGER_NAME, length = 50)
+	public String getTriggerName() {
+		return triggerName;
 	}
 
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
-	@Id
-	@Column(name = IDCPlugin.COL_SENTINEL_GROUP_ID, length = 50)
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String gorupId) {
-		this.groupId = gorupId;
+	public void setTriggerName(String triggerName) {
+		this.triggerName = triggerName;
 	}
 
 	@Id
-	@Column(name = IDCPlugin.COL_SENTINEL_LOAD_DATE)
-	public Long getLoadDate() {
-		return loadDate;
+	@Column(name = IDCPlugin.COL_SENTINEL_TRIGGER_GROUP, length = 50)
+	public String getTriggerGroup() {
+		return triggerGroup;
 	}
 
-	public void setLoadDate(Long loadDate) {
-		this.loadDate = loadDate;
+	public void setTriggerGroup(String triggerGroup) {
+		this.triggerGroup = triggerGroup;
+	}
+
+	@Id
+	@Column(name = IDCPlugin.COL_SENTINEL_SHOULD_FIRE_TIME)
+	public Long getShouldFireTime() {
+		return shouldFireTime;
+	}
+
+	public void setShouldFireTime(Long loadDate) {
+		this.shouldFireTime = loadDate;
 	}
 
 	@Column(name = IDCPlugin.COL_SENTINEL_STATUS)

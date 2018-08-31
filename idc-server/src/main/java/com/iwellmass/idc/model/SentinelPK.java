@@ -1,40 +1,39 @@
 package com.iwellmass.idc.model;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 public class SentinelPK implements Serializable {
 
 	private static final long serialVersionUID = 7546711538636604222L;
 
-	private String taskId;
+	private String triggerName;
 
-	private String groupId;
+	private String triggerGroup;
 
-	private LocalDateTime loadDate;
+	private Long shouldFireTime;
 
-	public String getTaskId() {
-		return taskId;
+	public String getTriggerName() {
+		return triggerName;
 	}
 
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+	public void setTriggerName(String triggerName) {
+		this.triggerName = triggerName;
 	}
 
-	public String getGroupId() {
-		return groupId;
+	public String getTriggerGroup() {
+		return triggerGroup;
 	}
 
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+	public void setTriggerGroup(String triggerGroup) {
+		this.triggerGroup = triggerGroup;
 	}
 
-	public LocalDateTime getLoadDate() {
-		return loadDate;
+	public Long getShouldFireTime() {
+		return shouldFireTime;
 	}
 
-	public void setLoadDate(LocalDateTime loadDate) {
-		this.loadDate = loadDate;
+	public void setShouldFireTime(Long shouldFireTime) {
+		this.shouldFireTime = shouldFireTime;
 	}
 
 }

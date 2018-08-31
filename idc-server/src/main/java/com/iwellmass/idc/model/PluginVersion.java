@@ -1,6 +1,8 @@
 package com.iwellmass.idc.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -21,6 +23,8 @@ public class PluginVersion implements Persistable<String>{
 	@Transient
 	private boolean isNew = false;
 
+	@Id
+	@Column(length = 10)
 	public String getVersion() {
 		return version;
 	}
@@ -29,6 +33,7 @@ public class PluginVersion implements Persistable<String>{
 		this.version = version;
 	}
 
+	@Column(name = "instance_seq")
 	public Long getInstanceSeq() {
 		return instanceSeq;
 	}

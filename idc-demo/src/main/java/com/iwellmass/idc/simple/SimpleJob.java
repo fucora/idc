@@ -1,17 +1,13 @@
 package com.iwellmass.idc.simple;
 
-import com.iwellmass.idc.IDCExecutionContext;
-import com.iwellmass.idc.IDCJob;
+import com.iwellmass.idc.executor.IDCExecutionContext;
+import com.iwellmass.idc.executor.IDCJob;
 
 public class SimpleJob implements IDCJob{
 
+	@Override
 	public void execute(IDCExecutionContext context) {
-		
-		String loadDate = context.getLoadDate();
-		
-		String taskId = context.getTaskId();
-		
+		System.out.println("SimpleJob worked.");
 		
 	}
-
 }

@@ -22,18 +22,17 @@
 	</distributionManagement>
 
 	<dependencyManagement>
-
 		<dependencies>
 			<!-- wac-model -->
 			<dependency>
 				<groupId>com.iwellmass</groupId>
-				<artifactId>idc-common</artifactId>
-				<version>2.0.0-SNAPSHOT</version>
+				<artifactId>wac-common</artifactId>
+				<version>2.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.iwellmass</groupId>
-				<artifactId>wac-common</artifactId>
-				<version>2.0-SNAPSHOT</version>
+				<artifactId>idc-core</artifactId>
+				<version>${project.version}</version>
 			</dependency>
 
 			<!-- 3rd -->
@@ -60,8 +59,8 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	
 	<dependencies>
-
 		<dependency>
 			<groupId>javax.persistence</groupId>
 			<artifactId>javax.persistence-api</artifactId>
@@ -73,25 +72,44 @@
 		</dependency>
 		<dependency>
 			<groupId>com.iwellmass</groupId>
-			<artifactId>idc-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.iwellmass</groupId>
-			<artifactId>idc-server-dag</artifactId>
-			<version>1.2.0-SNAPSHOT</version>
+			<artifactId>idc-core</artifactId>
 		</dependency>
 
+		<!-- spring -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
-
+		<!-- data -->
 		<dependency>
-			<groupId>com.iwellmass</groupId>
-			<artifactId>idc-common</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-
+		<!-- cloud -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-hystrix</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-eureka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.feign</groupId>
+			<artifactId>feign-httpclient</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.feign</groupId>
+			<artifactId>feign-slf4j</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
@@ -102,10 +120,6 @@
 			<artifactId>jgrapht-core</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
 		<!-- test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -115,7 +129,6 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
