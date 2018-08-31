@@ -8,14 +8,12 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<!-- common -->
 		<module>idc-common</module>
-		<!-- server -->
+		
 		<module>idc-server</module>
-		<!-- web -->
 		<module>idc-app</module>
-		<!-- executor -->
-		<module>idc-spring-boot-starter</module>
+		
+		<module>idc-spring-cloud-starter</module>
 		<module>idc-demo</module>
 	</modules>
 

@@ -52,6 +52,12 @@
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>wac-common</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.data</groupId>
+					<artifactId>spring-data-jpa</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- 3rd -->

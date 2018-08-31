@@ -18,6 +18,13 @@
 	</properties>
 
 
+	<distributionManagement>
+		<repository>
+			<id>center</id>
+			<url>http://maven.iwellmass.com:8081/repository/maven-private/</url>
+		</repository>
+	</distributionManagement>
+
 	<dependencyManagement>
 		<dependencies>
 			<!-- 3rd -->
@@ -32,17 +39,29 @@
 			<!-- wac-idc -->
 			<dependency>
 				<groupId>com.iwellmass</groupId>
-				<artifactId>idc-spring-boot-starter</artifactId>
+				<artifactId>idc-spring-cloud-starter</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- idc-sdk -->
+		<!-- wac -->
 		<dependency>
 			<groupId>com.iwellmass</groupId>
-			<artifactId>idc-spring-boot-starter</artifactId>
+			<artifactId>idc-spring-cloud-starter</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.data</groupId>
+					<artifactId>spring-data-jpa</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- spring-boot -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<dependency>

@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: idc-demo
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+#  datasource:
+#    driverClassName: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8
+#    username: root
+#    password: zjhz2017
+server:
+  port: 10086
+
+spring.data.jpa.repositories.enabled: false
+
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://eureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
