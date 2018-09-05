@@ -8,7 +8,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>idc-common</module>
+		<module>idc-core</module>
 		
 		<module>idc-server-spring-cloud-starter</module>
 		<module>idc-app</module>
