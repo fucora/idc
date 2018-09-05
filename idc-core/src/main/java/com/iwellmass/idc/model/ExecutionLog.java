@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.slf4j.helpers.MessageFormatter;
+
 @Entity
 @Table(name = "t_idc_execution_log")
 public class ExecutionLog {
@@ -67,6 +69,13 @@ public class ExecutionLog {
 		ExecutionLog log = new ExecutionLog();
 		log.setInstanceId(instanceId);
 		log.setMessage(message);
+		if (message != null) {
+			if (args == null || args.length == 0) {
+				log.setMessage(message);
+			} else {
+				log.setMessage(MessageFormatter.arrayFormat(message, args).getMessage());
+			}
+		}
 		log.setTime(LocalDateTime.now());
 		return log;
 	}

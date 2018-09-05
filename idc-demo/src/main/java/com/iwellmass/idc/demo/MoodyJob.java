@@ -5,7 +5,7 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.executor.IDCExecutionContext;
+import com.iwellmass.idc.executor.IDCJobExecutionContext;
 import com.iwellmass.idc.executor.IDCJob;
 
 public class MoodyJob implements IDCJob {
@@ -17,7 +17,7 @@ public class MoodyJob implements IDCJob {
 	private static final int SUCCESSFULLY_NORMAL = 2;
 
 	@Override
-	public void execute(IDCExecutionContext context) {
+	public void execute(IDCJobExecutionContext context) {
 		int op = new Random().nextInt(3);
 		switch (op) {
 		case UNCATCHED_EXCEPTION:

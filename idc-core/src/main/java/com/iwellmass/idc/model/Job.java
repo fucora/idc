@@ -27,6 +27,8 @@ public class Job {
 
 	private String groupId = DEFAULT_GROUP;
 	
+	private String domain;
+	
 	private String taskName;
 
 	private String description;
@@ -80,6 +82,17 @@ public class Job {
 
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
+	}
+	
+
+	@ApiModelProperty("所属域")
+	@Column(name = "domain", length = 50)
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 	@ApiModelProperty("任务名称")
@@ -144,7 +157,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("生效日期始 yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "start_time")
 	public LocalDateTime getStartTime() {
 		return startTime;
@@ -155,7 +168,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("生效日期止, yyyyMMdd")
-	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "end_time")
 	public LocalDateTime getEndTime() {
 		return endTime;

@@ -39,7 +39,7 @@
 			<!-- wac-idc -->
 			<dependency>
 				<groupId>com.iwellmass</groupId>
-				<artifactId>idc-spring-cloud-starter</artifactId>
+				<artifactId>idc-client-spring-cloud-starter</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
@@ -49,7 +49,7 @@
 		<!-- wac -->
 		<dependency>
 			<groupId>com.iwellmass</groupId>
-			<artifactId>idc-spring-cloud-starter</artifactId>
+			<artifactId>idc-client-spring-cloud-starter</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.data</groupId>

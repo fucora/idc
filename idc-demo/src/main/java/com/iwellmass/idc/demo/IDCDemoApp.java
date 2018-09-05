@@ -1,12 +1,12 @@
 package com.iwellmass.idc.demo;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.SpringCloudApplication;
 import org.springframework.context.annotation.Bean;
 
 import com.iwellmass.idc.executor.IDCJob;
 
-@SpringBootApplication
+@SpringCloudApplication
 public class IDCDemoApp {
 
 	public static void main(String[] args) {

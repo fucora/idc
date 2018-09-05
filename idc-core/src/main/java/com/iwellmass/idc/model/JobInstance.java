@@ -41,6 +41,8 @@ public class JobInstance {
 	private LocalDateTime endTime;
 
 	private JobInstanceType type;
+	
+	private String domain;
 
 	@ApiModelProperty("执行ID")
 	@Column(name = "id")
@@ -76,7 +78,7 @@ public class JobInstance {
 	@ApiModelProperty("业务日期")
 	@Id
 	@Column(name = "load_date")
-	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
+	@JsonFormat(pattern = "yyyyMMddHHmmss", timezone = "GMT+8")
 	public LocalDateTime getLoadDate() {
 		return loadDate;
 	}
@@ -154,5 +156,16 @@ public class JobInstance {
 
 	public void setType(JobInstanceType type) {
 		this.type = type;
+	}
+
+
+	@ApiModelProperty("所属域")
+	@Column(name = "domain")
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 }
