@@ -25,13 +25,13 @@ public class IDCJobExecutorServiceFactory {
 
 	@Inject
 	private Decoder decoder;
-	
+
 	@Inject
 	private Encoder encoder;
-	
+
 	@Inject
 	private Client client;
-	
+
 	@Inject
 	private Contract contract;
 
@@ -44,17 +44,18 @@ public class IDCJobExecutorServiceFactory {
 		return service;
 	}
 
-	private IDCJobExecutorService newFeignClient(String name, String jobName) {
-		String path = "http://" + name + MessageFormatter.arrayFormat(IDCJobExecutorService.RESOURCE_URI_TEMPLATE, new Object[] {
-				jobName
-		}).getMessage();
-		
-		RestIDCJobExecutor feginClient = Feign.builder()
-			.client(client)
-			.encoder(encoder)
-			.decoder(decoder)
-			.contract(contract)
-			.target(RestIDCJobExecutor.class, path);
+	private IDCJobExecutorService newFeignClient(String domain, String name) {
+
+		String path = format(domain, name);
+
+		RestIDCJobExecutor feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
+				.contract(contract).target(RestIDCJobExecutor.class, path);
 		return feginClient;
+	}
+
+	private static final String format(String domain, String name) {
+		String path = "http://"
+				+ MessageFormatter.arrayFormat("{}/idc-job/{}/execution", new Object[] { domain, name }).getMessage();
+		return path;
 	}
 }

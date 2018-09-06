@@ -26,9 +26,9 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
+import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
-import org.quartz.Trigger.TriggerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -107,11 +107,22 @@ public class SchedulerService {
 			throw new AppException("调度失败: " + e.getMessage());
 		}
 	}
+	
+	public void unschedule(JobPK jobKey) throws AppException {
+		try {
+			Job job = jobRepository.findOne(jobKey);
+			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, job.getTaskId(), job.getGroupId());
+			scheduler.unscheduleJob(triggerKey);
+		} catch (SchedulerException e) {
+			throw new AppException(e);
+		}
+		
+	}
 
 	public void complement(ComplementRequest request) {
 		try {
 			String taskId = request.getTaskId();
-			String groupId = request.getGroup();
+			String groupId = request.getGroupId();
 
 			Trigger mainTrigger = scheduler.getTrigger(buildTriggerKey(JobInstanceType.CRON, taskId, groupId));
 			Assert.isTrue(mainTrigger != null, "任务未提交");
@@ -194,4 +205,5 @@ public class SchedulerService {
 			throw new AppException("未指定周期调度类型, 接收的周期调度类型" + Arrays.asList(ScheduleType.values()));
 		}
 	}
+
 }

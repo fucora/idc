@@ -29,6 +29,12 @@ public class JobController {
 		return ServiceResult.success("提交成功");
 	}
 	
+	@PostMapping(path = "/unschedule")
+	public ServiceResult<String> unschedule(@RequestBody JobPK jobKey) {
+		jobService.unschedule(jobKey);
+		return ServiceResult.success("提交成功");
+	}
+	
 	@PostMapping(value = "/lock")
 	@ApiOperation("冻结 Job")
 	public ServiceResult<String> lock(@RequestBody JobPK jobKey) {

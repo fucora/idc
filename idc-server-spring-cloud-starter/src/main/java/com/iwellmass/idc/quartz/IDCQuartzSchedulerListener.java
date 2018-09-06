@@ -1,11 +1,14 @@
 package com.iwellmass.idc.quartz;
 
+import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
+
 import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.quartz.JobKey;
+import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.listeners.SchedulerListenerSupport;
@@ -34,7 +37,12 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	
 	@Override
 	public void jobScheduled(Trigger trigger) {
+		
 		JobKey jobKey = trigger.getJobKey();
+		
+		Job job = jobRepository.findOne(jobKey.getName(), jobKey.getGroup());
+		job.setStatus(ScheduleStatus.NORMAL);
+		
 		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
 		if (nextFireTime != null) {
 			JobInstanceType type = IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyGet(trigger.getJobDataMap());
@@ -46,7 +54,17 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 			sentinel.setStatus(SentinelStatus.READY);
 			sentinelRepository.save(sentinel);
 			LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
+			
+			job.setPrevLoadDate(null);
+			job.setNextLoadDate(toLocalDateTime(nextFireTime));
 		}
+		
+
+	}
+	
+	@Override
+	public void schedulerError(String msg, SchedulerException cause) {
+		LOGGER.info("调度错误: " + msg, cause);
 	}
 	
 	@Override

@@ -12,7 +12,7 @@ public class ComplementRequest {
 	private String taskId;
 
 	@ApiModelProperty("任务组")
-	private String group;
+	private String groupId;
 
 	@ApiModelProperty("开始时间，yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd")
@@ -30,12 +30,12 @@ public class ComplementRequest {
 		this.taskId = taskId;
 	}
 
-	public String getGroup() {
-		return group;
+	public String getGroupId() {
+		return groupId;
 	}
 
-	public void setGroup(String group) {
-		this.group = group;
+	public void setGroupId(String group) {
+		this.groupId = group;
 	}
 
 	public LocalDate getStartTime() {

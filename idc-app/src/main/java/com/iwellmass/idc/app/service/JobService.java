@@ -37,6 +37,10 @@ public class JobService {
 		schedulerService.schedule(job);
 	}
 
+	public void unschedule(JobPK jobKey) {
+		schedulerService.unschedule(jobKey);
+	}
+	
 	public void complement(ComplementRequest request) {
 		schedulerService.complement(request);
 	}
@@ -85,4 +89,5 @@ public class JobService {
 			return cb.equal(cb.literal(1), 1);
 		});
 	}
+
 }

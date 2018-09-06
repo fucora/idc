@@ -260,7 +260,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("参数")
-	@Column(name = "parameter")
+	@Column(name = "parameter", length = 4000)
 	public String getParameter() {
 		return this.parameter;
 	}

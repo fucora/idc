@@ -97,7 +97,7 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("参数设置")
-	@Column(name = "parameter", length = 2000)
+	@Column(name = "parameter", length = 4000)
 	public String getParameter() {
 		return parameter;
 	}
