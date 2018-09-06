@@ -79,12 +79,18 @@ public class SchedulerService {
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
 		}
+		if (job.getGroupId() == null) {
+			job.setGroupId(Job.DEFAULT_GROUP);
+		}
 		try {
 			ScheduleProperties sp = job.getScheduleProperties();
 			sp.setScheduleType(job.getScheduleType());
 			CronExpression cronExpr = new CronExpression(toCronExpression(sp));
 
 			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
+
+			Assert.isFalse(scheduler.checkExists(triggerKey), "不可重复调度任务");
+			
 			JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
 			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
 					.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())
@@ -108,6 +114,8 @@ public class SchedulerService {
 			jobRepository.save(job);
 			// 保存到 quartz
 			scheduler.scheduleJob(jobDetail, trigger);
+		} catch (AppException e) {
+			throw e;
 		} catch (ParseException e) {
 			LOGGER.error(e.getMessage(), e);
 			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
@@ -121,6 +129,7 @@ public class SchedulerService {
 		try {
 			Job job = jobRepository.findOne(jobKey);
 			if (job != null) {
+				LOGGER.info("取消调度 {}", jobKey);
 				TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, job.getTaskId(), job.getGroupId());
 				scheduler.unscheduleJob(triggerKey);
 			}

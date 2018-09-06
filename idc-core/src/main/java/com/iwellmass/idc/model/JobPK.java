@@ -35,4 +35,9 @@ public class JobPK implements Serializable {
 		this.groupId = group;
 	}
 
+	@Override
+	public String toString() {
+		return "JobPK [taskId=" + taskId + ", groupId=" + groupId + "]";
+	}
+
 }

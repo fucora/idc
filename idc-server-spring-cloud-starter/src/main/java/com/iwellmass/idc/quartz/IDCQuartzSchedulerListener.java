@@ -2,6 +2,7 @@ package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -64,6 +65,7 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	public void jobUnscheduled(TriggerKey triggerKey) {
 		JobKey jobKey = IDCPlugin.toJobKey(triggerKey);
 		Job job = getJob(jobKey);
+		job.setEndTime(LocalDateTime.now());
 		job.setStatus(ScheduleStatus.COMPLETE);
 		jobRepository.save(job);
 	}

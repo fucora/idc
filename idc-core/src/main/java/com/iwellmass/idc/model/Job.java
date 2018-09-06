@@ -26,7 +26,7 @@ public class Job {
 	// ~~ 任务属性 ~~
 	private String taskId;
 
-	private String groupId = DEFAULT_GROUP;
+	private String groupId;
 	
 	private String taskName;
 
