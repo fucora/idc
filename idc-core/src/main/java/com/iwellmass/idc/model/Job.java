@@ -21,6 +21,8 @@ import io.swagger.annotations.ApiModelProperty;
 @IdClass(JobPK.class)
 public class Job {
 
+	public static final String DEFAULT_GROUP = "default";
+
 	// ~~ 任务属性 ~~
 	private String taskId;
 
