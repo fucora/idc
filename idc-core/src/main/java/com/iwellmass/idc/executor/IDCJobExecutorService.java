@@ -9,7 +9,10 @@ public interface IDCJobExecutorService {
 	public void execute(JobInstance context);
 	
 	public static String toURI(String contentType) {
-		return MessageFormatter.format("/idc-job/{}/execution", new Object[] {contentType}).getMessage();
+		return MessageFormatter.format("/idc-job/{}/execution", contentType).getMessage();
 	}
 	
+	public static void main(String[] args) {
+		System.out.println(toURI("1231"));
+	}
 }
