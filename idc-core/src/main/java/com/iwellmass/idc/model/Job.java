@@ -275,4 +275,8 @@ public class Job {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "Job [taskId=" + taskId + ", groupId=" + groupId + ", taskName=" + taskName + "]";
+	}
 }

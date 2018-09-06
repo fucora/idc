@@ -30,7 +30,6 @@ public class JobController {
 	@Inject
 	private JobService jobService;
 	
-	
 	@PostMapping("/query")
 	public ServiceResult<PageData<Job>> query(@RequestBody JobQuery jobQuery, Pager pager) {
 		PageData<Job> data = jobService.findJob(jobQuery, pager);

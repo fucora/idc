@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
+import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceType;
@@ -63,6 +64,14 @@ public class SchedulerService {
 
 	@Transactional
 	public void schedule(Job job) throws AppException {
+		
+		LOGGER.info("创建调度任务 {}", job);
+		
+		// 默认的
+		if (job.getContentType() == null) {
+			job.setContentType(ContentType.NONE);
+		}
+		
 		
 		LocalDateTime now = LocalDateTime.now();
 		job.setCreateTime(now);
