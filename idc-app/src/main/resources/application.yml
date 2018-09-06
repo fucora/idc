@@ -75,7 +75,7 @@ eureka:
     prefer-ip-address: true
   client:
     serviceUrl:
-      defaultZone: http://grayeureka.iwellmass.com:8761/eureka/
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
     healthcheck:
       enabled: true
     lease:
@@ -92,7 +92,7 @@ eureka:
     prefer-ip-address: true
   client:
     serviceUrl:
-      defaultZone: http://eureka.iwellmass.com:8761/eureka/
+      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
     healthcheck:
       enabled: true
     lease:
