@@ -111,8 +111,10 @@ public class SchedulerService {
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
 			Job job = jobRepository.findOne(jobKey);
-			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, job.getTaskId(), job.getGroupId());
-			scheduler.unscheduleJob(triggerKey);
+			if (job != null) {
+				TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, job.getTaskId(), job.getGroupId());
+				scheduler.unscheduleJob(triggerKey);
+			}
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}

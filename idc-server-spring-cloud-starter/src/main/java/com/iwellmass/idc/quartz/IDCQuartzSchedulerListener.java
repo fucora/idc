@@ -58,8 +58,14 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 			job.setPrevLoadDate(null);
 			job.setNextLoadDate(toLocalDateTime(nextFireTime));
 		}
-		
-
+	}
+	
+	@Override
+	public void jobUnscheduled(TriggerKey triggerKey) {
+		JobKey jobKey = IDCPlugin.toJobKey(triggerKey);
+		Job job = getJob(jobKey);
+		job.setStatus(ScheduleStatus.COMPLETE);
+		jobRepository.save(job);
 	}
 	
 	@Override
