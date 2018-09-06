@@ -11,6 +11,7 @@ import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -26,8 +27,6 @@ public class Job {
 	private String taskId;
 
 	private String groupId = DEFAULT_GROUP;
-	
-	private String domain;
 	
 	private String taskName;
 
@@ -46,6 +45,8 @@ public class Job {
 	private String assignee;
 
 	private Set<JobDependency> dependencies;
+	
+	private String parameter;
 
 	// ~~ 调度属性 ~~
 	private ScheduleType scheduleType;
@@ -84,17 +85,6 @@ public class Job {
 		this.groupId = groupId;
 	}
 	
-
-	@ApiModelProperty("所属域")
-	@Column(name = "domain", length = 50)
-	public String getDomain() {
-		return domain;
-	}
-
-	public void setDomain(String domain) {
-		this.domain = domain;
-	}
-
 	@ApiModelProperty("任务名称")
 	@Column(name = "name", length = 100)
 	public String getJobName() {
@@ -267,6 +257,22 @@ public class Job {
 
 	public void setNextLoadDate(LocalDateTime nextLoadDate) {
 		this.nextLoadDate = nextLoadDate;
+	}
+
+	@ApiModelProperty("参数")
+	@Column(name = "parameter")
+	public String getParameter() {
+		return this.parameter;
+	}
+	
+	public void setParameter(String parameter) {
+		this.parameter  = parameter;
+	}
+	
+	public void setParameterObject(Object param) {
+		if (param != null) {
+			this.parameter = JSON.toJSONString(param);
+		}
 	}
 
 }

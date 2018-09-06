@@ -22,9 +22,9 @@ public class IDCJobHandler implements IDCJobExecutorService{
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobHandler.class);
 
 	private final IDCJob job;
+	private AsyncService asyncService;
 	private IDCExecutionContextFactory contextFactory;
 	private IDCStatusManagerClient idcStatusManagerClient;
-	private AsyncService asyncService;
 	
 	public IDCJobHandler(IDCJob job) {
 		this.job = job;
@@ -33,7 +33,7 @@ public class IDCJobHandler implements IDCJobExecutorService{
 	@ResponseBody
 	@PostMapping
 	public void execute(@RequestBody JobInstance jobInstance) {
-		IDCJobExecutionContext context = contextFactory.newContext(jobInstance, job);
+		IDCJobExecutionContext context = contextFactory.newContext(jobInstance);
 		// safe execute
 		execute(context);
 		LOGGER.info("IDCJob[id={}, groupId={}, taskId={}] accepted, timestamp: {}", jobInstance.getInstanceId(),
@@ -41,8 +41,8 @@ public class IDCJobHandler implements IDCJobExecutorService{
 	}
 	
 	public void execute(IDCJobExecutionContext context) {
-		LOGGER.info("执行任务 {}", context.getInstanceId());
-		CompletableFuture<CompleteEvent> futrue = asyncService.async(context);
+		LOGGER.info("执行任务 {}", context.getInstance());
+		CompletableFuture<CompleteEvent> futrue = asyncService.async(job, context);
 		/*if (context.isAsync()) {
 			futrue.get();
 		}*/

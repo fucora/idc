@@ -7,7 +7,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -34,7 +36,7 @@ public class JobInstance {
 
 	private String assignee;
 
-	private String parameters;
+	private String parameter;
 
 	private LocalDateTime startTime;
 
@@ -42,8 +44,6 @@ public class JobInstance {
 
 	private JobInstanceType type;
 	
-	private String domain;
-
 	@ApiModelProperty("执行ID")
 	@Column(name = "id")
 	public Integer getInstanceId() {
@@ -97,13 +97,21 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("参数设置")
-	@Column(name = "parameters", length = 2000)
-	public String getParameters() {
-		return parameters;
+	@Column(name = "parameter", length = 2000)
+	public String getParameter() {
+		return parameter;
+	}
+	
+	@Transient
+	public <T> T getParameterObject(Class<T> type) {
+		if (this.parameter == null || this.parameter.isEmpty()) {
+			return null;
+		}
+		return JSON.parseObject(this.getParameter(), type);
 	}
 
-	public void setParameters(String parameters) {
-		this.parameters = parameters;
+	public void setParameter(String parameter) {
+		this.parameter = parameter;
 	}
 
 	@ApiModelProperty("责任人")
@@ -158,14 +166,10 @@ public class JobInstance {
 		this.type = type;
 	}
 
-
-	@ApiModelProperty("所属域")
-	@Column(name = "domain")
-	public String getDomain() {
-		return domain;
+	@Override
+	public String toString() {
+		return "JobInstance [instanceId=" + instanceId + ", taskId=" + taskId + ", groupId=" + groupId + ", loadDate="
+				+ loadDate + "]";
 	}
-
-	public void setDomain(String domain) {
-		this.domain = domain;
-	}
+	
 }

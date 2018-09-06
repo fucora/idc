@@ -1,11 +1,12 @@
 package com.iwellmass.idc.executor;
 
+import com.iwellmass.idc.model.JobInstance;
+
 public interface IDCJobExecutionContext {
 	
-	public Integer getInstanceId();
-	
-	public IDCJob getIDCJob();
+	public JobInstance getInstance();
 	
 	public void complete(CompleteEvent event);
+
 	
 }

@@ -73,6 +73,12 @@
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>idc-server-spring-boot-starter</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-entitymanager</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.iwellmass</groupId>

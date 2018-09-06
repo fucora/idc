@@ -13,16 +13,15 @@ import com.iwellmass.idc.executor.IDCJobExecutionContext;
 public class AsyncService {
 
 	@Async("idc-executor")
-	public CompletableFuture<CompleteEvent> async(IDCJobExecutionContext context) {
+	public CompletableFuture<CompleteEvent> async(IDCJob idcJob, IDCJobExecutionContext context) {
 
 		CompleteEvent event = null;
 		try {
-			IDCJob idcJob = context.getIDCJob();
 			// 具体业务逻辑
 			idcJob.execute(context);
 			event = CompleteEvent.successEvent()
 				.setMessage("执行成功")
-				.setInstanceId(context.getInstanceId());
+				.setInstanceId(context.getInstance().getInstanceId());
 		} catch (Throwable e) {
 			event = CompleteEvent.failureEvent("执行失败", e);
 		}

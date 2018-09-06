@@ -2,13 +2,22 @@ package com.iwellmass.idc.model;
 
 import java.io.Serializable;
 
-public class JobPK implements Serializable{
+public class JobPK implements Serializable {
 
 	private static final long serialVersionUID = -6687330393375678068L;
 
 	private String taskId;
-	
+
 	private String groupId;
+
+	public JobPK() {
+	}
+
+	public JobPK(String taskId, String groupId) {
+		super();
+		this.taskId = taskId;
+		this.groupId = groupId;
+	}
 
 	public String getTaskId() {
 		return taskId;
@@ -25,6 +34,5 @@ public class JobPK implements Serializable{
 	public void setGroupId(String group) {
 		this.groupId = group;
 	}
-	
-	
+
 }

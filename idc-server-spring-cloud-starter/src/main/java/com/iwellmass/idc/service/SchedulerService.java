@@ -66,17 +66,16 @@ public class SchedulerService {
 		
 		LocalDateTime now = LocalDateTime.now();
 		job.setCreateTime(now);
+		job.setGroupId(job.getContentType().getDomain());
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
 		}
-
 		try {
 			ScheduleProperties sp = job.getScheduleProperties();
 			sp.setScheduleType(job.getScheduleType());
 			CronExpression cronExpr = new CronExpression(toCronExpression(sp));
 
-			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(),
-					job.getGroupId());
+			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
 			JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
 			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
 					.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())

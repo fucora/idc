@@ -77,7 +77,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 		
 		String jobName = getExecutorName(job.getContentType());
 		
-		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance.getDomain(), jobName);
+		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance.getGroupId(), jobName);
 		
 		try {
 			executorService.execute(jobInstance);
