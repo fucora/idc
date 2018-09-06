@@ -4,7 +4,7 @@ services:
     image: $idc_latest
     container_name: idc
     build:
-      context: ./idc-admin/idc-admin-web
+      context: ./idc-admin/idc-app
       args:
         - profile=gray
     network_mode: "host"
