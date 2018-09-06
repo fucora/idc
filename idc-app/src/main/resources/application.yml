@@ -47,9 +47,8 @@ security:
         serviceId: ${PREFIX:}resource
   user:
     password: password
-  ignored: /** #/css/**,/images/**,/js/**,/favicon.ico,/webjars/**,/static/**,*.html,/swagger-resources/**,/v2/api-docs,*.json
-
-spring.jpa.hibernate.ddl-auto: update
+  ignored: /** 
+  #ignored: /css/**,/images/**,/js/**,/favicon.ico,/webjars/**,/static/**,*.html,/swagger-resources/**,/v2/api-docs,*.json
 
 feign:
   hystirx:
@@ -65,3 +64,36 @@ feign:
         decode404: false
 
  
+---
+spring:
+  profiles: gray
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://grayeureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
+
+---
+spring:
+  profiles: dev
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5

@@ -1,13 +1,20 @@
 package com.iwellmass.idc.app.controller;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.model.Assignee;
+import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
@@ -22,6 +29,18 @@ public class JobController {
 
 	@Inject
 	private JobService jobService;
+	
+	
+	@PostMapping("/query")
+	public ServiceResult<PageData<Job>> query(@RequestBody JobQuery jobQuery, Pager pager) {
+		PageData<Job> data = jobService.findJob(jobQuery, pager);
+		return ServiceResult.success(data);
+	}
+	@GetMapping("/assignee")
+	public ServiceResult<List<Assignee>> getAssignee() {
+		List<Assignee> data = jobService.getAllAssignee();
+		return ServiceResult.success(data);
+	}
 	
 	@PostMapping(path = "/schedule")
 	public ServiceResult<String> schedule(@RequestBody Job job) {
