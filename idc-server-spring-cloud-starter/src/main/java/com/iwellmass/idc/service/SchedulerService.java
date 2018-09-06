@@ -65,22 +65,21 @@ public class SchedulerService {
 	@Transactional
 	public void schedule(Job job) throws AppException {
 		
+		LocalDateTime now = LocalDateTime.now();
+		
 		LOGGER.info("创建调度任务 {}", job);
 		
 		// 默认的
+		job.setCreateTime(now);
 		if (job.getContentType() == null) {
+			Assert.isTrue(job.getGroupId() != null, "未指定业务组");
 			job.setContentType(ContentType.NONE);
 		}
-		
-		
-		LocalDateTime now = LocalDateTime.now();
-		job.setCreateTime(now);
-		job.setGroupId(job.getContentType().getDomain());
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
 		}
 		if (job.getGroupId() == null) {
-			job.setGroupId(Job.DEFAULT_GROUP);
+			job.setGroupId(job.getContentType().getDomain());
 		}
 		try {
 			ScheduleProperties sp = job.getScheduleProperties();

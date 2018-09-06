@@ -7,7 +7,7 @@ public enum ContentType {
 	// 数据工厂 ---> data-factory
 
 	@ApiModelProperty("NONE")
-    NONE("default"),
+    NONE(null),
     
     @ApiModelProperty("SCALA")
     SCALA("data-factory"),
