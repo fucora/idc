@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
-import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceType;
@@ -72,14 +71,13 @@ public class SchedulerService {
 		// 默认的
 		job.setCreateTime(now);
 		if (job.getContentType() == null) {
-			Assert.isTrue(job.getGroupId() != null, "未指定业务组");
-			job.setContentType(ContentType.NONE);
+			job.setGroupId(Job.DEFAULT_GROUP);
+		}
+		if (job.getGroupId() == null) {
+			job.setContentType(Job.DEFAULT_CONTENT_TYPE);
 		}
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
-		}
-		if (job.getGroupId() == null) {
-			job.setGroupId(job.getContentType().getDomain());
 		}
 		try {
 			ScheduleProperties sp = job.getScheduleProperties();

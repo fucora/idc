@@ -5,12 +5,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
-import org.slf4j.helpers.MessageFormatter;
 import org.springframework.cloud.netflix.feign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.executor.IDCJobExecutorService;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.service.RestIDCJobExecutor;
 
 import feign.Client;
@@ -37,25 +37,18 @@ public class IDCJobExecutorServiceFactory {
 
 	private Map<String, IDCJobExecutorService> registryMap = new ConcurrentHashMap<>();
 
-	public IDCJobExecutorService getExecutor(String domain, String jobName) {
-		IDCJobExecutorService service = registryMap.computeIfAbsent(domain, (key) -> {
-			return newFeignClient(domain, jobName);
+	public IDCJobExecutorService getExecutor(Job job) {
+		IDCJobExecutorService service = registryMap.computeIfAbsent(job.getGroupId(), (key) -> {
+			return newFeignClient(job.getGroupId(), job.getContentType());
 		});
 		return service;
 	}
 
-	private IDCJobExecutorService newFeignClient(String domain, String name) {
-
-		String path = format(domain, name);
-
+	private IDCJobExecutorService newFeignClient(String domain, String contentType) {
+		String path = "http://" + IDCJobExecutorService.toURI(contentType);
 		RestIDCJobExecutor feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract).target(RestIDCJobExecutor.class, path);
 		return feginClient;
 	}
 
-	private static final String format(String domain, String name) {
-		String path = "http://"
-				+ MessageFormatter.arrayFormat("{}/idc-job/{}/execution", new Object[] { domain, name }).getMessage();
-		return path;
-	}
 }

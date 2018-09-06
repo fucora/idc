@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiModelProperty;
 @IdClass(JobPK.class)
 public class Job {
 
+	public static final String DEFAULT_CONTENT_TYPE = "default";
 	public static final String DEFAULT_GROUP = "default";
 
 	// ~~ 任务属性 ~~
@@ -34,7 +35,7 @@ public class Job {
 
 	private TaskType taskType;
 
-	private ContentType contentType;
+	private String contentType;
 
 	private LocalDateTime createTime;
 
@@ -115,13 +116,13 @@ public class Job {
 		this.taskType = taskType;
 	}
 
-	@ApiModelProperty("业务类型，DATA_SYNC、SPARK_SQL")
+	@ApiModelProperty("业务类型，业务方自定义")
 	@Column(name = "content_type")
-	public ContentType getContentType() {
+	public String getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(ContentType contentType) {
+	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 

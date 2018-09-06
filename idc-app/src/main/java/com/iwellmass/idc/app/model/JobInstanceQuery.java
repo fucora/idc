@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.TaskType;
 
@@ -19,7 +18,7 @@ public class JobInstanceQuery {
 	private List<TaskType> taskTypes;
 	
 	@ApiModelProperty("任务类型")
-	private ContentType contentType;
+	private String contentType;
 	
 	@ApiModelProperty("实例类型")
 	private JobInstanceType instanceType;
@@ -51,11 +50,11 @@ public class JobInstanceQuery {
 		this.taskName = taskName;
 	}
 
-	public ContentType getContentType() {
+	public String getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(ContentType contentType) {
+	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 

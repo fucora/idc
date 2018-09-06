@@ -1,14 +1,15 @@
 package com.iwellmass.idc.client.autoconfig;
 
+import static com.iwellmass.idc.executor.IDCJobExecutorService.toURI;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -20,7 +21,6 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import com.iwellmass.idc.executor.IDCJob;
-import com.iwellmass.idc.executor.IDCJobExecutorService;
 
 @Configuration
 @ConditionalOnBean(IDCJob.class)
@@ -51,23 +51,20 @@ public class IDCClientAutoConfiguration {
 	}
 
 	/*
-	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /{domain}/idc-job/{idc-job-name}/execution
+	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /idc-job/{idc-content-type}/execution
 	 * */
 	@Bean
-	public IDCJobHandlerMapping idcJobHandlerMapping(Map<String, IDCJob> idcJobs) {
+	public IDCJobHandlerMapping idcJobHandlerMapping(List<IDCJob> idcJobs) {
 		Map<String, IDCJobHandler> idcJobMap = new HashMap<>();
-		for (Entry<String, IDCJob> idcJobEntry : idcJobs.entrySet()) {
+		for (IDCJob job : idcJobs) {
 
-			IDCJob job = idcJobEntry.getValue();
 			IDCJobHandler jobHandler = new IDCJobHandler(job);
 			jobHandler.setAsyncService(asyncService());
 			jobHandler.setIdcStatusManagerClient(idcStatusManagerClient);
 			jobHandler.setContextFactory(idcExecutionContextFactory());
 
-			LOGGER.info("注册 IDCJob '{}' -> {} ", idcJobEntry.getKey(), job);
-			String uri = MessageFormatter.arrayFormat(IDCJobExecutorService.RESOURCE_URI_TEMPLATE, 
-					new Object[] {idcJobEntry.getKey()}).getMessage();
-			
+			LOGGER.info("注册 IDCJob '{}' -> {} ", job.getContentType(), job);
+			String uri = toURI(job.getContentType());
 			idcJobMap.put(uri, jobHandler);
 		}
 		IDCJobHandlerMapping mapping = new IDCJobHandlerMapping();

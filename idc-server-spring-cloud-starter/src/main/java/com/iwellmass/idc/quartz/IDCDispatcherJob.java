@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.IDCJobExecutorServiceFactory;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
-import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
@@ -75,9 +74,8 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	// 使用 eureka 来做 HA & balance
 	private void execute(Job job, JobInstance jobInstance) throws JobExecutionException {
 		
-		String jobName = getExecutorName(job.getContentType());
 		
-		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance.getGroupId(), jobName);
+		IDCJobExecutorService executorService = executorFactory.getExecutor(job);
 		
 		try {
 			executorService.execute(jobInstance);
@@ -86,10 +84,5 @@ public class IDCDispatcherJob implements org.quartz.Job {
 			throw new JobExecutionException("任务派发失败: " + e.getMessage(), false);
 		}
 	}
-	
-	private static final String getExecutorName(ContentType contentType) {
-		return contentType.toString().toLowerCase();
-	}
-	
 	
 }

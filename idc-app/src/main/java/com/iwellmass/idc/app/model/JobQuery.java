@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
-import com.iwellmass.idc.model.ContentType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
@@ -17,7 +16,7 @@ public class JobQuery {
 	private String taskName;
 
 	@ApiModelProperty("任务类型")
-	private ContentType contentType;
+	private String contentType;
 
 	@ApiModelProperty("节点类型")
 	private List<TaskType> taskTypes;
@@ -36,11 +35,11 @@ public class JobQuery {
 		this.taskName = taskName;
 	}
 
-	public ContentType getContentType() {
+	public String getContentType() {
 		return contentType;
 	}
 
-	public void setContentType(ContentType contentType) {
+	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 
@@ -74,7 +73,7 @@ public class JobQuery {
 		};
 	}
 
-	public static Specification<Job> contentTypeEq(ContentType content) {
+	public static Specification<Job> contentTypeEq(String content) {
 		return (root, query, cb) -> {
 			return cb.equal(root.get("assignee"), content);
 		};
