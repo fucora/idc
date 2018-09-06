@@ -70,10 +70,10 @@ public class SchedulerService {
 		
 		// 默认的
 		job.setCreateTime(now);
-		if (job.getContentType() == null) {
+		if (job.getGroupId() == null) {
 			job.setGroupId(Job.DEFAULT_GROUP);
 		}
-		if (job.getGroupId() == null) {
+		if (job.getContentType() == null) {
 			job.setContentType(Job.DEFAULT_CONTENT_TYPE);
 		}
 		if (job.getStartTime() == null) {

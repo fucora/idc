@@ -1,12 +1,11 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
-
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
@@ -37,12 +36,13 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	private SentinelRepository sentinelRepository;
 	
 	@Override
+	@Transactional
 	public void jobScheduled(Trigger trigger) {
 		
 		JobKey jobKey = trigger.getJobKey();
 		
-		Job job = jobRepository.findOne(jobKey.getName(), jobKey.getGroup());
-		job.setStatus(ScheduleStatus.NORMAL);
+		// Job job = jobRepository.findOne(jobKey.getName(), jobKey.getGroup());
+		// job.setStatus(ScheduleStatus.NORMAL);
 		
 		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
 		if (nextFireTime != null) {
@@ -56,8 +56,8 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 			sentinelRepository.save(sentinel);
 			LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
 			
-			job.setPrevLoadDate(null);
-			job.setNextLoadDate(toLocalDateTime(nextFireTime));
+			// job.setPrevLoadDate(null);
+			// job.setNextLoadDate(toLocalDateTime(nextFireTime));
 		}
 	}
 	

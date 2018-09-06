@@ -45,7 +45,7 @@ public class IDCJobExecutorServiceFactory {
 	}
 
 	private IDCJobExecutorService newFeignClient(String domain, String contentType) {
-		String path = "http://" + IDCJobExecutorService.toURI(contentType);
+		String path = "http://" + domain + IDCJobExecutorService.toURI(contentType);
 		RestIDCJobExecutor feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract).target(RestIDCJobExecutor.class, path);
 		return feginClient;
