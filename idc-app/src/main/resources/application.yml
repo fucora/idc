@@ -47,8 +47,8 @@ security:
         serviceId: ${PREFIX:}resource
   user:
     password: password
-  ignored: /css/**,/images/**,/js/**,/favicon.ico,/webjars/**,/static/**,*.html,/swagger-resources/**,/v2/api-docs,*.json
-
+  ignored: /**
+  
 feign:
   hystirx:
     enable: false
