@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.netflix.feign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ import feign.codec.Encoder;
 @Component
 @Import(FeignClientsConfiguration.class)
 public class IDCJobExecutorServiceFactory {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobExecutorServiceFactory.class);
 
 	@Inject
 	private Decoder decoder;
@@ -46,6 +50,7 @@ public class IDCJobExecutorServiceFactory {
 
 	private IDCJobExecutorService newFeignClient(String domain, String contentType) {
 		String path = "http://" + domain + IDCJobExecutorService.toURI(contentType);
+		LOGGER.info("create fegin client: {}", path);
 		RestIDCJobExecutor feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract).target(RestIDCJobExecutor.class, path);
 		return feginClient;
