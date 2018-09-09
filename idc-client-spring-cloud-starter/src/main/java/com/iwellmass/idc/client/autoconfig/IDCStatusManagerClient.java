@@ -11,10 +11,10 @@ import com.iwellmass.idc.executor.StartEvent;
 @FeignClient("idc")
 public interface IDCStatusManagerClient extends IDCStatusService {
 
-	@PutMapping("/complete")
+	@PutMapping("/job/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event);
 	
 	
-	@PutMapping("/start")
+	@PutMapping("/job/start")
 	public void fireStartEvent(@RequestBody StartEvent event);
 }
