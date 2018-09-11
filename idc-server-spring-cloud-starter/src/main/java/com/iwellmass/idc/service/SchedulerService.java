@@ -116,9 +116,12 @@ public class SchedulerService {
 	
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			LOGGER.debug("取消调度任务 {}", jobKey);
+			LOGGER.info("取消调度任务 {}", jobKey);
 			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getTaskId(), jobKey.getGroupId());
-			scheduler.unscheduleJob(triggerKey);
+			boolean result = scheduler.unscheduleJob(triggerKey);
+			if (!result) {
+				LOGGER.warn("{} 不存在关联的调度计划", jobKey);
+			}
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}

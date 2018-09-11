@@ -73,10 +73,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 
 	// 使用 eureka 来做 HA & balance
 	private void execute(Job job, JobInstance jobInstance) throws JobExecutionException {
-		
-		
 		IDCJobExecutorService executorService = executorFactory.getExecutor(job);
-		
 		try {
 			executorService.execute(jobInstance);
 		} catch (Throwable e) {
