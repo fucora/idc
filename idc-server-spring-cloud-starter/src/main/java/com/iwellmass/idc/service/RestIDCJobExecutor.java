@@ -9,7 +9,7 @@ import com.iwellmass.idc.model.JobInstance;
 
 public interface RestIDCJobExecutor extends IDCJobExecutorService {
 	
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path="/execution", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public void execute(@RequestBody JobInstance jobInstance);
 
 }
