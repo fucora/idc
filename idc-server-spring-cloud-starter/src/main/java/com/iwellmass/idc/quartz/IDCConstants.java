@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 
 public interface IDCConstants {
@@ -19,6 +20,10 @@ public interface IDCConstants {
 	public static final String COL_SENTINEL_TRIGGER_GROUP = "trigger_group";
 	public static final String COL_SENTINEL_SHOULD_FIRE_TIME = "should_fire_time";
 	public static final String COL_SENTINEL_STATUS = "status";
+	
+	
+	// ~~ 创建任务 ~~
+	public static final IDCContextKey<String> IDC_JOB_VALUE = IDCContextKey.def("idc.job.value", String.class);
 	
 	// ~~ context value keys ~~
 	/** 实例 ID */

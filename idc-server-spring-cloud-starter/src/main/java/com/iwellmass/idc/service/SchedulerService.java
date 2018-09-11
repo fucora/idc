@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
@@ -46,7 +47,6 @@ import com.iwellmass.idc.quartz.IDCConstants;
 import com.iwellmass.idc.quartz.IDCDispatcherJob;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.JobInstanceRepository;
-import com.iwellmass.idc.repo.JobRepository;
 
 @Service
 public class SchedulerService {
@@ -54,19 +54,14 @@ public class SchedulerService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerService.class);
 
 	@Inject
-	private JobRepository jobRepository;
-	
-	private JobInstanceRepository jobInstanceRepository;
-	
-	@Inject
 	private Scheduler scheduler;
 
 	@Transactional
 	public void schedule(Job job) throws AppException {
 		
-		LocalDateTime now = LocalDateTime.now();
-		
 		LOGGER.info("创建调度任务 {}", job);
+		
+		LocalDateTime now = LocalDateTime.now();
 		
 		// 默认的
 		job.setCreateTime(now);
@@ -79,36 +74,33 @@ public class SchedulerService {
 		if (job.getStartTime() == null) {
 			job.setStartTime(now);
 		}
+		ScheduleProperties sp = job.getScheduleProperties();
+		sp.setScheduleType(job.getScheduleType());
+		
+		// 添加到 scheduler
 		try {
-			ScheduleProperties sp = job.getScheduleProperties();
-			sp.setScheduleType(job.getScheduleType());
+			
 			CronExpression cronExpr = new CronExpression(toCronExpression(sp));
-
 			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
 
 			Assert.isFalse(scheduler.checkExists(triggerKey), "不可重复调度任务");
 			
 			JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
-			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
-					.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr).withMisfireHandlingInstructionIgnoreMisfires())
+			Trigger trigger = TriggerBuilder.newTrigger()
+					.withIdentity(triggerKey)
+					.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr)
+					.withMisfireHandlingInstructionIgnoreMisfires())
 					.startAt(toDate(job.getStartTime()))
 					.endAt(toDate(job.getEndTime())).build();
 
+			// 设置默认值
+			IDCConstants.IDC_JOB_VALUE.applyPut(trigger.getJobDataMap(), JSON.toJSONString(job));
 			IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyPut(trigger.getJobDataMap(), JobInstanceType.CRON);
 
 			JobDetail jobDetail = JobBuilder.newJob(IDCDispatcherJob.class)
 					.withIdentity(jobKey)
 					.requestRecovery()
 					.build();
-
-			LocalDateTime prevFireTime = Optional.ofNullable(trigger.getPreviousFireTime())
-					.map(IDCPlugin::toLocalDateTime).orElse(null);
-			LocalDateTime nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).map(IDCPlugin::toLocalDateTime)
-					.orElse(null);
-			job.setPrevLoadDate(prevFireTime);
-			job.setNextLoadDate(nextFireTime);
-			// 保存到 t_idc_job
-			jobRepository.save(job);
 			// 保存到 quartz
 			scheduler.scheduleJob(jobDetail, trigger);
 		} catch (AppException e) {
@@ -124,6 +116,7 @@ public class SchedulerService {
 	
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
+			LOGGER.debug("取消调度任务 {}", jobKey);
 			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getTaskId(), jobKey.getGroupId());
 			scheduler.unscheduleJob(triggerKey);
 		} catch (SchedulerException e) {
@@ -178,15 +171,15 @@ public class SchedulerService {
 	}
 	
 	public void redo(Integer id) {
-		JobInstance instance = jobInstanceRepository.findOne(id);
-		TriggerKey triggerKey = IDCPlugin.buildTriggerKey(instance.getType(), instance.getTaskId(), instance.getGroupId());
-		
-		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow()).build();
+//		JobInstance instance = jobInstanceRepository.findOne(id);
+//		TriggerKey triggerKey = IDCPlugin.buildTriggerKey(instance.getType(), instance.getTaskId(), instance.getGroupId());
+//		
+//		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
+//				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow()).build();
 		
 		// TODO 设置参数
 		try {
-			TriggerState state = scheduler.getTriggerState(triggerKey);
+			TriggerState state = scheduler.getTriggerState(null);
 			/*if (isJobComplete(state)) {
 				scheduler.rescheduleJob(triggerKey, trigger);
 			} else {

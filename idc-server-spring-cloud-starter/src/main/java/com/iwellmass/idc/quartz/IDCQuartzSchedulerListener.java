@@ -1,5 +1,6 @@
 package com.iwellmass.idc.quartz;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleStatus;
@@ -37,12 +39,15 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	@Override
 	@Transactional
 	public void jobScheduled(Trigger trigger) {
-		
 		JobKey jobKey = trigger.getJobKey();
+		String jobValue = IDCPlugin.IDC_JOB_VALUE.applyGet(trigger.getJobDataMap());
 		
-		// Job job = jobRepository.findOne(jobKey.getName(), jobKey.getGroup());
-		// job.setStatus(ScheduleStatus.NORMAL);
-		
+		Job job = JSON.parseObject(jobValue, Job.class);
+		// status
+		job.setStatus(ScheduleStatus.NORMAL);
+		// prev fire time
+		Optional.ofNullable(trigger.getPreviousFireTime()).map(IDCPlugin::toLocalDateTime).ifPresent(job::setPrevLoadDate);
+		// next fire time
 		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
 		if (nextFireTime != null) {
 			JobInstanceType type = IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyGet(trigger.getJobDataMap());
@@ -54,10 +59,11 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 			sentinel.setStatus(SentinelStatus.READY);
 			sentinelRepository.save(sentinel);
 			LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
-			
-			// job.setPrevLoadDate(null);
-			// job.setNextLoadDate(toLocalDateTime(nextFireTime));
+			job.setNextLoadDate(IDCPlugin.toLocalDateTime(nextFireTime));
 		}
+		
+		// save
+		jobRepository.save(job);
 	}
 	
 	@Override
@@ -66,7 +72,9 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 		Job job = getJob(jobKey);
 		if (job == null) {
 			LOGGER.warn("不能存在的任务实例: goroupId:{}, taskId:{}", jobKey.getGroup(), jobKey.getName());
-		} else if(!job.getStatus().isComplete()) {
+			return;
+		}
+		if (job.getStatus() == null || !job.getStatus().isComplete()) {
 			job.setStatus(ScheduleStatus.CANCELED);
 			jobRepository.save(job);
 		}

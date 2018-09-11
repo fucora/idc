@@ -7,12 +7,19 @@
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<distributionManagement>
+		<repository>
+			<id>center</id>
+			<url>http://maven.iwellmass.com:8081/repository/maven-private/</url>
+		</repository>
+	</distributionManagement>
+
 	<modules>
 		<module>idc-core</module>
-		
+
 		<module>idc-server-spring-cloud-starter</module>
 		<module>idc-app</module>
-		
+
 		<module>idc-client-spring-cloud-starter</module>
 		<module>idc-demo</module>
 	</modules>
