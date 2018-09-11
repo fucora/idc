@@ -15,30 +15,34 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
-import com.iwellmass.idc.app.service.JobInstanceService;
+import com.iwellmass.idc.app.service.JobInstanceQueryService;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.service.JobInstanceService;
 
 import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/job-instance")
 public class JobInstanceController {
-
+	
 	@Inject
 	private JobInstanceService jobInstanceService;
+
+	@Inject
+	private JobInstanceQueryService queryService;
 
 	@ApiOperation("通过条件检索实例（分页显示）")
 	@PostMapping("/query")
 	public ServiceResult<PageData<JobInstance>> findTaskInstanceByCondition(
 			@RequestBody(required = false) JobInstanceQuery query, Pager pager) {
-		PageData<JobInstance> taskInstance = jobInstanceService.findJobInstance(query, pager);
+		PageData<JobInstance> taskInstance = queryService.findJobInstance(query, pager);
 		return ServiceResult.success(taskInstance);
 	}
 
 	@ApiOperation("获取工作流实例")
 	@GetMapping("/{id}/workflow-job")
 	public ServiceResult<List<JobInstance>> getWorkflowTask(@PathVariable("id") Integer id) {
-		List<JobInstance> result = jobInstanceService.getWorkflowSubInstance(id);
+		List<JobInstance> result = queryService.getWorkflowSubInstance(id);
 		return ServiceResult.success(result);
 	}
 

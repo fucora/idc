@@ -1,4 +1,4 @@
-package com.iwellmass.idc.app.controller;
+package com.iwellmass.idc.app;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

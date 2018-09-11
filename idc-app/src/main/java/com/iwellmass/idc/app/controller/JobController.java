@@ -6,7 +6,6 @@ import javax.inject.Inject;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,14 +15,12 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.service.JobService;
-import com.iwellmass.idc.executor.CompleteEvent;
-import com.iwellmass.idc.executor.IDCStatusService;
-import com.iwellmass.idc.executor.StartEvent;
+import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.service.ComplementRequest;
 import com.iwellmass.idc.service.ExecutionRequest;
+import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -33,19 +30,19 @@ public class JobController {
 
 	@Inject
 	private JobService jobService;
-
+	
 	@Inject
-	private IDCStatusService statusService;
+	private JobQueryService jobQueryService;
 
 	@PostMapping("/query")
-	public ServiceResult<PageData<Job>> query(@RequestBody JobQuery jobQuery, Pager pager) {
-		PageData<Job> data = jobService.findJob(jobQuery, pager);
+	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
+		PageData<Job> data = jobQueryService.findJob(jobQuery, pager);
 		return ServiceResult.success(data);
 	}
 
 	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> getAssignee() {
-		List<Assignee> data = jobService.getAllAssignee();
+		List<Assignee> data = jobQueryService.getAllAssignee();
 		return ServiceResult.success(data);
 	}
 
@@ -87,15 +84,5 @@ public class JobController {
 	public ServiceResult<String> execution(@RequestBody ExecutionRequest request) {
 		jobService.execute(request);
 		return ServiceResult.success("提交成功");
-	}
-
-	@PutMapping("/complete")
-	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
-		statusService.fireCompleteEvent(event);
-	}
-
-	@PutMapping("/start")
-	public void fireStartEvent(@RequestBody StartEvent event) {
-		statusService.fireStartEvent(event);
 	}
 }

@@ -36,7 +36,6 @@ public class StdIDCStatusService implements IDCStatusService {
 	@Inject
 	SentinelRepository sentinelRepository;
 
-
 	@Override
 	public void fireStartEvent(StartEvent event) {
 		// 更新任务状态

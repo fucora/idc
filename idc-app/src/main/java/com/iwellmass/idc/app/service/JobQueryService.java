@@ -1,9 +1,8 @@
 package com.iwellmass.idc.app.service;
 
-
-
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -12,50 +11,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
-import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.service.ComplementRequest;
-import com.iwellmass.idc.service.ExecutionRequest;
-import com.iwellmass.idc.service.SchedulerService;
 
 @Service
-public class JobService {
+public class JobQueryService {
 
 	@Inject
 	private JobRepository jobRepository;
-
-	@Inject
-	private SchedulerService schedulerService;
-
-	public void schedule(Job job) throws AppException {
-		schedulerService.schedule(job);
-	}
-
-	public void unschedule(JobPK jobKey) {
-		schedulerService.unschedule(jobKey);
-	}
-	
-	public void complement(ComplementRequest request) {
-		schedulerService.complement(request);
-	}
-
-	public void execute(ExecutionRequest request) {
-		schedulerService.execute(request);
-	}
-
-	public void lock(JobPK jobKey) {
-		schedulerService.lock(jobKey);
-	}
-
-	public void unlock(JobPK jobKey) {
-		schedulerService.unlock(jobKey);
-	}
 
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
 
@@ -73,15 +42,19 @@ public class JobService {
 	}
 
 	public List<Job> getWorkflowJob() {
-		throw new UnsupportedOperationException("not supported yet.");
+		return jobRepository.findByTaskType(TaskType.WORKFLOW);
 	}
 
-	public List<Job> getWorkflowJob(Integer jobId) {
-		throw new UnsupportedOperationException("not supported yet.");
+	public List<Job> getWorkflowJob(JobPK jobKey) {
+		return jobRepository.findSubJobs(jobKey.getTaskId(), jobKey.getGroupId());
 	}
 
 	public List<Assignee> getAllAssignee() {
-		throw new UnsupportedOperationException("not supported yet.");
+		return jobRepository.findAllAssignee().stream().map(id -> {
+			Assignee asg = new Assignee();
+			asg.setAssignee(id);
+			return asg;
+		}).collect(Collectors.toList());
 	}
 
 	public static <T> Specifications<T> empty() {

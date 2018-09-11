@@ -10,7 +10,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -24,9 +23,7 @@ import org.quartz.JobKey;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
-import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
@@ -38,7 +35,6 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -46,12 +42,11 @@ import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.quartz.IDCConstants;
 import com.iwellmass.idc.quartz.IDCDispatcherJob;
 import com.iwellmass.idc.quartz.IDCPlugin;
-import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Service
-public class SchedulerService {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerService.class);
+public class JobService {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
 	@Inject
 	private Scheduler scheduler;
@@ -160,7 +155,6 @@ public class SchedulerService {
 		}
 	}
 
-
 	public void lock(JobPK jobKey) {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
@@ -173,26 +167,6 @@ public class SchedulerService {
 		throw new UnsupportedOperationException("not supported yet.");
 	}
 	
-	public void redo(Integer id) {
-//		JobInstance instance = jobInstanceRepository.findOne(id);
-//		TriggerKey triggerKey = IDCPlugin.buildTriggerKey(instance.getType(), instance.getTaskId(), instance.getGroupId());
-//		
-//		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
-//				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow()).build();
-		
-		// TODO 设置参数
-		try {
-			TriggerState state = scheduler.getTriggerState(null);
-			/*if (isJobComplete(state)) {
-				scheduler.rescheduleJob(triggerKey, trigger);
-			} else {
-				throw new AppException("重跑失败:  任务已经执行");
-			}*/
-		} catch (SchedulerException e) {
-			throw new AppException("重跑失败:  " + e.getMessage());
-		}
-	}
-
 	public String toCronExpression(ScheduleProperties scheduleProperties) {
 		LocalTime duetime = LocalTime.parse(scheduleProperties.getDuetime(), DateTimeFormatter.ISO_TIME);
 		switch (scheduleProperties.getScheduleType()) {
@@ -214,5 +188,4 @@ public class SchedulerService {
 			throw new AppException("未指定周期调度类型, 接收的周期调度类型" + Arrays.asList(ScheduleType.values()));
 		}
 	}
-
 }

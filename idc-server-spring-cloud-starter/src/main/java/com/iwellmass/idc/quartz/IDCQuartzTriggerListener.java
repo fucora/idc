@@ -88,9 +88,8 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 		jobInstance.setAssignee(job.getAssignee());
 		jobInstance.setTaskType(job.getTaskType());
 		jobInstance.setStatus(JobInstanceStatus.NEW);
-		// TODO 参数信息
 		jobInstance.setParameter(job.getParameter()); 
-		jobInstance.setStartTime(null);
+		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
 		Optional.ofNullable(nextFireTime).map(IDCPlugin::toLocalDateTime).ifPresent(jobInstance::setNextLoadDate);
 		jobInstanceRepository.save(jobInstance);

@@ -14,20 +14,12 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.repo.JobInstanceRepository;
-import com.iwellmass.idc.service.SchedulerService;
 
 @Service
-public class JobInstanceService {
+public class JobInstanceQueryService {
 
 	@Inject
 	private JobInstanceRepository repository;
-
-	@Inject
-	private SchedulerService schedulerService;
-
-	public void redo(Integer id) {
-		schedulerService.redo(id);
-	}
 
 	public PageData<JobInstance> findJobInstance(JobInstanceQuery params, Pager pager) {
 		// TODO dynamic query
