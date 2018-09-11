@@ -29,6 +29,8 @@ public class JobInstance {
 	private String groupId;
 
 	private LocalDateTime loadDate;
+	
+	private LocalDateTime nextLoadDate;
 
 	private TaskType taskType;
 
@@ -87,6 +89,16 @@ public class JobInstance {
 		this.loadDate = loadDate;
 	}
 
+	@ApiModelProperty("下个业务周期")
+	@Column(name = "next_load_date")
+	public LocalDateTime getNextLoadDate() {
+		return nextLoadDate;
+	}
+
+	public void setNextLoadDate(LocalDateTime nextLoadDate) {
+		this.nextLoadDate = nextLoadDate;
+	}
+	
 	@Column(name = "task_type")
 	public TaskType getTaskType() {
 		return taskType;
@@ -165,7 +177,7 @@ public class JobInstance {
 	public void setType(JobInstanceType type) {
 		this.type = type;
 	}
-
+	
 	@Override
 	public String toString() {
 		return "JobInstance [instanceId=" + instanceId + ", taskId=" + taskId + ", groupId=" + groupId + ", loadDate="

@@ -1,5 +1,7 @@
 package com.iwellmass.idc.service;
 
+import java.time.LocalDateTime;
+
 import javax.inject.Inject;
 
 import org.quartz.TriggerKey;
@@ -56,30 +58,41 @@ public class StdIDCStatusService implements IDCStatusService {
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
 		
 		if (jobInstance == null) {
-			LOGGER.warn("无法处理 {}, 实例不存在", event.getInstanceId());
+			LOGGER.warn("无法更新 {} 运行状态, 不存在此实例", event.getInstanceId());
 			return;
 		}
 		
 		jobInstance.setEndTime(event.getEndTime());
 		jobInstance.setStatus(event.getFinalStatus());
 		if (!jobInstanceRepository.tryUpdate(jobInstance)) {
+			LOGGER.warn("无法更新任务状态 {}, 更新结果为 0", jobInstance.getInstanceId());
 			return;
 		}
 		// 记录日志
 		jobLogRepository.log(event);
 		
+		
+		LocalDateTime nextLoadDate = jobInstance.getNextLoadDate();
+		
 		// 任务执行成功
 		if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
-			TriggerKey tk = IDCPlugin.buildTriggerKey(jobInstance.getType(), jobInstance.getTaskId(), jobInstance.getGroupId());
-			SentinelPK spk = new SentinelPK();
-			spk.setShouldFireTime(IDCPlugin.toMills(jobInstance.getLoadDate()));
-			spk.setTriggerName(tk.getName());
-			spk.setTriggerGroup(tk.getGroup());
 			
-			// TODO 未考虑任务间的依赖
-			Sentinel sentinel = sentinelRepository.findOne(spk);
-			sentinel.setStatus(SentinelStatus.READY);
-			sentinelRepository.save(sentinel);
+			if (nextLoadDate == null) {
+				LOGGER.info("Job {}.{} finalized.", jobInstance.getGroupId(), jobInstance.getTaskId());
+			} else {
+				TriggerKey tk = IDCPlugin.buildTriggerKey(jobInstance.getType(), jobInstance.getTaskId(), jobInstance.getGroupId());
+				
+				SentinelPK spk = new SentinelPK();
+				spk.setShouldFireTime(IDCPlugin.toMills(nextLoadDate));
+				spk.setTriggerName(tk.getName());
+				spk.setTriggerGroup(tk.getGroup());
+				
+				// TODO 未考虑任务间的依赖
+				// 更新下个周期的结果为 READY 状态
+				Sentinel sentinel = sentinelRepository.findOne(spk);
+				sentinel.setStatus(SentinelStatus.READY);
+				sentinelRepository.save(sentinel);
+			}
 		}
 	}
 }

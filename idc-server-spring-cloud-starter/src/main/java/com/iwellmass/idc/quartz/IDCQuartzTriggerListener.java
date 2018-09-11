@@ -7,6 +7,7 @@ import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -91,6 +92,7 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 		jobInstance.setParameter(job.getParameter()); 
 		jobInstance.setStartTime(null);
 		jobInstance.setEndTime(null);
+		Optional.ofNullable(nextFireTime).map(IDCPlugin::toLocalDateTime).ifPresent(jobInstance::setNextLoadDate);
 		jobInstanceRepository.save(jobInstance);
 		LOGGER.info("job instance {} up-to-date", instanceId);
 		
