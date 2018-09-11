@@ -43,9 +43,6 @@ public class StdIDCStatusService implements IDCStatusService {
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
 		jobInstance.setStartTime(event.getStartTime());
 		jobInstance.setStatus(JobInstanceStatus.RUNNING);
-		if (!jobInstanceRepository.tryUpdate(jobInstance)) {
-			return;
-		}
 		jobLogRepository.log(event);
 	}
 
@@ -64,10 +61,9 @@ public class StdIDCStatusService implements IDCStatusService {
 		
 		jobInstance.setEndTime(event.getEndTime());
 		jobInstance.setStatus(event.getFinalStatus());
-		if (!jobInstanceRepository.tryUpdate(jobInstance)) {
-			LOGGER.warn("无法更新任务状态 {}, 更新结果为 0", jobInstance.getInstanceId());
-			return;
-		}
+
+		jobInstanceRepository.save(jobInstance);
+		
 		// 记录日志
 		jobLogRepository.log(event);
 		
