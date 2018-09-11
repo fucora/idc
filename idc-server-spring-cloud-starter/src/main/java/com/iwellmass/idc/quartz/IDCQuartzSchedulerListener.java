@@ -1,6 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -65,9 +64,12 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	public void jobUnscheduled(TriggerKey triggerKey) {
 		JobKey jobKey = IDCPlugin.toJobKey(triggerKey);
 		Job job = getJob(jobKey);
-		job.setEndTime(LocalDateTime.now());
-		job.setStatus(ScheduleStatus.COMPLETE);
-		jobRepository.save(job);
+		if (job == null) {
+			LOGGER.warn("不能存在的任务实例: goroupId:{}, taskId:{}", jobKey.getGroup(), jobKey.getName());
+		} else if(!job.getStatus().isComplete()) {
+			job.setStatus(ScheduleStatus.CANCELED);
+			jobRepository.save(job);
+		}
 	}
 	
 	@Override

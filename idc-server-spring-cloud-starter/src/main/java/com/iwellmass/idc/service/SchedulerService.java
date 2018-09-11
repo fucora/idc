@@ -124,12 +124,8 @@ public class SchedulerService {
 	
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			Job job = jobRepository.findOne(jobKey);
-			if (job != null) {
-				LOGGER.info("取消调度 {}", jobKey);
-				TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, job.getTaskId(), job.getGroupId());
-				scheduler.unscheduleJob(triggerKey);
-			}
+			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getTaskId(), jobKey.getGroupId());
+			scheduler.unscheduleJob(triggerKey);
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}

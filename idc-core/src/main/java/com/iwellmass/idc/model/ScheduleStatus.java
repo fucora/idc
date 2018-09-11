@@ -23,5 +23,12 @@ public enum ScheduleStatus {
 	ERROR,
 	
 	@ApiModelProperty("调度阻塞")
-	BLOCKED
+	BLOCKED,
+	
+	@ApiModelProperty("任务被取消")
+	CANCELED;
+
+	public boolean isComplete() {
+		return this == COMPLETE || this == CANCELED;
+	}
 }
