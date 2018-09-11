@@ -1,23 +1,18 @@
 package com.iwellmass.idc.lookup;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SourceLookupManagerImpl implements EventDriveScheduler {
+public class SourceLookupManagerImpl {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SourceLookupManagerImpl.class);
 
 	private ScheduledExecutorService schExecutor = Executors.newSingleThreadScheduledExecutor();
 
 
-	@Override
-	public void scheduleOnSourceReady(Integer jobId, LocalDateTime loadDate) {
-		
-	}
 	
 //	@Override
 //	public void register(DdcNode node) {

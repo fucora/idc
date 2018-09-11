@@ -18,6 +18,9 @@ public class CompleteEvent implements IDCJobEvent {
 
 	private String message;
 
+	// protected
+	private CompleteEvent() {}
+
 	public LocalDateTime getEndTime() {
 		return endTime;
 	}
@@ -61,15 +64,15 @@ public class CompleteEvent implements IDCJobEvent {
 		return event;
 	}
 
-	public static CompleteEvent successEvent(String message, Object... args) {
-		return successEvent().setMessage(arrayFormat(message, args).getMessage());
-	}
-
 	public static CompleteEvent failureEvent() {
 		CompleteEvent event = new CompleteEvent();
 		event.finalStatus = JobInstanceStatus.FAILED;
 		event.endTime = LocalDateTime.now();
 		return event;
+	}
+
+	public static CompleteEvent successEvent(String message, Object... args) {
+		return successEvent().setMessage(arrayFormat(message, args).getMessage());
 	}
 
 	public static CompleteEvent failureEvent(String message, Object... args) {

@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -32,17 +33,8 @@ public class IDCClientAutoConfiguration {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCClientAutoConfiguration.class);
 
 	@Inject
-	public IDCStatusManagerClient idcStatusManagerClient;
+	public RestIDCStatusService idcStatusManagerClient;
 	
-	@Bean
-	public AsyncService asyncService() {
-		return new AsyncService();
-	}
-	
-	@Bean
-	public IDCExecutionContextFactory idcExecutionContextFactory() {
-		return new IDCExecutionContextFactory();
-	}
 
 	@Bean(name = "idc-executor")
 	public AsyncTaskExecutor asyncTaskExecutor() {
@@ -51,18 +43,14 @@ public class IDCClientAutoConfiguration {
 	}
 
 	/*
-	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /idc-job/{idc-content-type}/execution
+	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /idc-job/{idc-job-content-type}/execution
 	 * */
 	@Bean
-	public IDCJobHandlerMapping idcJobHandlerMapping(List<IDCJob> idcJobs) {
+	public IDCJobHandlerMapping idcJobHandlerMapping(List<IDCJob> idcJobs, AutowireCapableBeanFactory autowire) {
 		Map<String, IDCJobHandler> idcJobMap = new HashMap<>();
 		for (IDCJob job : idcJobs) {
-
 			IDCJobHandler jobHandler = new IDCJobHandler(job);
-			jobHandler.setAsyncService(asyncService());
-			jobHandler.setIdcStatusManagerClient(idcStatusManagerClient);
-			jobHandler.setContextFactory(idcExecutionContextFactory());
-
+			autowire.autowireBean(jobHandler);
 			LOGGER.info("注册 IDCJob '{}' -> {} ", job.getContentType(), job);
 			String uri = toURI(job.getContentType());
 			idcJobMap.put(uri, jobHandler);

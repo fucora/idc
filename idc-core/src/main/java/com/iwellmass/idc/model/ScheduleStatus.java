@@ -24,8 +24,4 @@ public enum ScheduleStatus {
 	
 	@ApiModelProperty("调度阻塞")
 	BLOCKED
-	
-	
-	
-	
 }

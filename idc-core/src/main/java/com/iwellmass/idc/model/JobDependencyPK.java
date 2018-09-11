@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class JobDependencyPK implements Serializable {
 
 	private static final long serialVersionUID = -4479061532661305224L;
+	
 	private String taskId;
 
 	private String groupId;

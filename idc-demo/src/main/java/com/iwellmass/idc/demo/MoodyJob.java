@@ -16,6 +16,12 @@ public class MoodyJob implements IDCJob {
 	private static final int SUCCESSFULLY_FAST = 1;
 	private static final int SUCCESSFULLY_NORMAL = 2;
 
+	private final String contentType;
+	
+	public MoodyJob(String contentType) {
+		this.contentType = contentType;
+	}
+	
 	@Override
 	public void execute(IDCJobExecutionContext context) {
 		int op = new Random().nextInt(3);
@@ -53,5 +59,10 @@ public class MoodyJob implements IDCJob {
 		}
 		LOGGER.info("long {} successed", l);
 	};
+	
+	@Override
+	public String getContentType() {
+		return contentType;
+	}
 
 }

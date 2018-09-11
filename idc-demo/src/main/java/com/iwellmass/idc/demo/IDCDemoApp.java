@@ -13,8 +13,8 @@ public class IDCDemoApp {
 		SpringApplication.run(IDCDemoApp.class, args);
 	}
 	
-	@Bean("moody-job")
+	@Bean
 	public IDCJob moodyJob() {
-		return new MoodyJob();
+		return new MoodyJob("moody");
 	}
 }
