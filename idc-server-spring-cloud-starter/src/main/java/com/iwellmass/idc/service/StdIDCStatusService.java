@@ -49,11 +49,14 @@ public class StdIDCStatusService implements IDCStatusService {
 
 	@Override
 	public void fireCompleteEvent(CompleteEvent event) {
+		
+		LOGGER.info("任务执行完毕: {}", event);
+		
 		// 更新实例状态
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
 		
 		if (jobInstance == null) {
-			LOGGER.warn("无法处理 {}, 任务不存在", event);
+			LOGGER.warn("无法处理 {}, 实例不存在", event.getInstanceId());
 			return;
 		}
 		

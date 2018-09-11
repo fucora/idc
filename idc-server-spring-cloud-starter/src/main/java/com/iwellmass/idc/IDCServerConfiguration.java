@@ -61,10 +61,16 @@ public class IDCServerConfiguration implements ApplicationListener<ContextRefres
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
 		try {
-			LOGGER.info("启动调度器...");
-			scheduler.startDelayed(5);
+			if (!scheduler.isStarted()) {
+				try {
+					LOGGER.info("启动调度器...");
+					scheduler.startDelayed(5);
+				} catch (SchedulerException e) {
+					LOGGER.error("调度器启动失败", e);
+				}
+			}
 		} catch (SchedulerException e) {
-			LOGGER.info("调度器启动失败", e);
+			LOGGER.error("启动调度器失败", e);
 		}
 	}
 
