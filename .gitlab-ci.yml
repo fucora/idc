@@ -7,7 +7,7 @@ variables:
 dev maven package build:
   stage: maven-build
   script:
-    - mvn clean package -DskipTests
+    - mvn clean package -DskipTests -Pprd
     - docker-compose -f docker-compose-dev.yml build
     - docker-compose -f docker-compose-dev.yml up -d
   tags:
@@ -18,7 +18,7 @@ dev maven package build:
 test maven package build:
   stage: maven-build
   script:
-    - mvn clean package -DskipTests
+    - mvn clean package -DskipTests -Pprd
     - docker-compose -f docker-compose-test.yml build
     - docker-compose -f docker-compose-test.yml up -d
   tags:

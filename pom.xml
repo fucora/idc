@@ -2,10 +2,31 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.iwellmass</groupId>
-	<artifactId>idc</artifactId>
+	<artifactId>idc-parent</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<name>idc</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<!-- wac-model -->
+		<wac.common.version>2.0-SNAPSHOT</wac.common.version>
+		<!-- 3rd -->
+		<org.quartz.version>2.3.0</org.quartz.version>
+	</properties>
+
+	<modules>
+		<module>idc-core</module>
+		<module>idc-server-spring-cloud-starter</module>
+		<module>idc-client-spring-cloud-starter</module>
+		<module>idc-app</module>
+		<module>idc-demo</module>
+	</modules>
 
 	<distributionManagement>
 		<repository>
@@ -14,36 +35,38 @@
 		</repository>
 	</distributionManagement>
 
-	<modules>
-		<module>idc-core</module>
+	<dependencyManagement>
+		<dependencies>
+			<!-- wac-model -->
+			<dependency>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>wac-common</artifactId>
+				<version>${wac.common.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>wac-auth</artifactId>
+				<version>${wac.common.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>iwellmass-dependencies</artifactId>
+				<version>2.0-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.quartz-scheduler</groupId>
+				<artifactId>quartz</artifactId>
+				<version>${org.quartz.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
-		<module>idc-server-spring-cloud-starter</module>
-		<module>idc-app</module>
-
-		<module>idc-client-spring-cloud-starter</module>
-		<module>idc-demo</module>
-	</modules>
-
-	<properties>
-		<spring_version>4.2.4.RELEASE</spring_version>
-		<!-- Build args -->
-		<java_source_version>1.8</java_source_version>
-		<java_target_version>1.8</java_target_version>
-	</properties>
-
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${java_source_version}</source>
-					<target>${java_target_version}</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+	</dependencies>
 </project>

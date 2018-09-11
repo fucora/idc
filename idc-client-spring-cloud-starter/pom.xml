@@ -3,41 +3,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.iwellmass</groupId>
+	<parent>
+		<groupId>com.iwellmass</groupId>
+		<artifactId>idc-parent</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
 	<artifactId>idc-client-spring-cloud-starter</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
 	<name>idc-client-spring-cloud-starter</name>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-	</properties>
-
-	<distributionManagement>
-		<repository>
-			<id>center</id>
-			<url>http://maven.iwellmass.com:8081/repository/maven-private/</url>
-		</repository>
-	</distributionManagement>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.iwellmass</groupId>
-				<artifactId>iwellmass-dependencies</artifactId>
-				<version>2.0-SNAPSHOT</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-
-			<dependency>
-				<groupId>com.iwellmass</groupId>
-				<artifactId>idc-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 
@@ -45,13 +19,10 @@
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>idc-core</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- spring cloud -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-config</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-hystrix</artifactId>
@@ -67,16 +38,6 @@
 		<dependency>
 			<groupId>com.netflix.feign</groupId>
 			<artifactId>feign-httpclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.netflix.feign</groupId>
-			<artifactId>feign-slf4j</artifactId>
-		</dependency>
-
-		<!-- logger -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
 		</dependency>
 
 		<!-- test -->
