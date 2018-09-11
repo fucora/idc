@@ -90,6 +90,11 @@ public class JobQuery {
 			return cb.equal(root.get("scheduleType"), st);
 		};
 	}
+	public static Specification<Job> scheduleTypeIn(List<ScheduleType> sts) {
+		return (root, query, cb) -> {
+			return root.get("scheduleType").in(sts);
+		};
+	}
 
 	public static Specification<Job> assigneeEq(String assignee) {
 		return (root, query, cb) -> {
