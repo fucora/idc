@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 
 public interface IDCConstants {

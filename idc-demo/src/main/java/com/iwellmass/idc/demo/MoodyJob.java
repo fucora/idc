@@ -27,7 +27,7 @@ public class MoodyJob implements IDCJob {
 		int op = new Random().nextInt(3);
 		switch (op) {
 		case UNCATCHED_EXCEPTION:
-			uncatchedException();
+			uncatchedException(context);
 			break;
 		case SUCCESSFULLY_FAST:
 			successfullyFast();
@@ -41,8 +41,9 @@ public class MoodyJob implements IDCJob {
 		}
 	}
 
-	private void uncatchedException() {
+	private void uncatchedException(IDCJobExecutionContext context) {
 		LOGGER.info("fast-fail.");
+		throw new RuntimeException(String.format("moody job fast fail on %s", context)) ;
 	}
 
 	private void successfullyFast() {

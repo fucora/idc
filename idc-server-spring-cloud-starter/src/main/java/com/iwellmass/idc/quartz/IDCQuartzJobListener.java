@@ -19,28 +19,28 @@ public class IDCQuartzJobListener extends JobListenerSupport {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCQuartzJobListener.class);
 
 	@Inject
-	private ExecutionLogRepository executionLogRepository;
+	private ExecutionLogRepository logRepository;
 
 	@Override
 	public void jobExecutionVetoed(JobExecutionContext context) {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
-		executionLogRepository.log(instanceId, "跳过执行");
+		logRepository.log(instanceId, "跳过执行");
 	}
 
 	@Override
 	public void jobToBeExecuted(JobExecutionContext context) {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
-		executionLogRepository.log(instanceId, "派发任务...");
+		logRepository.log(instanceId, "派发任务...");
 	}
 
 	@Override
 	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 		if (jobException != null) {
-			executionLogRepository.log(instanceId, "派发任务失败: " + jobException.getMessage());
+			logRepository.log(instanceId, "派发任务失败: " + jobException.getMessage());
 			LOGGER.warn(jobException.getMessage(), jobException);
 		} else {
-			executionLogRepository.log(instanceId, "派发任务成功");
+			logRepository.log(instanceId, "派发任务成功");
 		}
 	}
 

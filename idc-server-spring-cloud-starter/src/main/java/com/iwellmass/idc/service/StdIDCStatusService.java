@@ -31,7 +31,7 @@ public class StdIDCStatusService implements IDCStatusService {
 	private JobInstanceRepository jobInstanceRepository;
 
 	@Inject
-	private ExecutionLogRepository jobLogRepository;
+	private ExecutionLogRepository jobLogger;
 	
 	@Inject
 	SentinelRepository sentinelRepository;
@@ -43,7 +43,7 @@ public class StdIDCStatusService implements IDCStatusService {
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
 		jobInstance.setStartTime(event.getStartTime());
 		jobInstance.setStatus(JobInstanceStatus.RUNNING);
-		jobLogRepository.log(event);
+		jobLogger.log(event);
 	}
 
 	@Override
@@ -61,13 +61,8 @@ public class StdIDCStatusService implements IDCStatusService {
 		
 		jobInstance.setEndTime(event.getEndTime());
 		jobInstance.setStatus(event.getFinalStatus());
-
 		jobInstanceRepository.save(jobInstance);
-		
-		// 记录日志
-		jobLogRepository.log(event);
-		
-		
+
 		LocalDateTime nextLoadDate = jobInstance.getNextLoadDate();
 		
 		// 任务执行成功
@@ -86,9 +81,13 @@ public class StdIDCStatusService implements IDCStatusService {
 				// TODO 未考虑任务间的依赖
 				// 更新下个周期的结果为 READY 状态
 				Sentinel sentinel = sentinelRepository.findOne(spk);
+				LOGGER.info("update sentinel {} to {}", sentinel, SentinelStatus.READY);
 				sentinel.setStatus(SentinelStatus.READY);
 				sentinelRepository.save(sentinel);
 			}
 		}
+		
+		// 记录日志
+		jobLogger.log(event);
 	}
 }
