@@ -79,4 +79,9 @@ public class CompleteEvent implements IDCJobEvent {
 		return failureEvent().setMessage(arrayFormat(message, args).getMessage());
 	}
 
+	@Override
+	public String toString() {
+		return "CompleteEvent [endTime=" + endTime + ", finalStatus=" + finalStatus + ", instanceId=" + instanceId
+				+ ", message=" + message + "]";
+	}
 }

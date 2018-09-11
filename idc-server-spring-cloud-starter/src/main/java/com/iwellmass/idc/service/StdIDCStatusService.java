@@ -5,7 +5,7 @@ import javax.inject.Inject;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
@@ -20,10 +20,10 @@ import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.SentinelRepository;
 
-@Component
+@Service
 public class StdIDCStatusService implements IDCStatusService {
 
-	static final Logger LOGGER = LoggerFactory.getLogger(StdIDCStatusService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(StdIDCStatusService.class);
 
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
@@ -51,6 +51,12 @@ public class StdIDCStatusService implements IDCStatusService {
 	public void fireCompleteEvent(CompleteEvent event) {
 		// 更新实例状态
 		JobInstance jobInstance = jobInstanceRepository.findOne(event.getInstanceId());
+		
+		if (jobInstance == null) {
+			LOGGER.warn("无法处理 {}, 任务不存在", event);
+			return;
+		}
+		
 		jobInstance.setEndTime(event.getEndTime());
 		jobInstance.setStatus(event.getFinalStatus());
 		if (!jobInstanceRepository.tryUpdate(jobInstance)) {
@@ -73,6 +79,4 @@ public class StdIDCStatusService implements IDCStatusService {
 			sentinelRepository.save(sentinel);
 		}
 	}
-
-
 }
