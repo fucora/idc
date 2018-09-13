@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
+import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.ScheduleStatus;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Sentinel;
 import com.iwellmass.idc.model.SentinelStatus;
 import com.iwellmass.idc.repo.JobRepository;
@@ -35,30 +36,42 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	@Inject
 	private SentinelRepository sentinelRepository;
 	
-	@Override
-	@Transactional
-	public void jobScheduled(Trigger trigger) {
-		JobKey jobKey = trigger.getJobKey();
-		String jobValue = IDCPlugin.IDC_JOB_VALUE.applyGet(trigger.getJobDataMap());
-		
+	public void jobAdded(JobDetail jobDetail) {
+		String jobValue = IDCPlugin.IDC_JOB_VALUE.applyGet(jobDetail.getJobDataMap());
 		Job job = JSON.parseObject(jobValue, Job.class);
+		jobRepository.save(job);
+	}
+	
+	@Override
+	public void jobScheduled(Trigger trigger) {
+
+		JobKey jobKey = trigger.getJobKey();
+		Job job = getJob(jobKey);
+		// 调度类型
+		ScheduleType type = IDCConstants.IDC_SCHEDULE_TYPE.applyGet(trigger.getJobDataMap());
 		// status
 		job.setStatus(ScheduleStatus.NORMAL);
 		// prev fire time
 		Optional.ofNullable(trigger.getPreviousFireTime()).map(IDCPlugin::toLocalDateTime).ifPresent(job::setPrevLoadDate);
 		// next fire time
 		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
-		if (nextFireTime != null) {
-			JobInstanceType type = IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyGet(trigger.getJobDataMap());
-			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(type, jobKey.getName(), jobKey.getGroup());
-			Sentinel sentinel = new Sentinel();
-			sentinel.setTriggerName(triggerKey.getName());
-			sentinel.setTriggerGroup(triggerKey.getGroup());
-			sentinel.setShouldFireTime(nextFireTime.getTime());
-			sentinel.setStatus(SentinelStatus.READY);
-			sentinelRepository.save(sentinel);
-			LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
-			job.setNextLoadDate(IDCPlugin.toLocalDateTime(nextFireTime));
+		job.setNextLoadDate(IDCPlugin.toLocalDateTime(nextFireTime));
+		
+		// 周期调度添加哨兵
+		if (type == ScheduleType.MANUAL) {
+			// TODO 检查依赖
+		} else {
+			if (nextFireTime != null) {
+				TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getName(),
+						jobKey.getGroup());
+				Sentinel sentinel = new Sentinel();
+				sentinel.setTriggerName(triggerKey.getName());
+				sentinel.setTriggerGroup(triggerKey.getGroup());
+				sentinel.setShouldFireTime(nextFireTime.getTime());
+				sentinel.setStatus(SentinelStatus.READY);
+				sentinelRepository.save(sentinel);
+				LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
+			}
 		}
 		
 		// save

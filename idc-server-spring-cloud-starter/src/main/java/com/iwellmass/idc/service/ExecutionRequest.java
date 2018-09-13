@@ -1,28 +1,12 @@
 package com.iwellmass.idc.service;
 
-public class ExecutionRequest {
+import com.iwellmass.idc.model.JobPK;
 
-	private String taskId;
+public class ExecutionRequest extends JobPK {
 
-	private String groupId;
+	private static final long serialVersionUID = -8693972886473180967L;
 
 	private String jobParameter;
-
-	public String getTaskId() {
-		return taskId;
-	}
-
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
-	}
 
 	public String getJobParameter() {
 		return jobParameter;

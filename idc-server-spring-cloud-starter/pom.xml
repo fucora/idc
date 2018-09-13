@@ -66,10 +66,6 @@
 		</dependency>
 
 		<!-- spring -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
-		</dependency>
 		<!-- data -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -81,6 +77,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
@@ -107,6 +104,11 @@
 			<groupId>com.netflix.feign</groupId>
 			<artifactId>feign-httpclient</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.netflix.feign</groupId>
+			<artifactId>feign-slf4j</artifactId>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>

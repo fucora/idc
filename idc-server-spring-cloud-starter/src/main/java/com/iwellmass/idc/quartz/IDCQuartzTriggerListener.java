@@ -102,7 +102,7 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 	
 	@Override
 	public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
-		return IDCConstants.JOB_EXECUTION_SKIP.applyGet(context);
+		return IDCConstants.CONTEXT_SKIP.applyGet(context);
 	}
 	
 

@@ -32,7 +32,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate{
             + " WHERE " + alias("T", COL_SCHEDULER_NAME) + " = " + SCHED_NAME_SUBST
             + " AND " + alias("T", COL_TRIGGER_STATE) + " = ? AND " + alias("T", COL_NEXT_FIRE_TIME) + " <= ? " 
             + "AND (" + alias("T", COL_MISFIRE_INSTRUCTION) + " = -1 OR (" +alias("T", COL_MISFIRE_INSTRUCTION) + " != -1 AND "+ alias("T", COL_NEXT_FIRE_TIME) + " >= ?)) "
-            + "AND " + alias("S", COL_SENTINEL_STATUS) + " = ? "            
+            + "AND (" + alias("S", COL_SENTINEL_STATUS) + " = ? OR T.TRIGGER_TYPE != ? ) "            
             + "ORDER BY "+ alias("T", COL_NEXT_FIRE_TIME) + " ASC, " + alias("T", COL_PRIORITY) + " DESC";
 	
 	@Override
@@ -57,6 +57,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate{
             ps.setBigDecimal(2, new BigDecimal(String.valueOf(noLaterThan)));
             ps.setBigDecimal(3, new BigDecimal(String.valueOf(noEarlierThan)));
             ps.setInt(4, SentinelStatus.READY.ordinal());
+            ps.setString(5, "CRON");
             rs = ps.executeQuery();
             
             while (rs.next() && nextTriggers.size() <= maxCount) {

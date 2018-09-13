@@ -18,12 +18,15 @@ import javax.transaction.Transactional;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
+import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
@@ -58,7 +61,7 @@ public class JobService {
 		
 		LocalDateTime now = LocalDateTime.now();
 		
-		// 默认的
+		// 默认值
 		job.setCreateTime(now);
 		if (job.getGroupId() == null) {
 			job.setGroupId(Job.DEFAULT_GROUP);
@@ -72,36 +75,43 @@ public class JobService {
 		ScheduleProperties sp = job.getScheduleProperties();
 		sp.setScheduleType(job.getScheduleType());
 		
-		// 添加到 scheduler
+		JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
 		try {
-			
-			CronExpression cronExpr = new CronExpression(toCronExpression(sp));
-			TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
-
-			Assert.isFalse(scheduler.checkExists(triggerKey), "不可重复调度任务");
-			
-			JobKey jobKey = buildJobKey(job.getTaskId(), job.getGroupId());
-			Trigger trigger = TriggerBuilder.newTrigger()
-					.withIdentity(triggerKey)
-					.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr)
-					.withMisfireHandlingInstructionIgnoreMisfires())
-					.startAt(toDate(job.getStartTime()))
-					.endAt(toDate(job.getEndTime())).build();
-
-			// 设置默认值
-			IDCConstants.IDC_JOB_VALUE.applyPut(trigger.getJobDataMap(), JSON.toJSONString(job));
-			IDCConstants.CONTEXT_JOB_INSTANCE_TYPE.applyPut(trigger.getJobDataMap(), JobInstanceType.CRON);
-
+			// 添加到 scheduler
 			JobDetail jobDetail = JobBuilder.newJob(IDCDispatcherJob.class)
 					.withIdentity(jobKey)
 					.requestRecovery()
+					.storeDurably()
 					.build();
-			// 保存到 quartz
-			scheduler.scheduleJob(jobDetail, trigger);
+			IDCConstants.IDC_JOB_VALUE.applyPut(jobDetail.getJobDataMap(), JSON.toJSONString(job));
+			scheduler.addJob(jobDetail, false);
+		
+			// 调度 CRON 类型
+			if (sp.getScheduleType() == ScheduleType.MANUAL) {
+				CronExpression cronExpr = new CronExpression(toCronExpression(sp));
+				TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
+				
+				Assert.isFalse(scheduler.checkExists(triggerKey), "不可重复调度任务");
+				
+				Trigger trigger = TriggerBuilder.newTrigger()
+						.withIdentity(triggerKey)
+						.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr)
+								.withMisfireHandlingInstructionIgnoreMisfires())
+						.startAt(toDate(job.getStartTime()))
+						.endAt(toDate(job.getEndTime())).build();
+				
+				IDCConstants.IDC_SCHEDULE_TYPE.applyPut(trigger.getJobDataMap(), sp.getScheduleType());
+				
+				// 保存到 quartz
+				scheduler.scheduleJob(trigger);
+			}
 		} catch (AppException e) {
 			throw e;
+		} catch (ObjectAlreadyExistsException e) {
+			LOGGER.error(e.getMessage());
+			throw new AppException("不可重复调度任务");
 		} catch (ParseException e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage());
 			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
@@ -164,7 +174,32 @@ public class JobService {
 	}
 
 	public void execute(ExecutionRequest request) {
-		throw new UnsupportedOperationException("not supported yet.");
+		
+		String taskId = request.getTaskId();
+		String groupId = request.getGroupId();
+		
+		TriggerKey tk = buildTriggerKey(JobInstanceType.MANUAL, taskId, groupId);
+		
+		try {
+			TriggerState state = scheduler.getTriggerState(tk);
+			
+			if (state != TriggerState.NONE) {
+				Assert.isTrue(state == TriggerState.COMPLETE, "不可重复执行任务");
+			}
+			
+			JobDataMap jdm = new JobDataMap();
+			IDCConstants.IDC_PARAMETER.applyPut(jdm, request.getJobParameter());
+			IDCConstants.IDC_SCHEDULE_TYPE.applyPut(jdm, ScheduleType.MANUAL);
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity(tk)
+				.forJob(taskId, groupId)
+				.build();
+			
+			
+			scheduler.scheduleJob(trigger);
+		} catch (SchedulerException e) {
+			throw new AppException("执行失败: " + e.getMessage());
+		}
 	}
 	
 	public String toCronExpression(ScheduleProperties scheduleProperties) {
