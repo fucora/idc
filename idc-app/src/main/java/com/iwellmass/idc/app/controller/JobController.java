@@ -35,30 +35,35 @@ public class JobController {
 	@Inject
 	private JobQueryService jobQueryService;
 
+	@ApiOperation("查询任务")
 	@PostMapping("/query")
 	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
 		PageData<Job> data = jobQueryService.findJob(jobQuery, pager);
 		return ServiceResult.success(data);
 	}
 
+	@ApiOperation("查询负责人信息")
 	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> getAssignee() {
 		List<Assignee> data = jobQueryService.getAllAssignee();
 		return ServiceResult.success(data);
 	}
 	
+	@ApiOperation("查询调度状态")
 	@GetMapping("/status")
 	public ServiceResult<ScheduleStatus> getScheduleStatus(JobPK jobKey){
 		Job job = jobQueryService.findJob(jobKey);
 		return ServiceResult.success(job == null ? ScheduleStatus.NONE : job.getStatus());
 	}
 
+	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
 	public ServiceResult<String> schedule(@RequestBody Job job) {
 		jobService.schedule(job);
 		return ServiceResult.success("提交成功");
 	}
 
+	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
 	public ServiceResult<String> unschedule(@RequestBody JobPK jobKey) {
 		jobService.unschedule(jobKey);
