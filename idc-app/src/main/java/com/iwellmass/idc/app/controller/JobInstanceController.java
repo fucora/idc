@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
 import com.iwellmass.idc.model.JobInstance;
@@ -37,6 +38,12 @@ public class JobInstanceController {
 			@RequestBody(required = false) JobInstanceQuery query, Pager pager) {
 		PageData<JobInstance> taskInstance = queryService.findJobInstance(query, pager);
 		return ServiceResult.success(taskInstance);
+	}
+	
+	@ApiOperation("通过条件检索实例（分页显示）")
+	@PostMapping("/assignee")
+	public ServiceResult<List<Assignee>> assignee() {
+		return ServiceResult.success(queryService.getAllAssignee());
 	}
 
 	@ApiOperation("获取工作流实例")

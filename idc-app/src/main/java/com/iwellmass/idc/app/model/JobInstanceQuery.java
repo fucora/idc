@@ -4,26 +4,34 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.common.criteria.Equal;
+import com.iwellmass.common.criteria.In;
+import com.iwellmass.common.criteria.Like;
+import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class JobInstanceQuery {
+public class JobInstanceQuery implements SpecificationBuilder{
 
 	@ApiModelProperty("任务名")
+	@Like
 	private String taskName;
 
 	@ApiModelProperty("节点类型")
+	@In("taskType")
 	private List<TaskType> taskTypes;
 	
 	@ApiModelProperty("任务类型")
+	@Equal
 	private String contentType;
 	
 	@ApiModelProperty("实例类型")
 	private JobInstanceType instanceType;
 
 	@ApiModelProperty("负责人")
+	@Equal
 	private String assignee;
 
 	@ApiModelProperty("业务日期始， yyyyMMdd")
