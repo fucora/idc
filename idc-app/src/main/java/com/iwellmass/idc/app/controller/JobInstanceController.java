@@ -41,7 +41,7 @@ public class JobInstanceController {
 	}
 	
 	@ApiOperation("通过条件检索实例（分页显示）")
-	@PostMapping("/assignee")
+	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> assignee() {
 		return ServiceResult.success(queryService.getAllAssignee());
 	}
