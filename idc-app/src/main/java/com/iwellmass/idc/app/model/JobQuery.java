@@ -2,29 +2,36 @@ package com.iwellmass.idc.app.model;
 
 import java.util.List;
 
-import org.springframework.data.jpa.domain.Specification;
-
-import com.iwellmass.idc.model.Job;
+import com.iwellmass.common.criteria.Equal;
+import com.iwellmass.common.criteria.In;
+import com.iwellmass.common.criteria.Like;
+import com.iwellmass.common.criteria.Predicate;
+import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class JobQuery {
+public class JobQuery implements SpecificationBuilder {
 
 	@ApiModelProperty("任务名")
+	@Like
 	private String taskName;
 
 	@ApiModelProperty("任务类型")
+	@Equal
 	private String contentType;
 
 	@ApiModelProperty("节点类型")
+	@In("taskType")
 	private List<TaskType> taskTypes;
 
 	@ApiModelProperty("调度类型类型")
+	@Predicate(builder = ScheduleTypePredicate.class)
 	private ScheduleType scheduleType;
 
 	@ApiModelProperty("负责人")
+	@Equal
 	private String assignee;
 
 	public String getTaskName() {
@@ -65,40 +72,5 @@ public class JobQuery {
 
 	public void setScheduleType(ScheduleType scheduleType) {
 		this.scheduleType = scheduleType;
-	}
-	
-	public static Specification<Job> taskNameLike(String taskName) {
-		return (root, query, cb) -> {
-			return cb.like(root.get("taskName"), taskName);
-		};
-	}
-
-	public static Specification<Job> contentTypeEq(String content) {
-		return (root, query, cb) -> {
-			return cb.equal(root.get("assignee"), content);
-		};
-	}
-
-	public static Specification<Job> taskTypeIn(List<TaskType> taskType) {
-		return (root, query, cb) -> {
-			return root.get("taskType").in(taskType);
-		};
-	}
-
-	public static Specification<Job> scheduleTypeEq(ScheduleType st) {
-		return (root, query, cb) -> {
-			return cb.equal(root.get("scheduleType"), st);
-		};
-	}
-	public static Specification<Job> scheduleTypeIn(List<ScheduleType> sts) {
-		return (root, query, cb) -> {
-			return root.get("scheduleType").in(sts);
-		};
-	}
-
-	public static Specification<Job> assigneeEq(String assignee) {
-		return (root, query, cb) -> {
-			return cb.equal(root.get("assignee"), assignee);
-		};
 	}
 }
