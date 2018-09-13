@@ -50,7 +50,7 @@ public class JobService {
 
 	@Inject
 	private Scheduler scheduler;
-
+	
 	@Transactional
 	public void schedule(Job job) throws AppException {
 		
@@ -188,4 +188,5 @@ public class JobService {
 			throw new AppException("未指定周期调度类型, 接收的周期调度类型" + Arrays.asList(ScheduleType.values()));
 		}
 	}
+
 }

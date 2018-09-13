@@ -18,6 +18,7 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.service.ComplementRequest;
 import com.iwellmass.idc.service.ExecutionRequest;
 import com.iwellmass.idc.service.JobService;
@@ -44,6 +45,12 @@ public class JobController {
 	public ServiceResult<List<Assignee>> getAssignee() {
 		List<Assignee> data = jobQueryService.getAllAssignee();
 		return ServiceResult.success(data);
+	}
+	
+	@GetMapping("/status")
+	public ServiceResult<ScheduleStatus> getScheduleStatus(JobPK jobKey){
+		Job job = jobQueryService.findJob(jobKey);
+		return ServiceResult.success(job == null ? ScheduleStatus.NONE : job.getStatus());
 	}
 
 	@PostMapping(path = "/schedule")

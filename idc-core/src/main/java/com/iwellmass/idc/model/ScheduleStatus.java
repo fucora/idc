@@ -7,7 +7,7 @@ public enum ScheduleStatus {
 
 	
 	
-	@ApiModelProperty("NONE")
+	@ApiModelProperty("未调度")
 	NONE,
 	
 	@ApiModelProperty("正常")

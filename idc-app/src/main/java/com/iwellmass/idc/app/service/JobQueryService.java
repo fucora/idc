@@ -55,4 +55,8 @@ public class JobQueryService {
 		});
 	}
 
+	public Job findJob(JobPK jobKey) {
+		return jobRepository.findOne(jobKey);
+	}
+
 }
