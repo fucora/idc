@@ -1,9 +1,11 @@
 package com.iwellmass.idc.app.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.common.criteria.Between;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.In;
 import com.iwellmass.common.criteria.Like;
@@ -28,6 +30,7 @@ public class JobInstanceQuery implements SpecificationBuilder{
 	private String contentType;
 	
 	@ApiModelProperty("实例类型")
+	@Equal("type")
 	private JobInstanceType instanceType;
 
 	@ApiModelProperty("负责人")
@@ -36,19 +39,21 @@ public class JobInstanceQuery implements SpecificationBuilder{
 
 	@ApiModelProperty("业务日期始， yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
-	private Timestamp loadDateFrom;
+	@Between(value = "loadDate", to = "loadDateTo")
+	private LocalDate loadDateFrom;
 
 	@ApiModelProperty("业务日期止， yyyyMMdd")
 	@JsonFormat(pattern = "yyyyMMdd", timezone = "GMT+8")
-	private Timestamp loadDateTo;
+	private LocalDate loadDateTo;
 
 	@ApiModelProperty("运行时间始， yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
-	private Timestamp executeTimeFrom;
+	@Between(value = "startTime", to = "executeTimeTo")
+	private LocalDateTime executeTimeFrom;
 
 	@ApiModelProperty("运行时间止， yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
-	private Timestamp executeTimeTo;
+	private LocalDateTime executeTimeTo;
 
 	public String getTaskName() {
 		return taskName;
@@ -82,35 +87,35 @@ public class JobInstanceQuery implements SpecificationBuilder{
 		this.taskTypes = taskTypes;
 	}
 
-	public Timestamp getLoadDateFrom() {
+	public LocalDate getLoadDateFrom() {
 		return loadDateFrom;
 	}
 
-	public void setLoadDateFrom(Timestamp loadDateFrom) {
+	public void setLoadDateFrom(LocalDate loadDateFrom) {
 		this.loadDateFrom = loadDateFrom;
 	}
 
-	public Timestamp getLoadDateTo() {
+	public LocalDate getLoadDateTo() {
 		return loadDateTo;
 	}
 
-	public void setLoadDateTo(Timestamp loadDateTo) {
+	public void setLoadDateTo(LocalDate loadDateTo) {
 		this.loadDateTo = loadDateTo;
 	}
 
-	public Timestamp getExecuteTimeFrom() {
+	public LocalDateTime getExecuteTimeFrom() {
 		return executeTimeFrom;
 	}
 
-	public void setExecuteTimeFrom(Timestamp executeTimeFrom) {
+	public void setExecuteTimeFrom(LocalDateTime executeTimeFrom) {
 		this.executeTimeFrom = executeTimeFrom;
 	}
 
-	public Timestamp getExecuteTimeTo() {
+	public LocalDateTime getExecuteTimeTo() {
 		return executeTimeTo;
 	}
 
-	public void setExecuteTimeTo(Timestamp executeTimeTo) {
+	public void setExecuteTimeTo(LocalDateTime executeTimeTo) {
 		this.executeTimeTo = executeTimeTo;
 	}
 

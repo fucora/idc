@@ -59,7 +59,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		try {
 			this.job.execute(context);
 		} catch (Throwable e) {
-			return CompleteEvent.failureEvent("执行失败: " + e.getMessage()); // unexpect exception
+			context.event = CompleteEvent.failureEvent("执行失败: " + e.getMessage()); // unexpect exception
 		}
 
 		CompleteEvent event = context.event;

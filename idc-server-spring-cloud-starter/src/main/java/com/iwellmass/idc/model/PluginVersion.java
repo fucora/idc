@@ -18,8 +18,6 @@ public class PluginVersion implements Persistable<String>{
 
 	private String version = IDCPlugin.VERSION;
 
-	private Long instanceSeq;
-	
 	@Transient
 	private boolean isNew = false;
 
@@ -31,15 +29,6 @@ public class PluginVersion implements Persistable<String>{
 
 	public void setVersion(String version) {
 		this.version = version;
-	}
-
-	@Column(name = "instance_seq")
-	public Long getInstanceSeq() {
-		return instanceSeq;
-	}
-
-	public void setInstanceSeq(Long instanceSeq) {
-		this.instanceSeq = instanceSeq;
 	}
 
 	@Transient
@@ -59,5 +48,4 @@ public class PluginVersion implements Persistable<String>{
 		this.isNew = true;
 		return this;
 	}
-
 }

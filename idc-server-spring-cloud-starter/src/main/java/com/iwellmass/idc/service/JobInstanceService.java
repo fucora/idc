@@ -2,6 +2,7 @@ package com.iwellmass.idc.service;
 
 import javax.inject.Inject;
 
+import org.quartz.Scheduler;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.exception.AppException;
@@ -14,12 +15,22 @@ public class JobInstanceService {
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
 
+	@Inject
+	private Scheduler scheduler;
+	
 	public void redo(Integer instanceId) {
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
 		if (instance == null) {
 			throw new AppException("重跑失败, 任务实例 '" + instanceId + "' 不存在");
 		}
-		// TODO redo
+
+		
+		
+		
+		
+		
+		
+		
 	}
 
 }

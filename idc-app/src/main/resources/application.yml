@@ -13,6 +13,9 @@ spring:
 server:
   port: 9306
 
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.show-sql: true
+
 supervise:
   client:
     clientId: acme

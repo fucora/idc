@@ -31,7 +31,6 @@ import com.iwellmass.idc.model.SentinelStatus;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
 import com.iwellmass.idc.repo.SentinelRepository;
-import com.iwellmass.idc.service.PluginVersionService;
 
 /*
  * 生成 instance，生成 sentinel
@@ -52,9 +51,6 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 	@Inject
 	private SentinelRepository sentinelRepository;
 	
-	@Inject
-	private PluginVersionService pluginVersionService;
-
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 
@@ -78,21 +74,25 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 
 		// 生成实例
 		Job job = jobRepository.findOne(taskId, groupId);
-		Integer instanceId = pluginVersionService.generateInstanceId();
-		JobInstance jobInstance = new JobInstance();
-		jobInstance.setInstanceId(instanceId);
+		
+		JobInstance jobInstance = Optional.ofNullable(jobInstanceRepository.findOne(taskId, groupId, loadDate)).orElse(new JobInstance());
 		jobInstance.setTaskId(taskId);
 		jobInstance.setGroupId(groupId);
-		jobInstance.setLoadDate(loadDate);
+		jobInstance.setTaskName(jobInstance.getTaskName());
+		jobInstance.setContentType(job.getContentType());
+		jobInstance.setTaskType(job.getTaskType());
 		jobInstance.setType(getTriggerType(trigger));
 		jobInstance.setAssignee(job.getAssignee());
 		jobInstance.setTaskType(job.getTaskType());
+		jobInstance.setLoadDate(loadDate);
 		jobInstance.setStatus(JobInstanceStatus.NEW);
 		jobInstance.setParameter(job.getParameter()); 
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
 		Optional.ofNullable(nextFireTime).map(IDCPlugin::toLocalDateTime).ifPresent(jobInstance::setNextLoadDate);
 		jobInstanceRepository.save(jobInstance);
+		
+		Integer instanceId = jobInstance.getInstanceId();
 		LOGGER.info("job instance {} up-to-date", instanceId);
 		
 		// 初始化执行环境

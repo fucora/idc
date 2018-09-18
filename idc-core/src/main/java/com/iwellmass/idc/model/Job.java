@@ -37,17 +37,17 @@ public class Job {
 
 	private String contentType;
 
-	private LocalDateTime createTime;
-
-	private LocalDateTime updateTime;
-
 	private Integer workflowId;
 
 	private String assignee;
 
-	private Set<JobDependency> dependencies;
-	
 	private String parameter;
+	
+	private LocalDateTime createTime;
+
+	private LocalDateTime updateTime;
+	
+	private Set<JobDependency> dependencies;
 
 	// ~~ 调度属性 ~~
 	private ScheduleType scheduleType;

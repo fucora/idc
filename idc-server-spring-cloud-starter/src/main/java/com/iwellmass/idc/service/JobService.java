@@ -44,7 +44,6 @@ import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.quartz.IDCConstants;
 import com.iwellmass.idc.quartz.IDCDispatcherJob;
-import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
 public class JobService {
@@ -87,7 +86,7 @@ public class JobService {
 			scheduler.addJob(jobDetail, false);
 		
 			// 调度 CRON 类型
-			if (sp.getScheduleType() == ScheduleType.MANUAL) {
+			if (sp.getScheduleType() != ScheduleType.MANUAL) {
 				CronExpression cronExpr = new CronExpression(toCronExpression(sp));
 				TriggerKey triggerKey = buildTriggerKey(JobInstanceType.valueOf(job.getScheduleType()), job.getTaskId(), job.getGroupId());
 				
@@ -95,6 +94,7 @@ public class JobService {
 				
 				Trigger trigger = TriggerBuilder.newTrigger()
 						.withIdentity(triggerKey)
+						.forJob(jobKey)
 						.withSchedule(CronScheduleBuilder.cronSchedule(cronExpr)
 								.withMisfireHandlingInstructionIgnoreMisfires())
 						.startAt(toDate(job.getStartTime()))
@@ -121,11 +121,10 @@ public class JobService {
 	
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			LOGGER.info("取消调度任务 {}", jobKey);
-			TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getTaskId(), jobKey.getGroupId());
-			boolean result = scheduler.unscheduleJob(triggerKey);
+			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
+			boolean result = scheduler.deleteJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
 			if (!result) {
-				LOGGER.warn("{} 不存在关联的调度计划", jobKey);
+				LOGGER.warn("{} 不存在的调度任务", jobKey);
 			}
 		} catch (SchedulerException e) {
 			throw new AppException(e);
