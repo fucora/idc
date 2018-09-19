@@ -59,7 +59,7 @@ public class MoodyJob implements IDCJob {
 			LOGGER.info("long {} interrupted", l);
 		}
 		LOGGER.info("long {} successed", l);
-	};
+	}
 	
 	@Override
 	public String getContentType() {

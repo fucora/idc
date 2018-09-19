@@ -6,9 +6,9 @@ package com.iwellmass.idc.executor;
 public interface IDCJob {
 	
 	// ~~ META DATA ~~
-	public String getContentType();
+	String getContentType();
 	
 	// ~~ 业务逻辑 ~~
-	public void execute(IDCJobExecutionContext context);
+	void execute(IDCJobExecutionContext context);
 	
 }

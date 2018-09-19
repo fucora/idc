@@ -4,9 +4,9 @@ import com.iwellmass.idc.model.JobInstance;
 
 public interface IDCJobExecutionContext {
 	
-	public JobInstance getInstance();
+	JobInstance getInstance();
 	
-	public void complete(CompleteEvent event);
+	void complete(CompleteEvent event);
 
 	
 }
