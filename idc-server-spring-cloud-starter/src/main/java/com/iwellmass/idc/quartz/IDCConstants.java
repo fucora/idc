@@ -39,6 +39,8 @@ public interface IDCConstants {
 	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = IDCContextKey.def("job.context.loadDate", LocalDateTime.class);
 	/** 是否跳过本次执行 */
 	public static final IDCContextKey<Boolean> CONTEXT_SKIP = IDCContextKey.def("job.context.skip", Boolean.class).defaultValue(false);
+	/** 是否重跑实例 */
+	public static final IDCContextKey<Boolean> CONTEXT_REDO = IDCContextKey.def("job.context.redo", Boolean.class).defaultValue(false);
 
 	///** JobInstanceType */
 	//public static final IDCContextKey<JobInstanceType> CONTEXT_JOB_INSTANCE_TYPE = IDCContextKey.def("job.context.jobInstanceType", JobInstanceType.class);

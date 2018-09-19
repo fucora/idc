@@ -12,6 +12,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
@@ -53,7 +54,30 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 	
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
-
+		
+		boolean isRedo = IDCConstants.CONTEXT_REDO.applyGet(context);
+		
+		JobInstance instance = null;
+		if (context.isRecovering()) {
+			// TODO 
+			throw new UnsupportedOperationException("not supported yet.");
+		} else if (isRedo) {
+			int id = IDCConstants.CONTEXT_INSTANCE_ID.applyGet(context);
+			JobInstance jobInstance = jobInstanceRepository.findOne(id);
+			jobInstance.setStatus(JobInstanceStatus.NEW);
+			jobInstance.setStartTime(LocalDateTime.now());
+			jobInstance.setEndTime(null);
+			instance = jobInstanceRepository.save(jobInstance);
+		} else {
+			instance = triggerNew(trigger, context);
+		}
+		
+		// 初始化执行环境
+		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
+		CONTEXT_INSTANCE_ID.applyPut(context, instance.getInstanceId());
+	}
+	
+	private JobInstance triggerNew(Trigger trigger, JobExecutionContext context) {
 		JobKey jobKey = trigger.getJobKey();
 		String taskId = jobKey.getName();
 		String groupId = jobKey.getGroup();
@@ -94,10 +118,7 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 		
 		Integer instanceId = jobInstance.getInstanceId();
 		LOGGER.info("job instance {} up-to-date", instanceId);
-		
-		// 初始化执行环境
-		CONTEXT_LOAD_DATE.applyPut(context, loadDate);
-		CONTEXT_INSTANCE_ID.applyPut(context, instanceId);
+		return jobInstance;
 	}
 	
 	@Override

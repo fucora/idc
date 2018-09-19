@@ -127,4 +127,9 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	public static Long toMills(LocalDateTime loadDate) {
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
+
+	public static TriggerKey buildTriggerKeyForRedo(Integer instanceId) {
+		TriggerKey key = new TriggerKey("REDO_" + instanceId);
+		return key;
+	}
 }

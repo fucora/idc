@@ -11,13 +11,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
+import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Component
 public class IDCQuartzJobListener extends JobListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCQuartzJobListener.class);
 
+	@Inject
+	private JobInstanceRepository jobInstanceRepository;
+	
 	@Inject
 	private ExecutionLogRepository logRepository;
 
@@ -38,7 +44,12 @@ public class IDCQuartzJobListener extends JobListenerSupport {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 		if (jobException != null) {
 			logRepository.log(instanceId, "派发任务失败: " + jobException.getMessage());
-			LOGGER.warn(jobException.getMessage(), jobException);
+			LOGGER.error(jobException.getMessage(), jobException);
+			
+			JobInstance jobInstance = jobInstanceRepository.findOne(instanceId);
+			jobInstance.setStatus(JobInstanceStatus.FAILED);
+			jobInstanceRepository.save(jobInstance);
+			
 		} else {
 			logRepository.log(instanceId, "派发任务成功");
 		}

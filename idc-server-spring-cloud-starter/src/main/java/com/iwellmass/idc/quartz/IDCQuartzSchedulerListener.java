@@ -45,37 +45,41 @@ public class IDCQuartzSchedulerListener extends SchedulerListenerSupport {
 	@Override
 	public void jobScheduled(Trigger trigger) {
 
-		JobKey jobKey = trigger.getJobKey();
-		Job job = getJob(jobKey);
-		// 调度类型
-		ScheduleType type = IDCConstants.IDC_SCHEDULE_TYPE.applyGet(trigger.getJobDataMap());
-		// status
-		job.setStatus(ScheduleStatus.NORMAL);
-		// prev fire time
-		Optional.ofNullable(trigger.getPreviousFireTime()).map(IDCPlugin::toLocalDateTime).ifPresent(job::setPrevLoadDate);
-		// next fire time
-		Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
-		job.setNextLoadDate(IDCPlugin.toLocalDateTime(nextFireTime));
+		Boolean isRedo = IDCConstants.CONTEXT_REDO.applyGet(trigger.getJobDataMap());
 		
-		// 周期调度添加哨兵
-		if (type == ScheduleType.MANUAL) {
-			// TODO 检查依赖
-		} else {
-			if (nextFireTime != null) {
-				TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getName(),
-						jobKey.getGroup());
-				Sentinel sentinel = new Sentinel();
-				sentinel.setTriggerName(triggerKey.getName());
-				sentinel.setTriggerGroup(triggerKey.getGroup());
-				sentinel.setShouldFireTime(nextFireTime.getTime());
-				sentinel.setStatus(SentinelStatus.READY);
-				sentinelRepository.save(sentinel);
-				LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
+		if (!isRedo) {
+			JobKey jobKey = trigger.getJobKey();
+			Job job = getJob(jobKey);
+			// 调度类型
+			ScheduleType type = IDCConstants.IDC_SCHEDULE_TYPE.applyGet(trigger.getJobDataMap());
+			// status
+			job.setStatus(ScheduleStatus.NORMAL);
+			// prev fire time
+			Optional.ofNullable(trigger.getPreviousFireTime()).map(IDCPlugin::toLocalDateTime).ifPresent(job::setPrevLoadDate);
+			// next fire time
+			Date nextFireTime = Optional.ofNullable(trigger.getNextFireTime()).get();
+			job.setNextLoadDate(IDCPlugin.toLocalDateTime(nextFireTime));
+			
+			// 周期调度添加哨兵
+			if (type == ScheduleType.MANUAL) {
+				// TODO 检查依赖
+			} else {
+				if (nextFireTime != null) {
+					TriggerKey triggerKey = IDCPlugin.buildTriggerKey(JobInstanceType.CRON, jobKey.getName(),
+							jobKey.getGroup());
+					Sentinel sentinel = new Sentinel();
+					sentinel.setTriggerName(triggerKey.getName());
+					sentinel.setTriggerGroup(triggerKey.getGroup());
+					sentinel.setShouldFireTime(nextFireTime.getTime());
+					sentinel.setStatus(SentinelStatus.READY);
+					sentinelRepository.save(sentinel);
+					LOGGER.info("create '{}.{}.{}' sentinel", jobKey.getName(), jobKey.getGroup(), IDCPlugin.DEFAULT_LOAD_DATE_DF.format(nextFireTime));
+				}
 			}
+			
+			// save
+			jobRepository.save(job);
 		}
-		
-		// save
-		jobRepository.save(job);
 	}
 	
 	@Override
