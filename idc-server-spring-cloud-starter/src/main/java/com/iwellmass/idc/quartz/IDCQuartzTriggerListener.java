@@ -12,6 +12,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
@@ -31,7 +32,6 @@ import com.iwellmass.idc.model.SentinelStatus;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
 import com.iwellmass.idc.repo.SentinelRepository;
-import com.iwellmass.idc.service.PluginVersionService;
 
 /*
  * 生成 instance，生成 sentinel
@@ -52,12 +52,32 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 	@Inject
 	private SentinelRepository sentinelRepository;
 	
-	@Inject
-	private PluginVersionService pluginVersionService;
-
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
-
+		
+		boolean isRedo = IDCConstants.CONTEXT_REDO.applyGet(context);
+		
+		JobInstance instance = null;
+		if (context.isRecovering()) {
+			// TODO 
+			throw new UnsupportedOperationException("not supported yet.");
+		} else if (isRedo) {
+			int id = IDCConstants.CONTEXT_INSTANCE_ID.applyGet(context);
+			JobInstance jobInstance = jobInstanceRepository.findOne(id);
+			jobInstance.setStatus(JobInstanceStatus.NEW);
+			jobInstance.setStartTime(LocalDateTime.now());
+			jobInstance.setEndTime(null);
+			instance = jobInstanceRepository.save(jobInstance);
+		} else {
+			instance = triggerNew(trigger, context);
+		}
+		
+		// 初始化执行环境
+		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
+		CONTEXT_INSTANCE_ID.applyPut(context, instance.getInstanceId());
+	}
+	
+	private JobInstance triggerNew(Trigger trigger, JobExecutionContext context) {
 		JobKey jobKey = trigger.getJobKey();
 		String taskId = jobKey.getName();
 		String groupId = jobKey.getGroup();
@@ -78,26 +98,27 @@ public class IDCQuartzTriggerListener extends TriggerListenerSupport implements 
 
 		// 生成实例
 		Job job = jobRepository.findOne(taskId, groupId);
-		Integer instanceId = pluginVersionService.generateInstanceId();
-		JobInstance jobInstance = new JobInstance();
-		jobInstance.setInstanceId(instanceId);
+		
+		JobInstance jobInstance = Optional.ofNullable(jobInstanceRepository.findOne(taskId, groupId, loadDate)).orElse(new JobInstance());
 		jobInstance.setTaskId(taskId);
 		jobInstance.setGroupId(groupId);
-		jobInstance.setLoadDate(loadDate);
+		jobInstance.setTaskName(jobInstance.getTaskName());
+		jobInstance.setContentType(job.getContentType());
+		jobInstance.setTaskType(job.getTaskType());
 		jobInstance.setType(getTriggerType(trigger));
 		jobInstance.setAssignee(job.getAssignee());
 		jobInstance.setTaskType(job.getTaskType());
+		jobInstance.setLoadDate(loadDate);
 		jobInstance.setStatus(JobInstanceStatus.NEW);
 		jobInstance.setParameter(job.getParameter()); 
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
 		Optional.ofNullable(nextFireTime).map(IDCPlugin::toLocalDateTime).ifPresent(jobInstance::setNextLoadDate);
 		jobInstanceRepository.save(jobInstance);
-		LOGGER.info("job instance {} up-to-date", instanceId);
 		
-		// 初始化执行环境
-		CONTEXT_LOAD_DATE.applyPut(context, loadDate);
-		CONTEXT_INSTANCE_ID.applyPut(context, instanceId);
+		Integer instanceId = jobInstance.getInstanceId();
+		LOGGER.info("job instance {} up-to-date", instanceId);
+		return jobInstance;
 	}
 	
 	@Override

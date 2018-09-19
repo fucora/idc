@@ -47,7 +47,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("加载 IDCPlugin...");
 		PluginVersion version = null;
 		try {
-			version = pluginService.init();
+			version = pluginService.initPlugin();
 		} catch (Exception e) {
 			throw new SchedulerException("初始化 IDCPlugin 时出错: " + String.valueOf(e.getMessage()), e);
 		}
@@ -126,5 +126,10 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 
 	public static Long toMills(LocalDateTime loadDate) {
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+	}
+
+	public static TriggerKey buildTriggerKeyForRedo(Integer instanceId) {
+		TriggerKey key = new TriggerKey("REDO_" + instanceId);
+		return key;
 	}
 }
