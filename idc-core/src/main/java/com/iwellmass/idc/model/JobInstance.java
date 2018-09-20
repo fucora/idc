@@ -24,6 +24,8 @@ public class JobInstance {
 
 	private Integer instanceId;
 
+	private JobInstanceType instanceType;
+	
 	private String taskId;
 
 	private String groupId;
@@ -52,7 +54,7 @@ public class JobInstance {
 
 	private LocalDateTime endTime;
 
-	private JobInstanceType type;
+	private Long shouldFireTime;
 
 	@ApiModelProperty("执行ID")
 	@Id
@@ -143,7 +145,7 @@ public class JobInstance {
 		this.loadDate = loadDate;
 	}
 
-	@ApiModelProperty("下个业务周期")
+	@ApiModelProperty("上次触发时间")
 	@Column(name = "next_load_date")
 	public LocalDateTime getNextLoadDate() {
 		return nextLoadDate;
@@ -214,13 +216,22 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("实例类型")
-	@Column(name = "type")
-	public JobInstanceType getType() {
-		return type;
+	@Column(name = "instance_type")
+	public JobInstanceType getInstanceType() {
+		return instanceType;
 	}
 
-	public void setType(JobInstanceType type) {
-		this.type = type;
+	public void setInstanceType(JobInstanceType instanceType) {
+		this.instanceType = instanceType;
+	}
+
+	@Column(name = "should_fire_time")
+	public Long getShouldFireTime() {
+		return this.shouldFireTime;
+	}
+
+	public void setShouldFireTime(Long shouldFireTime) {
+		this.shouldFireTime = shouldFireTime;
 	}
 
 	@Override

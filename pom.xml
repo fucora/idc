@@ -22,7 +22,7 @@
 
 	<modules>
 		<module>idc-core</module>
-		<module>idc-server-spring-cloud-starter</module>
+		<module>idc-scheduler</module>
 		<module>idc-client-spring-cloud-starter</module>
 		<module>idc-app</module>
 		<module>idc-demo</module>

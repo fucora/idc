@@ -19,6 +19,7 @@ import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.service.JobInstanceService;
+import com.iwellmass.idc.service.RedoRequest;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -55,8 +56,9 @@ public class JobInstanceController {
 
 	@ApiOperation("重跑任务")
 	@PostMapping("/{id}/redo")
-	public ServiceResult<String> restart(@PathVariable(name = "id") Integer id) {
-		jobInstanceService.redo(id);
+	public ServiceResult<String> restart(@PathVariable(name = "id") Integer id, @RequestBody (required = false) RedoRequest redoRequest) {
+		redoRequest.setInstanceId(id);
+		jobInstanceService.redo(redoRequest);
 		return ServiceResult.success("success");
 	}
 }

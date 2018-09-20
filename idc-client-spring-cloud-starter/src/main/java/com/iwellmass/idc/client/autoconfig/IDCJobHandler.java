@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 	private IDCStatusService idcStatusService;
 
 	@Inject
+	@Named("idc-executor")
 	private AsyncTaskExecutor executor;
 
 	public IDCJobHandler(IDCJob job) {

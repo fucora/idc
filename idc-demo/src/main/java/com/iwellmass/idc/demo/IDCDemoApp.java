@@ -17,4 +17,9 @@ public class IDCDemoApp {
 	public IDCJob moodyJob() {
 		return new MoodyJob("moody");
 	}
+	
+	@Bean
+	public IDCJob moodyJob1() {
+		return new MoodyJob("moody-1");
+	}
 }

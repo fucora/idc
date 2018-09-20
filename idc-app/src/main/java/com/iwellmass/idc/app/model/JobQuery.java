@@ -5,9 +5,8 @@ import java.util.List;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.In;
 import com.iwellmass.common.criteria.Like;
-import com.iwellmass.common.criteria.Predicate;
 import com.iwellmass.common.criteria.SpecificationBuilder;
-import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -27,8 +26,8 @@ public class JobQuery implements SpecificationBuilder {
 	private List<TaskType> taskTypes;
 
 	@ApiModelProperty("调度类型类型")
-	@Predicate(builder = ScheduleTypePredicate.class)
-	private ScheduleType scheduleType;
+	@Equal
+	private DispatchType dispatchType;
 
 	@ApiModelProperty("负责人")
 	@Equal
@@ -66,11 +65,11 @@ public class JobQuery implements SpecificationBuilder {
 		this.taskTypes = taskTypes;
 	}
 
-	public ScheduleType getScheduleType() {
-		return scheduleType;
+	public DispatchType getDispatchType() {
+		return dispatchType;
 	}
 
-	public void setScheduleType(ScheduleType scheduleType) {
-		this.scheduleType = scheduleType;
+	public void setScheduleType(DispatchType dispatchType) {
+		this.dispatchType = dispatchType;
 	}
 }
