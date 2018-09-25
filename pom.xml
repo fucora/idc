@@ -25,7 +25,6 @@
 		<module>idc-scheduler</module>
 		<module>idc-client-spring-cloud-starter</module>
 		<module>idc-app</module>
-		<module>idc-demo</module>
 	</modules>
 
 	<distributionManagement>
