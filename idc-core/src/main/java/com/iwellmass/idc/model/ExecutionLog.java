@@ -11,6 +11,8 @@ import javax.persistence.Table;
 
 import org.slf4j.helpers.MessageFormatter;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Entity
 @Table(name = "t_idc_execution_log")
 public class ExecutionLog {
@@ -47,6 +49,7 @@ public class ExecutionLog {
 	}
 
 	@Column(name = "time")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	public LocalDateTime getTime() {
 		return time;
 	}

@@ -45,6 +45,8 @@ public class JobInstance {
 	private String parameter;
 
 	private LocalDateTime loadDate;
+	
+	private ScheduleType scheduleType;
 
 	private LocalDateTime nextLoadDate;
 
@@ -143,6 +145,16 @@ public class JobInstance {
 
 	public void setLoadDate(LocalDateTime loadDate) {
 		this.loadDate = loadDate;
+	}
+
+	@ApiModelProperty("schedule_type")
+	@Column(name = "schedule_type")
+	public ScheduleType getScheduleType() {
+		return scheduleType;
+	}
+
+	public void setScheduleType(ScheduleType scheduleType) {
+		this.scheduleType = scheduleType;
 	}
 
 	@ApiModelProperty("上次触发时间")

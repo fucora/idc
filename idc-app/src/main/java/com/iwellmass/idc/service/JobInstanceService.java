@@ -12,11 +12,18 @@ import org.quartz.Trigger;
 import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.PageData;
+import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.quartz.IDCPlugin;
+import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Service
@@ -24,6 +31,9 @@ public class JobInstanceService {
 
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
+	
+	@Inject
+	private ExecutionLogRepository logRepository;
 
 	@Inject
 	private Scheduler scheduler;
@@ -63,6 +73,12 @@ public class JobInstanceService {
 		} catch (SchedulerException e) {
 			throw new AppException("重跑失败: " + e.getMessage(), e);
 		}
+	}
+
+	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
+		Pageable page = new PageRequest(pager.getPage(), pager.getLimit());
+		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}
 
 }

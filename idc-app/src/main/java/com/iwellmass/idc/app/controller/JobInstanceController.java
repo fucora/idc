@@ -17,6 +17,7 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
+import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.service.JobInstanceService;
 import com.iwellmass.idc.service.RedoRequest;
@@ -60,5 +61,12 @@ public class JobInstanceController {
 		redoRequest.setInstanceId(id);
 		jobInstanceService.redo(redoRequest);
 		return ServiceResult.success("success");
+	}
+	
+	@ApiOperation("重跑任务")
+	@PostMapping("/{id}/log")
+	public ServiceResult<PageData<ExecutionLog>> restart(@PathVariable(name = "id") Integer id, Pager pager) {
+		PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
+		return ServiceResult.success(data);
 	}
 }
