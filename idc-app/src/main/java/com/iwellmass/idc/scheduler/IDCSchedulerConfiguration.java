@@ -6,6 +6,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,9 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 
 	private Scheduler scheduler;
 	
+	@Value(value="${idc.scheduler.start-auto:true}")
+	private Boolean startAuto;
+	
 	@Bean
 	public IDCQuartzJobFactory idcJobFactory() {
 		return new IDCQuartzJobFactory();
@@ -48,7 +52,7 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
 		try {
-			if (!scheduler.isStarted()) {
+			if (startAuto && !scheduler.isStarted()) {
 				try {
 					LOGGER.info("启动调度器...");
 					scheduler.startDelayed(5);

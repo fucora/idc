@@ -64,8 +64,6 @@ feign:
         requestInterceptors:
         - com.iwellmass.auth.config.OAuth2FeignRequestInterceptor
         decode404: false
-
- 
 ---
 spring:
   profiles: gray
@@ -99,3 +97,5 @@ eureka:
       enabled: true
     lease:
       duration: 5
+      
+idc.scheduler.start-auto: false

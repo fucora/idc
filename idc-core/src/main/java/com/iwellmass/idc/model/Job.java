@@ -161,7 +161,7 @@ public class Job {
 		this.scheduleType = scheduleType;
 	}
 
-	@ApiModelProperty("生效日期始 yyyyMMdd")
+	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "start_time")
 	public LocalDateTime getStartTime() {
@@ -172,7 +172,7 @@ public class Job {
 		this.startTime = startTime;
 	}
 
-	@ApiModelProperty("生效日期止, yyyyMMdd")
+	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "end_time")
 	public LocalDateTime getEndTime() {
