@@ -1,10 +1,9 @@
 package com.iwellmass.idc.service;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.*;
-
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 import static com.iwellmass.idc.quartz.IDCPlugin.buildCronTriggerKey;
 import static com.iwellmass.idc.quartz.IDCPlugin.buildManualTriggerKey;
 import static com.iwellmass.idc.quartz.IDCPlugin.toDate;
@@ -124,6 +123,9 @@ public class JobService {
 					.storeDurably()
 					.build();
 			
+			JOB_DISPATCH_TYPE.applyPut(jobDetail.getJobDataMap(), job.getDispatchType());
+			JOB_SCHEDULE_TYPE.applyPut(jobDetail.getJobDataMap(), sp.getScheduleType());
+			
 			// save scheduler job
 			scheduler.addJob(jobDetail, false);
 			
@@ -137,7 +139,6 @@ public class JobService {
 						.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
 						.endAt(toDate(job.getEndTime()))
 						.build();
-				CONTEXT_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), job.getDispatchType());
 				// 保存到 quartz
 				scheduler.scheduleJob(trigger);
 			}
@@ -191,7 +192,6 @@ public class JobService {
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}
-		
 	}
 
 	public void complement(ComplementRequest request) {
@@ -238,6 +238,10 @@ public class JobService {
 		String taskId = request.getTaskId();
 		String groupId = request.getGroupId();
 		
+		Job job = jobRepository.findOne(taskId, groupId);
+		
+		Assert.isTrue(job != null, "任务 %s.%s 不存在", groupId, taskId);
+		
 		JobKey jobKey = new JobKey(taskId, groupId);
 		
 		try {
@@ -268,7 +272,7 @@ public class JobService {
 			} else if (state == TriggerState.NONE) {
 				scheduler.scheduleJob(trigger);
 			} else {
-				throw new AppException("不可重复调度任务，当前调度状态 {}", state);
+				throw new AppException("不可重复调度任务，当前调度状态 %s ", state);
 			}
 		} catch (SchedulerException e) {
 			throw new AppException("执行失败: " + e.getMessage());

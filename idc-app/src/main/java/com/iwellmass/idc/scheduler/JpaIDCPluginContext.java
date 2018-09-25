@@ -42,12 +42,14 @@ public class JpaIDCPluginContext extends IDCPluginContext {
 	public void updateJob(JobKey jobKey, Consumer<Job> fun) {
 		Job job = jobRepo.findOne(jobKey.getName(), jobKey.getGroup());
 		fun.accept(job);
+		jobRepo.save(job);
 	}
 
 	@Override
 	public void updateJobInstance(int instanceId, Consumer<JobInstance> fun) {
 		JobInstance instance = instanceRepo.findOne(instanceId);
 		fun.accept(instance);
+		instanceRepo.save(instance);
 	}
 
 	@Override

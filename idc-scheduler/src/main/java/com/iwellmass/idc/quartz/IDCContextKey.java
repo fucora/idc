@@ -30,6 +30,8 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<String> JOB_GROUP_ID = defReq("idc.job.groupId", String.class);
 	/** ScheduleType */
 	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
+	/** 调度类型 */
+	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.context.dispatchType", DispatchType.class);
 
 	// ~~ runtime ~~
 	/** 实例 ID */
@@ -38,8 +40,6 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = defReq("idc.context.loadDate", LocalDateTime.class);
 	/** 运行时参数 */
 	public static final IDCContextKey<String> CONTEXT_PARAMETER = defReq("idc.context.parameter", String.class);
-	/** 调度类型 */
-	public static final IDCContextKey<DispatchType> CONTEXT_DISPATCH_TYPE = defReq("idc.context.dispatchType", DispatchType.class);
 
 	private String key;
 	private Class<T> type;
@@ -62,38 +62,54 @@ public class IDCContextKey<T> {
 		Object o = context.get(this.key);
 		return get0(o);
 	}
-
-	public final void applyPut(SchedulerContext context, T v) {
-		context.put(this.key, v);
-	}
-
+	
 	public T applyGet(JobDataMap jobDataMap) {
 		Object o = jobDataMap.get(this.key);
 		return get0(o);
 	}
 
+	@SuppressWarnings("unchecked")
+	public final T applyGet(JobExecutionContext context) {
+		Object o = get0(context.get(this.key()), false);
+		if (o != NIL) {
+			return (T) o;
+		}
+		o = get0(context.getTrigger().getJobDataMap().get(this.key), false);
+		if (o != NIL) {
+			return (T) o;
+		}
+		return (T) get0(context.getJobDetail().getJobDataMap().get(this.key), false);
+	}
+	
+	public final void applyPut(SchedulerContext context, T v) {
+		context.put(this.key, v);
+	}
+	
 	public final void applyPut(JobDataMap map, T v) {
 		map.put(this.key, v);
-	}
-
-	public final T applyGet(JobExecutionContext context) {
-		Object o = context.get(this.key());
-		return get0(o);
 	}
 
 	public final void applyPut(JobExecutionContext context, T v) {
 		context.put(this.key, v);
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	private T get0(Object o) {
+		return (T) this.get0(o, true);
+	}
+	
+	private Object get0(Object o, boolean required) {
 		if (o == null) {
 			if (defaultValue != NIL) {
-				return (T) defaultValue;
+				return  defaultValue;
 			}
-			throw new NullPointerException("未设置 " + this.key + " 值");
+			if (required) {
+				throw new NullPointerException("未设置 " + this.key + " 值");
+			} else {
+				return NIL;
+			}
 		}
-		return (T) o;
+		return  o;
 	}
 
 	@Override

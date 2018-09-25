@@ -2,6 +2,7 @@ package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
-		DispatchType type = null;
+		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getJobDetail().getJobDataMap());
 		
 		JobKey jobKey = trigger.getJobKey();
 
@@ -58,13 +59,13 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			
 			instance = pluginContext.createJobInstance(jobKey, (job) -> {
 				JobInstance jobInstance = createJobInstance(job);
-				jobInstance.setInstanceType(JobInstanceType.CRON);
+				jobInstance.setInstanceType(JobInstanceType.MANUAL);
 				jobInstance.setLoadDate(loadDate);
 				jobInstance.setNextLoadDate(null);
 				jobInstance.setShouldFireTime(IDCPlugin.toMills(loadDate));
 				return jobInstance;
 			});
-		} else {
+		} else if (type == DispatchType.AUTO) {
 			
 			Date shouldFireTime = context.getScheduledFireTime();
 			Date nextFireTime = context.getNextFireTime();
@@ -101,7 +102,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		JobInstance jobInstance = new JobInstance();
 		jobInstance.setTaskId(job.getTaskId());
 		jobInstance.setGroupId(job.getGroupId());
-		jobInstance.setTaskName(jobInstance.getTaskName());
+		jobInstance.setTaskName(job.getTaskName());
 		jobInstance.setContentType(job.getContentType());
 		jobInstance.setTaskType(job.getTaskType());
 		jobInstance.setAssignee(job.getAssignee());
@@ -110,6 +111,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		jobInstance.setParameter(job.getParameter());
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
+		jobInstance.setScheduleType(job.getScheduleType());
 		return jobInstance;
 	}
 

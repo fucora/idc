@@ -31,6 +31,6 @@ public interface IDCConstants {
 	public static final String COL_DEPENDENCY_SRC_JOB_GROUP = "src_group_id";
 	
 	public static final String TABLE_JOB_INSTANCE = "t_idc_job_instance";
-	public static final String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "shouldFireTime";
+	public static final String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "should_fire_time";
 	public static final String COL_JOB_INSTANCE_STATUS = "status";
 }

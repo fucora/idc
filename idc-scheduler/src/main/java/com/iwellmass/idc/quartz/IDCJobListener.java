@@ -1,6 +1,8 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -8,14 +10,11 @@ import java.util.Date;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCJobListener extends JobListenerSupport {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobListener.class);
 
 	private final IDCPluginContext pluginContext;
 	
@@ -26,9 +25,9 @@ public class IDCJobListener extends JobListenerSupport {
 	@Override
 	public void jobToBeExecuted(JobExecutionContext context) {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
-		
-		Date loadDate = context.getScheduledFireTime();
-		pluginContext.log(instanceId, "派发 {} 任务", loadDate.getTime());
+		LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(context);
+		ScheduleType scheduleType = JOB_SCHEDULE_TYPE.applyGet(context.getJobDetail().getJobDataMap());
+		pluginContext.log(instanceId, "派发任务，业务日期 {}", scheduleType.format(loadDate));
 	}
 
 	@Override
@@ -36,8 +35,6 @@ public class IDCJobListener extends JobListenerSupport {
 		Integer instanceId = CONTEXT_INSTANCE_ID.applyGet(context);
 		if (jobException != null) {
 			pluginContext.log(instanceId, "派发任务失败: " + jobException.getMessage());
-			LOGGER.error(jobException.getMessage(), jobException);
-			
 			pluginContext.updateJobInstance(instanceId, (jobInstance) -> {
 				jobInstance.setStatus(JobInstanceStatus.FAILED);
 				jobInstance.setEndTime(LocalDateTime.now());

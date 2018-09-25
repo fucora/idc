@@ -1,8 +1,9 @@
 package com.iwellmass.idc.quartz;
 
+import static com.iwellmass.idc.quartz.IDCPlugin.isManualJob;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.util.Date;
@@ -11,13 +12,13 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.listeners.SchedulerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.ScheduleStatus;
-import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCSchedulerListener extends SchedulerListenerSupport {
 
@@ -43,14 +44,12 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		
 		Boolean isRedo = false;
 		
-		DispatchType scheduleType = CONTEXT_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
-		
 		if (isRedo) {
 			LOGGER.info("重跑任务 {}", jobKey);
 		} else {
 			pluginContext.updateJob(jobKey, (job) -> {
 				// 更新调度信息
-				if (scheduleType == DispatchType.MANUAL) {
+				if (isManualJob(trigger.getKey())) {
 					job.setStatus(ScheduleStatus.NORMAL);
 					job.setNextLoadDate(null);
 					job.setPrevLoadDate(CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap()));
@@ -64,7 +63,7 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 			});
 		}
 	}
-	
+
 	@Override
 	public void triggerFinalized(Trigger trigger) {
 		

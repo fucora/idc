@@ -78,7 +78,6 @@ public class IDCDispatcherJob implements org.quartz.Job {
 		try {
 			executorService.execute(jobInstance);
 		} catch (Throwable e) {
-			LOGGER.error(e.getMessage(), e);
 			throw new JobExecutionException("任务派发失败: " + e.getMessage(), false);
 		}
 	}

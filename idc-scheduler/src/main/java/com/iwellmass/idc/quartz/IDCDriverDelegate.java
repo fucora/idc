@@ -26,14 +26,14 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
     			+ as("T", COL_TRIGGER_GROUP) + ", "
 	            + as("T", COL_NEXT_FIRE_TIME) + ", " 
     			+ as("T", COL_PRIORITY) + ", "
-    			+ "COUNT(1) DEP_CNT, "
+    			+ "COUNT(" + as("D", COL_IDC_JOB_NAME) + ") DEP_CNT, "
     			+ "COUNT(" + as("I", COL_JOB_INSTANCE_STATUS) + ") FIN_CNT "
             + "FROM " 
     			+ TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T "
             // ~~ 引入依赖表 ~~
             + "LEFT JOIN  " + TABLE_DEPENDENCY +" D " 
             	+ "ON "  + as("T", COL_JOB_NAME)   + " = " + as("D", COL_DEPENDENCY_SRC_JOB_NAME) + " "
-            	+ "AND " + as("T", COL_JOB_GROUP)  + " = " + as("D", COL_IDC_JOB_GROUP) + " "
+            	+ "AND " + as("T", COL_JOB_GROUP)  + " = " + as("D", COL_DEPENDENCY_SRC_JOB_GROUP) + " "
             + "LEFT JOIN  " + TABLE_JOB_INSTANCE + " I "
             	+ "ON "    + as("D", COL_IDC_JOB_NAME)  + " = "   + as("I", COL_IDC_JOB_NAME)   + " "
             	+ "AND "   + as("D", COL_IDC_JOB_GROUP) + " = "   + as("I", COL_IDC_JOB_GROUP)  + " "
@@ -94,7 +94,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
 	
 	public static void main(String[] args) {
 		
-		String msg = Util.rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE, "QRTZ_", "ABC");
+		String msg = Util.rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE, "QRTZ_", "IDCScheduler");
 		
 		System.out.println(msg);
 		

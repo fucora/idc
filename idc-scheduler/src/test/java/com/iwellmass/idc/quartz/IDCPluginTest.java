@@ -53,7 +53,7 @@ public class IDCPluginTest {
 			.withIdentity("CRON_" + lqd_01, "test")
 			.build();
 		
-		CONTEXT_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), DispatchType.AUTO);
+		JOB_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), DispatchType.AUTO);
 		
 		scheduler.scheduleJob(jdt, trigger);
 		

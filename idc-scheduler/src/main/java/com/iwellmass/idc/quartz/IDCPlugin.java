@@ -19,6 +19,7 @@ import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.PluginVersion;
@@ -121,6 +122,12 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	public static TriggerKey buildTriggerKeyForRedo(Integer instanceId) {
 		TriggerKey key = new TriggerKey("REDO_" + instanceId);
 		return key;
+	}
+	
+	
+	
+	public static boolean isManualJob(TriggerKey key) {
+		return key.getName().startsWith("MANUAL_");
 	}
 
 	/** 恢复等待异步结果的 trigger */

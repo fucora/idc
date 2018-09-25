@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.util.Assert;
@@ -25,7 +27,7 @@ public class JobInstanceQueryService {
 	private JobInstanceRepository repository;
 
 	public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
-		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit());
+		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
 		Page<JobInstance> result = queryObject == null ? repository.findAll(pgr)
 				: repository.findAll(queryObject.toSpecification(), pgr);
 		return new PageData<>(result.getNumberOfElements(), result.getContent());
