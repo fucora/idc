@@ -10,6 +10,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerContext;
 
 import com.iwellmass.idc.model.DispatchType;
+import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCContextKey<T> {
 
@@ -27,6 +28,8 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<String> JOB_TASK_ID = defReq("idc.job.taskId", String.class);
 	/** GroupId */
 	public static final IDCContextKey<String> JOB_GROUP_ID = defReq("idc.job.groupId", String.class);
+	/** ScheduleType */
+	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
 
 	// ~~ runtime ~~
 	/** 实例 ID */

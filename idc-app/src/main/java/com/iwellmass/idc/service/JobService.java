@@ -1,5 +1,6 @@
 package com.iwellmass.idc.service;
 
+import static com.iwellmass.idc.quartz.IDCContextKey.*;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
@@ -133,7 +134,7 @@ public class JobService {
 						.forJob(jobKey)
 						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
 								.withMisfireHandlingInstructionIgnoreMisfires())
-						.startAt(toDate(job.getStartTime()))
+						.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
 						.endAt(toDate(job.getEndTime()))
 						.build();
 				CONTEXT_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), job.getDispatchType());
@@ -242,16 +243,20 @@ public class JobService {
 		try {
 			JobDetail jdt = scheduler.getJobDetail(jobKey);
 		
+			ScheduleType scheduleType = JOB_SCHEDULE_TYPE.applyGet(jdt.getJobDataMap());
+			
 			Assert.isTrue(jdt != null, "任务 %s.%s 不存在", groupId, taskId);
 			
-			TriggerKey tk = buildManualTriggerKey(LocalDateTime.of(request.getLoadDate(), LocalTime.MIN), taskId, groupId);
+			LocalDateTime loadDate = request.getAsLocalDateTime(scheduleType);
+			
+			TriggerKey tk = buildManualTriggerKey(loadDate, taskId, groupId);
 			
 			TriggerState state = scheduler.getTriggerState(tk);
 			
 			// ~~ 调度参数 ~~
 			JobDataMap jdm = new JobDataMap();
 			CONTEXT_PARAMETER.applyPut(jdm, request.getJobParameter());
-			CONTEXT_LOAD_DATE.applyPut(jdm, LocalDateTime.of(request.getLoadDate(), LocalTime.MIN));
+			CONTEXT_LOAD_DATE.applyPut(jdm, loadDate);
 			Trigger trigger = TriggerBuilder.newTrigger()
 					.usingJobData(jdm)
 					.withIdentity(tk)
