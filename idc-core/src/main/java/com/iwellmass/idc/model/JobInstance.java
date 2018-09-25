@@ -57,6 +57,8 @@ public class JobInstance {
 	private LocalDateTime endTime;
 
 	private Long shouldFireTime;
+	
+	private String triggerName;
 
 	@ApiModelProperty("执行ID")
 	@Id
@@ -244,6 +246,24 @@ public class JobInstance {
 
 	public void setShouldFireTime(Long shouldFireTime) {
 		this.shouldFireTime = shouldFireTime;
+	}
+	
+	@Column(name = "trigger_name")
+	public String getTriggerName() {
+		return triggerName;
+	}
+
+	public void setTriggerName(String triggerName) {
+		this.triggerName = triggerName;
+	}
+
+	@Transient
+	public String getTriggerGroup() {
+		return getGroupId();
+	}
+
+	public void setTriggerGroup(String triggerGroup) {
+		setGroupId(triggerGroup);
 	}
 
 	@Override

@@ -12,8 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.executor.IDCJobExecutorService;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.service.RestIDCJobExecutor;
+import com.iwellmass.idc.model.JobInstance;
 
 import feign.Client;
 import feign.Contract;
@@ -41,9 +40,9 @@ public class IDCJobExecutorServiceFactory {
 
 	private Map<String, IDCJobExecutorService> registryMap = new ConcurrentHashMap<>();
 
-	public IDCJobExecutorService getExecutor(Job job) {
-		IDCJobExecutorService service = registryMap.computeIfAbsent(job.getGroupId(), (key) -> {
-			return newFeignClient(job.getGroupId(), job.getContentType());
+	public IDCJobExecutorService getExecutor(JobInstance instance) {
+		IDCJobExecutorService service = registryMap.computeIfAbsent(instance.getGroupId(), (key) -> {
+			return newFeignClient(instance.getGroupId(), instance.getContentType());
 		});
 		return service;
 	}

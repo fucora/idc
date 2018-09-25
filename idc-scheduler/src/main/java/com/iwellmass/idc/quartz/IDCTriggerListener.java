@@ -1,5 +1,6 @@
 package com.iwellmass.idc.quartz;
 
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
@@ -34,6 +35,8 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
+		LOGGER.info("触发任务 {}, loadDate {}", trigger.getJobKey(), context.getScheduledFireTime().getTime());
+		
 		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getJobDetail().getJobDataMap());
 		
 		JobKey jobKey = trigger.getJobKey();
@@ -59,6 +62,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			
 			instance = pluginContext.createJobInstance(jobKey, (job) -> {
 				JobInstance jobInstance = createJobInstance(job);
+				jobInstance.setTriggerName(trigger.getKey().getName());
 				jobInstance.setInstanceType(JobInstanceType.MANUAL);
 				jobInstance.setLoadDate(loadDate);
 				jobInstance.setNextLoadDate(null);
@@ -72,6 +76,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			
 			instance = pluginContext.createJobInstance(jobKey, (job) -> {
 				JobInstance jobInstance = createJobInstance(job);
+				jobInstance.setTriggerName(trigger.getKey().getName());
 				jobInstance.setInstanceType(JobInstanceType.CRON);
 				jobInstance.setLoadDate(toLocalDateTime(shouldFireTime));
 				jobInstance.setNextLoadDate(toLocalDateTime(nextFireTime));
@@ -81,22 +86,11 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		}
 
 		// 初始化执行环境
-		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
 		CONTEXT_INSTANCE_ID.applyPut(context, instance.getInstanceId());
+		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
+		CONTEXT_INSTANCE.applyPut(context, instance);
+		
 	}
-
-	/* 手动触发，必须传入业务日期 */
-//	private JobInstance triggerManual(Trigger trigger, JobExecutionContext context, Job job) {
-//		TriggerKey tk = trigger.getKey();
-//		LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
-//		JobInstance jobInstance = getOrCreateInstance(job, loadDate);
-//		jobInstance.setType(job.getScheduleType());
-//		jobInstance.setNextFireTime(-1L);
-//		jobInstance.setTriggerName(tk.getName());
-//		pluginContext.updateJobInstance(jobInstance);
-//		LOGGER.info("创建 {} 任务实例 {}", trigger.getJobKey(), jobInstance.getInstanceId());
-//		return jobInstance;
-//	}
 
 	private JobInstance createJobInstance(Job job) {
 		JobInstance jobInstance = new JobInstance();

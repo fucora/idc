@@ -8,17 +8,23 @@ public class StartEvent implements IDCJobEvent {
 
 	private static final long serialVersionUID = 4050183906735764215L;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime startTime;
+	
 	private Integer instanceId;
 	private String message;
+	
+	public StartEvent() {
+		this.startTime = LocalDateTime.now();
+	}
 
-	@JsonFormat(pattern = "yyyyMMddHHmmss", timezone = "GMT+8")
 	public LocalDateTime getStartTime() {
 		return startTime;
 	}
 
-	public void setStartTime(LocalDateTime startTime) {
+	public StartEvent setStartTime(LocalDateTime startTime) {
 		this.startTime = startTime;
+		return this;
 	}
 
 	public Integer getInstanceId() {

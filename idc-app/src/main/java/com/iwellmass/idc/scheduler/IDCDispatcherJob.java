@@ -1,8 +1,6 @@
 package com.iwellmass.idc.scheduler;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-
-import java.util.List;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 
 import javax.inject.Inject;
 
@@ -12,25 +10,14 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
-import com.iwellmass.idc.model.ExecutionLog;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.repo.JobInstanceRepository;
-import com.iwellmass.idc.repo.JobRepository;
 
 @DisallowConcurrentExecution
 public class IDCDispatcherJob implements org.quartz.Job {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCDispatcherJob.class);
-	
-	@Inject
-	private JobRepository jobRepository;
-	
-	@Inject
-	private JobInstanceRepository instanceRepository;
 
 	@Inject
 	private IDCJobExecutorServiceFactory executorFactory;
@@ -38,43 +25,25 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
-		LOGGER.info("派发任务 {} ", context.getJobDetail().getKey());
-		Integer id = CONTEXT_INSTANCE_ID.applyGet(context);
-		JobInstance jobInstance = instanceRepository.findOne(id);
+		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		
-		Job job = jobRepository.findOne(jobInstance.getTaskId(), jobInstance.getGroupId());
+		LOGGER.info("派发任务 {}, 实例 {} ", context.getJobDetail().getKey(), jobInstance.getInstanceId());
 		
 		// 工作流任务
 		if (jobInstance.getTaskType() == TaskType.WORKFLOW) {
+			throw new JobExecutionException("not supported yet.");
 			// TODO 获取所有子任务
 			// 执行它们
-			executeSubJobs(jobInstance);
 		}
 		// 独立任务
 		else {
-			execute(job, jobInstance);
-		}
-	}
-
-	// 执行子任务
-	private void executeSubJobs(JobInstance instance) {
-
-		// TODO 获取可用的子任务
-
-		List<Job> subJobs = null;
-
-		if (Utils.isNullOrEmpty(subJobs)) {
-			// TODO 通知已经执行完毕
-			ExecutionLog log = new ExecutionLog();
-			log.setMessage("执行完毕");
-		} else {
-
+			execute(jobInstance);
 		}
 	}
 
 	// 使用 eureka 来做 HA & balance
-	private void execute(Job job, JobInstance jobInstance) throws JobExecutionException {
-		IDCJobExecutorService executorService = executorFactory.getExecutor(job);
+	private void execute(JobInstance jobInstance) throws JobExecutionException {
+		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance);
 		try {
 			executorService.execute(jobInstance);
 		} catch (Throwable e) {

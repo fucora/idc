@@ -10,6 +10,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerContext;
 
 import com.iwellmass.idc.model.DispatchType;
+import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCContextKey<T> {
@@ -38,8 +39,12 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = defReq("idc.context.instanceId", Integer.class);
 	/** 获取业务日期 */
 	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = defReq("idc.context.loadDate", LocalDateTime.class);
+	/** 实例对象 */
+	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
 	/** 运行时参数 */
 	public static final IDCContextKey<String> CONTEXT_PARAMETER = defReq("idc.context.parameter", String.class);
+	
+	
 
 	private String key;
 	private Class<T> type;

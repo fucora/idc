@@ -9,7 +9,7 @@ import org.quartz.simpl.PropertySettingJobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
-public class IDCQuartzJobFactory extends PropertySettingJobFactory {
+public class AutowireJobFactory extends PropertySettingJobFactory {
 	
 	@Inject
 	private AutowireCapableBeanFactory autowireCapableBeanFactory;

@@ -16,7 +16,7 @@ import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
 
 @Component
-public class JpaIDCPluginContext extends IDCPluginContext {
+public class StdIDCPluginContext extends IDCPluginContext {
 
 	@Inject
 	private JobRepository jobRepo;

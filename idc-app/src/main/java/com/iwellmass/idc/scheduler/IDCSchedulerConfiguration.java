@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.quartz.IDCPluginContext;
 import com.iwellmass.idc.quartz.IDCSchedulerFactory;
@@ -33,8 +34,8 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	private Boolean startAuto;
 	
 	@Bean
-	public IDCQuartzJobFactory idcJobFactory() {
-		return new IDCQuartzJobFactory();
+	public AutowireJobFactory idcJobFactory() {
+		return new AutowireJobFactory();
 	}
 
 	@Bean
@@ -46,22 +47,22 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 		scheduler = factory.getScheduler();
 		scheduler.setJobFactory(idcJobFactory());
 		return scheduler;
-		
+	}
+	
+	@Bean
+	public IDCPlugin idcPlugin(Scheduler scheduler) throws SchedulerException {
+		return IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
 	}
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
 		try {
 			if (startAuto && !scheduler.isStarted()) {
-				try {
-					LOGGER.info("启动调度器...");
-					scheduler.startDelayed(5);
-				} catch (SchedulerException e) {
-					LOGGER.error("调度器启动失败", e);
-				}
+				LOGGER.info("启动IDCScheduler");
+				scheduler.startDelayed(5);
 			}
 		} catch (SchedulerException e) {
-			LOGGER.error("启动调度器失败", e);
+			LOGGER.error("启动 IDCScheduler 失败: " + e.getMessage(), e);
 		}
 	}
 
