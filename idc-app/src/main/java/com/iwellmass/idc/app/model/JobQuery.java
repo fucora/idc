@@ -69,7 +69,8 @@ public class JobQuery implements SpecificationBuilder {
 		return dispatchType;
 	}
 
-	public void setScheduleType(DispatchType dispatchType) {
+	public void setDispatchType(DispatchType dispatchType) {
 		this.dispatchType = dispatchType;
 	}
+	
 }
