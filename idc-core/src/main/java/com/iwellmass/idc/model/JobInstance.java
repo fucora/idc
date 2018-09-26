@@ -24,6 +24,8 @@ public class JobInstance {
 
 	private Integer instanceId;
 
+	private JobInstanceType instanceType;
+	
 	private String taskId;
 
 	private String groupId;
@@ -43,6 +45,8 @@ public class JobInstance {
 	private String parameter;
 
 	private LocalDateTime loadDate;
+	
+	private ScheduleType scheduleType;
 
 	private LocalDateTime nextLoadDate;
 
@@ -52,7 +56,9 @@ public class JobInstance {
 
 	private LocalDateTime endTime;
 
-	private JobInstanceType type;
+	private Long shouldFireTime;
+	
+	private String triggerName;
 
 	@ApiModelProperty("执行ID")
 	@Id
@@ -143,7 +149,17 @@ public class JobInstance {
 		this.loadDate = loadDate;
 	}
 
-	@ApiModelProperty("下个业务周期")
+	@ApiModelProperty("schedule_type")
+	@Column(name = "schedule_type")
+	public ScheduleType getScheduleType() {
+		return scheduleType;
+	}
+
+	public void setScheduleType(ScheduleType scheduleType) {
+		this.scheduleType = scheduleType;
+	}
+
+	@ApiModelProperty("上次触发时间")
 	@Column(name = "next_load_date")
 	public LocalDateTime getNextLoadDate() {
 		return nextLoadDate;
@@ -214,13 +230,40 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("实例类型")
-	@Column(name = "type")
-	public JobInstanceType getType() {
-		return type;
+	@Column(name = "instance_type")
+	public JobInstanceType getInstanceType() {
+		return instanceType;
 	}
 
-	public void setType(JobInstanceType type) {
-		this.type = type;
+	public void setInstanceType(JobInstanceType instanceType) {
+		this.instanceType = instanceType;
+	}
+
+	@Column(name = "should_fire_time")
+	public Long getShouldFireTime() {
+		return this.shouldFireTime;
+	}
+
+	public void setShouldFireTime(Long shouldFireTime) {
+		this.shouldFireTime = shouldFireTime;
+	}
+	
+	@Column(name = "trigger_name")
+	public String getTriggerName() {
+		return triggerName;
+	}
+
+	public void setTriggerName(String triggerName) {
+		this.triggerName = triggerName;
+	}
+
+	@Transient
+	public String getTriggerGroup() {
+		return getGroupId();
+	}
+
+	public void setTriggerGroup(String triggerGroup) {
+		setGroupId(triggerGroup);
 	}
 
 	@Override

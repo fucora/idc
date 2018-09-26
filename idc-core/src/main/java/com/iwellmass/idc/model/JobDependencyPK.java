@@ -5,14 +5,30 @@ import java.io.Serializable;
 public class JobDependencyPK implements Serializable {
 
 	private static final long serialVersionUID = -4479061532661305224L;
-	
+
+	private String srcTaskId;
+
+	private String srcGroupId;
+
 	private String taskId;
 
 	private String groupId;
 
-	private String dependencyTaskId;
+	public String getSrcTaskId() {
+		return srcTaskId;
+	}
 
-	private String dependencyGroupId;
+	public void setSrcTaskId(String srcTaskId) {
+		this.srcTaskId = srcTaskId;
+	}
+
+	public String getSrcGroupId() {
+		return srcGroupId;
+	}
+
+	public void setSrcGroupId(String srcGroupId) {
+		this.srcGroupId = srcGroupId;
+	}
 
 	public String getTaskId() {
 		return taskId;
@@ -30,20 +46,4 @@ public class JobDependencyPK implements Serializable {
 		this.groupId = groupId;
 	}
 
-	public String getDependencyTaskId() {
-		return dependencyTaskId;
-	}
-
-	public void setDependencyTaskId(String dependencyTaskId) {
-		this.dependencyTaskId = dependencyTaskId;
-	}
-
-	public String getDependencyGroupId() {
-		return dependencyGroupId;
-	}
-
-	public void setDependencyGroupId(String dependencyGroupId) {
-		this.dependencyGroupId = dependencyGroupId;
-	}
-	
 }

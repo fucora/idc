@@ -17,6 +17,7 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.repo.JobRepository;
 
@@ -27,10 +28,20 @@ public class JobQueryService {
 	private JobRepository jobRepository;
 
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
-
-		Specification<Job> spec = jobQuery.toSpecification();
+		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
 		Page<Job> job = jobRepository.findAll(spec, new PageRequest(pager.getPage(), pager.getLimit()));
 		return new PageData<Job>(job.getNumberOfElements(), job.getContent());
+	}
+	
+	// available 
+	public List<Job> findAvailableDependency(ScheduleType scheduleType) {
+		Specification<Job> spec = (root, cq, cb) -> {
+			return cb.and(
+					cb.equal(root.get("scheduleType"), scheduleType),
+					root.get("taskType").in(TaskType.WORKFLOW, TaskType.NODE_TASK)
+			);
+		};
+		return jobRepository.findAll(spec);
 	}
 
 	public List<Job> getWorkflowJob() {

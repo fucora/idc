@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
@@ -19,6 +20,7 @@ import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.ScheduleStatus;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.service.ComplementRequest;
 import com.iwellmass.idc.service.ExecutionRequest;
 import com.iwellmass.idc.service.JobService;
@@ -42,6 +44,13 @@ public class JobController {
 		return ServiceResult.success(data);
 	}
 
+	@ApiOperation("查询任务")
+	@GetMapping("/dependency-list")
+	public ServiceResult<List<Job>> query(@RequestParam("scheduleType") ScheduleType scheduleType) {
+		List<Job> deps = jobQueryService.findAvailableDependency(scheduleType);
+		return ServiceResult.success(deps);
+	}
+	
 	@ApiOperation("查询负责人信息")
 	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> getAssignee() {

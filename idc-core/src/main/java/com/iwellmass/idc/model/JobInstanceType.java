@@ -14,11 +14,4 @@ public enum JobInstanceType {
 	
 	@ApiModelProperty("补数实例")
 	COMPLEMENT;
-	
-	public static JobInstanceType valueOf(ScheduleType scheduleType) {
-		if (scheduleType == ScheduleType.MANUAL) {
-			return JobInstanceType.MANUAL;
-		}
-		return JobInstanceType.CRON;
-	}
 }

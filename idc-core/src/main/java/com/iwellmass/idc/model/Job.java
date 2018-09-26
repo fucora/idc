@@ -48,22 +48,26 @@ public class Job {
 	private LocalDateTime updateTime;
 	
 	private Set<JobDependency> dependencies;
+	
+	private DispatchType dispatchType;
+	
 
 	// ~~ 调度属性 ~~
-	private ScheduleType scheduleType;
 
 	private ScheduleProperties scheduleProperties;
 
+	private ScheduleType scheduleType;
+	
 	private LocalDateTime startTime;
 
 	private LocalDateTime endTime;
-
-	private ScheduleStatus status;
 
 	private LocalDateTime prevLoadDate;
 
 	private LocalDateTime nextLoadDate;
 
+	private ScheduleStatus status = ScheduleStatus.NONE;
+	
 	@Id
 	@ApiModelProperty("业务ID")
 	@Column(name = "task_id", length = 50)
@@ -87,12 +91,12 @@ public class Job {
 	}
 	
 	@ApiModelProperty("任务名称")
-	@Column(name = "name", length = 100)
-	public String getJobName() {
+	@Column(name = "task_name", length = 100)
+	public String getTaskName() {
 		return taskName;
 	}
 
-	public void setJobName(String taskName) {
+	public void setTaskName(String taskName) {
 		this.taskName = taskName;
 	}
 
@@ -127,13 +131,13 @@ public class Job {
 	}
 
 	@ApiModelProperty("调度类型")
-	@Column(name = "schedule_type")
-	public ScheduleType getScheduleType() {
-		return scheduleType;
+	@Column(name = "dispatch_type")
+	public DispatchType getDispatchType() {
+		return dispatchType;
 	}
 
-	public void setScheduleType(ScheduleType scheduleType) {
-		this.scheduleType = scheduleType;
+	public void setDispatchType(DispatchType dispatchType) {
+		this.dispatchType = dispatchType;
 	}
 
 	@ApiModelProperty("调度配置")
@@ -146,8 +150,18 @@ public class Job {
 	public void setScheduleProperties(ScheduleProperties scheduleProperties) {
 		this.scheduleProperties = scheduleProperties;
 	}
+	
+	
+	@Column(name = "schedule_type")
+	public ScheduleType getScheduleType() {
+		return scheduleType;
+	}
 
-	@ApiModelProperty("生效日期始 yyyyMMdd")
+	public void setScheduleType(ScheduleType scheduleType) {
+		this.scheduleType = scheduleType;
+	}
+
+	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "start_time")
 	public LocalDateTime getStartTime() {
@@ -158,7 +172,7 @@ public class Job {
 		this.startTime = startTime;
 	}
 
-	@ApiModelProperty("生效日期止, yyyyMMdd")
+	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@Column(name = "end_time")
 	public LocalDateTime getEndTime() {
@@ -220,14 +234,6 @@ public class Job {
 
 	public void setUpdateTime(LocalDateTime updateTime) {
 		this.updateTime = updateTime;
-	}
-
-	public String getTaskName() {
-		return taskName;
-	}
-
-	public void setTaskName(String taskName) {
-		this.taskName = taskName;
 	}
 
 	@ApiModelProperty("任务状态")

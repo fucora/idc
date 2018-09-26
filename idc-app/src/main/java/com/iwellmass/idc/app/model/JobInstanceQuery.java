@@ -15,23 +15,23 @@ import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class JobInstanceQuery implements SpecificationBuilder{
+public class JobInstanceQuery implements SpecificationBuilder {
 
 	@ApiModelProperty("任务名")
 	@Like
 	private String taskName;
 
+	@ApiModelProperty("实例类型")
+	@Equal
+	private JobInstanceType instanceType;
+
 	@ApiModelProperty("节点类型")
 	@In("taskType")
 	private List<TaskType> taskTypes;
-	
+
 	@ApiModelProperty("任务类型")
 	@Equal
 	private String contentType;
-	
-	@ApiModelProperty("实例类型")
-	@Equal("type")
-	private JobInstanceType instanceType;
 
 	@ApiModelProperty("负责人")
 	@Equal
@@ -126,5 +126,5 @@ public class JobInstanceQuery implements SpecificationBuilder{
 	public void setInstanceType(JobInstanceType instanceType) {
 		this.instanceType = instanceType;
 	}
-	
+
 }
