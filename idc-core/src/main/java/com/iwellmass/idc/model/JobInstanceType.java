@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 public enum JobInstanceType {
 	
 	@ApiModelProperty("周期实例")
-	CRON,
+	AUTO,
 	
 	@ApiModelProperty("手动实例")
 	MANUAL,

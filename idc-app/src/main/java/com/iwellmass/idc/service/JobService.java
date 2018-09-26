@@ -283,13 +283,13 @@ public class JobService {
 		LocalTime duetime = LocalTime.parse(scheduleProperties.getDuetime(), DateTimeFormatter.ISO_TIME);
 		switch (scheduleProperties.getScheduleType()) {
 		case MONTHLY: {
-			List<Integer> days = scheduleProperties.getDaysOfMonth();
+			List<Integer> days = scheduleProperties.getDays();
 			Assert.isFalse(Utils.isNullOrEmpty(days), "月调度配置不能为空");
 			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
 					String.join(",", days.stream().map(i -> i + "").collect(Collectors.toList())));
 		}
 		case WEEKLY: {
-			List<Integer> days = scheduleProperties.getDaysOfMonth();
+			List<Integer> days = scheduleProperties.getDays();
 			Assert.isFalse(Utils.isNullOrEmpty(days), "周调度配置不能为空");
 			return String.format("%s %s %s ? * %s *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
 					String.join(",", days.stream().map(i -> i + "").collect(Collectors.toList())));
