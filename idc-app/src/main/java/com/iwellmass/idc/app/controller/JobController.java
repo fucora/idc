@@ -19,7 +19,6 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
-import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.service.ComplementRequest;
 import com.iwellmass.idc.service.ExecutionRequest;
@@ -36,6 +35,13 @@ public class JobController {
 	
 	@Inject
 	private JobQueryService jobQueryService;
+	
+	@ApiOperation("获取任务信息")
+	@GetMapping
+	public ServiceResult<Job> query(JobPK jobKey) {
+		Job job = jobQueryService.findJob(jobKey);
+		return ServiceResult.success(job);
+	}
 
 	@ApiOperation("查询任务，分页")
 	@PostMapping("/query")
@@ -44,16 +50,6 @@ public class JobController {
 		return ServiceResult.success(data);
 	}
 	
-	@ApiOperation("查询调度信息")
-	@GetMapping("/schedule-properties")
-	public ServiceResult<ScheduleProperties> query(JobPK jobKey) {
-		Job job = jobQueryService.findJob(jobKey);
-		if (job == null) {
-			return ServiceResult.failure("任务不存在");
-		}
-		return ServiceResult.success(job.getScheduleProperties());
-	}
-
 	@ApiOperation("查询依赖列表")
 	@GetMapping("/dependency-list")
 	public ServiceResult<List<Job>> query(@RequestParam("scheduleType") ScheduleType scheduleType) {
