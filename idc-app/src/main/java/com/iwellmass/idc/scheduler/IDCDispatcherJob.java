@@ -1,7 +1,6 @@
 package com.iwellmass.idc.scheduler;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
 
 import javax.inject.Inject;
 
@@ -29,13 +28,6 @@ public class IDCDispatcherJob implements org.quartz.Job {
 		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		
 		LOGGER.info("派发任务 {}, 实例 {} ", context.getJobDetail().getKey(), jobInstance.getInstanceId());
-		
-		// TODO 强制覆盖所有参数？
-		String parameter = CONTEXT_PARAMETER.applyGet(context);
-		
-		if (parameter != null) {
-			jobInstance.setParameter(parameter);
-		}
 		
 		// 工作流任务
 		if (jobInstance.getTaskType() == TaskType.WORKFLOW) {
