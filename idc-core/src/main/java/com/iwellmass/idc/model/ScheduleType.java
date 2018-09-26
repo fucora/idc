@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * 调度类型
+ * 周期类型
  */
 public enum ScheduleType {
 
@@ -22,8 +22,8 @@ public enum ScheduleType {
 	@ApiModelProperty("小时调度")
 	HOURLY("yyyyMMddHHmmss"),
 
-	@ApiModelProperty("自定义 CRON 表达式")
-	CRON("yyyyMMddHHmmss");
+	@ApiModelProperty("自定义")
+	CUSTOMER("yyyyMMddHHmmss");
 	
 	private final DateTimeFormatter fmt;
 	

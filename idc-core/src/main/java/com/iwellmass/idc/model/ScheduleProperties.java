@@ -6,32 +6,22 @@ import io.swagger.annotations.ApiModelProperty;
 
 public class ScheduleProperties {
 
-	@ApiModelProperty("每月号数 ( 0 ~ 30 )")
-	private List<Integer> daysOfMonth;
-
-	@ApiModelProperty("每周星期数  1(周日) ~ 7(周六) ) ")
-	private List<Integer> daysOfWeek;
+	@ApiModelProperty("哪一天")
+	private List<Integer> days;
 
 	@ApiModelProperty("具体时间")
 	private String duetime = "00:00:00";
 
 	@ApiModelProperty("调度类型")
 	private ScheduleType scheduleType;
+	
 
-	public List<Integer> getDaysOfMonth() {
-		return daysOfMonth;
+	public List<Integer> getDays() {
+		return days;
 	}
 
-	public void setDaysOfMonth(List<Integer> daysOfMonth) {
-		this.daysOfMonth = daysOfMonth;
-	}
-
-	public List<Integer> getDaysOfWeek() {
-		return daysOfWeek;
-	}
-
-	public void setDaysOfWeek(List<Integer> daysOfWeek) {
-		this.daysOfWeek = daysOfWeek;
+	public void setDays(List<Integer> days) {
+		this.days = days;
 	}
 
 	public String getDuetime() {

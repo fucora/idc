@@ -16,7 +16,15 @@ import com.iwellmass.idc.model.TaskType;
 import io.swagger.annotations.ApiModelProperty;
 
 public class JobInstanceQuery implements SpecificationBuilder {
+	
+	@ApiModelProperty("业务ID")
+	@Equal
+	private String taskId;
 
+	@ApiModelProperty("业务组")
+	@Equal
+	private String groupId;
+	
 	@ApiModelProperty("任务名")
 	@Like
 	private String taskName;
@@ -54,6 +62,22 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	@ApiModelProperty("运行时间止， yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private LocalDateTime executeTimeTo;
+
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
 
 	public String getTaskName() {
 		return taskName;

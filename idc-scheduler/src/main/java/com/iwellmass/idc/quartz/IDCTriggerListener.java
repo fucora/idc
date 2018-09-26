@@ -75,7 +75,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		JobInstance instance = pluginContext.createJobInstance(trigger.getJobKey(), (job) -> {
 			JobInstance jobInstance = createJobInstance(job);
 			jobInstance.setTriggerName(trigger.getKey().getName());
-			jobInstance.setInstanceType(JobInstanceType.CRON);
+			jobInstance.setInstanceType(JobInstanceType.AUTO);
 			jobInstance.setLoadDate(loadDate);
 			jobInstance.setNextLoadDate(toLocalDateTime(nextFireTime));
 			jobInstance.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
@@ -102,6 +102,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
 		jobInstance.setScheduleType(job.getScheduleType());
+		jobInstance.setDispatchType(job.getDispatchType());
 		return jobInstance;
 	}
 
