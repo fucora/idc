@@ -1,6 +1,7 @@
 package com.iwellmass.idc.client.autoconfig;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.iwellmass.common.ServiceResult;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCJob;
 import com.iwellmass.idc.executor.IDCJobExecutionContext;
@@ -26,6 +28,10 @@ import com.iwellmass.idc.model.JobInstance;
 public class IDCJobHandler implements IDCJobExecutorService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobHandler.class);
+	
+	private static final int RUNNING = 0x01;
+	private static final int COMPLETE = 0x02;
+	private static final int NOTIFY_ERROR = 0x03;
 
 	private final IDCJob job;
 
@@ -42,58 +48,38 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	@ResponseBody
 	@PostMapping(path = "/execution")
-	public void execute(@RequestBody JobInstance jobInstance) {
+	public ServiceResult<String> doExecute(@RequestBody JobInstance jobInstance) {
 		// safe execute
-		executeAsync(jobInstance);
-		LOGGER.info("IDCJob[id={}, groupId={}, taskId={}] accepted, timestamp: {}", jobInstance.getInstanceId(),
+		execute(jobInstance);
+		LOGGER.info("任务 {} [groupId={}, taskId={}] accepted, timestamp: {}", jobInstance.getInstanceId(),
 				jobInstance.getTaskId(), jobInstance.getGroupId(), System.currentTimeMillis());
+		return ServiceResult.success("任务已提交");
 	}
-
-	public void executeAsync(JobInstance instance) {
-		LOGGER.info("执行任务 {}", instance);
-		CompletableFuture<CompleteEvent> futrue = CompletableFuture.supplyAsync(() -> safeExecute(instance), executor);
-		futrue.whenCompleteAsync(this::fireCompleteEvent);
-	}
-
-	private CompleteEvent safeExecute(JobInstance instance) {
-		ExecutionContextImpl context = newContext(instance);
-		context.instance = instance;
-		try {
-			this.job.execute(context);
-		} catch (Throwable e) {
-			context.event = CompleteEvent.failureEvent("执行失败: " + e.getMessage()); // unexpect exception
-		}
-
-		CompleteEvent event = context.event;
-		if (event == null) {
-			event = CompleteEvent.successEvent();
-		}
-		event.setInstanceId(context.getInstance().getInstanceId()).setEndTime(LocalDateTime.now());
-		return event;
-	}
-
-	private ExecutionContextImpl newContext(JobInstance instance) {
+	
+	public void execute(JobInstance instance) {
+		
 		ExecutionContextImpl context = new ExecutionContextImpl();
-		return context;
+		context.instance = instance;
+		
+		CompletableFuture.runAsync(() -> job.execute(context), executor)
+		.whenComplete((_void, cause) -> {
+			if (cause != null) {
+				CompleteEvent event = CompleteEvent.failureEvent("任务 {} 执行异常: {}", instance.getInstanceId(), cause.getMessage())
+						.setInstanceId(context.getInstance().getInstanceId())
+						.setEndTime(LocalDateTime.now());
+				context.complete(event);
+			}
+			if (!context.isComplete()) {
+				LOGGER.warn("任务 {} 已结束但未通知调度中心, 请确认异步通知可用", instance.getInstanceId());
+			}
+		});
 	}
 
-	private final void fireCompleteEvent(CompleteEvent event, Throwable cause) {
-		LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
-		if (cause != null) {
-			event = CompleteEvent.failureEvent("execute failured, report this bug...", cause);
-		}
-		try {
-			idcStatusService.fireCompleteEvent(event);
-		} catch (Throwable e) {
-			LOGGER.info("无法通知状态服务器: ", e.getMessage(), e);
-		}
-	}
-
-	class ExecutionContextImpl implements IDCJobExecutionContext {
+	private class ExecutionContextImpl implements IDCJobExecutionContext {
 
 		private JobInstance instance;
-		private CompleteEvent event;
-
+		private int state = RUNNING; // TODO use CAS
+		
 		@Override
 		public JobInstance getInstance() {
 			return instance;
@@ -101,7 +87,28 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 		@Override
 		public void complete(CompleteEvent event) {
-			this.event = event;
+			Objects.requireNonNull(event, "event 不能为空");
+
+			if (state == COMPLETE) {
+				LOGGER.warn("job {} already complete {}", event.getInstanceId());
+				return;
+			}
+			
+			event.setInstanceId(instance.getInstanceId());
+			
+			LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
+			
+			try {
+				idcStatusService.fireCompleteEvent(event);
+				state = COMPLETE;
+			} catch (Throwable e) {
+				state = NOTIFY_ERROR;
+				LOGGER.error("发送事件失败, EVENT: {}", event, e);
+			}
+		}
+		
+		public boolean isComplete() {
+			return state == COMPLETE || state == NOTIFY_ERROR;
 		}
 	}
 }

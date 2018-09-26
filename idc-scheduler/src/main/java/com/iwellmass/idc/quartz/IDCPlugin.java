@@ -178,7 +178,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		});
 		String message = event.getMessage();
 		if (message == null) {
-			message = "任务执行完毕 " + event.getInstanceId();
+			message = "执行完毕 ";
 		}
 		pluginContext.log(event.getInstanceId(), event.getMessage());
 	}
