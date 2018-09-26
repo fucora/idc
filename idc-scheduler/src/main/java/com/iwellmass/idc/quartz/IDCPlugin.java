@@ -167,7 +167,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		
 		// 更新实例状态
 		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
-			Assert.isTrue(jobInstance == null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
+			Assert.isTrue(jobInstance != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
 			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
 				try {
 					completeAsyncJob(jobInstance.getTriggerName(), jobInstance.getTriggerGroup(), event.getFinalStatus());
