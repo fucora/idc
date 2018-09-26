@@ -102,6 +102,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
 		jobInstance.setScheduleType(job.getScheduleType());
+		jobInstance.setDispatchType(job.getDispatchType());
 		return jobInstance;
 	}
 

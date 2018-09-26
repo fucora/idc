@@ -59,6 +59,8 @@ public class JobInstance {
 	private Long shouldFireTime;
 	
 	private String triggerName;
+	
+	private DispatchType dispatchType;
 
 	@ApiModelProperty("执行ID")
 	@Id
@@ -264,6 +266,15 @@ public class JobInstance {
 
 	public void setTriggerGroup(String triggerGroup) {
 		setGroupId(triggerGroup);
+	}
+
+	@Transient
+	public DispatchType getDispatchType() {
+		return dispatchType;
+	}
+
+	public void setDispatchType(DispatchType dispatchType) {
+		this.dispatchType = dispatchType;
 	}
 
 	@Override

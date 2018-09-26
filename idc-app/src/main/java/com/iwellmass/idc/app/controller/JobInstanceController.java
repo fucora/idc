@@ -42,7 +42,7 @@ public class JobInstanceController {
 		return ServiceResult.success(taskInstance);
 	}
 	
-	@ApiOperation("通过条件检索实例（分页显示）")
+	@ApiOperation("获取所有责任人")
 	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> assignee() {
 		return ServiceResult.success(queryService.getAllAssignee());
@@ -63,7 +63,7 @@ public class JobInstanceController {
 		return ServiceResult.success("success");
 	}
 	
-	@ApiOperation("重跑任务")
+	@ApiOperation("任务日志(分页)")
 	@PostMapping("/{id}/log")
 	public ServiceResult<PageData<ExecutionLog>> restart(@PathVariable(name = "id") Integer id, Pager pager) {
 		PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
