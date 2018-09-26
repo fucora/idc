@@ -42,9 +42,7 @@ public class IDCContextKey<T> {
 	/** 实例对象 */
 	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
 	/** 运行时参数 */
-	public static final IDCContextKey<String> CONTEXT_PARAMETER = defReq("idc.context.parameter", String.class);
-	
-	
+	public static final IDCContextKey<String> CONTEXT_PARAMETER = defOpt("idc.context.parameter", String.class, null);
 
 	private String key;
 	private Class<T> type;

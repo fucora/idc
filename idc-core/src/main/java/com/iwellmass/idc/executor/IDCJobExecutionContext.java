@@ -8,5 +8,4 @@ public interface IDCJobExecutionContext {
 	
 	void complete(CompleteEvent event);
 
-	
 }

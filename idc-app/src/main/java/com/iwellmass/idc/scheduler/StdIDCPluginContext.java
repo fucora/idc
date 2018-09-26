@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.quartz.JobKey;
 import org.springframework.stereotype.Component;
 
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.quartz.IDCPluginContext;
@@ -30,7 +31,11 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	@Override
 	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
 		Job job = jobRepo.findOne(jobKey.getName(), jobKey.getGroup());
+		
+		Assert.isTrue(job != null, "任务不存在");
+		
 		JobInstance instance = fun.apply(job);
+		
 		JobInstance check = instanceRepo.findOne(instance.getTaskId(), instance.getGroupId(), instance.getLoadDate());
 		if (check != null) {
 			instance.setInstanceId(check.getInstanceId());
