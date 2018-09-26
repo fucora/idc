@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.quartz.JobExecutionContext;
-import org.quartz.JobKey;
 import org.quartz.Trigger;
+import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,69 +27,65 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCTriggerListener.class);
 
 	private final IDCPluginContext pluginContext;
-	
+
 	public IDCTriggerListener(IDCPluginContext pluginContext) {
 		this.pluginContext = pluginContext;
 	}
 
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
-		
-		LOGGER.info("触发任务 {}, loadDate {}", trigger.getJobKey(), context.getScheduledFireTime().getTime());
-		
 		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getJobDetail().getJobDataMap());
-		
-		JobKey jobKey = trigger.getJobKey();
-
-		boolean isRedo = false;
-
-		JobInstance instance = null;
-		
-		if (context.isRecovering()) {
-			// TODO
-			throw new UnsupportedOperationException("not supported yet.");
-		} else if (isRedo) {
-			throw new UnsupportedOperationException("not supported yet.");
-			/*int id = IDCConstants.CONTEXT_INSTANCE_ID.applyGet(context);
-			JobInstance jobInstance = jobInstanceRepository.findOne(id);
-			jobInstance.setStatus(JobInstanceStatus.NEW);
-			jobInstance.setStartTime(LocalDateTime.now());
-			jobInstance.setEndTime(null);
-			instance = jobInstanceRepository.save(jobInstance);*/
+		if (type == DispatchType.AUTO) {
+			initContextForAuto(trigger, context);
 		} else if (type == DispatchType.MANUAL) {
-			
-			LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
-			
-			instance = pluginContext.createJobInstance(jobKey, (job) -> {
-				JobInstance jobInstance = createJobInstance(job);
-				jobInstance.setTriggerName(trigger.getKey().getName());
-				jobInstance.setInstanceType(JobInstanceType.MANUAL);
-				jobInstance.setLoadDate(loadDate);
-				jobInstance.setNextLoadDate(null);
-				jobInstance.setShouldFireTime(IDCPlugin.toMills(loadDate));
-				return jobInstance;
-			});
-		} else if (type == DispatchType.AUTO) {
-			
-			Date shouldFireTime = context.getScheduledFireTime();
-			Date nextFireTime = context.getNextFireTime();
-			
-			instance = pluginContext.createJobInstance(jobKey, (job) -> {
-				JobInstance jobInstance = createJobInstance(job);
-				jobInstance.setTriggerName(trigger.getKey().getName());
-				jobInstance.setInstanceType(JobInstanceType.CRON);
-				jobInstance.setLoadDate(toLocalDateTime(shouldFireTime));
-				jobInstance.setNextLoadDate(toLocalDateTime(nextFireTime));
-				jobInstance.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
-				return jobInstance;
-			});
+			initContextForManual(trigger, context);
+		} else {
+			// should never
+			context.setResult(CompletedExecutionInstruction.SET_TRIGGER_ERROR);
+			throw new UnsupportedOperationException("not supported " + type + " dispatch type");
 		}
+	}
+
+	private void initContextForManual(Trigger trigger, JobExecutionContext context) {
+		LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(context);
+		LOGGER.info("触发手动任务 {}, full loadDate {}", trigger.getJobKey(), loadDate.format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
+		JobInstance instance = pluginContext.createJobInstance(trigger.getJobKey(), (job) -> {
+			JobInstance jobInstance = createJobInstance(job);
+			jobInstance.setTriggerName(trigger.getKey().getName());
+			jobInstance.setInstanceType(JobInstanceType.MANUAL);
+			jobInstance.setLoadDate(loadDate);
+			jobInstance.setNextLoadDate(null);
+			jobInstance.setShouldFireTime(IDCPlugin.toMills(loadDate));
+			return jobInstance;
+		});
 
 		// 初始化执行环境
 		CONTEXT_INSTANCE_ID.applyPut(context, instance.getInstanceId());
-		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
 		CONTEXT_INSTANCE.applyPut(context, instance);
-		
+	}
+
+	private void initContextForAuto(Trigger trigger, JobExecutionContext context) {
+
+		Date shouldFireTime = context.getScheduledFireTime();
+		Date nextFireTime = context.getNextFireTime();
+
+		LocalDateTime loadDate = toLocalDateTime(shouldFireTime);
+		LOGGER.info("触发任务 {}, full loadDate {}", trigger.getJobKey(), loadDate.format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
+
+		JobInstance instance = pluginContext.createJobInstance(trigger.getJobKey(), (job) -> {
+			JobInstance jobInstance = createJobInstance(job);
+			jobInstance.setTriggerName(trigger.getKey().getName());
+			jobInstance.setInstanceType(JobInstanceType.CRON);
+			jobInstance.setLoadDate(loadDate);
+			jobInstance.setNextLoadDate(toLocalDateTime(nextFireTime));
+			jobInstance.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
+			return jobInstance;
+		});
+
+		// 初始化执行环境
+		CONTEXT_LOAD_DATE.applyPut(context, instance.getLoadDate());
+		CONTEXT_INSTANCE_ID.applyPut(context, instance.getInstanceId());
+		CONTEXT_INSTANCE.applyPut(context, instance);
 	}
 
 	private JobInstance createJobInstance(Job job) {
