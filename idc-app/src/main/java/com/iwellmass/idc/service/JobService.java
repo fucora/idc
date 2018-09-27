@@ -231,7 +231,10 @@ public class JobService {
 	public void pause(LockRequest lockReq) {
 		// TODO  强制取消子任务
 		LOGGER.info("冻结任务");
-		if (!lockReq.isForceLock()) {
+		if (lockReq.isForceLock()) {
+			instanceRepostory.resetStatusFrom(lockReq.getTaskId(), lockReq.getGroupId(), JobInstanceStatus.CANCLED, Arrays.asList(
+					JobInstanceStatus.NEW, JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));
+		} else {
 			// TODO double check state
 			List<JobInstance> result = instanceRepostory.findInstanceByStatus(lockReq.getTaskId(), lockReq.getGroupId(),
 					Arrays.asList(JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));

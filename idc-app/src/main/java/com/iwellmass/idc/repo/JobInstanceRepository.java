@@ -25,4 +25,7 @@ public interface JobInstanceRepository extends PagingAndSortingRepository<JobIns
 	
 	@Query("SELECT DISTINCT assignee FROM JobInstance WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
+
+	@Query("UPDATE JobInstance SET status = ?3 WHERE taskId = ?1 AND groupId = ?2 AND status IN ?4")
+	int resetStatusFrom(String taskId, String groupId, JobInstanceStatus status, List<JobInstanceStatus> olds);
 }

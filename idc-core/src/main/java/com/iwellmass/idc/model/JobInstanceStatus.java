@@ -16,5 +16,8 @@ public enum JobInstanceStatus {
 	FINISHED,
 	
 	// 失败
-	FAILED
+	FAILED,
+	
+	// 取消
+	CANCLED;
 }
