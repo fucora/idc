@@ -2,6 +2,7 @@ package com.iwellmass.idc.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCPlugin.toDate;
 
 import java.text.ParseException;
@@ -80,8 +81,11 @@ public class JobService {
 
 		LOGGER.info("创建调度任务 {}", jobPK);
 
+		job.setJobPK(jobPK);
 		job.setCreateTime(LocalDateTime.now());
 		job.setUpdateTime(null);
+		
+		
 		doScheduleJob(job, false);
 	}
 
@@ -98,7 +102,7 @@ public class JobService {
 		job.setUpdateTime(LocalDateTime.now());
 
 		LOGGER.info("重新调度任务 {}.{}", job.getGroupId(), job.getTaskId());
-
+		
 		doScheduleJob(job, true);
 	}
 
@@ -126,19 +130,31 @@ public class JobService {
 		boolean success = false;
 		try {
 			if (job.getDispatchType() == DispatchType.AUTO) {
+				
+				
+				JobDataMap newJobDataMap = new JobDataMap();
+				
+				JOB_DISPATCH_TYPE.applyPut(newJobDataMap, job.getDispatchType());
+				
 				// 让 QZ 可以知道调度类型
 				TriggerBuilder<CronTrigger> triggerBuilder = TriggerBuilder.newTrigger()
 						.withIdentity(jobPK.getJobId(), jobPK.getJobGroup())
 						.forJob(script.getScriptId(), script.getScriptGroup())
+						.usingJobData(newJobDataMap)
 						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
 								.withMisfireHandlingInstructionIgnoreMisfires());
 
+				
 				if (job.getStartTime() != null) {
 					triggerBuilder.startAt(toDate(job.getStartTime()));
 				}
 				if (job.getEndTime() != null) {
 					triggerBuilder.startAt(toDate(job.getEndTime()));
 				}
+				
+				
+				
+				
 
 				// 保存到 quartz
 				if (!scheduler.checkExists(triggerKey)) {
