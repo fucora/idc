@@ -87,11 +87,6 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 
 	@Override
 	public void jobResumed(JobKey jobKey) {
-		pluginContext.updateJob(jobKey, (job) -> {
-			
-			job.setUpdateTime(LocalDateTime.now());
-			job.setStatus(ScheduleStatus.NONE);
-		});
 		LOGGER.info("任务 {} 已恢复", jobKey);
 	}
 }

@@ -22,4 +22,5 @@ public abstract class IDCPluginContext {
 	public abstract void log(Integer instanceId, String message, Object...args);
 	
 	public static class Dependency {}
+	
 }

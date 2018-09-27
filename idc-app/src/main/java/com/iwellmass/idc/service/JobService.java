@@ -245,8 +245,24 @@ public class JobService {
 	}
 
 	public void resume(JobPK jobKey) {
+		
 		try {
 			scheduler.resumeJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
+			
+			Job job = jobRepository.findOne(jobKey);
+			
+			if (job != null) {
+				if (job.getDispatchType() == DispatchType.AUTO) {
+					TriggerKey tk = buildCronTriggerKey(job.getScheduleType(), jobKey.getTaskId(), jobKey.getGroupId());
+					TriggerState status = scheduler.getTriggerState(tk);
+					job.setStatus(ScheduleStatus.values()[status.ordinal()]);
+				} else {
+					List<JobInstance> result = instanceRepostory.findInstanceByStatus(jobKey.getTaskId(), job.getGroupId(),
+							Arrays.asList(JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));
+					job.setStatus(result.size() > 0 ? ScheduleStatus.NONE : ScheduleStatus.NORMAL);
+				}
+			}
+			jobRepository.save(job);
 		} catch (SchedulerException e) {
 			throw new AppException("无法冻结此任务");
 		}
@@ -260,7 +276,6 @@ public class JobService {
 
 		Assert.isTrue(job != null, "任务 %s.%s 不存在", groupId, taskId);
 		
-
 		ScheduleStatus status = job.getStatus();
 		
 		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结", groupId, taskId);

@@ -43,12 +43,10 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		LOGGER.info("加载 IDCPlugin...");
-		
 		if (pluginContext == null) {
 			throw new SchedulerException("未设置 IDCPluginContext...");
 		}
-		
-		// 将其设置再上下文中
+		// 将其设置在上下文中
 		IDC_PLUGIN.applyPut(scheduler.getContext(), this);
 		
 		scheduler.getListenerManager().addJobListener(new IDCJobListener(pluginContext));
@@ -76,6 +74,60 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	public IDCPluginContext getContext() {
 		return pluginContext;
 	}
+	
+	/** 恢复等待异步结果的 trigger */
+	public void completeAsyncJob(String triggerName, String triggerGroup, JobInstanceStatus finalStatus) throws SchedulerException {
+		CompletedExecutionInstruction instruction = null;
+		if (finalStatus == JobInstanceStatus.FAILED) {
+			instruction = CompletedExecutionInstruction.SET_TRIGGER_ERROR;
+		} else {
+			instruction = CompletedExecutionInstruction.NOOP;
+		}
+		jobStore.triggeredAsyncJobComplete(new TriggerKey(triggerName, triggerGroup), instruction);
+	}
+
+
+	@Override
+	public void fireStartEvent(StartEvent event) {
+		
+		LOGGER.info("Get event {}", event);
+		
+		// 更新实例状态
+		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
+			jobInstance.setStartTime(event.getStartTime());
+			jobInstance.setStatus(JobInstanceStatus.RUNNING);
+		});
+		String message = event.getMessage();
+		if (message == null) {
+			message = "开始执行任务 " + event.getInstanceId();
+		}
+		pluginContext.log(event.getInstanceId(), message);
+	}
+
+	@Override
+	public void fireCompleteEvent(CompleteEvent event) {
+		
+		LOGGER.info("Get event {}", event);
+		
+		// 更新实例状态
+		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
+			Assert.isTrue(jobInstance != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
+			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
+				try {
+					completeAsyncJob(jobInstance.getTriggerName(), jobInstance.getTriggerGroup(), event.getFinalStatus());
+				} catch (SchedulerException e) {
+					LOGGER.warn("无法更新实例 %s, %s", event.getInstanceId(), e.getMessage());
+				}
+			}
+		});
+		String message = event.getMessage();
+		if (message == null) {
+			message = "执行完毕 ";
+		}
+		pluginContext.log(event.getInstanceId(), message);
+	}
+	
+	
 	
 	public static void setDefaultContext(IDCPluginContext pluginContext) {
 		IDCPlugin.pluginContext = pluginContext;
@@ -131,55 +183,4 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		return key.getName().startsWith("MANUAL_");
 	}
 
-	/** 恢复等待异步结果的 trigger */
-	public void completeAsyncJob(String triggerName, String triggerGroup, JobInstanceStatus finalStatus) throws SchedulerException {
-		CompletedExecutionInstruction instruction = null;
-		if (finalStatus == JobInstanceStatus.FAILED) {
-			instruction = CompletedExecutionInstruction.SET_TRIGGER_ERROR;
-		} else {
-			instruction = CompletedExecutionInstruction.NOOP;
-		}
-		jobStore.triggeredAsyncJobComplete(new TriggerKey(triggerName, triggerGroup), instruction);
-	}
-
-
-	@Override
-	public void fireStartEvent(StartEvent event) {
-		
-		LOGGER.info("Get event {}", event);
-		
-		// 更新实例状态
-		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
-			jobInstance.setStartTime(event.getStartTime());
-			jobInstance.setStatus(JobInstanceStatus.RUNNING);
-		});
-		String message = event.getMessage();
-		if (message == null) {
-			message = "开始执行任务 " + event.getInstanceId();
-		}
-		pluginContext.log(event.getInstanceId(), message);
-	}
-
-	@Override
-	public void fireCompleteEvent(CompleteEvent event) {
-		
-		LOGGER.info("Get event {}", event);
-		
-		// 更新实例状态
-		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
-			Assert.isTrue(jobInstance != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
-			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
-				try {
-					completeAsyncJob(jobInstance.getTriggerName(), jobInstance.getTriggerGroup(), event.getFinalStatus());
-				} catch (SchedulerException e) {
-					LOGGER.warn("无法更新实例 %s, %s", event.getInstanceId(), e.getMessage());
-				}
-			}
-		});
-		String message = event.getMessage();
-		if (message == null) {
-			message = "执行完毕 ";
-		}
-		pluginContext.log(event.getInstanceId(), message);
-	}
 }
