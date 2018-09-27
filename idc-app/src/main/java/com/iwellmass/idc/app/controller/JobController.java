@@ -90,17 +90,17 @@ public class JobController {
 		return ServiceResult.success("提交成功");
 	}
 
-	@PostMapping(value = "/lock")
+	@PostMapping(value = "/pause")
 	@ApiOperation("冻结 Job")
-	public ServiceResult<String> lock(@RequestBody LockRequest request) {
-		jobService.lock(request);
+	public ServiceResult<String> pause(@RequestBody LockRequest request) {
+		jobService.pause(request);
 		return ServiceResult.success("任务已冻结");
 	}
 
-	@PostMapping(value = "/unlock")
+	@PostMapping(value = "/resume")
 	@ApiOperation("恢复 Job")
-	public ServiceResult<String> unlock(@RequestBody JobPK jobKey) {
-		jobService.unlock(jobKey);
+	public ServiceResult<String> resume(@RequestBody JobPK jobKey) {
+		jobService.resume(jobKey);
 		return ServiceResult.success("任务已恢复");
 	}
 

@@ -86,7 +86,7 @@ public class JobService {
 			if (scheduler.checkExists(jobKey)) {
 				throw new AppException("不可重复调度任务");
 			}
-			doScheduleJob(job);
+			doScheduleJob(job, false);
 		} catch (SchedulerException e) {
 			throw new AppException("调度失败: " + e.getMessage(), e);
 		}
@@ -101,11 +101,26 @@ public class JobService {
 			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
 		job.setUpdateTime(LocalDateTime.now());
-		doScheduleJob(job);
+		
+		LOGGER.info("重新调度任务 {}.{}", job.getGroupId(), job.getTaskId());
+		
+		doScheduleJob(job, true);
+	}
+
+	public void unschedule(JobPK jobKey) throws AppException {
+		try {
+			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
+			boolean result = scheduler.deleteJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
+			if (!result) {
+				LOGGER.warn("{} 不存在的调度任务", jobKey);
+			}
+		} catch (SchedulerException e) {
+			throw new AppException(e);
+		}
 	}
 	
 	@Transactional
-	private void doScheduleJob(Job job) {
+	private void doScheduleJob(Job job, boolean replace) {
 
 		LocalDateTime now = LocalDateTime.now();
 		// 默认值
@@ -160,7 +175,7 @@ public class JobService {
 			JOB_SCHEDULE_TYPE.applyPut(jobDetail.getJobDataMap(), sp.getScheduleType());
 
 			// save scheduler job
-			scheduler.addJob(jobDetail, false);
+			scheduler.addJob(jobDetail, replace);
 
 			if (job.getDispatchType() == DispatchType.AUTO) {
 				// 让 QZ 可以知道调度类型
@@ -171,7 +186,7 @@ public class JobService {
 					.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
 					.endAt(toDate(job.getEndTime())).build();
 				// 保存到 quartz
-				scheduler.scheduleJob(trigger);
+				scheduler.rescheduleJob(triggerKey, trigger);
 			}
 			success = true;
 		} catch (AppException e) {
@@ -194,8 +209,6 @@ public class JobService {
 				}
 			}
 		}
-	
-		
 	}
 	
 	private DirectedAcyclicGraph<JobKey, Dependency> loadDependencyGraph() {
@@ -215,21 +228,9 @@ public class JobService {
 		return depGraph;
 	}
 
-	public void unschedule(JobPK jobKey) throws AppException {
-		try {
-			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
-			boolean result = scheduler.deleteJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
-			if (!result) {
-				LOGGER.warn("{} 不存在的调度任务", jobKey);
-			}
-		} catch (SchedulerException e) {
-			throw new AppException(e);
-		}
-	}
-
-	public void lock(LockRequest lockReq) {
+	public void pause(LockRequest lockReq) {
 		// TODO  强制取消子任务
-		
+		LOGGER.info("冻结任务");
 		if (!lockReq.isForceLock()) {
 			// TODO double check state
 			List<JobInstance> result = instanceRepostory.findInstanceByStatus(lockReq.getTaskId(), lockReq.getGroupId(),
@@ -243,7 +244,7 @@ public class JobService {
 		}
 	}
 
-	public void unlock(JobPK jobKey) {
+	public void resume(JobPK jobKey) {
 		try {
 			scheduler.resumeJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
 		} catch (SchedulerException e) {
@@ -258,6 +259,13 @@ public class JobService {
 		Job job = jobRepository.findOne(taskId, groupId);
 
 		Assert.isTrue(job != null, "任务 %s.%s 不存在", groupId, taskId);
+		
+
+		ScheduleStatus status = job.getStatus();
+		
+		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结", groupId, taskId);
+		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 任务已阻塞", groupId, taskId);
+		Assert.isTrue(status != ScheduleStatus.NORMAL, "执行失败, 存在正在执行的任务实例", groupId, taskId);
 
 		JobKey jobKey = new JobKey(taskId, groupId);
 
