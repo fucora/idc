@@ -6,44 +6,44 @@ public class JobDependencyPK implements Serializable {
 
 	private static final long serialVersionUID = -4479061532661305224L;
 
-	private String srcTaskId;
+	private String srcJobId;
 
-	private String srcGroupId;
+	private String srcJobGroup;
 
-	private String taskId;
+	private String jobId;
 
-	private String groupId;
+	private String jobGroup;
 
-	public String getSrcTaskId() {
-		return srcTaskId;
+	public String getSrcJobId() {
+		return srcJobId;
 	}
 
-	public void setSrcTaskId(String srcTaskId) {
-		this.srcTaskId = srcTaskId;
+	public void setSrcJobId(String srcJobId) {
+		this.srcJobId = srcJobId;
 	}
 
-	public String getSrcGroupId() {
-		return srcGroupId;
+	public String getSrcJobGroup() {
+		return srcJobGroup;
 	}
 
-	public void setSrcGroupId(String srcGroupId) {
-		this.srcGroupId = srcGroupId;
+	public void setSrcJobGroup(String srcJobGroup) {
+		this.srcJobGroup = srcJobGroup;
 	}
 
-	public String getTaskId() {
-		return taskId;
+	public String getJobId() {
+		return jobId;
 	}
 
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 
-	public String getGroupId() {
-		return groupId;
+	public String getJobGroup() {
+		return jobGroup;
 	}
 
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
 	}
 
 }

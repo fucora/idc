@@ -13,54 +13,54 @@ import io.swagger.annotations.ApiOperation;
 @IdClass(JobDependencyPK.class)
 public class JobDependency {
 	
-	private String srcTaskId;
+	private String srcJobId;
 	
-	private String srcGroupId;
+	private String srcJobGroup;
 
-	private String taskId;
+	private String jobId;
 
-	private String groupId;
+	private String jobGroup;
 
 	@Id
-	@Column(name = "src_task_id", length = 50)
+	@Column(name = "src_job_id", length = 50)
 	public String getSrcJobId() {
-		return srcTaskId;
+		return srcJobId;
 	}
 
-	public void setSrcJobId(String srcTaskId) {
-		this.srcTaskId = srcTaskId;
+	public void setSrcJobId(String srcJobId) {
+		this.srcJobId = srcJobId;
 	}
 
 	@Id
-	@Column(name = "src_group_id", length = 50)
+	@Column(name = "src_job_group", length = 50)
 	public String getSrcJobGroup() {
-		return srcGroupId;
+		return srcJobGroup;
 	}
 
-	public void setSrcJobGroup(String srcGroupId) {
-		this.srcGroupId = srcGroupId;
+	public void setSrcJobGroup(String srcJobGroup) {
+		this.srcJobGroup = srcJobGroup;
 	}
 
 	@Id
-	@Column(name = "task_id", length = 50)
+	@Column(name = "job_id", length = 50)
 	@ApiOperation("依赖的 taskId")
 	public String getJobId() {
-		return taskId;
+		return jobId;
 	}
 
-	public void setJobId(String srcTaskId) {
-		this.taskId = srcTaskId;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 
 	@Id
-	@Column(name = "group_id", length = 50)
+	@Column(name = "job_group", length = 50)
 	@ApiOperation("依赖的 groupId")
 	public String getJobGroup() {
-		return groupId;
+		return jobGroup;
 	}
 
 	public void setJobGroup(String srcGroup) {
-		this.groupId = srcGroup;
+		this.jobGroup = srcGroup;
 	}
 
 }
