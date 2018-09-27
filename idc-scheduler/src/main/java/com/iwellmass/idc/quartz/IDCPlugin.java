@@ -148,7 +148,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		
 		LOGGER.info("Get event {}", event);
 		
-		// 更新任务状态
+		// 更新实例状态
 		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
 			jobInstance.setStartTime(event.getStartTime());
 			jobInstance.setStatus(JobInstanceStatus.RUNNING);
@@ -157,7 +157,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		if (message == null) {
 			message = "开始执行任务 " + event.getInstanceId();
 		}
-		pluginContext.log(event.getInstanceId(), event.getMessage());
+		pluginContext.log(event.getInstanceId(), message);
 	}
 
 	@Override
@@ -180,6 +180,6 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		if (message == null) {
 			message = "执行完毕 ";
 		}
-		pluginContext.log(event.getInstanceId(), event.getMessage());
+		pluginContext.log(event.getInstanceId(), message);
 	}
 }

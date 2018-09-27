@@ -7,26 +7,23 @@ public enum ScheduleStatus {
 
 	@ApiModelProperty("未调度")
 	NONE,
-	
+
 	@ApiModelProperty("正常")
 	NORMAL,
-	
+
 	@ApiModelProperty("冻结")
 	PAUSED,
-	
+
 	@ApiModelProperty("完结")
 	COMPLETE,
-	
+
 	@ApiModelProperty("调度异常")
 	ERROR,
-	
+
 	@ApiModelProperty("调度阻塞")
-	BLOCKED,
-	
-	@ApiModelProperty("任务被取消")
-	CANCELED;
+	BLOCKED;
 
 	public boolean isComplete() {
-		return this == COMPLETE || this == CANCELED;
+		return this == COMPLETE;
 	}
 }

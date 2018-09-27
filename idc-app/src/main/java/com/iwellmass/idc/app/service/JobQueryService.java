@@ -29,6 +29,7 @@ public class JobQueryService {
 	@Inject
 	private JobRepository jobRepository;
 	
+	@Inject
 	private JobDependencyRepository dependencyRepository;
 
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
