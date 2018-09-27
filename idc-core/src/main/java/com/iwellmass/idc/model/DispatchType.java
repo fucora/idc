@@ -9,5 +9,5 @@ public enum DispatchType {
 	/**
 	 * 手动
 	 */
-	MANUAL;
+	MANUAL
 }

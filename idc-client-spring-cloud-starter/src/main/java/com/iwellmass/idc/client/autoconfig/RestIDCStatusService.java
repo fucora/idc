@@ -13,9 +13,9 @@ import com.iwellmass.idc.executor.StartEvent;
 public interface RestIDCStatusService extends IDCStatusService {
 
 	@PutMapping(path = "/job/complete", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void fireCompleteEvent(@RequestBody CompleteEvent event);
+	void fireCompleteEvent(@RequestBody CompleteEvent event);
 	
 	
 	@PutMapping(path = "/job/start", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void fireStartEvent(@RequestBody StartEvent event);
+	void fireStartEvent(@RequestBody StartEvent event);
 }

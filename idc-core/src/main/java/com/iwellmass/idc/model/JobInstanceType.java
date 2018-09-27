@@ -13,5 +13,5 @@ public enum JobInstanceType {
 	MANUAL,
 	
 	@ApiModelProperty("补数实例")
-	COMPLEMENT;
+	COMPLEMENT
 }

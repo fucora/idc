@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.http.MediaType;
 import org.springframework.util.ClassUtils;
@@ -30,15 +31,12 @@ public class IDCJobHandlerMapping extends RequestMappingHandlerMapping {
 		Class<?> handlerType = handler.getClass();
 		final Class<?> userType = ClassUtils.getUserClass(handlerType);
 		Map<Method, RequestMappingInfo> methods = MethodIntrospector.selectMethods(userType,
-				new MethodIntrospector.MetadataLookup<RequestMappingInfo>() {
-					@Override
-					public RequestMappingInfo inspect(Method method) {
-						try {
-							return getMappingForMethod(method, userType);
-						} catch (Throwable ex) {
-							throw new IllegalStateException(
-									"Invalid mapping on handler class [" + userType.getName() + "]: " + method, ex);
-						}
+				(MethodIntrospector.MetadataLookup<RequestMappingInfo>) method -> {
+					try {
+						return getMappingForMethod(method, userType);
+					} catch (Throwable ex) {
+						throw new IllegalStateException(
+								"Invalid mapping on handler class [" + userType.getName() + "]: " + method, ex);
 					}
 				});
 

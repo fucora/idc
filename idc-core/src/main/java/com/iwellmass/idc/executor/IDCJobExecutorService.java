@@ -6,9 +6,9 @@ import com.iwellmass.idc.model.JobInstance;
 
 public interface IDCJobExecutorService {
 
-	public void execute(JobInstance context);
+	void execute(JobInstance context);
 
-	public static String toURI(String contentType) {
+	static String toURI(String contentType) {
 		return MessageFormatter.format("/idc-job/{}", contentType).getMessage();
 	}
 }

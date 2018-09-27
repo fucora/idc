@@ -56,7 +56,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
 			throws SQLException {
         PreparedStatement ps = null;
         ResultSet rs = null;
-        List<TriggerKey> nextTriggers = new LinkedList<TriggerKey>();
+        List<TriggerKey> nextTriggers = new LinkedList<>();
         try {
             ps = conn.prepareStatement(rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE));
             
@@ -73,6 +73,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
             ps.setString(2, STATE_WAITING);
             ps.setBigDecimal(3, new BigDecimal(String.valueOf(noLaterThan)));
             ps.setBigDecimal(4, new BigDecimal(String.valueOf(noEarlierThan)));
+            logger.info("noLaterThan:"+noLaterThan+",noEarlierThan"+noEarlierThan);
             rs = ps.executeQuery();
             
             while (rs.next() && nextTriggers.size() <= maxCount) {

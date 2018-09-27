@@ -77,11 +77,11 @@ public class JobService {
 
 	@Transactional
 	public void schedule(Job job) throws AppException {
-		
+
 		JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
-		
+
 		Assert.isTrue(jobRepository.findOne(job.getTaskId(), job.getGroupId()) == null, "不可重复调度任务");
-		
+
 		try {
 			if (scheduler.checkExists(jobKey)) {
 				throw new AppException("不可重复调度任务");
@@ -90,7 +90,7 @@ public class JobService {
 		} catch (SchedulerException e) {
 			throw new AppException("调度失败: " + e.getMessage(), e);
 		}
-		
+
 	}
 
 	@Transactional
@@ -101,9 +101,9 @@ public class JobService {
 			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
 		job.setUpdateTime(LocalDateTime.now());
-		
+
 		LOGGER.info("重新调度任务 {}.{}", job.getGroupId(), job.getTaskId());
-		
+
 		doScheduleJob(job, true);
 	}
 
@@ -118,8 +118,7 @@ public class JobService {
 			throw new AppException(e);
 		}
 	}
-	
-	@Transactional
+
 	private void doScheduleJob(Job job, boolean replace) {
 
 		LocalDateTime now = LocalDateTime.now();
@@ -159,7 +158,7 @@ public class JobService {
 		// save dependencies
 		dependencyRepo.cleanJobDependencies(job.getTaskId(), job.getGroupId());
 		dependencyRepo.save(job.getDependencies());
-		
+
 		boolean success = false;
 		try {
 
@@ -180,14 +179,18 @@ public class JobService {
 			if (job.getDispatchType() == DispatchType.AUTO) {
 				// 让 QZ 可以知道调度类型
 				Trigger trigger = TriggerBuilder.newTrigger()
-					.withIdentity(triggerKey).forJob(jobKey)
-					.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
-					.withMisfireHandlingInstructionIgnoreMisfires())
-					.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
-					.endAt(toDate(job.getEndTime())).build();
+						.withIdentity(triggerKey).forJob(jobKey)
+						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
+								.withMisfireHandlingInstructionIgnoreMisfires())
+						.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
+						.endAt(toDate(job.getEndTime())).build();
 				// 保存到 quartz
-				scheduler.rescheduleJob(triggerKey, trigger);
-			}
+				if (scheduler.checkExists(triggerKey)) {
+					scheduler.rescheduleJob(triggerKey, trigger);
+				} else {
+					scheduler.scheduleJob(trigger);
+				}
+		}
 			success = true;
 		} catch (AppException e) {
 			throw e;
@@ -210,7 +213,7 @@ public class JobService {
 			}
 		}
 	}
-	
+
 	private DirectedAcyclicGraph<JobKey, Dependency> loadDependencyGraph() {
 
 		List<JobDependency> deps = dependencyRepo.findAll();
@@ -248,12 +251,12 @@ public class JobService {
 	}
 
 	public void resume(JobPK jobKey) {
-		
+
 		try {
 			scheduler.resumeJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
-			
+
 			Job job = jobRepository.findOne(jobKey);
-			
+
 			if (job != null) {
 				if (job.getDispatchType() == DispatchType.AUTO) {
 					TriggerKey tk = buildCronTriggerKey(job.getScheduleType(), jobKey.getTaskId(), jobKey.getGroupId());
@@ -278,9 +281,9 @@ public class JobService {
 		Job job = jobRepository.findOne(taskId, groupId);
 
 		Assert.isTrue(job != null, "任务 %s.%s 不存在", groupId, taskId);
-		
+
 		ScheduleStatus status = job.getStatus();
-		
+
 		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结", groupId, taskId);
 		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 任务已阻塞", groupId, taskId);
 
@@ -344,30 +347,30 @@ public class JobService {
 		/*
 		 * try { String taskId = request.getTaskId(); String groupId =
 		 * request.getGroupId();
-		 * 
+		 *
 		 * Trigger mainTrigger =
 		 * scheduler.getTrigger(buildTriggerKey(JobInstanceType.CRON, taskId, groupId));
 		 * Assert.isTrue(mainTrigger != null, "任务未提交");
-		 * 
+		 *
 		 * ScheduleBuilder<? extends Trigger> sbt = mainTrigger.getScheduleBuilder();
-		 * 
+		 *
 		 * TriggerKey triggerKey = buildTriggerKey(JobInstanceType.COMPLEMENT, taskId,
 		 * groupId);
-		 * 
+		 *
 		 * Trigger trigger = scheduler.getTrigger(triggerKey);
-		 * 
+		 *
 		 * Assert.isTrue(trigger == null, "存在正在执行的补数任务");
-		 * 
+		 *
 		 * TriggerBuilder<?> complementTriggerBuilder =
 		 * TriggerBuilder.newTrigger().withIdentity(triggerKey)
 		 * .forJob(mainTrigger.getJobKey()).withSchedule(sbt)
 		 * .startAt(toDate(LocalDateTime.of(request.getStartTime(), LocalTime.MIN)))
 		 * .endAt(toDate(LocalDateTime.of(request.getEndTime(), LocalTime.MAX)));
-		 * 
+		 *
 		 * if (trigger == null) {
 		 * scheduler.scheduleJob(complementTriggerBuilder.build()); } else {
 		 * scheduler.rescheduleJob(triggerKey, complementTriggerBuilder.build()); }
-		 * 
+		 *
 		 * } catch (SchedulerException e) { throw new AppException("补数异常: " +
 		 * e.getMessage()); }
 		 */

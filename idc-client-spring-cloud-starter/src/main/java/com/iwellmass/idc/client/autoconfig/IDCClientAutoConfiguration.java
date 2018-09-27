@@ -1,13 +1,6 @@
 package com.iwellmass.idc.client.autoconfig;
 
-import static com.iwellmass.idc.executor.IDCJobExecutorService.toURI;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import com.iwellmass.idc.executor.IDCJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -21,7 +14,12 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import com.iwellmass.idc.executor.IDCJob;
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.iwellmass.idc.executor.IDCJobExecutorService.toURI;
 
 @Configuration
 @ConditionalOnBean(IDCJob.class)
@@ -34,12 +32,11 @@ public class IDCClientAutoConfiguration {
 
 	@Inject
 	public RestIDCStatusService idcStatusManagerClient;
-	
+
 
 	@Bean(name = "idc-executor")
 	public AsyncTaskExecutor asyncTaskExecutor() {
-		SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("idc-executor-");
-		return executor;
+		return new SimpleAsyncTaskExecutor("idc-executor-");
 	}
 
 	/*
