@@ -5,10 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerContext;
-
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.ScheduleType;
@@ -25,14 +21,14 @@ public class IDCContextKey<T> {
 
 	// ~~ JOB ~~
 	public static final IDCContextKey<Boolean> JOB_ASYNC = defOpt("idc.job.async", Boolean.class, true);
-	/** TaskId */
-	public static final IDCContextKey<String> JOB_TASK_ID = defReq("idc.job.taskId", String.class);
-	/** GroupId */
-	public static final IDCContextKey<String> JOB_GROUP_ID = defReq("idc.job.groupId", String.class);
-	/** ScheduleType */
-	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
+	/** JobName */
+	public static final IDCContextKey<String> JOB_NAME = defReq("idc.job.jobName", String.class);
+	/** JobGroup */
+	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
 	/** 调度类型 */
-	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.context.dispatchType", DispatchType.class);
+	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
+	/** 自动调度 OR 手动调度*/
+	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.job.dispatchType", DispatchType.class);
 
 	// ~~ runtime ~~
 	/** 实例 ID */
@@ -61,50 +57,20 @@ public class IDCContextKey<T> {
 		return this.type;
 	}
 
-	public T applyGet(SchedulerContext context) {
-		Object o = context.get(this.key);
-		return get0(o);
-	}
-	
-	public T applyGet(JobDataMap jobDataMap) {
+	@SuppressWarnings("unchecked")
+	public T applyGet(Map<String, Object> jobDataMap) {
 		Object o = jobDataMap.get(this.key);
-		return get0(o);
+		return (T) get0(o, true);
 	}
 
-	@SuppressWarnings("unchecked")
-	public final T applyGet(JobExecutionContext context) {
-		Object o = get0(context.get(this.key()), false);
-		if (o != NIL) {
-			return (T) o;
-		}
-		o = get0(context.getTrigger().getJobDataMap().get(this.key), false);
-		if (o != NIL) {
-			return (T) o;
-		}
-		return (T) get0(context.getJobDetail().getJobDataMap().get(this.key), false);
-	}
-	
-	public final void applyPut(SchedulerContext context, T v) {
-		context.put(this.key, v);
-	}
-	
-	public final void applyPut(JobDataMap map, T v) {
+	public final void applyPut(Map<String, Object> map, T v) {
 		map.put(this.key, v);
 	}
 
-	public final void applyPut(JobExecutionContext context, T v) {
-		context.put(this.key, v);
-	}
-	
-	@SuppressWarnings("unchecked")
-	private T get0(Object o) {
-		return (T) this.get0(o, true);
-	}
-	
 	private Object get0(Object o, boolean required) {
 		if (o == null) {
 			if (defaultValue != NIL) {
-				return  defaultValue;
+				return defaultValue;
 			}
 			if (required) {
 				throw new NullPointerException("未设置 " + this.key + " 值");
@@ -112,25 +78,7 @@ public class IDCContextKey<T> {
 				return NIL;
 			}
 		}
-		return  o;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof IDCContextKey) {
-			return key.equals(((IDCContextKey<?>) obj).key);
-		}
-		return key.equals(obj);
-	}
-
-	@Override
-	public String toString() {
-		return key;
-	}
-
-	@Override
-	public int hashCode() {
-		return key.hashCode();
+		return o;
 	}
 
 	/** define required key-value */
@@ -139,6 +87,7 @@ public class IDCContextKey<T> {
 		cache.put(key, contextKey);
 		return contextKey;
 	}
+
 	/** define option key-value */
 	public static final <T> IDCContextKey<T> defOpt(String key, Class<T> valueType, T defaultValue) {
 		IDCContextKey<T> contextKey = new IDCContextKey<>(key, valueType);

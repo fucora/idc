@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.quartz.IDCPluginContext;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
@@ -29,8 +30,8 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	private ExecutionLogRepository logRepository;
 	
 	@Override
-	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
-		Job job = jobRepo.findOne(jobKey.getName(), jobKey.getGroup());
+	public JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun) {
+		Job job = jobRepo.findOne(jobKey.getJobId(), jobKey.getJobGroup());
 		
 		Assert.isTrue(job != null, "任务不存在");
 		
@@ -44,8 +45,8 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public void updateJob(JobKey jobKey, Consumer<Job> fun) {
-		Job job = jobRepo.findOne(jobKey.getName(), jobKey.getGroup());
+	public void updateJob(JobPK jobKey, Consumer<Job> fun) {
+		Job job = jobRepo.findOne(jobKey.getJobId(), jobKey.getJobGroup());
 		fun.accept(job);
 		jobRepo.save(job);
 	}

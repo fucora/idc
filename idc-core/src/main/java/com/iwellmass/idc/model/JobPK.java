@@ -6,38 +6,38 @@ public class JobPK implements Serializable {
 
 	private static final long serialVersionUID = -6687330393375678068L;
 
-	private String taskId;
+	private String jobId;
 
-	private String groupId;
+	private String jobGroup;
 
 	public JobPK() {
 	}
 
-	public JobPK(String taskId, String groupId) {
+	public JobPK(String jobId, String jobGroup) {
 		super();
-		this.taskId = taskId;
-		this.groupId = groupId;
+		this.jobId = jobId;
+		this.jobGroup = jobGroup;
 	}
 
-	public String getTaskId() {
-		return taskId;
+	public String getJobId() {
+		return jobId;
 	}
 
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 
-	public String getGroupId() {
-		return groupId;
+	public String getJobGroup() {
+		return jobGroup;
 	}
 
-	public void setGroupId(String group) {
-		this.groupId = group;
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
 	}
-
+	
 	@Override
 	public String toString() {
-		return "JobPK [taskId=" + taskId + ", groupId=" + groupId + "]";
+		return jobGroup + "." + jobId;
 	}
 
 }

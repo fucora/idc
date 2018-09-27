@@ -23,43 +23,43 @@ public class JobDependency {
 
 	@Id
 	@Column(name = "src_task_id", length = 50)
-	public String getSrcTaskId() {
+	public String getSrcJobId() {
 		return srcTaskId;
 	}
 
-	public void setSrcTaskId(String srcTaskId) {
+	public void setSrcJobId(String srcTaskId) {
 		this.srcTaskId = srcTaskId;
 	}
 
 	@Id
 	@Column(name = "src_group_id", length = 50)
-	public String getSrcGroupId() {
+	public String getSrcJobGroup() {
 		return srcGroupId;
 	}
 
-	public void setSrcGroupId(String srcGroupId) {
+	public void setSrcJobGroup(String srcGroupId) {
 		this.srcGroupId = srcGroupId;
 	}
 
 	@Id
 	@Column(name = "task_id", length = 50)
 	@ApiOperation("依赖的 taskId")
-	public String getTaskId() {
+	public String getJobId() {
 		return taskId;
 	}
 
-	public void setTaskId(String srcTaskId) {
+	public void setJobId(String srcTaskId) {
 		this.taskId = srcTaskId;
 	}
 
 	@Id
 	@Column(name = "group_id", length = 50)
 	@ApiOperation("依赖的 groupId")
-	public String getGroupId() {
+	public String getJobGroup() {
 		return groupId;
 	}
 
-	public void setGroupId(String srcGroup) {
+	public void setJobGroup(String srcGroup) {
 		this.groupId = srcGroup;
 	}
 

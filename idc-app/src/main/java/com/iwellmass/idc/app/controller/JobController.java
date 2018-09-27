@@ -1,4 +1,6 @@
 package com.iwellmass.idc.app.controller;
+ 
+import static com.iwellmass.idc.scheduler.StdJobPKGenerator.valueOf;
 
 import java.util.List;
 
@@ -18,7 +20,8 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.model.LockRequest;
+import com.iwellmass.idc.app.model.PauseRequest;
+import com.iwellmass.idc.app.model.TaskKey;
 import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
@@ -30,7 +33,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/job")
 public class JobController {
-
+	
 	@Inject
 	private JobService jobService;
 	
@@ -39,7 +42,10 @@ public class JobController {
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping
-	public ServiceResult<Job> getJob(JobPK jobKey) {
+	public ServiceResult<Job> getJob(TaskKey taskKey) {
+		
+		JobPK jobKey = valueOf(taskKey);
+		
 		Job job = jobQueryService.findJob(jobKey);
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
@@ -85,21 +91,24 @@ public class JobController {
 
 	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
-	public ServiceResult<String> unschedule(@RequestBody JobPK jobKey) {
+	public ServiceResult<String> unschedule(@RequestBody TaskKey taskKey) {
+		JobPK jobKey = valueOf(taskKey);
 		jobService.unschedule(jobKey);
 		return ServiceResult.success("提交成功");
 	}
 
 	@PostMapping(value = "/pause")
 	@ApiOperation("冻结 Job")
-	public ServiceResult<String> pause(@RequestBody LockRequest request) {
-		jobService.pause(request);
+	public ServiceResult<String> pause(@RequestBody PauseRequest request) {
+		JobPK jobKey = valueOf(request);
+		jobService.pause(jobKey, request.isForceLock());
 		return ServiceResult.success("任务已冻结");
 	}
 
 	@PostMapping(value = "/resume")
 	@ApiOperation("恢复 Job")
-	public ServiceResult<String> resume(@RequestBody JobPK jobKey) {
+	public ServiceResult<String> resume(@RequestBody TaskKey taskKey) {
+		JobPK jobKey = valueOf(taskKey);
 		jobService.resume(jobKey);
 		return ServiceResult.success("任务已恢复");
 	}

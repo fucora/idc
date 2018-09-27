@@ -1,6 +1,8 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.*;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
+
 import java.util.Date;
 
 import javax.sql.DataSource;
@@ -15,7 +17,6 @@ import org.quartz.TriggerBuilder;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCPluginTest {
 	

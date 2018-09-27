@@ -40,7 +40,8 @@ public class JobInstanceService {
 	private Scheduler scheduler;
 
 	public void redo(RedoRequest request) {
-		int instanceId = request.getInstanceId();
+		throw new UnsupportedOperationException("unsupported yet.");
+		/*int instanceId = request.getInstanceId();
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
 		if (instance == null) {
 			throw new AppException("任务实例 '" + instanceId + "' 不存在");
@@ -73,7 +74,7 @@ public class JobInstanceService {
 			}
 		} catch (SchedulerException e) {
 			throw new AppException("重跑失败: " + e.getMessage(), e);
-		}
+		}*/
 	}
 
 	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {

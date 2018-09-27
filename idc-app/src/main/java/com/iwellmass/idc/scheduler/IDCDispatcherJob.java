@@ -26,7 +26,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
-		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
+		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context.getMergedJobDataMap());
 		
 		LOGGER.info("派发任务 {}, 实例 {} ", context.getJobDetail().getKey(), jobInstance.getInstanceId());
 		

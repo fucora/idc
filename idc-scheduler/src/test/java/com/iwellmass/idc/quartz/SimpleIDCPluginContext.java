@@ -3,12 +3,13 @@ package com.iwellmass.idc.quartz;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.ScheduleType;
 
 public class SimpleIDCPluginContext extends IDCPluginContext {
 
@@ -20,10 +21,10 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public void updateJob(JobKey jobKey, Consumer<Job> fun) {
+	public void updateJob(JobPK jobKey, Consumer<Job> fun) {
 		Job job = new Job();
-		job.setTaskId(jobKey.getName());
-		job.setGroupId(jobKey.getGroup());
+		job.setTaskId(jobKey.getJobId());
+		job.setGroupId(jobKey.getJobGroup());
 		fun.andThen(v -> LOGGER.info("更新任务 : {}", v)).accept(job);
 	}
 
@@ -37,11 +38,14 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
+	public JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun) {
 		Job job = new Job();
-		job.setTaskId(jobKey.getName());
-		job.setGroupId(jobKey.getGroup());
-		return fun.apply(job);
+		job.setTaskId(jobKey.getJobId());
+		job.setGroupId(jobKey.getJobGroup());
+		job.setScheduleType(ScheduleType.DAILY);
+		JobInstance ins = fun.apply(job);
+		ins.setInstanceId(10086);
+		return ins;
 	}
 
 }

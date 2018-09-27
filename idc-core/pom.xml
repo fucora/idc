@@ -32,7 +32,6 @@
 
 
 	<dependencies>
-
 		<!-- wac -->
 		<dependency>
 			<groupId>com.iwellmass</groupId>
@@ -55,12 +54,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
-		</dependency>
-
 
 		<!-- test -->
 		<dependency>

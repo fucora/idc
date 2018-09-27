@@ -55,6 +55,11 @@
 			<artifactId>idc-core</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+		</dependency>
+
 		
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -75,7 +80,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
 		</dependency>
 	</dependencies>
 </project>

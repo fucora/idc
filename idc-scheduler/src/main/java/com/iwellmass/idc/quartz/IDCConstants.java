@@ -23,12 +23,12 @@ public interface IDCConstants {
 	String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "SHOULD_FIRE_TIME";
 	String COL_JOB_INSTANCE_STATUS = "STATUS";*/
 	
-	String COL_IDC_JOB_NAME = "task_id";
-	String COL_IDC_JOB_GROUP = "group_id";
+	String COL_IDC_JOB_NAME = "job_id";
+	String COL_IDC_JOB_GROUP = "job_group";
 	
 	String TABLE_DEPENDENCY = "t_idc_dependency";
-	String COL_DEPENDENCY_SRC_JOB_NAME = "src_task_id";
-	String COL_DEPENDENCY_SRC_JOB_GROUP = "src_group_id";
+	String COL_DEPENDENCY_SRC_JOB_NAME = "src_job_id";
+	String COL_DEPENDENCY_SRC_JOB_GROUP = "src_job_group";
 	
 	String TABLE_JOB_INSTANCE = "t_idc_job_instance";
 	String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "should_fire_time";

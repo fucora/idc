@@ -54,7 +54,7 @@ public class JobQueryService {
 	}
 
 	public List<Job> getWorkflowJob(JobPK jobKey) {
-		return jobRepository.findSubJobs(jobKey.getTaskId(), jobKey.getGroupId());
+		return jobRepository.findSubJobs(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
 	public List<Assignee> getAllAssignee() {

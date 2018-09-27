@@ -14,15 +14,15 @@ import com.iwellmass.idc.model.TaskType;
 @Repository
 public interface JobRepository extends CrudRepository<Job, JobPK>, JpaSpecificationExecutor<Job>{
 
-	@Query("SELECT j FROM Job j WHERE j.taskId = ?1 and j.groupId = ?2")
-	Job findOne(String taskId, String groupId);
+	@Query("SELECT j FROM Job j WHERE j.jobName = ?1 and j.jobGroup = ?2")
+	Job findOne(String jobName, String jobGroup);
 
 	@Query("SELECT DISTINCT assignee FROM Job WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
 
 	List<Job> findByTaskType(TaskType workflow);
 	
-	@Query("SELECT J FROM Job J WHERE J.taskId = ?1 AND J.groupId = ?2 AND J.taskType = com.iwellmass.idc.model.TaskType.WORKFLOW_TASK")
-	List<Job> findSubJobs(String taskId, String groupId);
+	@Query("SELECT J FROM Job J WHERE J.jobName = ?1 AND J.jobGroup = ?2 AND J.taskType = com.iwellmass.idc.model.TaskType.WORKFLOW_TASK")
+	List<Job> findSubJobs(String jobName, String jobGroup);
 
 }

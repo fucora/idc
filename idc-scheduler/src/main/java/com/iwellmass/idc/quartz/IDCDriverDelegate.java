@@ -73,7 +73,6 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
             ps.setString(2, STATE_WAITING);
             ps.setBigDecimal(3, new BigDecimal(String.valueOf(noLaterThan)));
             ps.setBigDecimal(4, new BigDecimal(String.valueOf(noEarlierThan)));
-            logger.info("noLaterThan:"+noLaterThan+",noEarlierThan"+noEarlierThan);
             rs = ps.executeQuery();
             
             while (rs.next() && nextTriggers.size() <= maxCount) {

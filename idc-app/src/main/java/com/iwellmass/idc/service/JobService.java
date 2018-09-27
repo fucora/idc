@@ -2,10 +2,6 @@ package com.iwellmass.idc.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
-import static com.iwellmass.idc.quartz.IDCPlugin.buildCronTriggerKey;
-import static com.iwellmass.idc.quartz.IDCPlugin.buildManualTriggerKey;
 import static com.iwellmass.idc.quartz.IDCPlugin.toDate;
 
 import java.text.ParseException;
@@ -22,10 +18,8 @@ import javax.transaction.Transactional;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.JobBuilder;
+import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -42,21 +36,19 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
-import com.iwellmass.idc.app.model.LockRequest;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobScript;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.quartz.IDCPluginContext.Dependency;
+import com.iwellmass.idc.quartz.JobPKGenerator;
 import com.iwellmass.idc.repo.JobDependencyRepository;
-import com.iwellmass.idc.repo.JobInstanceRepository;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.scheduler.IDCDispatcherJob;
+import com.iwellmass.idc.scheduler.StdJobPKGenerator;
 
 @Service
 public class JobService {
@@ -67,34 +59,37 @@ public class JobService {
 	private JobRepository jobRepository;
 
 	@Inject
-	private JobInstanceRepository instanceRepostory;
-
-	@Inject
 	private JobDependencyRepository dependencyRepo;
 
 	@Inject
 	private Scheduler scheduler;
 
+	@Inject
+	private JobScriptFactory jobScriptFactory;
+
+	@Inject
+	private JobPKGenerator jobPKGenerator;
+
 	@Transactional
 	public void schedule(Job job) throws AppException {
 
-		JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
+		loadDependencyGraph(job);
 
-		Assert.isTrue(jobRepository.findOne(job.getTaskId(), job.getGroupId()) == null, "不可重复调度任务");
+		JobPK jobPK = jobPKGenerator.generate(job);
+		Assert.isTrue(jobRepository.findOne(jobPK) == null, "不可重复调度任务");
 
-		try {
-			if (scheduler.checkExists(jobKey)) {
-				throw new AppException("不可重复调度任务");
-			}
-			doScheduleJob(job, false);
-		} catch (SchedulerException e) {
-			throw new AppException("调度失败: " + e.getMessage(), e);
-		}
+		LOGGER.info("创建调度任务 {}", jobPK);
 
+		job.setCreateTime(LocalDateTime.now());
+		job.setUpdateTime(null);
+		doScheduleJob(job, false);
 	}
 
 	@Transactional
 	public void reschedule(Job job) {
+
+		loadDependencyGraph(job);
+
 		// 没有正在执行的任务计划便可以重新调度计划任务
 		Job pj = jobRepository.findOne(job.getTaskId(), job.getGroupId());
 		if (pj != null) {
@@ -107,96 +102,61 @@ public class JobService {
 		doScheduleJob(job, true);
 	}
 
-	public void unschedule(JobPK jobKey) throws AppException {
-		try {
-			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
-			boolean result = scheduler.deleteJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
-			if (!result) {
-				LOGGER.warn("{} 不存在的调度任务", jobKey);
-			}
-		} catch (SchedulerException e) {
-			throw new AppException(e);
-		}
-	}
-
 	private void doScheduleJob(Job job, boolean replace) {
 
-		LocalDateTime now = LocalDateTime.now();
+		// TODO 以后扩展
+		JobScript script = jobScriptFactory.getJobScript(job);
+		if (script == null) {
+			throw new AppException("未找到对应的 JobScript");
+		}
+
+		JobPK jobPK = jobPKGenerator.generate(job);
+		TriggerKey triggerKey = new TriggerKey(jobPK.getJobId(), jobPK.getJobGroup());
+
 		// 默认值
-		job.setCreateTime(now);
-		if (job.getGroupId() == null) {
-			job.setGroupId(Job.DEFAULT_GROUP);
-		}
-		if (job.getContentType() == null) {
-			job.setContentType(Job.DEFAULT_CONTENT_TYPE);
-		}
 		ScheduleProperties sp = job.getScheduleProperties();
 		job.setScheduleType(sp.getScheduleType());
-		JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
-
-		// 计算依赖
-		List<JobDependency> deps = job.getDependencies();
-		if (!Utils.isNullOrEmpty(deps)) {
-			DirectedAcyclicGraph<JobKey, Dependency> depGraph = loadDependencyGraph();
-			depGraph.addVertex(jobKey);
-			for (JobDependency dep : deps) {
-				JobKey target = new JobKey(dep.getTaskId(), dep.getGroupId());
-				try {
-					depGraph.addVertex(target);
-					depGraph.addEdge(jobKey, target);
-				} catch (IllegalArgumentException e) {
-					throw new AppException("无法添加 " + jobKey + " -> " + target + " 依赖: " + e.getMessage(), jobKey);
-				}
-				dep.setSrcTaskId(jobKey.getName());
-				dep.setSrcGroupId(jobKey.getGroup());
-			}
-		}
 
 		// save idc job
 		jobRepository.save(job);
-
 		// save dependencies
-		dependencyRepo.cleanJobDependencies(job.getTaskId(), job.getGroupId());
+		dependencyRepo.cleanJobDependencies(jobPK.getJobId(), jobPK.getJobGroup());
 		dependencyRepo.save(job.getDependencies());
 
 		boolean success = false;
 		try {
-
-			TriggerKey triggerKey = buildCronTriggerKey(sp.getScheduleType(), job.getTaskId(), job.getGroupId());
-
-			JobDetail jobDetail = JobBuilder
-				.newJob(IDCDispatcherJob.class)
-				.withIdentity(jobKey)
-				.requestRecovery()
-				.storeDurably().build();
-
-			JOB_DISPATCH_TYPE.applyPut(jobDetail.getJobDataMap(), job.getDispatchType());
-			JOB_SCHEDULE_TYPE.applyPut(jobDetail.getJobDataMap(), sp.getScheduleType());
-
-			// save scheduler job
-			scheduler.addJob(jobDetail, replace);
-
 			if (job.getDispatchType() == DispatchType.AUTO) {
 				// 让 QZ 可以知道调度类型
-				Trigger trigger = TriggerBuilder.newTrigger()
-						.withIdentity(triggerKey).forJob(jobKey)
+				TriggerBuilder<CronTrigger> triggerBuilder = TriggerBuilder.newTrigger()
+						.withIdentity(jobPK.getJobId(), jobPK.getJobGroup())
+						.forJob(script.getScriptId(), script.getScriptGroup())
 						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
-								.withMisfireHandlingInstructionIgnoreMisfires())
-						.startAt(toDate(job.getStartTime() == null ? now : job.getStartTime()))
-						.endAt(toDate(job.getEndTime())).build();
-				// 保存到 quartz
-				if (scheduler.checkExists(triggerKey)) {
-					scheduler.rescheduleJob(triggerKey, trigger);
-				} else {
-					scheduler.scheduleJob(trigger);
+								.withMisfireHandlingInstructionIgnoreMisfires());
+
+				if (job.getStartTime() != null) {
+					triggerBuilder.startAt(toDate(job.getStartTime()));
 				}
-		}
+				if (job.getEndTime() != null) {
+					triggerBuilder.startAt(toDate(job.getEndTime()));
+				}
+
+				// 保存到 quartz
+				if (!scheduler.checkExists(triggerKey)) {
+					scheduler.scheduleJob(triggerBuilder.build());
+				} else {
+					if (replace) {
+						scheduler.rescheduleJob(triggerKey, triggerBuilder.build());
+					} else {
+						throw new AppException("不可重复创建调度任务");
+					}
+				}
+			}
 			success = true;
 		} catch (AppException e) {
 			throw e;
 		} catch (ObjectAlreadyExistsException e) {
 			LOGGER.error(e.getMessage());
-			throw new AppException("不可重复调度任务");
+			throw new AppException("不可重复创建调度任务");
 		} catch (ParseException e) {
 			LOGGER.error(e.getMessage());
 			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
@@ -206,7 +166,7 @@ public class JobService {
 		} finally {
 			if (!success) {
 				try {
-					scheduler.deleteJob(jobKey);
+					scheduler.unscheduleJob(triggerKey);
 				} catch (Throwable e) {
 					// ignore
 				}
@@ -214,91 +174,106 @@ public class JobService {
 		}
 	}
 
-	private DirectedAcyclicGraph<JobKey, Dependency> loadDependencyGraph() {
+	private void loadDependencyGraph(Job job) {
+		List<JobDependency> deps = job.getDependencies();
 
-		List<JobDependency> deps = dependencyRepo.findAll();
-		DirectedAcyclicGraph<JobKey, Dependency> depGraph = new DirectedAcyclicGraph<>(Dependency.class);
+		TriggerKey jobPk = new TriggerKey(job.getJobId(), job.getJobGroup());
 
-		if (deps != null) {
-			for (JobDependency dep : deps) {
-				JobKey sourceVertex = new JobKey(dep.getSrcTaskId(), dep.getSrcGroupId());
-				JobKey targetVertex = new JobKey(dep.getTaskId(), dep.getGroupId());
-				depGraph.addVertex(sourceVertex);
-				depGraph.addVertex(targetVertex);
-				depGraph.addEdge(sourceVertex, targetVertex);
+		if (Utils.isNullOrEmpty(deps)) {
+			return;
+		}
+
+		// 初始化
+		DirectedAcyclicGraph<TriggerKey, Dependency> depGraph = new DirectedAcyclicGraph<>(Dependency.class);
+		List<JobDependency> existingDeps = dependencyRepo.findAll();
+		if (existingDeps != null) {
+			for (JobDependency dep : existingDeps) {
+				TriggerKey srcPk = new TriggerKey(dep.getSrcJobId(), dep.getSrcJobGroup());
+				TriggerKey targetPk = new TriggerKey(dep.getJobId(), dep.getJobGroup());
+				depGraph.addVertex(srcPk);
+				depGraph.addVertex(targetPk);
+				depGraph.addEdge(srcPk, targetPk);
 			}
 		}
-		return depGraph;
+
+		// 检查依赖
+		depGraph.addVertex(jobPk);
+		for (JobDependency dep : deps) {
+			TriggerKey target = new TriggerKey(dep.getJobId(), dep.getJobGroup());
+			try {
+				depGraph.addVertex(target);
+				depGraph.addEdge(jobPk, target);
+			} catch (IllegalArgumentException e) {
+				throw new AppException("无法添加 " + jobPk + " -> " + target + " 依赖: " + e.getMessage());
+			}
+			dep.setSrcJobId(jobPk.getName());
+			dep.setSrcJobGroup(jobPk.getGroup());
+		}
 	}
 
-	public void pause(LockRequest lockReq) {
-		// TODO  强制取消子任务
-		LOGGER.info("冻结任务");
-		if (lockReq.isForceLock()) {
-			instanceRepostory.resetStatusFrom(lockReq.getTaskId(), lockReq.getGroupId(), JobInstanceStatus.CANCLED, Arrays.asList(
-					JobInstanceStatus.NEW, JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));
-		} else {
-			// TODO double check state
-			List<JobInstance> result = instanceRepostory.findInstanceByStatus(lockReq.getTaskId(), lockReq.getGroupId(),
-					Arrays.asList(JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));
-			Assert.isTrue(result.size() == 0, "等待  %s 个任务执行完毕", result.size());
-		}
+	@Transactional
+	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			scheduler.pauseJob(new JobKey(lockReq.getTaskId(), lockReq.getGroupId()));
+			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
+			boolean result = scheduler.unscheduleJob(new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
+			if (!result) {
+				LOGGER.warn("{} 不存在的调度任务", jobKey);
+			}
+		} catch (SchedulerException e) {
+			throw new AppException(e);
+		}
+	}
+
+	@Transactional
+	public void pause(JobPK jobKey, boolean forcePause) {
+		LOGGER.info("冻结调度任务 {}", jobKey);
+		TriggerKey triggerKey = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
+		try {
+			if (!forcePause) {
+				TriggerState state = scheduler.getTriggerState(triggerKey);
+				Assert.isTrue(state != TriggerState.BLOCKED, "等待任务执行完毕");
+			} else {
+				// TODO 强制取消子任务
+			}
+			scheduler.pauseTrigger(triggerKey);
 		} catch (SchedulerException e) {
 			throw new AppException("无法冻结此任务");
 		}
 	}
 
+	@Transactional
 	public void resume(JobPK jobKey) {
-
+		TriggerKey tk = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 		try {
-			scheduler.resumeJob(new JobKey(jobKey.getTaskId(), jobKey.getGroupId()));
-
 			Job job = jobRepository.findOne(jobKey);
-
-			if (job != null) {
-				if (job.getDispatchType() == DispatchType.AUTO) {
-					TriggerKey tk = buildCronTriggerKey(job.getScheduleType(), jobKey.getTaskId(), jobKey.getGroupId());
-					TriggerState status = scheduler.getTriggerState(tk);
-					job.setStatus(ScheduleStatus.values()[status.ordinal()]);
-				} else {
-					List<JobInstance> result = instanceRepostory.findInstanceByStatus(jobKey.getTaskId(), job.getGroupId(),
-							Arrays.asList(JobInstanceStatus.ACCEPTED, JobInstanceStatus.RUNNING));
-					job.setStatus(result.size() > 0 ? ScheduleStatus.NONE : ScheduleStatus.NORMAL);
-				}
-			}
+			Assert.isTrue(job != null, "调度任务 %s 不存在", jobKey);
+			scheduler.resumeTrigger(tk);
+			TriggerState state = scheduler.getTriggerState(tk);
+			job.setStatus(ScheduleStatus.values()[state.ordinal()]);
 			jobRepository.save(job);
 		} catch (SchedulerException e) {
-			throw new AppException("无法冻结此任务");
+			throw new AppException("无法恢复此任务");
 		}
 	}
 
 	public void execute(ExecutionRequest request) {
-		String taskId = request.getTaskId();
-		String groupId = request.getGroupId();
+		
+		JobPK jobPk = StdJobPKGenerator.valueOf(request);
+		
+		TriggerKey tk = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
+		
+		Job job = jobRepository.findOne(jobPk);
 
-		Job job = jobRepository.findOne(taskId, groupId);
-
-		Assert.isTrue(job != null, "任务 %s.%s 不存在", groupId, taskId);
+		Assert.isTrue(job != null, "调度任务 %s 不存在", jobPk);
 
 		ScheduleStatus status = job.getStatus();
 
-		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结", groupId, taskId);
-		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 任务已阻塞", groupId, taskId);
+		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结");
+		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 存在正在执行的任务实例");
 
-		JobKey jobKey = new JobKey(taskId, groupId);
+		LocalDateTime loadDate = job.getScheduleType().parse(request.getLoadDate());
 
 		try {
-			JobDetail jdt = scheduler.getJobDetail(jobKey);
-
-			ScheduleType scheduleType = JOB_SCHEDULE_TYPE.applyGet(jdt.getJobDataMap());
-
-			Assert.isTrue(jdt != null, "任务 %s.%s 不存在", groupId, taskId);
-
-			LocalDateTime loadDate = request.getAsLocalDateTime(scheduleType);
-
-			TriggerKey tk = buildManualTriggerKey(loadDate, taskId, groupId);
 
 			TriggerState state = scheduler.getTriggerState(tk);
 
@@ -306,15 +281,15 @@ public class JobService {
 			JobDataMap jdm = new JobDataMap();
 			CONTEXT_PARAMETER.applyPut(jdm, request.getJobParameter());
 			CONTEXT_LOAD_DATE.applyPut(jdm, loadDate);
-			Trigger trigger = TriggerBuilder.newTrigger().usingJobData(jdm).withIdentity(tk).forJob(taskId, groupId)
-					.build();
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.usingJobData(jdm)
+				.withIdentity(tk)
+				.forJob(request.getTaskId(), request.getGroupId()).build();
 
-			if (state == TriggerState.COMPLETE) {
-				scheduler.rescheduleJob(tk, trigger);
-			} else if (state == TriggerState.NONE) {
+			if (state == TriggerState.NONE) {
 				scheduler.scheduleJob(trigger);
 			} else {
-				throw new AppException("不可重复调度任务，当前调度状态 %s ", state);
+				scheduler.rescheduleJob(tk, trigger);
 			}
 		} catch (SchedulerException e) {
 			throw new AppException("执行失败: " + e.getMessage());

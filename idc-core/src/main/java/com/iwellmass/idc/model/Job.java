@@ -21,14 +21,36 @@ import io.swagger.annotations.ApiModelProperty;
 @IdClass(JobPK.class)
 public class Job {
 
-	public static final String DEFAULT_CONTENT_TYPE = "default";
-	public static final String DEFAULT_GROUP = "default";
-
 	// ~~ 任务属性 ~~
+	private String jobId;
+
+	private String jobGroup;
+
+	private List<JobDependency> dependencies;
+
+	private ScheduleProperties scheduleProperties;
+
+	private ScheduleType scheduleType;
+
+	private LocalDateTime startTime;
+
+	private LocalDateTime endTime;
+
+	private LocalDateTime prevLoadDate;
+
+	private LocalDateTime nextLoadDate;
+
+	private ScheduleStatus status = ScheduleStatus.NONE;
+
+	private LocalDateTime createTime;
+
+	private LocalDateTime updateTime;
+
+	// ~~ 业务属性 ~~
 	private String taskId;
 
 	private String groupId;
-	
+
 	private String taskName;
 
 	private String description;
@@ -42,33 +64,29 @@ public class Job {
 	private String assignee;
 
 	private String parameter;
-	
-	private LocalDateTime createTime;
 
-	private LocalDateTime updateTime;
-	
-	private List<JobDependency> dependencies;
-	
 	private DispatchType dispatchType;
-	
 
-	// ~~ 调度属性 ~~
-
-	private ScheduleProperties scheduleProperties;
-
-	private ScheduleType scheduleType;
-	
-	private LocalDateTime startTime;
-
-	private LocalDateTime endTime;
-
-	private LocalDateTime prevLoadDate;
-
-	private LocalDateTime nextLoadDate;
-
-	private ScheduleStatus status = ScheduleStatus.NONE;
-	
 	@Id
+	@Column(name = "job_id", length = 50)
+	public String getJobId() {
+		return jobId;
+	}
+
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
+	}
+
+	@Id
+	@Column(name = "job_group", length = 50)
+	public String getJobGroup() {
+		return jobGroup;
+	}
+
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
+	}
+
 	@ApiModelProperty("业务ID")
 	@Column(name = "task_id", length = 50)
 	public String getTaskId() {
@@ -80,7 +98,6 @@ public class Job {
 	}
 
 	@ApiModelProperty("业务组")
-	@Id
 	@Column(name = "group_id", length = 50)
 	public String getGroupId() {
 		return groupId;
@@ -89,7 +106,7 @@ public class Job {
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
 	}
-	
+
 	@ApiModelProperty("任务名称")
 	@Column(name = "task_name", length = 100)
 	public String getTaskName() {
@@ -150,8 +167,7 @@ public class Job {
 	public void setScheduleProperties(ScheduleProperties scheduleProperties) {
 		this.scheduleProperties = scheduleProperties;
 	}
-	
-	
+
 	@Column(name = "schedule_type")
 	public ScheduleType getScheduleType() {
 		return scheduleType;
@@ -271,15 +287,20 @@ public class Job {
 	public String getParameter() {
 		return this.parameter;
 	}
-	
+
 	public void setParameter(String parameter) {
-		this.parameter  = parameter;
+		this.parameter = parameter;
 	}
-	
+
 	public void setParameterObject(Object param) {
 		if (param != null) {
 			this.parameter = JSON.toJSONString(param);
 		}
+	}
+	
+	public void setJobPK(JobPK pk) {
+		this.jobId = pk.getJobId();
+		this.jobGroup = pk.getJobGroup();
 	}
 
 	@Override

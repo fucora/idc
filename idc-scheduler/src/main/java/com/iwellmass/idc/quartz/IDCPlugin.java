@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.CompletedExecutionInstruction;
@@ -23,10 +22,8 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.StartEvent;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.PluginVersion;
-import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusService {
 
@@ -114,7 +111,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 			Assert.isTrue(jobInstance != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
 			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
 				try {
-					completeAsyncJob(jobInstance.getTriggerName(), jobInstance.getTriggerGroup(), event.getFinalStatus());
+					completeAsyncJob(jobInstance.getJobId(), jobInstance.getJobGroup(), event.getFinalStatus());
 				} catch (SchedulerException e) {
 					LOGGER.warn("无法更新实例 %s, %s", event.getInstanceId(), e.getMessage());
 				}
@@ -127,16 +124,8 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		pluginContext.log(event.getInstanceId(), message);
 	}
 	
-	
-	
 	public static void setDefaultContext(IDCPluginContext pluginContext) {
 		IDCPlugin.pluginContext = pluginContext;
-	}
-
-	public static JobKey toJobKey(TriggerKey triggerKey) {
-		String key = triggerKey.getName();
-		String jobName = key.substring(key.indexOf('_') + 1, key.length());
-		return new JobKey(jobName, triggerKey.getGroup());
 	}
 
 	public static final LocalDateTime toLocalDateTime(Date date) {
@@ -155,32 +144,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		return new Date(mill);
 	}
 
-	public static TriggerKey buildManualTriggerKey(LocalDateTime loadDate, String taskId, String groupId) {
-		if (groupId == null) {
-			groupId = Job.DEFAULT_GROUP;
-		}
-		TriggerKey key = new TriggerKey("MANUAL_" + taskId + "_" + loadDate.format(DEFAULT_LOAD_DATE_DTF), groupId);
-		return key;
-	}
-	public static TriggerKey buildCronTriggerKey(ScheduleType type, String taskId, String groupId) {
-		if (groupId == null) {
-			groupId = Job.DEFAULT_GROUP;
-		}
-		TriggerKey key = new TriggerKey(type.toString() + "_" + taskId, groupId);
-		return key;
-	}
-
-	public static Long toMills(LocalDateTime loadDate) {
+	public static Long toEpochMilli(LocalDateTime loadDate) {
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
-
-	public static TriggerKey buildTriggerKeyForRedo(Integer instanceId) {
-		TriggerKey key = new TriggerKey("REDO_" + instanceId);
-		return key;
-	}
-	
-	public static boolean isManualJob(TriggerKey key) {
-		return key.getName().startsWith("MANUAL_");
-	}
-
 }

@@ -24,8 +24,17 @@ public class JobInstance {
 
 	private Integer instanceId;
 
-	private JobInstanceType instanceType;
+	// ~~ 调度相关 ~~
+	private String jobId;
 	
+	private String jobGroup;
+	
+	private Long shouldFireTime;
+	
+	private LocalDateTime loadDate;
+	
+	
+	// ~~ 任务相关 ~~
 	private String taskId;
 
 	private String groupId;
@@ -42,37 +51,56 @@ public class JobInstance {
 
 	private String assignee;
 
-	private String parameter;
-
-	private LocalDateTime loadDate;
-	
 	private ScheduleType scheduleType;
 
-	private LocalDateTime nextLoadDate;
-
-	private JobInstanceStatus status;
-
+	
+	// ~~ 运行相关  ~~
+	
+	private String parameter;
+	
 	private LocalDateTime startTime;
-
+	
 	private LocalDateTime endTime;
-
-	private Long shouldFireTime;
 	
-	private String triggerName;
+	private JobInstanceStatus status;
 	
+	private LocalDateTime nextLoadDate;
+	
+	private JobInstanceType instanceType;
+	
+	
+	// ~~ transient ~~
 	private DispatchType dispatchType;
-
+	
 	@ApiModelProperty("执行ID")
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Integer getInstanceId() {
 		return instanceId;
 	}
-
+	
 	public void setInstanceId(Integer instanceId) {
 		this.instanceId = instanceId;
 	}
+	
+	@Column(name = "job_id")
+	public String getJobId() {
+		return jobId;
+	}
 
+	public void setJobId(String jobName) {
+		this.jobId = jobName;
+	}
+	
+	@Column(name = "job_group")
+	public String getJobGroup() {
+		return this.jobGroup;
+	}
+	
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
+	}
+	
 	@ApiModelProperty("任务 ID")
 	@Column(name = "task_id")
 	public String getTaskId() {
@@ -83,15 +111,6 @@ public class JobInstance {
 		this.taskId = taskId;
 	}
 
-	@Column(name = "task_name", length = 200)
-	public String getTaskName() {
-		return taskName;
-	}
-
-	public void setTaskName(String taskName) {
-		this.taskName = taskName;
-	}
-
 	@Column(name = "group_id", length = 50)
 	public String getGroupId() {
 		return groupId;
@@ -99,6 +118,15 @@ public class JobInstance {
 
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
+	}
+	
+	@Column(name = "task_name", length = 200)
+	public String getTaskName() {
+		return taskName;
+	}
+
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
 	}
 
 	@Column(name = "task_type")
@@ -250,24 +278,6 @@ public class JobInstance {
 		this.shouldFireTime = shouldFireTime;
 	}
 	
-	@Column(name = "trigger_name")
-	public String getTriggerName() {
-		return triggerName;
-	}
-
-	public void setTriggerName(String triggerName) {
-		this.triggerName = triggerName;
-	}
-
-	@Transient
-	public String getTriggerGroup() {
-		return getGroupId();
-	}
-
-	public void setTriggerGroup(String triggerGroup) {
-		setGroupId(triggerGroup);
-	}
-
 	@Transient
 	public DispatchType getDispatchType() {
 		return dispatchType;
@@ -276,7 +286,12 @@ public class JobInstance {
 	public void setDispatchType(DispatchType dispatchType) {
 		this.dispatchType = dispatchType;
 	}
-
+	
+	public void setJobPK(JobPK jobKey) {
+		this.jobId = jobKey.getJobId();
+		this.jobGroup = jobKey.getJobGroup();
+	}
+	
 	@Override
 	public String toString() {
 		return "JobInstance [instanceId=" + instanceId + ", taskId=" + taskId + ", groupId=" + groupId + ", loadDate="
