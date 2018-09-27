@@ -38,4 +38,8 @@ public enum ScheduleType {
 		return loadDate.format(fmt);
 	}
 	
+	public LocalDateTime parse(String loadDateStr) {
+		return LocalDateTime.parse(loadDateStr, fmt);
+	}
+	
 }

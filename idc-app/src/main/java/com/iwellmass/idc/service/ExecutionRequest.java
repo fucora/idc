@@ -38,6 +38,8 @@ public class ExecutionRequest extends JobPK {
 			return LocalDateTime.of(LocalDate.parse(loadDate, DateTimeFormatter.BASIC_ISO_DATE), LocalTime.MIN);
 		case MONTHLY: 
 			return LocalDateTime.of(LocalDate.parse(loadDate + "01", DateTimeFormatter.BASIC_ISO_DATE), LocalTime.MIN);
+		case CUSTOMER:
+			return type.parse(loadDate);
 		default:
 			throw new UnsupportedOperationException("unsupported scheduleType" + type);
 		}

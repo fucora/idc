@@ -3,6 +3,7 @@ package com.iwellmass.idc.quartz;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
@@ -56,6 +57,17 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			jobInstance.setLoadDate(loadDate);
 			jobInstance.setNextLoadDate(null);
 			jobInstance.setShouldFireTime(IDCPlugin.toMills(loadDate));
+			
+			// 设置调用参数
+			
+			// TODO 强制覆盖所有参数？
+			String parameter = CONTEXT_PARAMETER.applyGet(trigger.getJobDataMap());
+			
+			if(parameter != null) {
+				jobInstance.setParameter(parameter);
+			}
+			
+			
 			return jobInstance;
 		});
 

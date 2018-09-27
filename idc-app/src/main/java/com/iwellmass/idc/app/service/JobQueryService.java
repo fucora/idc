@@ -16,9 +16,11 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.repo.JobDependencyRepository;
 import com.iwellmass.idc.repo.JobRepository;
 
 @Service
@@ -26,6 +28,8 @@ public class JobQueryService {
 
 	@Inject
 	private JobRepository jobRepository;
+	
+	private JobDependencyRepository dependencyRepository;
 
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
 		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
@@ -67,7 +71,10 @@ public class JobQueryService {
 	}
 
 	public Job findJob(JobPK jobKey) {
-		return jobRepository.findOne(jobKey);
+		Job job = jobRepository.findOne(jobKey);
+		List<JobDependency> dependencies = dependencyRepository.findDependencies(job.getTaskId(), job.getGroupId());
+		job.setDependencies(dependencies);
+		return job;
 	}
 
 }

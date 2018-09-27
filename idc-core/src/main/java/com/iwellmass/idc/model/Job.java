@@ -1,7 +1,7 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -47,7 +47,7 @@ public class Job {
 
 	private LocalDateTime updateTime;
 	
-	private Set<JobDependency> dependencies;
+	private List<JobDependency> dependencies;
 	
 	private DispatchType dispatchType;
 	
@@ -206,11 +206,11 @@ public class Job {
 
 	@ApiModelProperty("依赖")
 	@Transient
-	public Set<JobDependency> getDependencies() {
+	public List<JobDependency> getDependencies() {
 		return dependencies;
 	}
 
-	public void setDependencies(Set<JobDependency> dependencies) {
+	public void setDependencies(List<JobDependency> dependencies) {
 		this.dependencies = dependencies;
 	}
 

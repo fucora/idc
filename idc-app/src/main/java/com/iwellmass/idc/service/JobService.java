@@ -14,7 +14,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -91,7 +90,7 @@ public class JobService {
 			}
 		
 			// 计算依赖
-			Set<JobDependency> deps = job.getDependencies();
+			List<JobDependency> deps = job.getDependencies();
 			if (!Utils.isNullOrEmpty(deps)) {
 				DirectedAcyclicGraph<JobKey, Dependency> depGraph = loadDependencyGraph();
 				depGraph.addVertex(jobKey);
