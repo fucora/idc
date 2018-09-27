@@ -73,8 +73,10 @@ public class JobQueryService {
 
 	public Job findJob(JobPK jobKey) {
 		Job job = jobRepository.findOne(jobKey);
-		List<JobDependency> dependencies = dependencyRepository.findDependencies(job.getTaskId(), job.getGroupId());
-		job.setDependencies(dependencies);
+		if (job != null) {
+			List<JobDependency> dependencies = dependencyRepository.findDependencies(job.getTaskId(), job.getGroupId());
+			job.setDependencies(dependencies);
+		}
 		return job;
 	}
 
