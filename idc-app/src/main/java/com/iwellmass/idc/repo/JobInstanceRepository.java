@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
@@ -26,6 +27,7 @@ public interface JobInstanceRepository extends PagingAndSortingRepository<JobIns
 	@Query("SELECT DISTINCT assignee FROM JobInstance WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
 
+	@Modifying
 	@Query("UPDATE JobInstance SET status = ?3 WHERE taskId = ?1 AND groupId = ?2 AND status IN ?4")
 	int resetStatusFrom(String taskId, String groupId, JobInstanceStatus status, List<JobInstanceStatus> olds);
 }
