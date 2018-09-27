@@ -74,10 +74,11 @@ public class JobService {
 	@Transactional
 	public void schedule(Job job) throws AppException {
 
-		validate(job);
 
 		JobPK jobPK = jobPKGenerator.generate(job);
 		Assert.isTrue(jobRepository.findOne(jobPK) == null, "不可重复调度任务");
+		
+		validate(jobPK, job.getDependencies());
 
 		LOGGER.info("创建调度任务 {}", jobPK);
 
@@ -92,16 +93,20 @@ public class JobService {
 	@Transactional
 	public void reschedule(Job job) {
 
-		validate(job);
+		JobPK jobPk = jobPKGenerator.generate(job);
+		
+		validate(jobPk, job.getDependencies());
 
 		// 没有正在执行的任务计划便可以重新调度计划任务
-		Job pj = jobRepository.findOne(job.getTaskId(), job.getGroupId());
+		Job pj = jobRepository.findOne(jobPk);
 		if (pj != null) {
 			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
+		
+		job.setJobPK(jobPk);
 		job.setUpdateTime(LocalDateTime.now());
 
-		LOGGER.info("重新调度任务 {}.{}", job.getGroupId(), job.getTaskId());
+		LOGGER.info("重新调度任务 {}", jobPk);
 		
 		doScheduleJob(job, true);
 	}
@@ -152,10 +157,6 @@ public class JobService {
 					triggerBuilder.startAt(toDate(job.getEndTime()));
 				}
 				
-				
-				
-				
-
 				// 保存到 quartz
 				if (!scheduler.checkExists(triggerKey)) {
 					scheduler.scheduleJob(triggerBuilder.build());
@@ -190,18 +191,13 @@ public class JobService {
 		}
 	}
 
-	private void validate(Job job) {
-		
-		JobPK jobPk = jobPKGenerator.generate(job);
-		
-		List<JobDependency> deps = job.getDependencies();
-
-		TriggerKey triggerKey = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
+	private void validate(JobPK jobPk, List<JobDependency> deps) {
 
 		if (Utils.isNullOrEmpty(deps)) {
 			return;
 		}
 
+		TriggerKey triggerKey = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
 		// 初始化
 		DirectedAcyclicGraph<TriggerKey, Dependency> depGraph = new DirectedAcyclicGraph<>(Dependency.class);
 		List<JobDependency> existingDeps = dependencyRepo.findAll();

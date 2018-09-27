@@ -14,9 +14,6 @@ import com.iwellmass.idc.model.TaskType;
 @Repository
 public interface JobRepository extends CrudRepository<Job, JobPK>, JpaSpecificationExecutor<Job>{
 
-	@Query("SELECT j FROM Job j WHERE j.jobId = ?1 and j.jobGroup = ?2")
-	Job findOne(String jobId, String jobGroup);
-
 	@Query("SELECT DISTINCT assignee FROM Job WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
 

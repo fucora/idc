@@ -37,6 +37,12 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	/* 初始化执行信息 */
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
+		if (context.isRecovering()) {
+
+			
+		}
+		
+		
 		JobDataMap data = context.getMergedJobDataMap();
 		
 		DispatchType type = JOB_DISPATCH_TYPE.applyGet(data);

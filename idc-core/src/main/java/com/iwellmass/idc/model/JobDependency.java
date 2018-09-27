@@ -1,12 +1,11 @@
 package com.iwellmass.idc.model;
 
-import java.beans.Transient;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -14,24 +13,14 @@ import io.swagger.annotations.ApiOperation;
 @Table(name = "t_idc_dependency")
 @IdClass(JobDependencyPK.class)
 public class JobDependency {
-	
+
 	private String srcJobId;
-	
+
 	private String srcJobGroup;
 
 	private String jobId;
 
 	private String jobGroup;
-	
-	private String srcTaskId;
-	
-	private String srcGroupId;
-	
-	private String taskId;
-	
-	private String groupId;
-	
-	
 
 	@Id
 	@Column(name = "src_job_id", length = 50)
@@ -110,8 +99,5 @@ public class JobDependency {
 	public void setGroupId(String groupId) {
 		this.setJobGroup(groupId);
 	}
-	
-	
-	
 
 }

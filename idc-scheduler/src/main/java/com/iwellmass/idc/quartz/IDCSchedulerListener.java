@@ -38,7 +38,7 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		DispatchType dispatchType = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
 		
 		TriggerKey triggerKey = trigger.getKey();
-		LOGGER.info("创建调度 {}, 调度模式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
+		LOGGER.info("创建调度 {}, 调度方式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
 		
 		Boolean isRedo = false;
 		if (isRedo) {

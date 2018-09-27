@@ -30,9 +30,9 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	
 	@Override
 	public JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun) {
-		Job job = jobRepo.findOne(jobKey.getJobId(), jobKey.getJobGroup());
+		Job job = jobRepo.findOne(jobKey);
 		
-		Assert.isTrue(job != null, "任务不存在");
+		Assert.isTrue(job != null, "任务 %s 不存在", jobKey);
 		
 		JobInstance instance = fun.apply(job);
 		
@@ -45,7 +45,7 @@ public class StdIDCPluginContext extends IDCPluginContext {
 
 	@Override
 	public void updateJob(JobPK jobKey, Consumer<Job> fun) {
-		Job job = jobRepo.findOne(jobKey.getJobId(), jobKey.getJobGroup());
+		Job job = jobRepo.findOne(jobKey);
 		fun.accept(job);
 		jobRepo.save(job);
 	}
