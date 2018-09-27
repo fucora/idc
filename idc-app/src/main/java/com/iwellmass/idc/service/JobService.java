@@ -283,7 +283,6 @@ public class JobService {
 		
 		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结", groupId, taskId);
 		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 任务已阻塞", groupId, taskId);
-		Assert.isTrue(status != ScheduleStatus.NORMAL, "执行失败, 存在正在执行的任务实例", groupId, taskId);
 
 		JobKey jobKey = new JobKey(taskId, groupId);
 
