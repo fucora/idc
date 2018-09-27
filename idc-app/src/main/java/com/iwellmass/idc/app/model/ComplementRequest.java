@@ -1,4 +1,4 @@
-package com.iwellmass.idc.service;
+package com.iwellmass.idc.app.model;
 
 import java.time.LocalDate;
 

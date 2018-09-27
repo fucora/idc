@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;

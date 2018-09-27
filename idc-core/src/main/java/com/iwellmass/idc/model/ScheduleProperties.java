@@ -15,6 +15,8 @@ public class ScheduleProperties {
 	@ApiModelProperty("调度类型")
 	private ScheduleType scheduleType;
 	
+	@ApiModelProperty("调度类型")
+	private Boolean isRetry = true;
 
 	public List<Integer> getDays() {
 		return days;
@@ -38,6 +40,14 @@ public class ScheduleProperties {
 
 	public void setScheduleType(ScheduleType scheduleType) {
 		this.scheduleType = scheduleType;
+	}
+
+	public Boolean getIsRetry() {
+		return isRetry;
+	}
+
+	public void setIsRetry(Boolean isRetry) {
+		this.isRetry = isRetry;
 	}
 
 }

@@ -43,4 +43,5 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 		job.setGroupId(jobKey.getGroup());
 		return fun.apply(job);
 	}
+
 }

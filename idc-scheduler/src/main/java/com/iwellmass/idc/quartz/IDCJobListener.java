@@ -5,7 +5,6 @@ import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -38,6 +37,10 @@ public class IDCJobListener extends JobListenerSupport {
 			pluginContext.updateJobInstance(instanceId, (jobInstance) -> {
 				jobInstance.setStatus(JobInstanceStatus.FAILED);
 				jobInstance.setEndTime(LocalDateTime.now());
+			});
+		} else {
+			pluginContext.updateJobInstance(instanceId, (jobInstance) -> {
+				jobInstance.setStatus(JobInstanceStatus.ACCEPTED);
 			});
 		}
 	}

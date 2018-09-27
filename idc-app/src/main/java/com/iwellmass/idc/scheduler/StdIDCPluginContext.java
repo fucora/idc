@@ -27,7 +27,7 @@ public class StdIDCPluginContext extends IDCPluginContext {
 
 	@Inject
 	private ExecutionLogRepository logRepository;
-
+	
 	@Override
 	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
 		Job job = jobRepo.findOne(jobKey.getName(), jobKey.getGroup());

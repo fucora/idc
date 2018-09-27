@@ -15,13 +15,14 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
+import com.iwellmass.idc.app.model.ComplementRequest;
+import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
+import com.iwellmass.idc.app.model.LockRequest;
 import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.service.ComplementRequest;
-import com.iwellmass.idc.service.ExecutionRequest;
 import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
@@ -38,10 +39,14 @@ public class JobController {
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping
-	public ServiceResult<Job> query(JobPK jobKey) {
+	public ServiceResult<Job> getJob(JobPK jobKey) {
 		Job job = jobQueryService.findJob(jobKey);
+		if (job == null) {
+			return ServiceResult.failure("任务不存在");
+		}
 		return ServiceResult.success(job);
 	}
+	
 
 	@ApiOperation("查询任务，分页")
 	@PostMapping("/query")
@@ -70,6 +75,13 @@ public class JobController {
 		jobService.schedule(job);
 		return ServiceResult.success("提交成功");
 	}
+	
+	@ApiOperation("重新调度任务")
+	@PostMapping(path = "/reschedule")
+	public ServiceResult<String> reschedule(@RequestBody Job job) {
+		jobService.reschedule(job);
+		return ServiceResult.success("提交成功");
+	}
 
 	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
@@ -78,17 +90,17 @@ public class JobController {
 		return ServiceResult.success("提交成功");
 	}
 
-	@PostMapping(value = "/lock")
+	@PostMapping(value = "/pause")
 	@ApiOperation("冻结 Job")
-	public ServiceResult<String> lock(@RequestBody JobPK jobKey) {
-		jobService.lock(jobKey);
+	public ServiceResult<String> pause(@RequestBody LockRequest request) {
+		jobService.pause(request);
 		return ServiceResult.success("任务已冻结");
 	}
 
-	@PostMapping(value = "/unlock")
+	@PostMapping(value = "/resume")
 	@ApiOperation("恢复 Job")
-	public ServiceResult<String> unlock(@RequestBody JobPK jobKey) {
-		jobService.unlock(jobKey);
+	public ServiceResult<String> resume(@RequestBody JobPK jobKey) {
+		jobService.resume(jobKey);
 		return ServiceResult.success("任务已恢复");
 	}
 

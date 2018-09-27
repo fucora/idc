@@ -10,6 +10,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.TaskType;
@@ -45,6 +46,9 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	private void execute(JobInstance jobInstance) throws JobExecutionException {
 		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance);
 		try {
+			
+			LOGGER.info("instance -> {}", JSON.toJSONString(jobInstance));
+			
 			executorService.execute(jobInstance);
 		} catch (Throwable e) {
 			throw new JobExecutionException("任务派发失败: " + e.getMessage(), false);
