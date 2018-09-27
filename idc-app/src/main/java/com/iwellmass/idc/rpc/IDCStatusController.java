@@ -28,6 +28,7 @@ public class IDCStatusController {
 	@Inject
 	private IDCStatusService statusService;
 	
+	@Inject
 	private JobQueryService jobQueryService;
 
 	@PutMapping("/complete")

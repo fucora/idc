@@ -13,7 +13,7 @@ import com.iwellmass.idc.model.JobDependencyPK;
 @Repository
 public interface JobDependencyRepository extends CrudRepository<JobDependency, JobDependencyPK>{
 
-	@Query("SELECT D FROM JobDependency D WHERE D.taskId = ?1 AND D.groupId = ?2")
+	@Query("SELECT D FROM JobDependency D WHERE D.srcTaskId = ?1 AND D.srcGroupId = ?2")
 	List<JobDependency> findDependencies(String taskId, String groupId);
 
 	
