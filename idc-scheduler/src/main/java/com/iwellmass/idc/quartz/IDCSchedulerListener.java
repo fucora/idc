@@ -32,17 +32,19 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	/* 创建调度 */
 	public void jobScheduled(Trigger trigger) {
 		
+		JobPK jobPK = toJobPK(trigger.getKey());
+		
 		Boolean isAsync = JOB_ASYNC.applyGet(trigger.getJobDataMap());
 		DispatchType dispatchType = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
 		
 		TriggerKey triggerKey = trigger.getKey();
-		LOGGER.info("创建调度 {}, 调度模式 {}, 执行模式 {}", triggerKey, dispatchType, isAsync ? "异步" : "同步");
+		LOGGER.info("创建调度 {}, 调度模式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
 		
 		Boolean isRedo = false;
 		if (isRedo) {
 			LOGGER.info("重跑调度 {}", triggerKey);
 		} else {
-			pluginContext.updateJob(toJobPK(triggerKey), (job) -> {
+			pluginContext.updateJob(jobPK, (job) -> {
 				// 更新调度信息
 				job.setStatus(ScheduleStatus.NORMAL);
 				if (dispatchType == DispatchType.MANUAL) {
