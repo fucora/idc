@@ -1,5 +1,7 @@
 package com.iwellmass.idc.model;
 
+import java.beans.Transient;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -20,6 +22,16 @@ public class JobDependency {
 	private String jobId;
 
 	private String jobGroup;
+	
+	private String srcTaskId;
+	
+	private String srcGroupId;
+	
+	private String taskId;
+	
+	private String groupId;
+	
+	
 
 	@Id
 	@Column(name = "src_job_id", length = 50)
@@ -59,8 +71,47 @@ public class JobDependency {
 		return jobGroup;
 	}
 
-	public void setJobGroup(String srcGroup) {
-		this.jobGroup = srcGroup;
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
 	}
+
+	@Transient
+	public String getSrcTaskId() {
+		return this.getSrcJobId();
+	}
+
+	public void setSrcTaskId(String srcTaskId) {
+		this.setSrcJobId(srcTaskId);
+	}
+
+	@Transient
+	public String getSrcGroupId() {
+		return this.getSrcJobGroup();
+	}
+
+	public void setSrcGroupId(String srcGroupId) {
+		this.setSrcJobGroup(srcGroupId);
+	}
+
+	@Transient
+	public String getTaskId() {
+		return this.getJobId();
+	}
+
+	public void setTaskId(String taskId) {
+		this.setJobId(taskId);
+	}
+
+	@Transient
+	public String getGroupId() {
+		return this.getJobGroup();
+	}
+
+	public void setGroupId(String groupId) {
+		this.setJobGroup(groupId);
+	}
+	
+	
+	
 
 }

@@ -13,8 +13,8 @@ import com.iwellmass.idc.model.JobDependencyPK;
 @Repository
 public interface JobDependencyRepository extends CrudRepository<JobDependency, JobDependencyPK>{
 
-	@Query("SELECT D FROM JobDependency D WHERE D.srcTaskId = ?1 AND D.srcGroupId = ?2")
-	List<JobDependency> findDependencies(String taskId, String groupId);
+	@Query("SELECT D FROM JobDependency D WHERE D.srcJobId = ?1 AND D.srcJobGroup = ?2")
+	List<JobDependency> findDependencies(String jobId, String jobGroup);
 
 	
 	@Query("SELECT D FROM JobDependency D")
@@ -22,7 +22,7 @@ public interface JobDependencyRepository extends CrudRepository<JobDependency, J
 
 
 	@Modifying
-	@Query("DELETE FROM JobDependency WHERE srcTaskId = ?1 AND srcGroupId = ?2")
-	void cleanJobDependencies(String taskId, String groupId);
+	@Query("DELETE FROM JobDependency WHERE srcJobId = ?1 AND srcJobGroup = ?2")
+	void cleanJobDependencies(String jobId, String jobGroup);
 	
 }
