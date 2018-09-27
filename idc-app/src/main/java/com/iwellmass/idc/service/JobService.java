@@ -73,7 +73,7 @@ public class JobService {
 	@Transactional
 	public void schedule(Job job) throws AppException {
 
-		loadDependencyGraph(job);
+		validate(job);
 
 		JobPK jobPK = jobPKGenerator.generate(job);
 		Assert.isTrue(jobRepository.findOne(jobPK) == null, "不可重复调度任务");
@@ -88,7 +88,7 @@ public class JobService {
 	@Transactional
 	public void reschedule(Job job) {
 
-		loadDependencyGraph(job);
+		validate(job);
 
 		// 没有正在执行的任务计划便可以重新调度计划任务
 		Job pj = jobRepository.findOne(job.getTaskId(), job.getGroupId());
@@ -174,10 +174,13 @@ public class JobService {
 		}
 	}
 
-	private void loadDependencyGraph(Job job) {
+	private void validate(Job job) {
+		
+		JobPK jobPk = jobPKGenerator.generate(job);
+		
 		List<JobDependency> deps = job.getDependencies();
 
-		TriggerKey jobPk = new TriggerKey(job.getJobId(), job.getJobGroup());
+		TriggerKey triggerKey = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
 
 		if (Utils.isNullOrEmpty(deps)) {
 			return;
@@ -197,17 +200,17 @@ public class JobService {
 		}
 
 		// 检查依赖
-		depGraph.addVertex(jobPk);
+		depGraph.addVertex(triggerKey);
 		for (JobDependency dep : deps) {
 			TriggerKey target = new TriggerKey(dep.getJobId(), dep.getJobGroup());
 			try {
 				depGraph.addVertex(target);
-				depGraph.addEdge(jobPk, target);
+				depGraph.addEdge(triggerKey, target);
 			} catch (IllegalArgumentException e) {
-				throw new AppException("无法添加 " + jobPk + " -> " + target + " 依赖: " + e.getMessage());
+				throw new AppException("无法添加 " + triggerKey + " -> " + target + " 依赖: " + e.getMessage());
 			}
-			dep.setSrcJobId(jobPk.getName());
-			dep.setSrcJobGroup(jobPk.getGroup());
+			dep.setSrcJobId(triggerKey.getName());
+			dep.setSrcJobGroup(triggerKey.getGroup());
 		}
 	}
 
