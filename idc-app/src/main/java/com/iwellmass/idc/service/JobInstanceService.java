@@ -1,29 +1,17 @@
 package com.iwellmass.idc.service;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.*;
 import javax.inject.Inject;
 
-import org.quartz.JobDataMap;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.Trigger.TriggerState;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.model.ExecutionLog;
-import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 

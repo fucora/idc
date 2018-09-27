@@ -5,7 +5,6 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.quartz.JobKey;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.common.util.Assert;
