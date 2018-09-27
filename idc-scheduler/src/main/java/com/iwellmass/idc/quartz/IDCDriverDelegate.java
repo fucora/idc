@@ -32,8 +32,8 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
     			+ TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T "
             // ~~ 引入依赖表 ~~
             + "LEFT JOIN  " + TABLE_DEPENDENCY +" D " 
-            	+ "ON "  + as("T", COL_JOB_NAME)   + " = " + as("D", COL_DEPENDENCY_SRC_JOB_NAME) + " "
-            	+ "AND " + as("T", COL_JOB_GROUP)  + " = " + as("D", COL_DEPENDENCY_SRC_JOB_GROUP) + " "
+            	+ "ON "  + as("T", COL_TRIGGER_NAME)   + " = " + as("D", COL_DEPENDENCY_SRC_JOB_NAME) + " "
+            	+ "AND " + as("T", COL_TRIGGER_GROUP)  + " = " + as("D", COL_DEPENDENCY_SRC_JOB_GROUP) + " "
             + "LEFT JOIN  " + TABLE_JOB_INSTANCE + " I "
             	+ "ON "    + as("D", COL_IDC_JOB_NAME)  + " = "   + as("I", COL_IDC_JOB_NAME)   + " "
             	+ "AND "   + as("D", COL_IDC_JOB_GROUP) + " = "   + as("I", COL_IDC_JOB_GROUP)  + " "
