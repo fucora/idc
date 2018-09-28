@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -104,11 +105,15 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	@Override
 	public void fireCompleteEvent(CompleteEvent event) {
 		
-		LOGGER.info("Get event {}", event);
+		LOGGER.info("Get {}", event);
 		
 		// 更新实例状态
 		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
 			Assert.isTrue(jobInstance != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
+			
+			jobInstance.setStatus(event.getFinalStatus());
+			Optional.ofNullable(jobInstance.getEndTime()).ifPresent(jobInstance::setEndTime);
+			
 			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
 				try {
 					completeAsyncJob(jobInstance.getJobId(), jobInstance.getJobGroup(), event.getFinalStatus());
@@ -117,11 +122,9 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 				}
 			}
 		});
-		String message = event.getMessage();
-		if (message == null) {
-			message = "执行完毕 ";
-		}
+		String message = Optional.ofNullable(event.getMessage()).orElse("执行完毕");
 		pluginContext.log(event.getInstanceId(), message);
+		LOGGER.info("实例 {} 更新至 {}", event.getInstanceId(), event.getFinalStatus());
 	}
 	
 	public static void setDefaultContext(IDCPluginContext pluginContext) {
