@@ -35,7 +35,7 @@ public class JobQueryService {
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
 		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
 		Page<Job> job = jobRepository.findAll(spec, new PageRequest(pager.getPage(), pager.getLimit()));
-		return new PageData<Job>(job.getNumberOfElements(), job.getContent());
+		return new PageData<Job>((int)job.getTotalElements(), job.getContent());
 	}
 	
 	// available 

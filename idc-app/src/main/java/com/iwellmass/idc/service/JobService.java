@@ -31,6 +31,10 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
@@ -71,7 +75,9 @@ public class JobService {
 	@Inject
 	private JobPKGenerator jobPKGenerator;
 
-	@Transactional
+	@Inject
+	private PlatformTransactionManager transactionManager;
+	
 	public void schedule(Job job) throws AppException {
 
 
@@ -126,12 +132,20 @@ public class JobService {
 		ScheduleProperties sp = job.getScheduleProperties();
 		job.setScheduleType(sp.getScheduleType());
 
-		// save idc job
-		jobRepository.save(job);
-		// save dependencies
-		dependencyRepo.cleanJobDependencies(jobPK.getJobId(), jobPK.getJobGroup());
-		dependencyRepo.save(job.getDependencies());
-
+		
+		TransactionTemplate template = new TransactionTemplate(transactionManager);
+		template.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				// save idc job
+				jobRepository.save(job);
+				// save dependencies
+				dependencyRepo.cleanJobDependencies(jobPK.getJobId(), jobPK.getJobGroup());
+				dependencyRepo.save(job.getDependencies());
+			}
+		});
+		
+		
 		boolean success = false;
 		try {
 			if (job.getDispatchType() == DispatchType.AUTO) {
@@ -229,10 +243,10 @@ public class JobService {
 	@Transactional
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			LOGGER.info("取消任务 {} 所有调度计划", jobKey);
+			LOGGER.info("取消调度任务 {}", jobKey);
 			boolean result = scheduler.unscheduleJob(new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
 			if (!result) {
-				LOGGER.warn("{} 不存在的调度任务", jobKey);
+				LOGGER.warn("调度任务 {} 不存在", jobKey);
 			}
 		} catch (SchedulerException e) {
 			throw new AppException(e);
