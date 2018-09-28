@@ -41,7 +41,9 @@ public class IDCJobExecutorServiceFactory {
 	private Map<String, IDCJobExecutorService> registryMap = new ConcurrentHashMap<>();
 
 	public IDCJobExecutorService getExecutor(JobInstance instance) {
-		IDCJobExecutorService service = registryMap.computeIfAbsent(instance.getGroupId(), (key) -> {
+		// 域 + contentType
+		String _key = instance.getGroupId() + instance.getContentType();
+		IDCJobExecutorService service = registryMap.computeIfAbsent(_key, (key) -> {
 			return newFeignClient(instance.getGroupId(), instance.getContentType());
 		});
 		return service;
