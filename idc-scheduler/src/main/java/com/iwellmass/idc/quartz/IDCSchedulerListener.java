@@ -61,6 +61,12 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		}
 	}
 
+	/* 撤销调度 */
+	public void jobUnscheduled(TriggerKey triggerKey) {
+		JobPK jobPk = new JobPK(triggerKey.getName(), triggerKey.getGroup());
+		pluginContext.remove(jobPk);
+	}
+
 	/* 调度冻结 */
 	public void triggerPaused(TriggerKey triggerKey) {
 		LOGGER.info("调度任务 {} 已冻结", triggerKey);

@@ -29,12 +29,13 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public void updateJobInstance(int instanceId, Consumer<JobInstance> fun) {
+	public JobInstance updateJobInstance(int instanceId, Consumer<JobInstance> fun) {
 		JobInstance jobInstance = new JobInstance();
 		jobInstance.setInstanceId(instanceId);
 		jobInstance.setTaskId("test");
 		jobInstance.setGroupId("test");
 		fun.andThen(i -> LOGGER.info("更新调度 : {}", i)).accept(jobInstance);
+		return jobInstance;
 	}
 
 	@Override
@@ -46,6 +47,12 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 		JobInstance ins = fun.apply(job);
 		ins.setInstanceId(10086);
 		return ins;
+	}
+
+	@Override
+	public void remove(JobPK jobPk) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

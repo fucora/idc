@@ -15,6 +15,7 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
+import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
@@ -63,10 +64,26 @@ public class JobInstanceController {
 		return ServiceResult.success("success");
 	}
 	
+	@ApiOperation("取消任务")
+	@PostMapping("/{id}/cancle")
+	public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id, @RequestBody (required = false) CancleRequest redoRequest) {
+		redoRequest.setInstanceId(id);
+		jobInstanceService.cancle(redoRequest);
+		return ServiceResult.success("success");
+	}
+	
+	
+	
 	@ApiOperation("任务日志(分页)")
 	@PostMapping("/{id}/log")
 	public ServiceResult<PageData<ExecutionLog>> restart(@PathVariable(name = "id") Integer id, Pager pager) {
 		PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
 		return ServiceResult.success(data);
 	}
+	
+	
+	
+	
+	
+	
 }

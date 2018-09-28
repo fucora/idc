@@ -130,7 +130,7 @@ public class IDCJobStore extends JobStoreTX {
             
             // job complete
             if (triggerInstCode == CompletedExecutionInstruction.NOOP) {
-            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_ASYNC_COMPLETE, STATE_ASYNC_WAITING);
+            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_COMPLETE, STATE_ASYNC_WAITING);
             	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_ASYNC_COMPLETE, STATE_BLOCKED);
             	signalSchedulingChangeOnTxCompletion(0L);
             } else {

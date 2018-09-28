@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobDependencyPK;
+import com.iwellmass.idc.model.JobPK;
 
 @Repository
 public interface JobDependencyRepository extends CrudRepository<JobDependency, JobDependencyPK>{
@@ -24,5 +25,9 @@ public interface JobDependencyRepository extends CrudRepository<JobDependency, J
 	@Modifying
 	@Query("DELETE FROM JobDependency WHERE srcJobId = ?1 AND srcJobGroup = ?2")
 	void cleanJobDependencies(String jobId, String jobGroup);
+
+	@Modifying
+	@Query("DELETE FROM JobDependency WHERE srcJobId = ?1 AND srcJobGroup = ?2 OR jobId = ?3 AND jobGroup = ?4")
+	void deleteByJob(JobPK jobPk);
 	
 }

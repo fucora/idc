@@ -6,7 +6,7 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8
+    url: jdbc:mysql://db.iwellmass.com:3306/idc_bak?characterEncoding=utf8
     username: root
     password: zjhz2017
     

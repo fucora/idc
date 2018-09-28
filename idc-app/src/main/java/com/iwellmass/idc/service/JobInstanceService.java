@@ -3,21 +3,33 @@ package com.iwellmass.idc.service;
 import javax.inject.Inject;
 
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.model.ExecutionLog;
+import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.quartz.IDCContextKey;
+import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Service
 public class JobInstanceService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobInstanceService.class);
+	
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
 	
@@ -28,7 +40,6 @@ public class JobInstanceService {
 	private Scheduler scheduler;
 
 	public void redo(RedoRequest request) {
-		throw new UnsupportedOperationException("unsupported yet.");
 		/*int instanceId = request.getInstanceId();
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
 		if (instance == null) {
@@ -65,6 +76,27 @@ public class JobInstanceService {
 		}*/
 	}
 
+	public void cancle(CancleRequest req) {
+		int instanceId = req.getInstanceId();
+		JobInstance instance = jobInstanceRepository.findOne(instanceId);
+		Assert.isTrue(instance != null, "不存在此实例 %s", instanceId);
+		
+		try {
+			IDCPlugin plugin = IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
+			plugin.cancleJob(instance.getJobId(), instance.getJobGroup());
+			
+		} catch (SchedulerException e) {
+			LOGGER.error(e.getMessage(), e);
+			logRepository.log(instanceId, "无法取消任务: {}", e.getMessage());
+			if (req.isForce()) {
+				instance.setStatus(JobInstanceStatus.CANCLED);
+				logRepository.log(instanceId, "强制取消任务", e.getMessage());
+			} else {
+				throw new AppException("无法取消任务: " + e.getMessage(), e);
+			}
+		}
+	}
+	
 	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
 		Pageable page = new PageRequest(pager.getPage(), pager.getLimit());
 		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);

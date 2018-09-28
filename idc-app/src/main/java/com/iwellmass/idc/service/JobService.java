@@ -243,7 +243,7 @@ public class JobService {
 	@Transactional
 	public void unschedule(JobPK jobKey) throws AppException {
 		try {
-			LOGGER.info("取消调度任务 {}", jobKey);
+			LOGGER.info("撤销调度任务 {}", jobKey);
 			boolean result = scheduler.unscheduleJob(new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
 			if (!result) {
 				LOGGER.warn("调度任务 {} 不存在", jobKey);

@@ -4,11 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobPK;
 
 @Repository
 public interface JobInstanceRepository
@@ -22,4 +24,8 @@ public interface JobInstanceRepository
 
 	@Query("SELECT DISTINCT assignee FROM JobInstance WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
+
+	@Modifying
+	@Query("DELETE FROM JobInstance WHERE taskId = ?1 AND groupId = ?2")
+	void deleteByJob(JobPK jobPk);
 }
