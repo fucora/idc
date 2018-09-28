@@ -291,6 +291,11 @@ public class JobInstance {
 		this.jobId = jobKey.getJobId();
 		this.jobGroup = jobKey.getJobGroup();
 	}
+	@Transient
+	public JobPK getJobPK() {
+		return new JobPK(jobId, jobGroup);
+	}
+	
 	
 	@Override
 	public String toString() {

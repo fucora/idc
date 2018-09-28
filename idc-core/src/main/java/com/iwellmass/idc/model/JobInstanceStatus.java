@@ -20,4 +20,9 @@ public enum JobInstanceStatus {
 	
 	// 取消
 	CANCLED;
+	
+	
+	public boolean isComplete() {
+		return this == FINISHED || this == FAILED || this == JobInstanceStatus.CANCLED;
+	}
 }

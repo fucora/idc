@@ -21,6 +21,8 @@
         </encoder>
     </appender>
     
+    <logger name="com.netflix" level="off" />
+    
     <root level="INFO">
         <appender-ref ref="console"/>
         <appender-ref ref="file"/>

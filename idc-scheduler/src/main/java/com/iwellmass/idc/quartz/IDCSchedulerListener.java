@@ -40,25 +40,22 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		TriggerKey triggerKey = trigger.getKey();
 		LOGGER.info("创建调度 {}, 调度方式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
 		
-		Boolean isRedo = false;
-		if (isRedo) {
-			LOGGER.info("重跑调度 {}", triggerKey);
-		} else {
-			pluginContext.updateJob(jobPK, (job) -> {
-				// 更新调度信息
-				job.setStatus(ScheduleStatus.NORMAL);
-				if (dispatchType == DispatchType.MANUAL) {
-					job.setPrevLoadDate(CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap()));
-					job.setNextLoadDate(null);
-				} else {
-					// prev fire time
-					job.setPrevLoadDate(toLocalDateTime(trigger.getPreviousFireTime()));
-					Date nextFireTime = trigger.getNextFireTime();
-					// next fire time
-					job.setNextLoadDate(toLocalDateTime(nextFireTime));
-				}
-			});
-		}
+
+		pluginContext.updateJob(jobPK, (job) -> {
+			// 更新调度信息
+			job.setStatus(ScheduleStatus.NORMAL);
+			if (dispatchType == DispatchType.MANUAL) {
+				job.setPrevLoadDate(CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap()));
+				job.setNextLoadDate(null);
+			} else {
+				// prev fire time
+				job.setPrevLoadDate(toLocalDateTime(trigger.getPreviousFireTime()));
+				Date nextFireTime = trigger.getNextFireTime();
+				// next fire time
+				job.setNextLoadDate(toLocalDateTime(nextFireTime));
+			}
+		});
+	
 	}
 
 	/* 撤销调度 */

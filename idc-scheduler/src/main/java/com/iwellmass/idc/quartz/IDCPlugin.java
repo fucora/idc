@@ -25,6 +25,7 @@ import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.PluginVersion;
 
 public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusService {
@@ -126,6 +127,10 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		IDCPlugin.pluginContext = pluginContext;
 	}
 
+	public static JobPK toJobPK(TriggerKey triggerKey) {
+		return new JobPK(triggerKey.getName(), triggerKey.getGroup());
+	}
+	
 	public static final LocalDateTime toLocalDateTime(Date date) {
 		if (date == null) {
 			return null;
