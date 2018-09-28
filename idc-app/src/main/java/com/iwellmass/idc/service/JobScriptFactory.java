@@ -31,7 +31,8 @@ public class JobScriptFactory {
 			JobDetail jobDetail = JobBuilder
 				.newJob(IDCDispatcherJob.class)
 				.withIdentity(new JobKey(job.getTaskId(), job.getGroupId()))
-				.requestRecovery().storeDurably()
+				.requestRecovery(false)
+				.storeDurably()
 				.build();
 
 			scheduler.addJob(jobDetail, true);

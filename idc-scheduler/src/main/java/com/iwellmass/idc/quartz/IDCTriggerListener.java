@@ -37,17 +37,14 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	/* 初始化执行信息 */
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
-		if (context.isRecovering()) {
-
-			
-		}
-		
 		
 		JobDataMap data = context.getMergedJobDataMap();
 		
 		DispatchType type = JOB_DISPATCH_TYPE.applyGet(data);
 
 		JobPK jobKey = new JobPK(trigger.getKey().getName(), trigger.getKey().getGroup());
+		
+		LOGGER.info("触发 {} 任务 {}", type, jobKey);
 		
 		if (type != DispatchType.AUTO && type != DispatchType.MANUAL) {
 			// should never
