@@ -24,6 +24,9 @@ import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobPK;
 
+/**
+ * 同步生成 JobInstance 记录
+ */
 public class IDCTriggerListener extends TriggerListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCTriggerListener.class);
@@ -84,6 +87,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		});
 		
 		// 初始化执行环境
+		jobInstance.setDispatchType(type);
 		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), jobInstance);
 	}
 	
