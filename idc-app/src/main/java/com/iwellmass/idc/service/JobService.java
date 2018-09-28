@@ -168,7 +168,7 @@ public class JobService {
 					triggerBuilder.startAt(toDate(job.getStartTime()));
 				}
 				if (job.getEndTime() != null) {
-					triggerBuilder.startAt(toDate(job.getEndTime()));
+					triggerBuilder.endAt(toDate(job.getEndTime()));
 				}
 				
 				// 保存到 quartz
