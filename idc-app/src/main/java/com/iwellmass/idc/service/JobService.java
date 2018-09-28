@@ -308,6 +308,7 @@ public class JobService {
 
 			// ~~ 调度参数 ~~
 			JobDataMap jdm = new JobDataMap();
+			JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
 			CONTEXT_PARAMETER.applyPut(jdm, request.getJobParameter());
 			CONTEXT_LOAD_DATE.applyPut(jdm, loadDate);
 			Trigger trigger = TriggerBuilder.newTrigger()
