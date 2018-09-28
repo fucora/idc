@@ -27,7 +27,8 @@ public interface JobDependencyRepository extends CrudRepository<JobDependency, J
 	void cleanJobDependencies(String jobId, String jobGroup);
 
 	@Modifying
-	@Query("DELETE FROM JobDependency WHERE srcJobId = ?1 AND srcJobGroup = ?2 OR jobId = ?3 AND jobGroup = ?4")
+	@Query("DELETE FROM JobDependency WHERE (srcJobId = :#{#jk.jobId} AND srcJobGroup = :#{#jk.jobGroup}) "
+			+ "OR (jobId = :#{#jk.jobId} AND jk = :#{#jk.jobGroup})")
 	void deleteByJob(JobPK jobPk);
 	
 }

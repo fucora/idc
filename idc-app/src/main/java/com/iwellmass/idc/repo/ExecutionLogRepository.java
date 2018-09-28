@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.executor.IDCJobEvent;
@@ -27,7 +28,7 @@ public interface ExecutionLogRepository extends PagingAndSortingRepository<Execu
 	Page<ExecutionLog> findByInstanceId(Integer id, Pageable page);
 
 	@Modifying
-	@Query("DELETE FROM ExecutionLog WHERE instanceId IN ( SELECT instanceId FROM JobInstance WHERE taskId = ?1 AND groupId = ?2)")
-	void deleteByJob(JobPK jobPk);
+	@Query("DELETE FROM ExecutionLog WHERE instanceId IN ( SELECT instanceId FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup})")
+	void deleteByJob(@Param("jk") JobPK jobPk);
 
 }
