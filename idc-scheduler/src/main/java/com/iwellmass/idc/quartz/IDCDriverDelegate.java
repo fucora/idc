@@ -16,6 +16,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
             + "ORDER BY "+ as("T", COL_NEXT_FIRE_TIME) + " ASC, " + as("T", COL_PRIORITY) + " DESC";
 	
     
-    public static final String IDC_UPDATE_JOB_INSTANCE = "UPDATE idc.t_idc_job_instance SET `status` = ? AND end_time = ? WHERE instance_id = ?";
+    public static final String IDC_UPDATE_JOB_INSTANCE = "UPDATE idc.t_idc_job_instance SET status = ?, end_time= ?  WHERE instance_id = ?";
     
 	@Override
 	public List<TriggerKey> selectTriggerToAcquire(Connection conn, long noLaterThan, long noEarlierThan, int maxCount)

@@ -106,7 +106,7 @@ public class IDCJobStore extends JobStoreTX {
 	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event)
 			throws JobPersistenceException {
         retryExecuteInNonManagedTXLock(
-                LOCK_TRIGGER_ACCESS,
+                null,
                 new TransactionCallback<Void>() {
                     public Void execute(Connection conn) throws JobPersistenceException {
                     	triggeredAsyncJobComplete(conn, triggerKey, event);
