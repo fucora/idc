@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.quartz.JobDataMap;
-import org.quartz.JobPersistenceException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -34,6 +33,7 @@ import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.PluginVersion;
+import com.iwellmass.idc.quartz.IDCPluginContext.BatchLogger;
 
 public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusService {
 
@@ -99,15 +99,24 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	public void fireCompleteEvent(CompleteEvent event) {
 		
 		LOGGER.info("更新任务状态, {}", event);
+		
+		BatchLogger logger = pluginContext.batchLogger(event.getInstanceId());
+		logger.log(event.getMessage()).log("执行结束, 执行结果: {}", event.getFinalStatus());
+		
 		JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
+		
 		Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
-		event.setScheduledFireTime(ins.getShouldFireTime());
+		
 		try {
+			event.setScheduledFireTime(ins.getShouldFireTime());
 			jobStore.triggeredAsyncJobComplete(toTriggerKey(ins.getJobPK()), event);
-		} catch (JobPersistenceException e) {
-			throw new AppException("无法更新任务状态" + e.getMessage());
+		} catch (Exception e) {
+			String error = "无法更新任务状态" + e.getMessage();
+			logger.log(error);
+			throw new AppException(error, e);
+		} finally {
+			logger.end();
 		}
-		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("执行结束"));
 	}
 	
 	public void cancleJob(String jobId, String jobGroup) {

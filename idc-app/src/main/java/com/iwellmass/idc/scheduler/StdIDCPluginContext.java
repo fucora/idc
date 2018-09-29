@@ -132,7 +132,12 @@ public class StdIDCPluginContext extends IDCPluginContext {
 
 		@Override
 		public BatchLogger log(String message, Object... args) {
-			logs = new LinkedList<>();
+			if (message == null || message.isEmpty()) {
+				return this;
+			}
+			if (logs == null) {
+				logs = new LinkedList<>();
+			}
 			logs.add(ExecutionLog.createLog(instanceId, message, args));
 			return this;
 		}
