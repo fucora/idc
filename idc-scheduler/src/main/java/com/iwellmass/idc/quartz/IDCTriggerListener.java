@@ -70,7 +70,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		pluginContext.clearLog(jobInstance.getInstanceId());
 		pluginContext.batchLogger(jobInstance.getInstanceId())
 			.log("创建任务实例 {}, 执行类型 {} ", jobInstance.getInstanceId(), type)
-			.log("运行参数: ", jobInstance.getParameter())
+			.log("运行参数: ", jobInstance.getParameter() == null ? "--" : jobInstance.getParameter())
 			.end();
 		
 		// 初始化执行环境

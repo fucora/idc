@@ -101,7 +101,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		LOGGER.info("更新任务状态, {}", event);
 		
 		BatchLogger logger = pluginContext.batchLogger(event.getInstanceId());
-		logger.log(event.getMessage()).log("执行结束, 执行结果: {}", event.getFinalStatus());
+		logger.log(event.getMessage()).log("任务结束, 执行结果: {}", event.getFinalStatus());
 		
 		JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
 		
