@@ -1,11 +1,9 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
+import static com.iwellmass.idc.quartz.IDCPlugin.toJobPK;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
@@ -36,23 +34,13 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	public void jobScheduled(Trigger trigger) {
 		
 		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
+		JobPK jobPK = toJobPK(trigger.getKey());
 		
-		if (isRedo) {
-			String jobId = JOB_ID.applyGet(trigger.getJobDataMap());
-			String jobGroup = JOB_GROUP.applyGet(trigger.getJobDataMap());
-			int instanceId = CONTEXT_INSTANCE_ID.applyGet(trigger.getJobDataMap());
-
-			JobPK jobPk = new JobPK(jobId, jobGroup);
-			
-			LOGGER.info("重跑任务实例 {}-{}", jobPk, instanceId);
-			
-		} else {
-			JobPK jobPK = toJobPK(trigger.getKey());
-			
-			Boolean isAsync = true;
+		Boolean isAsync = true;
+		if (!isRedo) {
 			DispatchType dispatchType = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
 			
-			LOGGER.info("创建调度 {}, 调度方式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
+			LOGGER.info("创建 {} 任务 {}, 执行模式: {}", dispatchType, jobPK, isAsync ? "异步" : "同步");
 
 			pluginContext.updateJob(jobPK, (job) -> {
 				// 更新调度信息
@@ -68,6 +56,8 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 					job.setNextLoadDate(toLocalDateTime(nextFireTime));
 				}
 			});
+		} else {
+			LOGGER.info("创建 REDO 任务 {},  执行模式: 异步", jobPK, isAsync ? "异步" : "同步") ;
 		}
 	}
 
@@ -98,10 +88,11 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	
 	/* 调度完结 */
 	public void triggerFinalized(Trigger trigger) {
-		TriggerKey tk = trigger.getKey();
-		LOGGER.info("调度任务 {} 已完结", tk);
 		
-		pluginContext.updateJob(toJobPK(tk), (job) -> {
+		JobPK jobPK = toJobPK(trigger);
+		LOGGER.info("调度任务 {} 已完结", jobPK);
+		
+		pluginContext.updateJob(jobPK, (job) -> {
 			job.setUpdateTime(LocalDateTime.now());
 			job.setStatus(ScheduleStatus.COMPLETE);
 		});
@@ -112,7 +103,4 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		LOGGER.error("IDCScheduler ERROR: " + msg, cause);
 	}
 	
-	private JobPK toJobPK(TriggerKey tk) {
-		return new JobPK(tk.getName(), tk.getGroup());
-	}
 }

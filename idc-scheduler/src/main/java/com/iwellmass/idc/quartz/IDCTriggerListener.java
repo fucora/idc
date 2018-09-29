@@ -1,9 +1,13 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
@@ -23,6 +27,7 @@ import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.ScheduleStatus;
 
 /**
  * 同步生成 JobInstance 记录
@@ -40,14 +45,9 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	/* 初始化执行信息 */
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
+		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
 		
-		JobDataMap data = context.getMergedJobDataMap();
-		
-		DispatchType type = JOB_DISPATCH_TYPE.applyGet(data);
-
-		JobPK jobKey = new JobPK(trigger.getKey().getName(), trigger.getKey().getGroup());
-		
-		LOGGER.info("触发 {} 任务 {}", type, jobKey);
+		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getMergedJobDataMap());
 		
 		if (type != DispatchType.AUTO && type != DispatchType.MANUAL) {
 			// should never
@@ -55,7 +55,49 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			throw new UnsupportedOperationException("not supported " + type + " dispatch type");
 		}
 		
-		JobInstance jobInstance = pluginContext.createJobInstance(jobKey, (job) -> {
+		LOGGER.info("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
+		JobInstance jobInstance = null;
+		if (isRedo) {
+			jobInstance = triggerRedo(trigger, context);
+		} else {
+			jobInstance = triggerNormal(trigger, context);
+		}
+		
+		LOGGER.info("执行 {}, JobPK {}, loadDate {}", jobInstance.getTaskName(),  jobInstance.getJobPK(),
+				jobInstance.getLoadDate().format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
+		
+		// 初始化执行环境
+		jobInstance.setDispatchType(type);
+		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), jobInstance);
+	}
+	
+	
+	private JobInstance triggerRedo(Trigger trigger, JobExecutionContext context) {
+		
+		String jobId = JOB_ID.applyGet(trigger.getJobDataMap());
+		String jobGroup = JOB_GROUP.applyGet(trigger.getJobDataMap());
+		int instanceId = CONTEXT_INSTANCE_ID.applyGet(trigger.getJobDataMap());
+		
+		JobPK jobKey = new JobPK(jobId, jobGroup);
+		
+		pluginContext.updateJob(jobKey, (job) -> {
+			job.setUpdateTime(LocalDateTime.now());
+			job.setStatus(ScheduleStatus.NORMAL);
+		});
+		
+		return pluginContext.updateJobInstance(instanceId, (ins -> {
+			ins.setStatus(JobInstanceStatus.NEW);
+		}));
+	}
+	private JobInstance triggerNormal(Trigger trigger, JobExecutionContext context) {
+		
+		JobPK jobKey = new JobPK(trigger.getKey().getName(), trigger.getKey().getGroup());
+		
+		JobDataMap data = context.getMergedJobDataMap();
+		
+		DispatchType type = JOB_DISPATCH_TYPE.applyGet(data);
+		
+		return pluginContext.createJobInstance(jobKey, (job) -> {
 			
 			JobInstance newIns = createJobInstance(job);
 			
@@ -82,13 +124,8 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 				newIns.setNextLoadDate(toLocalDateTime(context.getNextFireTime()));
 				newIns.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
 			}
-			LOGGER.info("执行 {} 调度任务 {}, Full loadDate {}", type, jobKey, newIns.getLoadDate().format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
 			return newIns;
 		});
-		
-		// 初始化执行环境
-		jobInstance.setDispatchType(type);
-		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), jobInstance);
 	}
 	
 	private JobInstance createJobInstance(Job job) {

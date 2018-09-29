@@ -59,6 +59,10 @@ public class JobInstanceController {
 	@ApiOperation("重跑任务")
 	@PostMapping("/{id}/redo")
 	public ServiceResult<String> restart(@PathVariable(name = "id") Integer id, @RequestBody (required = false) RedoRequest redoRequest) {
+		
+		if (redoRequest == null) {
+			redoRequest = new RedoRequest();
+		}
 		redoRequest.setInstanceId(id);
 		jobInstanceService.redo(redoRequest);
 		return ServiceResult.success("success");

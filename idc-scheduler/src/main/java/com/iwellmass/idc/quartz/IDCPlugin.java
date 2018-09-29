@@ -1,6 +1,9 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -10,8 +13,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerKey;
 import org.quartz.spi.ClassLoadHelper;
@@ -77,20 +82,16 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	
 	/** 恢复等待异步结果的 trigger */
 	public void completeAsyncJob(String triggerName, String triggerGroup, JobInstanceStatus finalStatus) throws SchedulerException {
-		CompletedExecutionInstruction instruction = null;
-		if (finalStatus == JobInstanceStatus.FAILED) {
-			instruction = CompletedExecutionInstruction.SET_TRIGGER_ERROR;
-		} else {
-			instruction = CompletedExecutionInstruction.NOOP;
-		}
+		CompletedExecutionInstruction instruction = finalStatus == JobInstanceStatus.FINISHED ? CompletedExecutionInstruction.NOOP
+				: CompletedExecutionInstruction.SET_TRIGGER_ERROR;
 		jobStore.triggeredAsyncJobComplete(new TriggerKey(triggerName, triggerGroup), instruction);
 	}
-
 
 	@Override
 	public void fireStartEvent(StartEvent event) {
 		LOGGER.info("Get event {}", event);
 		// 更新实例状态
+
 		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
 			jobInstance.setStartTime(event.getStartTime());
 			jobInstance.setStatus(JobInstanceStatus.RUNNING);
@@ -109,6 +110,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 			ins.setStatus(event.getFinalStatus());
 			ins.setEndTime(Optional.ofNullable(event.getEndTime()).orElse(LocalDateTime.now()));
 		});
+		
 		// 通知异步信息
 		try {
 			completeAsyncJob(jobInstance.getJobId(), jobInstance.getJobGroup(), event.getFinalStatus());
@@ -127,8 +129,22 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		IDCPlugin.pluginContext = pluginContext;
 	}
 
+	public static JobPK toJobPK(Trigger trigger) {
+		JobDataMap jdm = trigger.getJobDataMap();
+		boolean isRedo = JOB_REOD.applyGet(jdm);
+		if (isRedo) {
+			String jobId = JOB_ID.applyGet(jdm);
+			String groupId = JOB_GROUP.applyGet(jdm);
+			return new JobPK(jobId, groupId);
+		} else {
+			return new JobPK(trigger.getKey().getName(), trigger.getKey().getGroup());
+		}
+	}
 	public static JobPK toJobPK(TriggerKey triggerKey) {
 		return new JobPK(triggerKey.getName(), triggerKey.getGroup());
+	}
+	public static TriggerKey toJobPK(JobPK jobKey) {
+		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 	
 	public static final LocalDateTime toLocalDateTime(Date date) {

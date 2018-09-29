@@ -1,5 +1,8 @@
 package com.iwellmass.idc.service;
 
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
@@ -55,6 +58,7 @@ public class JobInstanceService {
 	@Inject
 	private JobScriptFactory jobScriptFactory;
 	
+	@Inject
 	private JobRepository jobRepository;
 
 	public void redo(RedoRequest request) {
@@ -83,6 +87,9 @@ public class JobInstanceService {
 			.startNow().build();
 		
 		JobDataMap jdm = trigger.getJobDataMap();
+		JOB_REOD.applyPut(jdm, true);
+		JOB_ID.applyPut(jdm, job.getJobId());
+		JOB_GROUP.applyPut(jdm, job.getJobGroup());
 		JOB_SCHEDULE_TYPE.applyPut(jdm, job.getScheduleType());
 		JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
 		CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);

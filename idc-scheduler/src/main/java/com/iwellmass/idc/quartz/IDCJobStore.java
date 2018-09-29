@@ -98,27 +98,40 @@ public class IDCJobStore extends JobStoreTX {
     }
 	
 	
-	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompletedExecutionInstruction triggerInstCode)
+	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompletedExecutionInstruction instruction)
 			throws JobPersistenceException {
         retryExecuteInNonManagedTXLock(
                 LOCK_TRIGGER_ACCESS,
                 new TransactionCallback<Void>() {
                     public Void execute(Connection conn) throws JobPersistenceException {
-                    	triggeredAsyncJobComplete(conn, triggerKey, triggerInstCode);
+                    	triggeredAsyncJobComplete(conn, triggerKey, instruction);
                         return null;
                     }
                 });    
 	}
 
-	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompletedExecutionInstruction triggerInstCode) throws JobPersistenceException {
+	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompletedExecutionInstruction instruction) throws JobPersistenceException {
         try {
-            getDelegate().updateTriggerStateFromOtherState(conn,
-            		key, STATE_WAITING,
-                    STATE_BLOCKED);
-
-            getDelegate().updateTriggerStateFromOtherState(conn,
-                    key, STATE_PAUSED,
-                    STATE_PAUSED_BLOCKED);
+        	
+        	if (instruction == CompletedExecutionInstruction.NOOP) {
+        		getDelegate().updateTriggerStateFromOtherState(conn,
+        				key, STATE_WAITING,
+        				STATE_BLOCKED);
+        		
+        		getDelegate().updateTriggerStateFromOtherState(conn,
+        				key, STATE_PAUSED,
+        				STATE_PAUSED_BLOCKED);
+        	} else if (instruction == CompletedExecutionInstruction.SET_TRIGGER_ERROR) {
+        		getDelegate().updateTriggerStateFromOtherState(conn,
+        				key, STATE_ERROR,
+        				STATE_BLOCKED);
+        		
+        		getDelegate().updateTriggerStateFromOtherState(conn,
+        				key, STATE_ERROR,
+        				STATE_PAUSED_BLOCKED);
+        	} else {
+        		throw new JobPersistenceException("无法处理指令 " + instruction);
+        	}
 
             signalSchedulingChangeOnTxCompletion(0L);
         	
