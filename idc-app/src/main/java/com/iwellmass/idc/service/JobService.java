@@ -332,14 +332,18 @@ public class JobService {
 		case MONTHLY: {
 			List<Integer> days = scheduleProperties.getDays();
 			Assert.isFalse(Utils.isNullOrEmpty(days), "月调度配置不能为空");
+			
+			boolean isLast = days.stream().filter(i -> i < 0).count() == 1;
+			if(isLast && days.size() > 1) {
+				throw new AppException("最后 T 天不能使用组合配置模式");
+			};
+			
 			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
-					String.join(",", days.stream().map(i -> i > 0 ? String.valueOf(i) : "L" + i).collect(Collectors.toList())));
+				isLast ? days.get(0) == -1 ? "L" : "L" + (days.get(0) + 1)
+					: String.join(",", days.stream().map(String::valueOf).collect(Collectors.toList())));
 		}
 		case WEEKLY: {
-			List<Integer> days = scheduleProperties.getDays();
-			Assert.isFalse(Utils.isNullOrEmpty(days), "周调度配置不能为空");
-			return String.format("%s %s %s ? * %s *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
-					String.join(",", days.stream().map(i -> i + "").collect(Collectors.toList())));
+			throw new UnsupportedOperationException("not supported yet");
 		}
 		case DAILY:
 			return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
@@ -380,5 +384,4 @@ public class JobService {
 		 * e.getMessage()); }
 		 */
 	}
-	
 }
