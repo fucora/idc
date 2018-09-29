@@ -1,7 +1,6 @@
 package com.iwellmass.idc.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 
@@ -84,7 +83,6 @@ public class JobInstanceService {
 			.startNow().build();
 		
 		JobDataMap jdm = trigger.getJobDataMap();
-		JOB_ASYNC.applyPut(jdm, true);
 		JOB_SCHEDULE_TYPE.applyPut(jdm, job.getScheduleType());
 		JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
 		CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);

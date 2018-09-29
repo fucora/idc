@@ -1,8 +1,11 @@
 package com.iwellmass.idc.quartz;
 
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
 import java.time.LocalDateTime;
@@ -32,30 +35,40 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	/* 创建调度 */
 	public void jobScheduled(Trigger trigger) {
 		
-		JobPK jobPK = toJobPK(trigger.getKey());
+		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
 		
-		Boolean isAsync = JOB_ASYNC.applyGet(trigger.getJobDataMap());
-		DispatchType dispatchType = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
-		
-		TriggerKey triggerKey = trigger.getKey();
-		LOGGER.info("创建调度 {}, 调度方式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
-		
+		if (isRedo) {
+			String jobId = JOB_ID.applyGet(trigger.getJobDataMap());
+			String jobGroup = JOB_GROUP.applyGet(trigger.getJobDataMap());
+			int instanceId = CONTEXT_INSTANCE_ID.applyGet(trigger.getJobDataMap());
 
-		pluginContext.updateJob(jobPK, (job) -> {
-			// 更新调度信息
-			job.setStatus(ScheduleStatus.NORMAL);
-			if (dispatchType == DispatchType.MANUAL) {
-				job.setPrevLoadDate(CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap()));
-				job.setNextLoadDate(null);
-			} else {
-				// prev fire time
-				job.setPrevLoadDate(toLocalDateTime(trigger.getPreviousFireTime()));
-				Date nextFireTime = trigger.getNextFireTime();
-				// next fire time
-				job.setNextLoadDate(toLocalDateTime(nextFireTime));
-			}
-		});
-	
+			JobPK jobPk = new JobPK(jobId, jobGroup);
+			
+			LOGGER.info("重跑任务实例 {}-{}", jobPk, instanceId);
+			
+		} else {
+			JobPK jobPK = toJobPK(trigger.getKey());
+			
+			Boolean isAsync = true;
+			DispatchType dispatchType = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
+			
+			LOGGER.info("创建调度 {}, 调度方式: {}, 执行模式: {}", jobPK, dispatchType, isAsync ? "异步" : "同步");
+
+			pluginContext.updateJob(jobPK, (job) -> {
+				// 更新调度信息
+				job.setStatus(ScheduleStatus.NORMAL);
+				if (dispatchType == DispatchType.MANUAL) {
+					job.setPrevLoadDate(CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap()));
+					job.setNextLoadDate(null);
+				} else {
+					// prev fire time
+					job.setPrevLoadDate(toLocalDateTime(trigger.getPreviousFireTime()));
+					Date nextFireTime = trigger.getNextFireTime();
+					// next fire time
+					job.setNextLoadDate(toLocalDateTime(nextFireTime));
+				}
+			});
+		}
 	}
 
 	/* 撤销调度 */

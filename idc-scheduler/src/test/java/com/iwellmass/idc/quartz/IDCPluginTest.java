@@ -1,6 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 
 import java.util.Date;
@@ -23,6 +22,7 @@ public class IDCPluginTest {
 	private static final String lqd_01 = "lqd_01";
 	private static final String group = "test";
 	
+	private static final Date _1_1 = new Date(1514736000000L);
 	private static final Date _9_1 = new Date(1535731200000L);
 
 	@Test
@@ -45,12 +45,11 @@ public class IDCPluginTest {
 			.requestRecovery()
 			.storeDurably()
 			.build();
-		JOB_ASYNC.applyPut(jdt.getJobDataMap(), true);
 		
 		Trigger trigger = TriggerBuilder.newTrigger()
-			.withSchedule(CronScheduleBuilder.cronSchedule("0 0 0 * * ? *")
+			.withSchedule(CronScheduleBuilder.cronSchedule("0 0 0 L * ? *")
 				.withMisfireHandlingInstructionIgnoreMisfires())
-			.startAt(_9_1)
+			.startAt(_1_1)
 			.withIdentity("CRON_" + lqd_01, "test")
 			.build();
 		

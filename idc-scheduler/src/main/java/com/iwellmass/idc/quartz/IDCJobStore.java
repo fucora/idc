@@ -1,7 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ASYNC;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -59,29 +57,20 @@ public class IDCJobStore extends JobStoreTX {
                 signalSchedulingChangeOnTxCompletion(0L);
             }
 
-            if (jobDetail.isConcurrentExectionDisallowed()) {
-            	// async job ?
-            	boolean isAsync = JOB_ASYNC.applyGet(jobDetail.getJobDataMap());
-            	if (isAsync) {
-            		// update to WAITING_ASYNC 
-            		getDelegate().updateTriggerStatesForJobFromOtherState(conn,
-            				jobDetail.getKey(), STATE_ASYNC_WAITING,
-            				STATE_BLOCKED);
-            		// may be early notify
-        			getDelegate().updateTriggerStatesForJobFromOtherState(conn,
-            				jobDetail.getKey(), STATE_WAITING,
-            				STATE_ASYNC_COMPLETE);
-            	} else {
-            		getDelegate().updateTriggerStatesForJobFromOtherState(conn,
-            				jobDetail.getKey(), STATE_WAITING,
-            				STATE_BLOCKED);
-	                getDelegate().updateTriggerStatesForJobFromOtherState(conn,
-	                        jobDetail.getKey(), STATE_PAUSED,
-	                        STATE_PAUSED_BLOCKED);
-            	}
+            /*
+             QZ 原逻辑，使用异步接口通知
+             if (jobDetail.isConcurrentExectionDisallowed()) {
+                getDelegate().updateTriggerStatesForJobFromOtherState(conn,
+                        jobDetail.getKey(), STATE_WAITING,
+                        STATE_BLOCKED);
+
+                getDelegate().updateTriggerStatesForJobFromOtherState(conn,
+                        jobDetail.getKey(), STATE_PAUSED,
+                        STATE_PAUSED_BLOCKED);
 
                 signalSchedulingChangeOnTxCompletion(0L);
-            }
+            }*/
+            
             if (jobDetail.isPersistJobDataAfterExecution()) {
                 try {
                     if (jobDetail.getJobDataMap().isDirty()) {
@@ -109,36 +98,30 @@ public class IDCJobStore extends JobStoreTX {
     }
 	
 	
-	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompletedExecutionInstruction triggerInstCode) throws JobPersistenceException {
-        executeInLock(
+	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompletedExecutionInstruction triggerInstCode)
+			throws JobPersistenceException {
+        retryExecuteInNonManagedTXLock(
                 LOCK_TRIGGER_ACCESS,
-                new TransactionCallback<Object>() {
-                    public Object execute(Connection conn) throws JobPersistenceException {
+                new TransactionCallback<Void>() {
+                    public Void execute(Connection conn) throws JobPersistenceException {
                     	triggeredAsyncJobComplete(conn, triggerKey, triggerInstCode);
                         return null;
                     }
-                });
-    }
-	
+                });    
+	}
+
 	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompletedExecutionInstruction triggerInstCode) throws JobPersistenceException {
         try {
-            TriggerStatus status = getDelegate().selectTriggerStatus(conn, key);
+            getDelegate().updateTriggerStateFromOtherState(conn,
+            		key, STATE_WAITING,
+                    STATE_BLOCKED);
 
-            if (status == null || status.getNextFireTime() == null) {
-                return;
-            }
-            
-            // job complete
-            if (triggerInstCode == CompletedExecutionInstruction.NOOP) {
-            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_COMPLETE, STATE_ASYNC_WAITING);
-            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_ASYNC_COMPLETE, STATE_BLOCKED);
-            	signalSchedulingChangeOnTxCompletion(0L);
-            } else {
-            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_ERROR, STATE_ASYNC_WAITING);
-            	// TODO check loadDate ?
-            	getDelegate().updateTriggerStateFromOtherState(conn, key, STATE_ERROR, STATE_BLOCKED);
-            	signalSchedulingChangeOnTxCompletion(0L);
-            }
+            getDelegate().updateTriggerStateFromOtherState(conn,
+                    key, STATE_PAUSED,
+                    STATE_PAUSED_BLOCKED);
+
+            signalSchedulingChangeOnTxCompletion(0L);
+        	
         } catch (SQLException e) {
             throw new JobPersistenceException("Couldn't resume async job, trigger '"
                     + key + "': " + e.getMessage(), e);

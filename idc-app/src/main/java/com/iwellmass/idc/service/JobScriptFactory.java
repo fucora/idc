@@ -24,7 +24,6 @@ public class JobScriptFactory {
 	@Inject
 	private Scheduler scheduler;
 
-
 	public JobScript getJobScript(Job job) {
 		try {
 			// 首先生成 JobDetails

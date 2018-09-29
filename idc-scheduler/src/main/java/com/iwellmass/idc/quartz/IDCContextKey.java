@@ -20,9 +20,9 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 
 	// ~~ JOB ~~
-	public static final IDCContextKey<Boolean> JOB_ASYNC = defOpt("idc.job.async", Boolean.class, true);
+	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
 	/** JobName */
-	public static final IDCContextKey<String> JOB_NAME = defReq("idc.job.jobName", String.class);
+	public static final IDCContextKey<String> JOB_ID = defReq("idc.job.id", String.class);
 	/** JobGroup */
 	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
 	/** 调度类型 */

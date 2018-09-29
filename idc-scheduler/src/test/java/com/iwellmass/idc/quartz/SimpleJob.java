@@ -1,6 +1,9 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.*;
+
+import java.text.SimpleDateFormat;
+
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -19,8 +22,8 @@ public class SimpleJob implements Job{
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleJob.class);
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		
-		LOGGER.info("execute job: ");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		LOGGER.info("execute job: {}", sdf.format(context.getScheduledFireTime()));
 		
 		
 		

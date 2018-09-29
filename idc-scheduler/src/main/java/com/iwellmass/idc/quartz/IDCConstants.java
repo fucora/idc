@@ -12,7 +12,7 @@ public interface IDCConstants {
 	String VERSION = "2.0";
 
 	// ~~ IDC 依赖表
-	/*String COL_IDC_JOB_NAME = "JOB_NAME";
+	String COL_IDC_JOB_NAME = "JOB_NAME";
 	String COL_IDC_JOB_GROUP = "JOB_GROUP";
 	
 	String TABLE_DEPENDENCY = "QRTZ_DEPENDENCY";
@@ -21,9 +21,9 @@ public interface IDCConstants {
 	
 	String TABLE_JOB_INSTANCE = "QRTZ_SIGNAL";
 	String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "SHOULD_FIRE_TIME";
-	String COL_JOB_INSTANCE_STATUS = "STATUS";*/
+	String COL_JOB_INSTANCE_STATUS = "STATUS";
 	
-	String COL_IDC_JOB_NAME = "job_id";
+	/*String COL_IDC_JOB_NAME = "job_id";
 	String COL_IDC_JOB_GROUP = "job_group";
 	
 	String TABLE_DEPENDENCY = "t_idc_dependency";
@@ -32,5 +32,5 @@ public interface IDCConstants {
 	
 	String TABLE_JOB_INSTANCE = "t_idc_job_instance";
 	String COL_JOB_INSTANCE_SHOULD_FIRE_TIME = "should_fire_time";
-	String COL_JOB_INSTANCE_STATUS = "status";
+	String COL_JOB_INSTANCE_STATUS = "status";*/
 }
