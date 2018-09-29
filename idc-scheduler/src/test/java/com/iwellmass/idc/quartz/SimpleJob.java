@@ -1,6 +1,6 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.*;
+import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
 
 import java.text.SimpleDateFormat;
 
@@ -12,8 +12,6 @@ import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.iwellmass.idc.model.JobInstanceStatus;
 
 
 @DisallowConcurrentExecution

@@ -29,7 +29,6 @@ public class IDCJobListener extends JobListenerSupport {
 	@Override
 	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 		JobInstance instance = CONTEXT_INSTANCE.applyGet(context.getMergedJobDataMap());
-
 		if (jobException != null) {
 			pluginContext.log(instance.getInstanceId(), "派发任务失败: " + jobException.getMessage());
 			pluginContext.updateJobInstance(instance.getInstanceId(), (jobInstance) -> {
@@ -37,12 +36,13 @@ public class IDCJobListener extends JobListenerSupport {
 				jobInstance.setEndTime(LocalDateTime.now());
 			});
 		} else {
+			pluginContext.log(instance.getInstanceId(), "等待执行结果...");
 			pluginContext.updateJobInstance(instance.getInstanceId(), (jobInstance) -> {
 				jobInstance.setStatus(JobInstanceStatus.ACCEPTED);
 			});
 		}
 	}
-
+	
 	@Override
 	public String getName() {
 		return IDCJobListener.class.getSimpleName();

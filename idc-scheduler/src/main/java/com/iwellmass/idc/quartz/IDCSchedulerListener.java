@@ -34,7 +34,7 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	public void jobScheduled(Trigger trigger) {
 		
 		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
-		JobPK jobPK = toJobPK(trigger.getKey());
+		JobPK jobPK = toJobPK(trigger);
 		
 		Boolean isAsync = true;
 		if (!isRedo) {
@@ -63,7 +63,7 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 
 	/* 撤销调度 */
 	public void jobUnscheduled(TriggerKey triggerKey) {
-		JobPK jobPk = new JobPK(triggerKey.getName(), triggerKey.getGroup());
+		JobPK jobPk = toJobPK(triggerKey);
 		pluginContext.remove(jobPk);
 	}
 
@@ -102,5 +102,4 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	public void schedulerError(String msg, SchedulerException cause) {
 		LOGGER.error("IDCScheduler ERROR: " + msg, cause);
 	}
-	
 }

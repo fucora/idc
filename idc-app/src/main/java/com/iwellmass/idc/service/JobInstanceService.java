@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.exception.AppException;
@@ -143,7 +145,7 @@ public class JobInstanceService {
 	}
 	
 	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
-		Pageable page = new PageRequest(pager.getPage(), pager.getLimit());
+		Pageable page = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.ASC, "id"));
 		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
 		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}

@@ -103,11 +103,11 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
 		event.setScheduledFireTime(ins.getShouldFireTime());
 		try {
-			jobStore.triggeredAsyncJobComplete(toJobPK(ins.getJobPK()), event);
+			jobStore.triggeredAsyncJobComplete(toTriggerKey(ins.getJobPK()), event);
 		} catch (JobPersistenceException e) {
 			throw new AppException("无法更新任务状态" + e.getMessage());
 		}
-		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("执行完毕"));
+		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("执行结束"));
 	}
 	
 	public void cancleJob(String jobId, String jobGroup) {
@@ -132,7 +132,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	public static JobPK toJobPK(TriggerKey triggerKey) {
 		return new JobPK(triggerKey.getName(), triggerKey.getGroup());
 	}
-	public static TriggerKey toJobPK(JobPK jobKey) {
+	public static TriggerKey toTriggerKey(JobPK jobKey) {
 		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 	

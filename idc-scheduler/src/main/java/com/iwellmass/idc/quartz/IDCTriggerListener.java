@@ -46,8 +46,9 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
 		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
-		
 		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getMergedJobDataMap());
+		
+		LOGGER.debug("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
 		
 		if (type != DispatchType.AUTO && type != DispatchType.MANUAL) {
 			// should never
@@ -55,7 +56,6 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			throw new UnsupportedOperationException("not supported " + type + " dispatch type");
 		}
 		
-		LOGGER.debug("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
 		JobInstance jobInstance = null;
 		if (isRedo) {
 			jobInstance = triggerRedo(trigger, context);
@@ -65,6 +65,13 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		
 		LOGGER.info("执行 {}, JobPK {}, loadDate {}", jobInstance.getTaskName(),  jobInstance.getJobPK(),
 				jobInstance.getLoadDate().format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
+		
+		// 清空日志
+		pluginContext.clearLog(jobInstance.getInstanceId());
+		pluginContext.batchLogger(jobInstance.getInstanceId())
+			.log("创建任务实例 {}, 执行类型 {} ", jobInstance.getInstanceId(), type)
+			.log("运行参数: ", jobInstance.getParameter())
+			.end();
 		
 		// 初始化执行环境
 		jobInstance.setDispatchType(type);
@@ -87,6 +94,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		
 		return pluginContext.updateJobInstance(instanceId, (ins -> {
 			ins.setStatus(JobInstanceStatus.NEW);
+			ins.setParameter(mergeParameter(ins.getParameter(), context));
 		}));
 	}
 	private JobInstance triggerNormal(Trigger trigger, JobExecutionContext context) {
@@ -100,12 +108,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		return pluginContext.createJobInstance(jobKey, (job) -> {
 			
 			JobInstance newIns = createJobInstance(job);
-			
-			// TODO 强制覆盖所有参数？
-			String parameter = CONTEXT_PARAMETER.applyGet(data);
-			if (parameter != null) {
-				newIns.setParameter(parameter);
-			}
+			newIns.setParameter(mergeParameter(job.getParameter(), context));
 			
 			LocalDateTime loadDate = null;
 			
@@ -126,6 +129,15 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			}
 			return newIns;
 		});
+	}
+	
+	private String mergeParameter(String defaultParameter, JobExecutionContext context) {
+		// TODO 强制覆盖所有参数？
+		String parameter = CONTEXT_PARAMETER.applyGet(context.getTrigger().getJobDataMap());
+		if (parameter != null) {
+			return parameter;
+		}
+		return defaultParameter;
 	}
 	
 	private JobInstance createJobInstance(Job job) {

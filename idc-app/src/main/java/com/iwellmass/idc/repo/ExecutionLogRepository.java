@@ -31,4 +31,6 @@ public interface ExecutionLogRepository extends PagingAndSortingRepository<Execu
 	@Query("DELETE FROM ExecutionLog WHERE instanceId IN ( SELECT instanceId FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup})")
 	void deleteByJob(@Param("jk") JobPK jobPk);
 
+	void deleteByInstanceId(Integer instanceId);
+
 }

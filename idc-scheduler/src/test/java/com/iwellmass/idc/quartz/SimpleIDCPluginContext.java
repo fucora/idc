@@ -62,4 +62,16 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 		return null;
 	}
 
+	@Override
+	public void clearLog(Integer instanceId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public BatchLogger batchLogger(Integer instaceId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

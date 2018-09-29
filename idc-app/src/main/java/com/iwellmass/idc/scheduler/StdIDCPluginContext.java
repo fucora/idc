@@ -1,5 +1,7 @@
 package com.iwellmass.idc.scheduler;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
+import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobPK;
@@ -103,9 +106,42 @@ public class StdIDCPluginContext extends IDCPluginContext {
 		});
 	}
 
-
 	@Override
 	public JobInstance getJobInstance(Integer instanceId) {
 		return instanceRepo.findOne(instanceId);
 	}
+
+	@Override
+	public void clearLog(Integer instanceId) {
+		logRepository.deleteByInstanceId(instanceId);
+	}
+	
+	@Override
+	public BatchLogger batchLogger(Integer instanceId) {
+		return new BatchLoggerImpl(instanceId);
+	}
+	
+	class BatchLoggerImpl implements BatchLogger {
+		
+		Integer instanceId = null;
+		private List<ExecutionLog> logs;
+		
+		public BatchLoggerImpl(Integer instanceId) {
+			this.instanceId = instanceId;
+		}
+
+		@Override
+		public BatchLogger log(String message, Object... args) {
+			logs = new LinkedList<>();
+			logs.add(ExecutionLog.createLog(instanceId, message, args));
+			return this;
+		}
+
+		@Override
+		public void end() {
+			logRepository.save(logs);
+			logs = null;
+		}
+	}
+
 }

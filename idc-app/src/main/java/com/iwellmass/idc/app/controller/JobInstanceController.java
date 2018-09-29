@@ -83,17 +83,10 @@ public class JobInstanceController {
 		return ServiceResult.success("success");
 	}
 	
-	
 	@ApiOperation("任务日志(分页)")
 	@PostMapping("/{id}/log")
-	public ServiceResult<PageData<ExecutionLog>> restart(@PathVariable(name = "id") Integer id, Pager pager) {
+	public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") Integer id, Pager pager) {
 		PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
 		return ServiceResult.success(data);
 	}
-	
-	
-	
-	
-	
-	
 }
