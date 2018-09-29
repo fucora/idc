@@ -101,18 +101,13 @@ public class IDCJobStore extends JobStoreTX {
                     + e.getMessage(), e);
         }
     }
-	
-	
-	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event)
-			throws JobPersistenceException {
-        retryExecuteInNonManagedTXLock(
-                null,
-                new TransactionCallback<Void>() {
-                    public Void execute(Connection conn) throws JobPersistenceException {
-                    	triggeredAsyncJobComplete(conn, triggerKey, event);
-                        return null;
-                    }
-                });    
+
+
+	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event) {
+		retryExecuteInNonManagedTXLock(null, (TransactionCallback<Void>) conn -> {
+			triggeredAsyncJobComplete(conn, triggerKey, event);
+			return null;
+		});
 	}
 
 	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompleteEvent event) throws JobPersistenceException {
