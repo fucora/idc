@@ -107,6 +107,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		} catch (JobPersistenceException e) {
 			throw new AppException("无法更新任务状态" + e.getMessage());
 		}
+		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("执行完毕"));
 	}
 	
 	public void cancleJob(String jobId, String jobGroup) {

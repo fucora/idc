@@ -1,11 +1,13 @@
 package com.iwellmass.idc.service;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
+
+import java.time.LocalDateTime;
 
 import javax.inject.Inject;
 
@@ -29,13 +31,13 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.RedoRequest;
+import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.JobScript;
-import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
@@ -65,13 +67,14 @@ public class JobInstanceService {
 	public void redo(RedoRequest request) {
 		
 		int instanceId = request.getInstanceId();
-		
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
-		JobPK jobPK = instance.getJobPK();
+		
 		Assert.isTrue(instance != null, "找不到此实例");
 		
+		JobPK jobPK = instance.getJobPK();
 		Job job = jobRepository.findOne(jobPK);
 		JobScript script = jobScriptFactory.getJobScript(job);
+		
 		Assert.isTrue(script != null, "找不到业务对象");
 		
 		try {
@@ -99,6 +102,25 @@ public class JobInstanceService {
 		}
 	}
 
+	
+	public void forceComplete(int instanceId) {
+		
+		JobInstance instance = jobInstanceRepository.findOne(instanceId);
+		
+		Assert.isTrue(instance != null, "找不到此实例");
+		
+		try {
+			IDCPlugin plugin = IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
+			CompleteEvent event = CompleteEvent
+				.successEvent("强制结束")
+				.setInstanceId(instanceId)
+				.setEndTime(LocalDateTime.now());
+			plugin.fireCompleteEvent(event);
+		} catch (SchedulerException e) {
+			throw new AppException("强制结束任务时出错: " + e.getMessage());
+		}
+	}
+	
 	public void cancle(CancleRequest req) {
 		int instanceId = req.getInstanceId();
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
