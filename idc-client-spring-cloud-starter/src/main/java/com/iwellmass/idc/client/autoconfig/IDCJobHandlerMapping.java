@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.http.MediaType;
 import org.springframework.util.ClassUtils;

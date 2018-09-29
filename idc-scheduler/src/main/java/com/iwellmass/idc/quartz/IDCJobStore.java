@@ -126,6 +126,7 @@ public class IDCJobStore extends JobStoreTX {
      		if (getDelegate() instanceof IDCDriverDelegate) {
     			IDCDriverDelegate delegate = (IDCDriverDelegate) getDelegate();
         		delegate.updateTriggerStateForIDC(conn, event);	
+        		signalSchedulingChangeOnTxCompletion(0L);
     		}
         	
         	Trigger trigger = getDelegate().selectTrigger(conn, key);
