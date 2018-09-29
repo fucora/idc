@@ -6,6 +6,8 @@ public class RedoRequest {
 	
 	private String jobParameter;
 
+	private boolean force;
+	
 	public Integer getInstanceId() {
 		return instanceId;
 	}
@@ -21,6 +23,13 @@ public class RedoRequest {
 	public void setJobParameter(String jobParameter) {
 		this.jobParameter = jobParameter;
 	}
-	
+
+	public boolean isForce() {
+		return force;
+	}
+
+	public void setForce(boolean force) {
+		this.force = force;
+	}
 	
 }

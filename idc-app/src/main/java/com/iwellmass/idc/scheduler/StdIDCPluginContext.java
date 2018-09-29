@@ -102,4 +102,10 @@ public class StdIDCPluginContext extends IDCPluginContext {
 			return null;
 		});
 	}
+
+
+	@Override
+	public JobInstance getJobInstance(Integer instanceId) {
+		return instanceRepo.findOne(instanceId);
+	}
 }

@@ -15,13 +15,14 @@ public abstract class IDCPluginContext {
 	public abstract void updateJob(JobPK triggerKey, Consumer<Job> fun);
 	
 	public abstract JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun);
-	
 	public abstract JobInstance updateJobInstance(int instanceId, Consumer<JobInstance> fun);
+	public abstract JobInstance getJobInstance(Integer instanceId);
 	
 	public abstract void log(Integer instanceId, String message, Object...args);
 	
 	public static class Dependency {}
 
 	public abstract void remove(JobPK jobPk);
+
 	
 }

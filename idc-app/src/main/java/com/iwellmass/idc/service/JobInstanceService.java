@@ -35,6 +35,7 @@ import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.JobScript;
+import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
@@ -62,39 +63,36 @@ public class JobInstanceService {
 	private JobRepository jobRepository;
 
 	public void redo(RedoRequest request) {
+		
 		int instanceId = request.getInstanceId();
+		
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
-		
+		JobPK jobPK = instance.getJobPK();
 		Assert.isTrue(instance != null, "找不到此实例");
-		Assert.isTrue(instance.getStatus().isComplete(), "实例正在运行，无法重跑");
 		
-		JobPK id = instance.getJobPK();
-		
-		Job job = jobRepository.findOne(id);
-		
-		
+		Job job = jobRepository.findOne(jobPK);
 		JobScript script = jobScriptFactory.getJobScript(job);
-		
 		Assert.isTrue(script != null, "找不到业务对象");
 		
-		
-		TriggerKey triggerKey = new TriggerKey("REDO_" + instanceId, id.getJobGroup());
-		
-		Trigger trigger = TriggerBuilder.newTrigger()
-			.withIdentity(triggerKey)
-			.withSchedule(SimpleScheduleBuilder.simpleSchedule())
-			.forJob(script.getScriptId(), script.getScriptGroup())
-			.startNow().build();
-		
-		JobDataMap jdm = trigger.getJobDataMap();
-		JOB_REOD.applyPut(jdm, true);
-		JOB_ID.applyPut(jdm, job.getJobId());
-		JOB_GROUP.applyPut(jdm, job.getJobGroup());
-		JOB_SCHEDULE_TYPE.applyPut(jdm, job.getScheduleType());
-		JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
-		CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);
-
 		try {
+			TriggerKey triggerKey = new TriggerKey("REDO_" + instanceId, jobPK.getJobGroup());
+			
+			Assert.isTrue(instance.getStatus().isComplete() || request.isForce(), "实例正在运行，无法重跑");
+			
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity(triggerKey)
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule())
+				.forJob(script.getScriptId(), script.getScriptGroup())
+				.startNow().build();
+			
+			JobDataMap jdm = trigger.getJobDataMap();
+			JOB_REOD.applyPut(jdm, true);
+			JOB_ID.applyPut(jdm, job.getJobId());
+			JOB_GROUP.applyPut(jdm, job.getJobGroup());
+			JOB_SCHEDULE_TYPE.applyPut(jdm, job.getScheduleType());
+			JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
+			CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);
+			
 			scheduler.scheduleJob(trigger);
 		} catch (SchedulerException e) {
 			throw new AppException("重跑失败: " + e.getMessage(), e);

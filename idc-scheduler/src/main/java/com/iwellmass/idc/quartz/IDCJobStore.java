@@ -3,14 +3,19 @@ package com.iwellmass.idc.quartz;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 import org.quartz.JobDetail;
 import org.quartz.JobPersistenceException;
+import org.quartz.Trigger;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.JobStoreTX;
 import org.quartz.impl.jdbcjobstore.TriggerStatus;
 import org.quartz.spi.OperableTrigger;
+
+import com.iwellmass.idc.executor.CompleteEvent;
+import com.iwellmass.idc.model.JobInstanceStatus;
 
 public class IDCJobStore extends JobStoreTX {
 	
@@ -98,22 +103,44 @@ public class IDCJobStore extends JobStoreTX {
     }
 	
 	
-	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompletedExecutionInstruction instruction)
+	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event)
 			throws JobPersistenceException {
         retryExecuteInNonManagedTXLock(
                 LOCK_TRIGGER_ACCESS,
                 new TransactionCallback<Void>() {
                     public Void execute(Connection conn) throws JobPersistenceException {
-                    	triggeredAsyncJobComplete(conn, triggerKey, instruction);
+                    	triggeredAsyncJobComplete(conn, triggerKey, event);
                         return null;
                     }
                 });    
 	}
 
-	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompletedExecutionInstruction instruction) throws JobPersistenceException {
+	protected void triggeredAsyncJobComplete(Connection conn, TriggerKey key, CompleteEvent event) throws JobPersistenceException {
+		
+		if (event.getEndTime() == null) {
+			event.setEndTime(LocalDateTime.now());
+		}
         try {
         	
-        	if (instruction == CompletedExecutionInstruction.NOOP) {
+        	/* 无论什么情况我们都更新 IDC，因为重跑、重报 都希望我们更新界面上看到的任务状态*/ 
+     		if (getDelegate() instanceof IDCDriverDelegate) {
+    			IDCDriverDelegate delegate = (IDCDriverDelegate) getDelegate();
+        		delegate.updateTriggerStateForIDC(conn, event);	
+    		}
+        	
+        	Trigger trigger = getDelegate().selectTrigger(conn, key);
+        	
+        	if (trigger == null ) {
+        		getLog().warn("不存在的 trigger 信息");
+        		return;
+        	}
+        	
+        	if (trigger.getPreviousFireTime() != null && trigger.getPreviousFireTime().getTime() != event.getScheduledFireTime()) {
+        		getLog().warn("未更新 Trigger, 请求{}, 当前 {}", event.getScheduledFireTime(), trigger.getNextFireTime().getTime());
+        		return;
+        	}
+        	
+        	if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
         		getDelegate().updateTriggerStateFromOtherState(conn,
         				key, STATE_WAITING,
         				STATE_BLOCKED);
@@ -121,21 +148,14 @@ public class IDCJobStore extends JobStoreTX {
         		getDelegate().updateTriggerStateFromOtherState(conn,
         				key, STATE_PAUSED,
         				STATE_PAUSED_BLOCKED);
-        	} else if (instruction == CompletedExecutionInstruction.SET_TRIGGER_ERROR) {
-        		getDelegate().updateTriggerStateFromOtherState(conn,
-        				key, STATE_ERROR,
-        				STATE_BLOCKED);
-        		
-        		getDelegate().updateTriggerStateFromOtherState(conn,
-        				key, STATE_ERROR,
-        				STATE_PAUSED_BLOCKED);
+        		signalSchedulingChangeOnTxCompletion(0L);
+        	} else if (event.getFinalStatus() == JobInstanceStatus.FAILED) {
+        		// do nothing
+        		signalSchedulingChangeOnTxCompletion(0L);
         	} else {
-        		throw new JobPersistenceException("无法处理指令 " + instruction);
+        		throw new UnsupportedOperationException("unsupported event status " + event.getFinalStatus());
         	}
-
-            signalSchedulingChangeOnTxCompletion(0L);
-        	
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new JobPersistenceException("Couldn't resume async job, trigger '"
                     + key + "': " + e.getMessage(), e);
         }

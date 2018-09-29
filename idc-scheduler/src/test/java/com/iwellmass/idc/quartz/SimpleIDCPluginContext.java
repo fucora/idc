@@ -55,4 +55,11 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 		
 	}
 
+
+	@Override
+	public JobInstance getJobInstance(Integer instanceId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

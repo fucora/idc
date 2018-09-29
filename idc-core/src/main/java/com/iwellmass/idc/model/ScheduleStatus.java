@@ -22,8 +22,4 @@ public enum ScheduleStatus {
 
 	@ApiModelProperty("调度阻塞")
 	BLOCKED;
-
-	public boolean isComplete() {
-		return this == COMPLETE;
-	}
 }

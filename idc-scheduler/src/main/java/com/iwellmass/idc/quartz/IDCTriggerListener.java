@@ -55,7 +55,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			throw new UnsupportedOperationException("not supported " + type + " dispatch type");
 		}
 		
-		LOGGER.info("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
+		LOGGER.debug("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
 		JobInstance jobInstance = null;
 		if (isRedo) {
 			jobInstance = triggerRedo(trigger, context);

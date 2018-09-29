@@ -1,11 +1,18 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCConstants.*;
-
+import static com.iwellmass.idc.quartz.IDCConstants.COL_DEPENDENCY_SRC_JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCConstants.COL_DEPENDENCY_SRC_JOB_NAME;
+import static com.iwellmass.idc.quartz.IDCConstants.COL_IDC_JOB_GROUP;
+import static com.iwellmass.idc.quartz.IDCConstants.COL_IDC_JOB_NAME;
+import static com.iwellmass.idc.quartz.IDCConstants.COL_JOB_INSTANCE_SHOULD_FIRE_TIME;
+import static com.iwellmass.idc.quartz.IDCConstants.COL_JOB_INSTANCE_STATUS;
+import static com.iwellmass.idc.quartz.IDCConstants.TABLE_DEPENDENCY;
+import static com.iwellmass.idc.quartz.IDCConstants.TABLE_JOB_INSTANCE;
 import static org.quartz.TriggerKey.triggerKey;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +23,7 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.StdJDBCDelegate;
 import org.quartz.impl.jdbcjobstore.Util;
 
+import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.JobInstanceStatus;
 
 public class IDCDriverDelegate extends StdJDBCDelegate {
@@ -51,6 +59,9 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
     		+ "HAVING DEP_CNT = FIN_CNT "
             + "ORDER BY "+ as("T", COL_NEXT_FIRE_TIME) + " ASC, " + as("T", COL_PRIORITY) + " DESC";
 	
+    
+    public static final String IDC_UPDATE_JOB_INSTANCE = "UPDATE idc.t_idc_job_instance SET `status` = ? AND end_time = ? WHERE instance_id = ?";
+    
 	@Override
 	public List<TriggerKey> selectTriggerToAcquire(Connection conn, long noLaterThan, long noEarlierThan, int maxCount)
 			throws SQLException {
@@ -87,6 +98,20 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
             closeStatement(ps);
         }      
     }
+	
+	
+	public int updateTriggerStateForIDC(Connection conn, CompleteEvent event) throws SQLException {
+		PreparedStatement ps = null;
+		try {
+			ps = conn.prepareStatement(IDC_UPDATE_JOB_INSTANCE);
+			ps.setInt(1, event.getFinalStatus().ordinal()); // status
+			ps.setDate(2, new Date(IDCPlugin.toEpochMilli(event.getEndTime()))); // 时间
+			ps.setInt(3, event.getInstanceId());
+			return ps.executeUpdate();
+		} finally {
+			closeStatement(ps);
+		}   
+	}
 	
 	public static  String  as(String alias, String name) {
 		return alias + "." + name;

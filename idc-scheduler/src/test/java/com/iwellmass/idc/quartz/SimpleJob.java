@@ -31,7 +31,6 @@ public class SimpleJob implements Job{
 			try {
 				IDCPlugin plugin = IDC_PLUGIN.applyGet(context.getScheduler().getContext());
 				TriggerKey key = context.getTrigger().getKey();
-				plugin.completeAsyncJob(key.getName(), key.getGroup(), JobInstanceStatus.FINISHED);
 			} catch (SchedulerException e) {
 				e.printStackTrace();
 			}

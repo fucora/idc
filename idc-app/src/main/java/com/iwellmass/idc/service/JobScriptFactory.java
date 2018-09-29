@@ -26,23 +26,28 @@ public class JobScriptFactory {
 
 	public JobScript getJobScript(Job job) {
 		try {
-			// 首先生成 JobDetails
-			JobDetail jobDetail = JobBuilder
-				.newJob(IDCDispatcherJob.class)
-				.withIdentity(new JobKey(job.getTaskId(), job.getGroupId()))
-				.requestRecovery(false)
-				.storeDurably()
-				.build();
-
-			scheduler.addJob(jobDetail, true);
+			
+			JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
+			
+			if (!scheduler.checkExists(jobKey)) {
+				// 首先生成 JobDetails
+				JobDetail jobDetail = JobBuilder
+						.newJob(IDCDispatcherJob.class)
+						.withIdentity(jobKey)
+						.requestRecovery(false)
+						.storeDurably()
+						.build();
+				scheduler.addJob(jobDetail, true);
+			}
+			
 			return new JobScript() {
 				@Override
 				public String getScriptId() {
-					return jobDetail.getKey().getName();
+					return jobKey.getName();
 				}
 				@Override
 				public String getScriptGroup() {
-					return jobDetail.getKey().getGroup();
+					return jobKey.getGroup();
 				}
 			};
 		} catch (SchedulerException e) {

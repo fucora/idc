@@ -11,6 +11,8 @@ public class CompleteEvent implements IDCJobEvent {
 	private static final long serialVersionUID = -2050270529918044581L;
 
 	private LocalDateTime endTime;
+	
+	private long scheduledFireTime;
 
 	private JobInstanceStatus finalStatus;
 
@@ -20,6 +22,14 @@ public class CompleteEvent implements IDCJobEvent {
 
 	// protected
 	private CompleteEvent() {}
+	
+	public long getScheduledFireTime() {
+		return scheduledFireTime;
+	}
+
+	public void setScheduledFireTime(long scheduledFireTime) {
+		this.scheduledFireTime = scheduledFireTime;
+	}
 
 	public LocalDateTime getEndTime() {
 		return endTime;

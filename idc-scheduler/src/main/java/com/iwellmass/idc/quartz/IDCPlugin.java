@@ -14,16 +14,18 @@ import java.util.List;
 import java.util.Optional;
 
 import org.quartz.JobDataMap;
+import org.quartz.JobPersistenceException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerKey;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
@@ -80,13 +82,6 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		return pluginContext;
 	}
 	
-	/** 恢复等待异步结果的 trigger */
-	public void completeAsyncJob(String triggerName, String triggerGroup, JobInstanceStatus finalStatus) throws SchedulerException {
-		CompletedExecutionInstruction instruction = finalStatus == JobInstanceStatus.FINISHED ? CompletedExecutionInstruction.NOOP
-				: CompletedExecutionInstruction.SET_TRIGGER_ERROR;
-		jobStore.triggeredAsyncJobComplete(new TriggerKey(triggerName, triggerGroup), instruction);
-	}
-
 	@Override
 	public void fireStartEvent(StartEvent event) {
 		LOGGER.info("Get event {}", event);
@@ -100,25 +95,18 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	}
 
 	@Override
+	@Transactional
 	public void fireCompleteEvent(CompleteEvent event) {
 		
-		LOGGER.info("Get {}", event);
-		
-		// 更新实例状态
-		JobInstance jobInstance= pluginContext.updateJobInstance(event.getInstanceId(), (ins)->{
-			Assert.isTrue(ins != null, "无法更新实例 %s, 不存在此实例", event.getInstanceId());
-			ins.setStatus(event.getFinalStatus());
-			ins.setEndTime(Optional.ofNullable(event.getEndTime()).orElse(LocalDateTime.now()));
-		});
-		
-		// 通知异步信息
+		LOGGER.info("更新任务状态, {}", event);
+		JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
+		Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
+		event.setScheduledFireTime(ins.getShouldFireTime());
 		try {
-			completeAsyncJob(jobInstance.getJobId(), jobInstance.getJobGroup(), event.getFinalStatus());
-		} catch (SchedulerException e) {
-			LOGGER.warn("无法更新实例 %s, %s", event.getInstanceId(), e.getMessage());
+			jobStore.triggeredAsyncJobComplete(toJobPK(ins.getJobPK()), event);
+		} catch (JobPersistenceException e) {
+			throw new AppException("无法更新任务状态" + e.getMessage());
 		}
-		
-		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("执行完毕"));
 	}
 	
 	public void cancleJob(String jobId, String jobGroup) {
