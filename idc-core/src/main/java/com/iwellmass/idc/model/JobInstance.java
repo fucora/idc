@@ -74,6 +74,7 @@ public class JobInstance {
 	
 	@ApiModelProperty("执行ID")
 	@Id
+	@Column(name = "instance_id")
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Integer getInstanceId() {
 		return instanceId;
@@ -139,7 +140,7 @@ public class JobInstance {
 	}
 
 	@ApiModelProperty("描述")
-	@Column(length = 500)
+	@Column(name = "description", length = 500)
 	public String getDescription() {
 		return description;
 	}
