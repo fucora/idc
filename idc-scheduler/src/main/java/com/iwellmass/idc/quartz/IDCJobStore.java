@@ -19,11 +19,6 @@ import com.iwellmass.idc.model.JobInstanceStatus;
 
 public class IDCJobStore extends JobStoreTX {
 	
-	// waiting on async result
-	public static final String STATE_ASYNC_WAITING = "ASYNC_WAITING";
-	// job complete
-	public static final String STATE_ASYNC_COMPLETE = "ASYNC_COMPLETE";
-	
 	@Override
 	protected void triggeredJobComplete(Connection conn, OperableTrigger trigger, JobDetail jobDetail,
 			CompletedExecutionInstruction triggerInstCode) throws JobPersistenceException {

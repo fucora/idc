@@ -8,6 +8,8 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -19,7 +21,14 @@ import io.swagger.annotations.ApiModelProperty;
 @Entity
 @Table(name = "t_idc_job")
 @IdClass(JobPK.class)
+@SecondaryTable(name = Job.TABLE_TRIGGERS, pkJoinColumns = {
+		@PrimaryKeyJoinColumn(name = Job.COL_JOB_ID, referencedColumnName = "job_id"),
+		@PrimaryKeyJoinColumn(name = Job.COL_JOB_GROUP, referencedColumnName = "job_group") })
 public class Job {
+
+	public static final String TABLE_TRIGGERS = "QRTZ_TRIGGERS";
+	public static final String COL_JOB_ID = "TRIGGER_NAME";
+	public static final String COL_JOB_GROUP = "TRIGGER_GROUP";
 
 	// ~~ 任务属性 ~~
 	private String jobId;
@@ -32,6 +41,15 @@ public class Job {
 
 	private ScheduleType scheduleType;
 
+	private LocalDateTime createTime;
+
+	private LocalDateTime updateTime;
+
+	private String parameter;
+
+	private Integer workflowId;
+
+	// ~~ SecondaryTable ~~
 	private LocalDateTime startTime;
 
 	private LocalDateTime endTime;
@@ -42,11 +60,8 @@ public class Job {
 
 	private ScheduleStatus status = ScheduleStatus.NONE;
 
-	private LocalDateTime createTime;
-
-	private LocalDateTime updateTime;
-
 	// ~~ 业务属性 ~~
+	// ~~ SecondaryTable ~~
 	private String taskId;
 
 	private String groupId;
@@ -59,11 +74,7 @@ public class Job {
 
 	private String contentType;
 
-	private Integer workflowId;
-
 	private String assignee;
-
-	private String parameter;
 
 	private DispatchType dispatchType;
 
@@ -85,26 +96,6 @@ public class Job {
 
 	public void setJobGroup(String jobGroup) {
 		this.jobGroup = jobGroup;
-	}
-
-	@ApiModelProperty("业务ID")
-	@Column(name = "task_id", length = 50)
-	public String getTaskId() {
-		return taskId;
-	}
-
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
-	@ApiModelProperty("业务组")
-	@Column(name = "group_id", length = 50)
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
 	}
 
 	@ApiModelProperty("任务名称")
@@ -177,28 +168,6 @@ public class Job {
 		this.scheduleType = scheduleType;
 	}
 
-	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	@Column(name = "start_time")
-	public LocalDateTime getStartTime() {
-		return startTime;
-	}
-
-	public void setStartTime(LocalDateTime startTime) {
-		this.startTime = startTime;
-	}
-
-	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	@Column(name = "end_time")
-	public LocalDateTime getEndTime() {
-		return endTime;
-	}
-
-	public void setEndTime(LocalDateTime endTime) {
-		this.endTime = endTime;
-	}
-
 	@ApiModelProperty("创建日期")
 	@Column(name = "createtime")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -208,16 +177,6 @@ public class Job {
 
 	public void setCreateTime(LocalDateTime createTime) {
 		this.createTime = createTime;
-	}
-
-	@Column(name = "workflow_id")
-	@ApiModelProperty("所属工作流 ID")
-	public Integer getWorkflowId() {
-		return workflowId;
-	}
-
-	public void setWorkflowId(Integer workflowId) {
-		this.workflowId = workflowId;
 	}
 
 	@ApiModelProperty("依赖")
@@ -244,42 +203,13 @@ public class Job {
 
 	@ApiModelProperty("更新时间")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@Column(name = "update_time")
 	public LocalDateTime getUpdateTime() {
 		return updateTime;
 	}
 
 	public void setUpdateTime(LocalDateTime updateTime) {
 		this.updateTime = updateTime;
-	}
-
-	@ApiModelProperty("任务状态")
-	@Column(name = "status")
-	public ScheduleStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(ScheduleStatus status) {
-		this.status = status;
-	}
-
-	@ApiModelProperty("最近一次业务日期")
-	@Column(name = "prev_load_date")
-	public LocalDateTime getPrevLoadDate() {
-		return prevLoadDate;
-	}
-
-	public void setPrevLoadDate(LocalDateTime prevLoadDate) {
-		this.prevLoadDate = prevLoadDate;
-	}
-
-	@ApiModelProperty("下一次业务日期")
-	@Column(name = "next_load_date")
-	public LocalDateTime getNextLoadDate() {
-		return nextLoadDate;
-	}
-
-	public void setNextLoadDate(LocalDateTime nextLoadDate) {
-		this.nextLoadDate = nextLoadDate;
 	}
 
 	@ApiModelProperty("参数")
@@ -297,7 +227,94 @@ public class Job {
 			this.parameter = JSON.toJSONString(param);
 		}
 	}
-	
+
+	@Column(name = "workflow_id")
+	@ApiModelProperty("所属工作流 ID")
+	public Integer getWorkflowId() {
+		return workflowId;
+	}
+
+	public void setWorkflowId(Integer workflowId) {
+		this.workflowId = workflowId;
+	}
+
+	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@Column(table = TABLE_TRIGGERS, name = "START_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	public LocalDateTime getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(LocalDateTime startTime) {
+		this.startTime = startTime;
+	}
+
+	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@Column(table = TABLE_TRIGGERS, name = "END_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	public LocalDateTime getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(LocalDateTime endTime) {
+		this.endTime = endTime;
+	}
+
+	@ApiModelProperty("任务状态")
+	@Column(table = TABLE_TRIGGERS, name = "TRIGGER_STATE")
+	@Convert(converter = ScheduleStatusConverter.class)
+	public ScheduleStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ScheduleStatus status) {
+		this.status = status;
+	}
+
+	@ApiModelProperty("最近一次业务日期")
+	@Column(table = TABLE_TRIGGERS, name = "PREV_FIRE_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	public LocalDateTime getPrevLoadDate() {
+		return prevLoadDate;
+	}
+
+	public void setPrevLoadDate(LocalDateTime prevLoadDate) {
+		this.prevLoadDate = prevLoadDate;
+	}
+
+	@ApiModelProperty("下一次业务日期")
+	@Column(table = TABLE_TRIGGERS, name = "NEXT_FIRE_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	public LocalDateTime getNextLoadDate() {
+		return nextLoadDate;
+	}
+
+	public void setNextLoadDate(LocalDateTime nextLoadDate) {
+		this.nextLoadDate = nextLoadDate;
+	}
+
+	@ApiModelProperty("业务ID")
+	@Column(table = TABLE_TRIGGERS, name = "JOB_NAME")
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	@ApiModelProperty("业务域")
+	@Column(table = TABLE_TRIGGERS, name = "JOB_GROUP")
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
+
 	public void setJobPK(JobPK pk) {
 		this.jobId = pk.getJobId();
 		this.jobGroup = pk.getJobGroup();

@@ -37,7 +37,7 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCTriggerListener.class);
 
 	private final IDCPluginContext pluginContext;
-
+	
 	public IDCTriggerListener(IDCPluginContext pluginContext) {
 		this.pluginContext = pluginContext;
 	}
@@ -77,7 +77,6 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		jobInstance.setDispatchType(type);
 		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), jobInstance);
 	}
-	
 	
 	private JobInstance triggerRedo(Trigger trigger, JobExecutionContext context) {
 		

@@ -34,7 +34,7 @@ public class JobScriptFactory {
 				JobDetail jobDetail = JobBuilder
 						.newJob(IDCDispatcherJob.class)
 						.withIdentity(jobKey)
-						.requestRecovery(false)
+						.requestRecovery(true)
 						.storeDurably()
 						.build();
 				scheduler.addJob(jobDetail, true);

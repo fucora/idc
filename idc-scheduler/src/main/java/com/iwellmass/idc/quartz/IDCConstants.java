@@ -7,6 +7,10 @@ public interface IDCConstants {
 
 	SimpleDateFormat DEFAULT_LOAD_DATE_DF = new SimpleDateFormat("yyyyMMddHHmmss");
 	DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
+	
+	
+
+	
 
 	// ~~ IDC quartz plugin ~~
 	String VERSION = "2.0";

@@ -92,7 +92,6 @@ public class JobService {
 		job.setCreateTime(LocalDateTime.now());
 		job.setUpdateTime(null);
 		
-		
 		doScheduleJob(job, false);
 	}
 

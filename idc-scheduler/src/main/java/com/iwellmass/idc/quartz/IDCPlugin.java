@@ -101,13 +101,13 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		LOGGER.info("更新任务状态, {}", event);
 		
 		BatchLogger logger = pluginContext.batchLogger(event.getInstanceId());
-		logger.log(event.getMessage()).log("任务结束, 执行结果: {}", event.getFinalStatus());
-		
-		JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
-		
-		Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
-		
 		try {
+			logger.log(event.getMessage()).log("任务结束, 执行结果: {}", event.getFinalStatus());
+			
+			JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
+			
+			Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
+		
 			event.setScheduledFireTime(ins.getShouldFireTime());
 			jobStore.triggeredAsyncJobComplete(toTriggerKey(ins.getJobPK()), event);
 		} catch (Exception e) {
@@ -164,5 +164,4 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	public static Long toEpochMilli(LocalDateTime loadDate) {
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
-
 }
