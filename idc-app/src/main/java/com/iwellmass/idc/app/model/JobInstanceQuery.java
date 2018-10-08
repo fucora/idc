@@ -17,13 +17,13 @@ import io.swagger.annotations.ApiModelProperty;
 
 public class JobInstanceQuery implements SpecificationBuilder {
 	
-	@ApiModelProperty("业务ID")
+	@ApiModelProperty("任务ID")
 	@Equal
-	private String taskId;
+	private String jobId;
 
-	@ApiModelProperty("业务组")
+	@ApiModelProperty("任务组")
 	@Equal
-	private String groupId;
+	private String jobGroup;
 	
 	@ApiModelProperty("任务名")
 	@Like
@@ -63,20 +63,20 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss", timezone = "GMT+8")
 	private LocalDateTime executeTimeTo;
 
-	public String getTaskId() {
-		return taskId;
+	public String getJobId() {
+		return jobId;
 	}
 
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 
-	public String getGroupId() {
-		return groupId;
+	public String getJobGroup() {
+		return jobGroup;
 	}
 
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+	public void setJobGroup(String jobGroup) {
+		this.jobGroup = jobGroup;
 	}
 
 	public String getTaskName() {
