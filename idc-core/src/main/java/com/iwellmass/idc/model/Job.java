@@ -49,7 +49,7 @@ public class Job {
 
 	private Integer workflowId;
 
-	// ~~ SecondaryTable ~~
+	// ~~ SecondaryTable 运行时信息 ~~
 	private LocalDateTime startTime;
 
 	private LocalDateTime endTime;
@@ -61,7 +61,6 @@ public class Job {
 	private ScheduleStatus status = ScheduleStatus.NONE;
 
 	// ~~ 业务属性 ~~
-	// ~~ SecondaryTable ~~
 	private String taskId;
 
 	private String groupId;
@@ -296,7 +295,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("业务ID")
-	@Column(table = TABLE_TRIGGERS, name = "JOB_NAME")
+	@Column(name = "task_id")
 	public String getTaskId() {
 		return taskId;
 	}
@@ -306,7 +305,7 @@ public class Job {
 	}
 
 	@ApiModelProperty("业务域")
-	@Column(table = TABLE_TRIGGERS, name = "JOB_GROUP")
+	@Column(name = "group_id")
 	public String getGroupId() {
 		return groupId;
 	}

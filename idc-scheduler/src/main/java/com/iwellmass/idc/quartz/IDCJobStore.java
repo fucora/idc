@@ -122,12 +122,12 @@ public class IDCJobStore extends JobStoreTX {
         	Trigger trigger = getDelegate().selectTrigger(conn, key);
         	
         	if (trigger == null ) {
-        		getLog().warn("不存在的 trigger 信息");
+        		getLog().debug("不存在的 trigger 信息");
         		return;
         	}
         	
         	if (trigger.getPreviousFireTime() != null && trigger.getPreviousFireTime().getTime() != event.getScheduledFireTime()) {
-        		getLog().warn("未更新 Trigger, 请求{}, 当前 {}", event.getScheduledFireTime(), trigger.getNextFireTime().getTime());
+        		getLog().debug("未更新 Trigger, 请求{}, 当前 {}", event.getScheduledFireTime(), trigger.getNextFireTime().getTime());
         		return;
         	}
         	

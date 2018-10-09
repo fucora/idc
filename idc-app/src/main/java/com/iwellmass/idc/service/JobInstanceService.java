@@ -1,7 +1,6 @@
 package com.iwellmass.idc.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
@@ -35,16 +34,12 @@ import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.ExecutionLog;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
-import com.iwellmass.idc.model.JobPK;
-import com.iwellmass.idc.model.JobScript;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
-import com.iwellmass.idc.repo.JobRepository;
 
 @Service
 public class JobInstanceService {
@@ -59,12 +54,6 @@ public class JobInstanceService {
 
 	@Inject
 	private Scheduler scheduler;
-	
-	@Inject
-	private JobScriptFactory jobScriptFactory;
-	
-	@Inject
-	private JobRepository jobRepository;
 
 	public void redo(RedoRequest request) {
 		
@@ -73,29 +62,22 @@ public class JobInstanceService {
 		
 		Assert.isTrue(instance != null, "找不到此实例");
 		
-		JobPK jobPK = instance.getJobPK();
-		Job job = jobRepository.findOne(jobPK);
-		JobScript script = jobScriptFactory.getJobScript(job);
-		
-		Assert.isTrue(script != null, "找不到业务对象");
-		
 		try {
-			TriggerKey triggerKey = new TriggerKey("REDO_" + instanceId, jobPK.getJobGroup());
+			TriggerKey triggerKey = new TriggerKey("REDO_" + instanceId, instance.getJobGroup());
 			
 			Assert.isTrue(instance.getStatus().isComplete() || request.isForce(), "实例正在运行，无法重跑");
 			
 			Trigger trigger = TriggerBuilder.newTrigger()
 				.withIdentity(triggerKey)
 				.withSchedule(SimpleScheduleBuilder.simpleSchedule())
-				.forJob(script.getScriptId(), script.getScriptGroup())
+				.forJob(instance.getTaskId(), instance.getGroupId()) // 哪个业务
 				.startNow().build();
 			
 			JobDataMap jdm = trigger.getJobDataMap();
 			JOB_REOD.applyPut(jdm, true);
-			JOB_ID.applyPut(jdm, job.getJobId());
-			JOB_GROUP.applyPut(jdm, job.getJobGroup());
-			JOB_SCHEDULE_TYPE.applyPut(jdm, job.getScheduleType());
-			JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
+			JOB_ID.applyPut(jdm, instance.getJobId());
+			JOB_GROUP.applyPut(jdm, instance.getJobGroup());
+			JOB_SCHEDULE_TYPE.applyPut(jdm, instance.getScheduleType());
 			CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);
 			
 			scheduler.scheduleJob(trigger);
@@ -118,6 +100,7 @@ public class JobInstanceService {
 				.setInstanceId(instanceId)
 				.setEndTime(LocalDateTime.now());
 			plugin.fireCompleteEvent(event);
+			scheduler.resetTriggerFromErrorState(IDCPlugin.toTriggerKey(instance.getJobPK()));
 		} catch (SchedulerException e) {
 			throw new AppException("强制结束任务时出错: " + e.getMessage());
 		}

@@ -28,8 +28,6 @@ public class IDCDispatcherJob implements org.quartz.Job {
 
 		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context.getMergedJobDataMap());
 		
-		LOGGER.info("派发任务 {}, 实例 {} ", context.getJobDetail().getKey(), jobInstance.getInstanceId());
-		
 		// 工作流任务
 		if (jobInstance.getTaskType() == TaskType.WORKFLOW) {
 			throw new JobExecutionException("not supported yet.");
@@ -45,10 +43,16 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	// 使用 eureka 来做 HA & balance
 	private void execute(JobInstance jobInstance) throws JobExecutionException {
 		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance);
+		
 		try {
 			
-			LOGGER.info("instance -> {}", JSON.toJSONString(jobInstance));
+			String loadDate = jobInstance.getScheduleType().format(jobInstance.getLoadDate());
 			
+			LOGGER.info("派发任务 {}_{}, 实例 ID {}", jobInstance.getJobPK(), loadDate, jobInstance.getInstanceId());
+			
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("instance -> {}", JSON.toJSONString(jobInstance));
+			}
 			executorService.execute(jobInstance);
 		} catch (Throwable e) {
 			throw new JobExecutionException("任务派发失败: " + e.getMessage(), false);

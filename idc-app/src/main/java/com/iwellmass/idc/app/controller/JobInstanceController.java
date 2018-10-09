@@ -76,9 +76,9 @@ public class JobInstanceController {
 		return ServiceResult.success("success");
 	}
 	
-	@ApiOperation("取消任务")
+	@ApiOperation("强制结束任务")
 	@PostMapping("/{id}/force-complete")
-	public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id) {
+	public ServiceResult<String> forceComplete(@PathVariable(name = "id") Integer id) {
 		jobInstanceService.forceComplete(id);
 		return ServiceResult.success("success");
 	}

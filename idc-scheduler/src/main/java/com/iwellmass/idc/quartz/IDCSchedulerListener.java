@@ -72,7 +72,6 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		LOGGER.info("调度任务 {} 已冻结", triggerKey);
 		pluginContext.updateJob(toJobPK(triggerKey), (job) -> {
 			job.setUpdateTime(LocalDateTime.now());
-			job.setStatus(ScheduleStatus.PAUSED);
 		});
 	}
 	
@@ -81,10 +80,8 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		LOGGER.info("调度任务 {} 已恢复", triggerKey);
 		pluginContext.updateJob(toJobPK(triggerKey), (job) -> {
 			job.setUpdateTime(LocalDateTime.now());
-			job.setStatus(ScheduleStatus.NORMAL);
 		});
 	}
-
 	
 	/* 调度完结 */
 	public void triggerFinalized(Trigger trigger) {
@@ -94,7 +91,6 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 		
 		pluginContext.updateJob(jobPK, (job) -> {
 			job.setUpdateTime(LocalDateTime.now());
-			job.setStatus(ScheduleStatus.COMPLETE);
 		});
 	}
 	

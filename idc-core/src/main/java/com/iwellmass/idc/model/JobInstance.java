@@ -12,6 +12,7 @@ import javax.persistence.Transient;
 
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -67,10 +68,6 @@ public class JobInstance {
 	private LocalDateTime nextLoadDate;
 	
 	private JobInstanceType instanceType;
-	
-	
-	// ~~ transient ~~
-	private DispatchType dispatchType;
 	
 	@ApiModelProperty("执行ID")
 	@Id
@@ -281,22 +278,20 @@ public class JobInstance {
 	
 	@Transient
 	public DispatchType getDispatchType() {
-		return dispatchType;
+		return DispatchType.valueOf(instanceType.toString());
 	}
 
-	public void setDispatchType(DispatchType dispatchType) {
-		this.dispatchType = dispatchType;
-	}
 	
 	public void setJobPK(JobPK jobKey) {
 		this.jobId = jobKey.getJobId();
 		this.jobGroup = jobKey.getJobGroup();
 	}
+	
 	@Transient
+	@JsonIgnore
 	public JobPK getJobPK() {
 		return new JobPK(jobId, jobGroup);
 	}
-	
 	
 	@Override
 	public String toString() {

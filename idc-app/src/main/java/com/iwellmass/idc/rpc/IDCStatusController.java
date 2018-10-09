@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.iwellmass.idc.app.model.TaskKey;
 import com.iwellmass.idc.app.service.JobQueryService;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
@@ -18,6 +19,9 @@ import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobPK;
 import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.quartz.IDCPlugin;
+import com.iwellmass.idc.quartz.JobPKGenerator;
+import com.iwellmass.idc.scheduler.StdJobPKGenerator;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -30,7 +34,7 @@ public class IDCStatusController {
 	
 	@Inject
 	private JobQueryService jobQueryService;
-
+	
 	@PutMapping("/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
 		statusService.fireCompleteEvent(event);
@@ -44,8 +48,9 @@ public class IDCStatusController {
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping("/schedule-properties")
-	public ScheduleProperties getScheduleProperties(JobPK jobKey) {
-		Job job = jobQueryService.findJob(jobKey);
+	public ScheduleProperties getScheduleProperties(TaskKey taskKey) {
+		JobPK jobPK = StdJobPKGenerator.valueOf(taskKey);
+		Job job = jobQueryService.findJob(jobPK);
 		if (job == null) {
 			return null;
 		}

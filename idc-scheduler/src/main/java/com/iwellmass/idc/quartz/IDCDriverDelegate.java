@@ -12,10 +12,10 @@ import static org.quartz.TriggerKey.triggerKey;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -105,7 +105,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
 		try {
 			ps = conn.prepareStatement(IDC_UPDATE_JOB_INSTANCE);
 			ps.setInt(1, event.getFinalStatus().ordinal()); // status
-			ps.setDate(2, new Date(IDCPlugin.toEpochMilli(event.getEndTime()))); // 时间
+			ps.setTimestamp(2, new Timestamp(IDCPlugin.toEpochMilli(event.getEndTime()))); // 时间
 			ps.setInt(3, event.getInstanceId());
 			return ps.executeUpdate();
 		} finally {

@@ -5,8 +5,6 @@ import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
 
@@ -16,18 +14,17 @@ import java.util.Date;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
-import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobInstanceType;
 import com.iwellmass.idc.model.JobPK;
-import com.iwellmass.idc.model.ScheduleStatus;
 
 /**
  * 同步生成 JobInstance 记录
@@ -46,15 +43,6 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
 		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
-		DispatchType type = JOB_DISPATCH_TYPE.applyGet(context.getMergedJobDataMap());
-		
-		LOGGER.debug("任务 {} 已触发, DispatchType {}", trigger.getKey(), type);
-		
-		if (type != DispatchType.AUTO && type != DispatchType.MANUAL) {
-			// should never
-			context.setResult(CompletedExecutionInstruction.SET_TRIGGER_ERROR);
-			throw new UnsupportedOperationException("not supported " + type + " dispatch type");
-		}
 		
 		JobInstance jobInstance = null;
 		if (isRedo) {
@@ -63,35 +51,30 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 			jobInstance = triggerNormal(trigger, context);
 		}
 		
-		LOGGER.info("执行 {}, JobPK {}, loadDate {}", jobInstance.getTaskName(),  jobInstance.getJobPK(),
-				jobInstance.getLoadDate().format(IDCPlugin.DEFAULT_LOAD_DATE_DTF));
+		LOGGER.debug("任务 {} 已触发, DispatchType {}", trigger.getKey(), jobInstance.getInstanceType());
+		
+		String loadDate = jobInstance.getScheduleType().format(jobInstance.getLoadDate());
+		
+		LOGGER.info("执行任务 {}, JobPK {}_{}", jobInstance.getTaskName(), jobInstance.getJobPK(), loadDate);
 		
 		// 清空日志
 		pluginContext.clearLog(jobInstance.getInstanceId());
 		pluginContext.batchLogger(jobInstance.getInstanceId())
-			.log("创建任务实例 {}, 执行类型 {} ", jobInstance.getInstanceId(), type)
-			.log("运行参数: ", jobInstance.getParameter() == null ? "--" : jobInstance.getParameter())
+			.log("创建任务实例 {}, 实例类型 {} ", jobInstance.getInstanceId(), jobInstance.getInstanceType())
+			.log("运行参数: ", Utils.isNullOrEmpty(jobInstance.getParameter()) ? "--" : jobInstance.getParameter())
 			.end();
 		
 		// 初始化执行环境
-		jobInstance.setDispatchType(type);
 		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), jobInstance);
 	}
 	
 	private JobInstance triggerRedo(Trigger trigger, JobExecutionContext context) {
 		
-		String jobId = JOB_ID.applyGet(trigger.getJobDataMap());
-		String jobGroup = JOB_GROUP.applyGet(trigger.getJobDataMap());
 		int instanceId = CONTEXT_INSTANCE_ID.applyGet(trigger.getJobDataMap());
 		
-		JobPK jobKey = new JobPK(jobId, jobGroup);
-		
-		pluginContext.updateJob(jobKey, (job) -> {
-			job.setUpdateTime(LocalDateTime.now());
-			job.setStatus(ScheduleStatus.NORMAL);
-		});
-		
 		return pluginContext.updateJobInstance(instanceId, (ins -> {
+			ins.setStartTime(LocalDateTime.now());
+			ins.setEndTime(null);
 			ins.setStatus(JobInstanceStatus.NEW);
 			ins.setParameter(mergeParameter(ins.getParameter(), context));
 		}));
@@ -151,12 +134,10 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 		jobInstance.setTaskType(job.getTaskType());
 		jobInstance.setAssignee(job.getAssignee());
 		jobInstance.setParameter(job.getParameter());
+		jobInstance.setScheduleType(job.getScheduleType());
 		jobInstance.setStartTime(LocalDateTime.now());
 		jobInstance.setEndTime(null);
-		jobInstance.setScheduleType(job.getScheduleType());
-		jobInstance.setDispatchType(job.getDispatchType());
 		jobInstance.setStatus(JobInstanceStatus.NEW);
-		jobInstance.setDispatchType(job.getDispatchType());
 		return jobInstance;
 	}
 
