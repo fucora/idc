@@ -1,15 +1,11 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
-
 import java.text.SimpleDateFormat;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.SchedulerException;
-import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,24 +19,7 @@ public class SimpleJob implements Job{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		LOGGER.info("execute job: {}", sdf.format(context.getScheduledFireTime()));
 		
-		
-		
-		Thread thread = new Thread(()->{
-			try {
-				IDCPlugin plugin = IDC_PLUGIN.applyGet(context.getScheduler().getContext());
-				TriggerKey key = context.getTrigger().getKey();
-			} catch (SchedulerException e) {
-				e.printStackTrace();
-			}
-		});
-		thread.start();
-		try {
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		LOGGER.info("simple job executed.");
-		
+		throw new JobExecutionException("执行失败");
 	}
 
 }

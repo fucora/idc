@@ -15,7 +15,11 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.model.DispatchType;
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCPluginTest {
 	
@@ -46,13 +50,20 @@ public class IDCPluginTest {
 			.storeDurably()
 			.build();
 		
+		
 		Trigger trigger = TriggerBuilder.newTrigger()
 			.withSchedule(CronScheduleBuilder.cronSchedule("0 0 0 L * ? *")
 				.withMisfireHandlingInstructionIgnoreMisfires())
 			.startAt(_1_1)
-			.withIdentity("CRON_" + lqd_01, "test")
+			.withIdentity(lqd_01, group)
 			.build();
 		
+		Job job = new Job();
+		job.setJobKey(new JobKey(lqd_01, group));
+		job.setScheduleType(ScheduleType.MONTHLY);
+		job.setDispatchType(DispatchType.AUTO);
+		
+		IDCContextKey.JOB_JSON.applyPut(trigger.getJobDataMap(), JSON.toJSONString(job));
 		JOB_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), DispatchType.AUTO);
 		
 		scheduler.scheduleJob(jdt, trigger);

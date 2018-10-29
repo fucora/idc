@@ -100,7 +100,7 @@ public class JobInstanceService {
 				.setInstanceId(instanceId)
 				.setEndTime(LocalDateTime.now());
 			plugin.fireCompleteEvent(event);
-			scheduler.resetTriggerFromErrorState(IDCPlugin.toTriggerKey(instance.getJobPK()));
+			scheduler.resetTriggerFromErrorState(IDCPlugin.asTriggerKey(instance.getJobKey()));
 		} catch (SchedulerException e) {
 			throw new AppException("强制结束任务时出错: " + e.getMessage());
 		}

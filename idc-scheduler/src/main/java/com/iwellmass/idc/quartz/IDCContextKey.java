@@ -19,17 +19,21 @@ public class IDCContextKey<T> {
 	// ~~ 调度器 ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 
+	// ~~ TASK ~~
+	public static final IDCContextKey<String> JOB_JSON = defReq("idc.task.json", String.class);
+	
 	// ~~ JOB ~~
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
 	/** JobName */
 	public static final IDCContextKey<String> JOB_ID = defReq("idc.job.id", String.class);
 	/** JobGroup */
 	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
-	/** 调度类型 */
+	/** 调度类型（日、月、周、年） */
 	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
 	/** 自动调度 OR 手动调度*/
 	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.job.dispatchType", DispatchType.class);
-
+	/** 参数解析 */
+	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
 	// ~~ runtime ~~
 	/** 实例 ID */
 	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = defReq("idc.context.instanceId", Integer.class);
@@ -60,26 +64,19 @@ public class IDCContextKey<T> {
 	@SuppressWarnings("unchecked")
 	public T applyGet(Map<String, Object> jobDataMap) {
 		Object o = jobDataMap.get(this.key);
-		return (T) get0(o, true);
+		if (o == null) {
+			if (defaultValue != NIL) {
+				return (T) defaultValue;
+			}
+			throw new NullPointerException("未设置 " + this.key + " 值");
+		}
+		return (T) o;
 	}
 
 	public final void applyPut(Map<String, Object> map, T v) {
 		map.put(this.key, v);
 	}
 
-	private Object get0(Object o, boolean required) {
-		if (o == null) {
-			if (defaultValue != NIL) {
-				return defaultValue;
-			}
-			if (required) {
-				throw new NullPointerException("未设置 " + this.key + " 值");
-			} else {
-				return NIL;
-			}
-		}
-		return o;
-	}
 
 	/** define required key-value */
 	public static final <T> IDCContextKey<T> defReq(String key, Class<T> valueType) {

@@ -8,11 +8,11 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.TaskType;
 
 @Repository
-public interface JobRepository extends CrudRepository<Job, JobPK>, JpaSpecificationExecutor<Job>{
+public interface JobRepository extends CrudRepository<Job, JobKey>, JpaSpecificationExecutor<Job>{
 
 	@Query("SELECT DISTINCT assignee FROM Job WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();

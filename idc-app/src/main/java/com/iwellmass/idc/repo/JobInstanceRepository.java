@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 
 @Repository
 public interface JobInstanceRepository
@@ -28,5 +28,5 @@ public interface JobInstanceRepository
 
 	@Modifying
 	@Query("DELETE FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup}")
-	void deleteByJob(@Param("jk") JobPK jobPk);
+	void deleteByJob(@Param("jk") JobKey jobPk);
 }

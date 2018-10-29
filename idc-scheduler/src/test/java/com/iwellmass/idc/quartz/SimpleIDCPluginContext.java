@@ -1,5 +1,8 @@
 package com.iwellmass.idc.quartz;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -8,23 +11,28 @@ import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobPK;
-import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.JobKey;
 
 public class SimpleIDCPluginContext extends IDCPluginContext {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleIDCPluginContext.class);
+	
+	private static final Map<JobKey, Job> jobMap = new HashMap<>();
+	private static final Map<Integer, JobInstance> jobInstanceMap = new HashMap<>();
 
 	@Override
 	public void log(Integer instanceId, String message, Object... args) {
-		LOGGER.info(" {} : " + message, instanceId, args);
+		LOGGER.info("[" + instanceId + "] >> " + message, args);
+	}
+	
+	@Override
+	public void createJob(Job job) {
+		jobMap.put(job.getJobKey(), job);
 	}
 
 	@Override
-	public void updateJob(JobPK jobKey, Consumer<Job> fun) {
-		Job job = new Job();
-		job.setTaskId(jobKey.getJobId());
-		job.setGroupId(jobKey.getJobGroup());
+	public void updateJob(JobKey jobKey, Consumer<Job> fun) {
+		Job job = jobMap.get(jobKey);
 		fun.andThen(v -> LOGGER.info("更新任务 : {}", v)).accept(job);
 	}
 
@@ -39,39 +47,52 @@ public class SimpleIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun) {
-		Job job = new Job();
-		job.setTaskId(jobKey.getJobId());
-		job.setGroupId(jobKey.getJobGroup());
-		job.setScheduleType(ScheduleType.DAILY);
-		JobInstance ins = fun.apply(job);
-		ins.setInstanceId(10086);
-		return ins;
+	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
+		synchronized (jobInstanceMap) {
+			Job job = jobMap.get(jobKey);
+			JobInstance ins = fun.apply(job);
+			ins.setInstanceId(jobInstanceMap.size() + 1);
+			jobInstanceMap.put(ins.getInstanceId(), ins);
+			return ins;
+		}
 	}
 
 	@Override
-	public void remove(JobPK jobPk) {
-		// TODO Auto-generated method stub
+	public void remove(JobKey jobKey) {
 		
 	}
 
 
 	@Override
 	public JobInstance getJobInstance(Integer instanceId) {
-		// TODO Auto-generated method stub
-		return null;
+		return jobInstanceMap.get(instanceId);
 	}
 
 	@Override
-	public void clearLog(Integer instanceId) {
-		// TODO Auto-generated method stub
-		
+	public JobInstance getJobInstance(JobKey jobKey, LocalDateTime loadDate) {
+		for (JobInstance entry : jobInstanceMap.values()) {
+			if (entry.getJobKey().equals(jobKey) && entry.getLoadDate().isEqual(loadDate)) {
+				return entry;
+			}
+		}
+		throw new NullPointerException("实例不存在");
 	}
+	
+	@Override
+	public void clearLog(Integer instanceId) {}
 
 	@Override
 	public BatchLogger batchLogger(Integer instaceId) {
-		// TODO Auto-generated method stub
-		return null;
+		return new BatchLogger() {
+			@Override
+			public BatchLogger log(String message, Object... args) {
+				SimpleIDCPluginContext.this.log(instaceId, message, args);
+				return this;
+			}
+			
+			@Override
+			public void end() {}
+		};
 	}
-
+	
 }

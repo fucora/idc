@@ -1,5 +1,6 @@
 package com.iwellmass.idc.scheduler;
 
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -16,7 +17,7 @@ import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCPluginContext;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobDependencyRepository;
@@ -41,7 +42,7 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	private JobDependencyRepository dependencyRepo;
 	
 	@Override
-	public JobInstance createJobInstance(JobPK jobKey, Function<Job, JobInstance> fun) {
+	public JobInstance createJobInstance(JobKey jobKey, Function<Job, JobInstance> fun) {
 		Job job = jobRepo.findOne(jobKey);
 		
 		Assert.isTrue(job != null, "任务 %s 不存在", jobKey);
@@ -56,7 +57,7 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public void updateJob(JobPK jobKey, Consumer<Job> fun) {
+	public void updateJob(JobKey jobKey, Consumer<Job> fun) {
 		Job job = jobRepo.findOne(jobKey);
 		fun.accept(job);
 		jobRepo.save(job);
@@ -75,7 +76,7 @@ public class StdIDCPluginContext extends IDCPluginContext {
 	}
 
 	@Override
-	public void remove(JobPK jobPk) {
+	public void remove(JobKey jobPk) {
 
 		// 清空日志信息
 		LOGGER.info("删除日志信息");
@@ -147,6 +148,16 @@ public class StdIDCPluginContext extends IDCPluginContext {
 			logRepository.save(logs);
 			logs = null;
 		}
+	}
+
+	@Override
+	public void createJob(Job job) {
+		
+	}
+
+	@Override
+	public JobInstance getJobInstance(JobKey jobKey, LocalDateTime loadDate) {
+		return null;
 	}
 
 }

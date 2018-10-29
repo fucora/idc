@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -31,7 +32,7 @@ import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.quartz.IDCPluginContext.BatchLogger;
 
@@ -41,9 +42,9 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 	
 	private static IDCPluginContext pluginContext;
 	
-	private IDCJobStore jobStore;
+	private IDCJobStoreTX jobStore;
 	
-	public IDCPlugin(IDCJobStore jobStore) {
+	public IDCPlugin(IDCJobStoreTX jobStore) {
 		this.jobStore = jobStore;
 	}
 
@@ -56,9 +57,9 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		// 将其设置在上下文中
 		IDC_PLUGIN.applyPut(scheduler.getContext(), this);
 		
-		scheduler.getListenerManager().addJobListener(new IDCJobListener(pluginContext));
-		scheduler.getListenerManager().addSchedulerListener(new IDCSchedulerListener(pluginContext));
-		scheduler.getListenerManager().addTriggerListener(new IDCTriggerListener(pluginContext));
+		scheduler.getListenerManager().addJobListener(new IDCJobListener());
+		scheduler.getListenerManager().addSchedulerListener(new IDCSchedulerListener());
+		scheduler.getListenerManager().addTriggerListener(new IDCTriggerListener());
 		
 		PluginVersion version = new PluginVersion();
 		LOGGER.info("IDCPlugin 已加载, VERSION: {}", version.getVersion());
@@ -78,7 +79,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
-	public IDCPluginContext getContext() {
+	public static IDCPluginContext getContext() {
 		return pluginContext;
 	}
 	
@@ -109,7 +110,7 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 			Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
 		
 			event.setScheduledFireTime(ins.getShouldFireTime());
-			jobStore.triggeredAsyncJobComplete(toTriggerKey(ins.getJobPK()), event);
+			jobStore.triggeredAsyncJobComplete(asTriggerKey(ins.getJobKey()), event);
 		} catch (Exception e) {
 			String error = "无法更新任务状态" + e.getMessage();
 			logger.log(error);
@@ -127,21 +128,33 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		IDCPlugin.pluginContext = pluginContext;
 	}
 
-	public static JobPK toJobPK(Trigger trigger) {
+	public static JobKey parseJobKey(Trigger trigger) {
 		JobDataMap jdm = trigger.getJobDataMap();
 		boolean isRedo = JOB_REOD.applyGet(jdm);
 		if (isRedo) {
 			String jobId = JOB_ID.applyGet(jdm);
 			String groupId = JOB_GROUP.applyGet(jdm);
-			return new JobPK(jobId, groupId);
+			return new JobKey(jobId, groupId);
 		} else {
-			return new JobPK(trigger.getKey().getName(), trigger.getKey().getGroup());
+			return new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
 		}
 	}
-	public static JobPK toJobPK(TriggerKey triggerKey) {
-		return new JobPK(triggerKey.getName(), triggerKey.getGroup());
+	
+	public static LocalDateTime parseLoadDate(Trigger trigger, JobExecutionContext context) {
+		JobDataMap jdm = trigger.getJobDataMap();
+		boolean isRedo = JOB_REOD.applyGet(jdm);
+		if (isRedo) {
+			return IDCContextKey.CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
+		} else {
+			return toLocalDateTime(context.getScheduledFireTime());
+		}
 	}
-	public static TriggerKey toTriggerKey(JobPK jobKey) {
+	
+	
+	public static JobKey asJobKey(TriggerKey triggerKey) {
+		return new JobKey(triggerKey.getName(), triggerKey.getGroup());
+	}
+	public static TriggerKey asTriggerKey(JobKey jobKey) {
 		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 	

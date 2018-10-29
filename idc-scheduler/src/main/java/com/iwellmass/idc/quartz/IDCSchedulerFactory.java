@@ -65,7 +65,7 @@ public final class IDCSchedulerFactory {
 		DBConnectionManager.getInstance().addConnectionProvider(dsName, new SimpleConnectionProvider());
 		
 		// JobStroe
-		IDCJobStore jobStore = new IDCJobStore();
+		IDCJobStoreTX jobStore = new IDCJobStoreTX();
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);

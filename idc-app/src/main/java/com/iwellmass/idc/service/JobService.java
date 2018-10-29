@@ -44,16 +44,16 @@ import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobPK;
-import com.iwellmass.idc.model.JobScript;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.quartz.IDCPluginContext.Dependency;
-import com.iwellmass.idc.quartz.JobPKGenerator;
+import com.iwellmass.idc.quartz.JobKeyGenerator;
 import com.iwellmass.idc.repo.JobDependencyRepository;
 import com.iwellmass.idc.repo.JobRepository;
-import com.iwellmass.idc.scheduler.StdJobPKGenerator;
+import com.iwellmass.idc.scheduler.StdJobKeyGenerator;
 
 @Service
 public class JobService {
@@ -73,7 +73,7 @@ public class JobService {
 	private JobScriptFactory jobScriptFactory;
 
 	@Inject
-	private JobPKGenerator jobPKGenerator;
+	private JobKeyGenerator jobPKGenerator;
 
 	@Inject
 	private PlatformTransactionManager transactionManager;
@@ -81,14 +81,14 @@ public class JobService {
 	public void schedule(Job job) throws AppException {
 
 
-		JobPK jobPK = jobPKGenerator.generate(job);
+		JobKey jobPK = jobPKGenerator.generate(job);
 		Assert.isTrue(jobRepository.findOne(jobPK) == null, "不可重复调度任务");
 		
 		validate(jobPK, job.getDependencies());
 
 		LOGGER.info("创建调度任务 {}", jobPK);
 
-		job.setJobPK(jobPK);
+		job.setJobKey(jobPK);
 		job.setCreateTime(LocalDateTime.now());
 		job.setUpdateTime(null);
 		
@@ -98,7 +98,7 @@ public class JobService {
 	@Transactional
 	public void reschedule(Job job) {
 
-		JobPK jobPk = jobPKGenerator.generate(job);
+		JobKey jobPk = jobPKGenerator.generate(job);
 		
 		validate(jobPk, job.getDependencies());
 
@@ -108,7 +108,7 @@ public class JobService {
 			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
 		
-		job.setJobPK(jobPk);
+		job.setJobKey(jobPk);
 		job.setUpdateTime(LocalDateTime.now());
 
 		LOGGER.info("重新调度任务 {}", jobPk);
@@ -119,12 +119,12 @@ public class JobService {
 	private void doScheduleJob(Job job, boolean replace) {
 
 		// TODO 以后扩展
-		JobScript script = jobScriptFactory.getJobScript(job);
+		Task script = jobScriptFactory.getJobScript(job);
 		if (script == null) {
 			throw new AppException("未找到对应的 JobScript");
 		}
 
-		JobPK jobPK = jobPKGenerator.generate(job);
+		JobKey jobPK = jobPKGenerator.generate(job);
 		TriggerKey triggerKey = new TriggerKey(jobPK.getJobId(), jobPK.getJobGroup());
 
 		// 默认值
@@ -157,7 +157,7 @@ public class JobService {
 				// 让 QZ 可以知道调度类型
 				TriggerBuilder<CronTrigger> triggerBuilder = TriggerBuilder.newTrigger()
 						.withIdentity(jobPK.getJobId(), jobPK.getJobGroup())
-						.forJob(script.getScriptId(), script.getScriptGroup())
+						.forJob(script.getTaskId(), script.getTaskGroup())
 						.usingJobData(newJobDataMap)
 						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
 								.withMisfireHandlingInstructionIgnoreMisfires());
@@ -204,7 +204,7 @@ public class JobService {
 		}
 	}
 
-	private void validate(JobPK jobPk, List<JobDependency> deps) {
+	private void validate(JobKey jobPk, List<JobDependency> deps) {
 
 		if (Utils.isNullOrEmpty(deps)) {
 			return;
@@ -240,7 +240,7 @@ public class JobService {
 	}
 
 	@Transactional
-	public void unschedule(JobPK jobKey) throws AppException {
+	public void unschedule(JobKey jobKey) throws AppException {
 		try {
 			LOGGER.info("撤销调度任务 {}", jobKey);
 			boolean result = scheduler.unscheduleJob(new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
@@ -253,7 +253,7 @@ public class JobService {
 	}
 
 	@Transactional
-	public void pause(JobPK jobKey, boolean forcePause) {
+	public void pause(JobKey jobKey, boolean forcePause) {
 		LOGGER.info("冻结调度任务 {}", jobKey);
 		TriggerKey triggerKey = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 		try {
@@ -270,7 +270,7 @@ public class JobService {
 	}
 
 	@Transactional
-	public void resume(JobPK jobKey) {
+	public void resume(JobKey jobKey) {
 		TriggerKey tk = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 		try {
 			Job job = jobRepository.findOne(jobKey);
@@ -286,7 +286,7 @@ public class JobService {
 
 	public void execute(ExecutionRequest request) {
 		
-		JobPK jobPk = StdJobPKGenerator.valueOf(request);
+		JobKey jobPk = StdJobKeyGenerator.valueOf(request);
 		
 		TriggerKey tk = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
 		

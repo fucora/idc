@@ -1,4 +1,4 @@
-package com.iwellmass.idc.model;
+package com.iwellmass.idc.jpa;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

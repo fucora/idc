@@ -1,12 +1,12 @@
 package com.iwellmass.idc.quartz;
 
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 
-public interface JobPKGenerator {
+public interface JobKeyGenerator {
 
 	String DEFAULT_GROUP = "default";
 
-	public JobPK generate(Job job);
+	public JobKey generate(Job job);
 
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobScript;
+import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.scheduler.IDCDispatcherJob;
 
 @Component
@@ -24,7 +24,7 @@ public class JobScriptFactory {
 	@Inject
 	private Scheduler scheduler;
 
-	public JobScript getJobScript(Job job) {
+	public Task getJobScript(Job job) {
 		try {
 			
 			JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
@@ -39,14 +39,13 @@ public class JobScriptFactory {
 						.build();
 				scheduler.addJob(jobDetail, true);
 			}
-			
-			return new JobScript() {
+			return new Task() {
 				@Override
-				public String getScriptId() {
+				public String getTaskId(){
 					return jobKey.getName();
 				}
 				@Override
-				public String getScriptGroup() {
+				public String getTaskGroup() {
 					return jobKey.getGroup();
 				}
 			};

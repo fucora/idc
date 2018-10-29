@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.executor.IDCJobEvent;
 import com.iwellmass.idc.model.ExecutionLog;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 
 @Repository
 public interface ExecutionLogRepository extends PagingAndSortingRepository<ExecutionLog, Long> {
@@ -30,7 +30,7 @@ public interface ExecutionLogRepository extends PagingAndSortingRepository<Execu
 
 	@Modifying
 	@Query("DELETE FROM ExecutionLog WHERE instanceId IN ( SELECT instanceId FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup})")
-	void deleteByJob(@Param("jk") JobPK jobPk);
+	void deleteByJob(@Param("jk") JobKey jobPk);
 
 	@Modifying
 	@Transactional

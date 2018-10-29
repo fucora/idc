@@ -1,6 +1,7 @@
-package com.iwellmass.idc.model;
+package com.iwellmass.idc.jpa;
 
 import com.iwellmass.core.convert.JsonStringConverter;
+import com.iwellmass.idc.model.ScheduleProperties;
 
 public class SchedulePropertiesConverter extends JsonStringConverter<ScheduleProperties> {
 	@Override

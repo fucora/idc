@@ -18,6 +18,8 @@
 		<wac.common.version>2.0-SNAPSHOT</wac.common.version>
 		<!-- 3rd -->
 		<org.quartz.version>2.3.0</org.quartz.version>
+		<!-- lombok -->
+		<lombok.version>1.18.2</lombok.version>
 	</properties>
 
 	<modules>
@@ -59,13 +61,42 @@
 				<artifactId>quartz</artifactId>
 				<version>${org.quartz.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok-maven-plugin</artifactId>
+				<version>1.18.2.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>delombok</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

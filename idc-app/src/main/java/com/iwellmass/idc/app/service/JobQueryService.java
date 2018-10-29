@@ -17,7 +17,7 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobPK;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.repo.JobDependencyRepository;
@@ -53,7 +53,7 @@ public class JobQueryService {
 		return jobRepository.findByTaskType(TaskType.WORKFLOW);
 	}
 
-	public List<Job> getWorkflowJob(JobPK jobKey) {
+	public List<Job> getWorkflowJob(JobKey jobKey) {
 		return jobRepository.findSubJobs(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
@@ -71,7 +71,7 @@ public class JobQueryService {
 		});
 	}
 
-	public Job findJob(JobPK jobKey) {
+	public Job findJob(JobKey jobKey) {
 		Job job = jobRepository.findOne(jobKey);
 		if (job != null) {
 			List<JobDependency> dependencies = dependencyRepository.findDependencies(job.getTaskId(), job.getGroupId());

@@ -48,7 +48,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 			
 			String loadDate = jobInstance.getScheduleType().format(jobInstance.getLoadDate());
 			
-			LOGGER.info("派发任务 {}_{}, 实例 ID {}", jobInstance.getJobPK(), loadDate, jobInstance.getInstanceId());
+			LOGGER.info("派发任务 {}_{}, 实例 ID {}", jobInstance.getJobKey(), loadDate, jobInstance.getInstanceId());
 			
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("instance -> {}", JSON.toJSONString(jobInstance));

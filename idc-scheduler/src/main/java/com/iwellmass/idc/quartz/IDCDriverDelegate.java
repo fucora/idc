@@ -1,13 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCConstants.COL_DEPENDENCY_SRC_JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCConstants.COL_DEPENDENCY_SRC_JOB_NAME;
-import static com.iwellmass.idc.quartz.IDCConstants.COL_IDC_JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCConstants.COL_IDC_JOB_NAME;
-import static com.iwellmass.idc.quartz.IDCConstants.COL_JOB_INSTANCE_SHOULD_FIRE_TIME;
-import static com.iwellmass.idc.quartz.IDCConstants.COL_JOB_INSTANCE_STATUS;
-import static com.iwellmass.idc.quartz.IDCConstants.TABLE_DEPENDENCY;
-import static com.iwellmass.idc.quartz.IDCConstants.TABLE_JOB_INSTANCE;
 import static org.quartz.TriggerKey.triggerKey;
 
 import java.math.BigDecimal;
@@ -24,44 +16,35 @@ import org.quartz.impl.jdbcjobstore.StdJDBCDelegate;
 import org.quartz.impl.jdbcjobstore.Util;
 
 import com.iwellmass.idc.executor.CompleteEvent;
-import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.model.BarrierState;
 
-public class IDCDriverDelegate extends StdJDBCDelegate {
+public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
 
-    public static final String IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE = 
-    		"SELECT "
-	            + as("T", COL_TRIGGER_NAME) + ", " 
-    			+ as("T", COL_TRIGGER_GROUP) + ", "
-	            + as("T", COL_NEXT_FIRE_TIME) + ", " 
-    			+ as("T", COL_PRIORITY) + ", "
-    			+ "COUNT(" + as("D", COL_IDC_JOB_NAME) + ") DEP_CNT, "
-    			+ "COUNT(" + as("I", COL_JOB_INSTANCE_STATUS) + ") FIN_CNT "
-            + "FROM " 
-    			+ TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T "
-            // ~~ 引入依赖表 ~~
-            + "LEFT JOIN  " + TABLE_DEPENDENCY +" D " 
-            	+ "ON "  + as("T", COL_TRIGGER_NAME)   + " = " + as("D", COL_DEPENDENCY_SRC_JOB_NAME) + " "
-            	+ "AND " + as("T", COL_TRIGGER_GROUP)  + " = " + as("D", COL_DEPENDENCY_SRC_JOB_GROUP) + " "
-            + "LEFT JOIN  " + TABLE_JOB_INSTANCE + " I "
-            	+ "ON "    + as("D", COL_IDC_JOB_NAME)  + " = "   + as("I", COL_IDC_JOB_NAME)   + " "
-            	+ "AND "   + as("D", COL_IDC_JOB_GROUP) + " = "   + as("I", COL_IDC_JOB_GROUP)  + " "
-            	+ "AND "   + as("T", COL_NEXT_FIRE_TIME)       + " = "   + as("I", COL_JOB_INSTANCE_SHOULD_FIRE_TIME) + " "
-            	+ "AND "   + as("I", COL_JOB_INSTANCE_STATUS)  + " = ? "
-            + "WHERE " + as("T", COL_SCHEDULER_NAME) + " = " + SCHED_NAME_SUBST + " "
-	            + "AND " + as("T", COL_TRIGGER_STATE) + " = ? AND " + as("T", COL_NEXT_FIRE_TIME) + " <= ? " 
-	            + "AND (" + as("T", COL_MISFIRE_INSTRUCTION) + " = -1 OR (" +as("T", COL_MISFIRE_INSTRUCTION)+ " != -1 AND "+ as("T", COL_NEXT_FIRE_TIME) + " >= ?)) "
-            // ~~ 引入依赖表 ~~
-            + "GROUP BY "
-            	+ as("T", COL_TRIGGER_NAME) + ", " 
-    			+ as("T", COL_TRIGGER_GROUP) + ", "
-	            + as("T", COL_NEXT_FIRE_TIME) + ", " 
-    			+ as("T", COL_PRIORITY) + " "
-    		+ "HAVING DEP_CNT = FIN_CNT "
-            + "ORDER BY "+ as("T", COL_NEXT_FIRE_TIME) + " ASC, " + as("T", COL_PRIORITY) + " DESC";
+    public static final String IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE = "SELECT "
+	        + "T." + COL_TRIGGER_NAME + ", T." + COL_TRIGGER_GROUP + ", "
+	        + "T." + COL_NEXT_FIRE_TIME + ", T." + COL_PRIORITY + " FROM "
+	        + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T"
+	        + " LEFT JOIN " + TABLE_PREFIX_SUBST + TABLE_BARRIER + " B ON T." + COL_TRIGGER_NAME + " = B." + COL_TRIGGER_NAME
+	        + " AND T." + COL_TRIGGER_GROUP + " = B." + COL_TRIGGER_GROUP + " AND B." + COL_BARRIER_STATE + " = " + BarrierState.VALID.ordinal()
+	        + " WHERE "
+	        + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
+	        + " AND " + COL_TRIGGER_STATE + " = ? AND " + COL_NEXT_FIRE_TIME + " <= ? " 
+	        + "AND (" + COL_MISFIRE_INSTRUCTION + " = -1 OR (" +COL_MISFIRE_INSTRUCTION+ " != -1 AND "+ COL_NEXT_FIRE_TIME + " >= ?)) "
+	        + "AND B." + COL_TRIGGER_NAME + " IS NULL "
+	        + "ORDER BY "+ COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
+    
+    public static final String IDC_UPDATE_JOB_BARRIER_STATE = "UPDATE QRTZ_BARRIER "
+    		+ "SET STATE = ? WHERE BARRIER_NAME = ? AND BARRIER_GROUP = ? AND BARRIER_SHOULD_FIRE_TIME = ?";
+    
+    public static final String INSERT_BARRIER = "INSERT INTO " + TABLE_BARRIER + "(" + COL_TRIGGER_NAME + ", "
+			+ COL_TRIGGER_GROUP + ", " + COL_BARRIER_NAME + ", " + COL_BARRIER_GROUP + ", " + COL_BARRIER_SHOULD_FIRE_TIME
+			+ ", " + COL_BARRIER_STATE + ") " + "VALUES (?, ?, ?, ?, ?, ?);";
 	
+    public static final String DELETE_BARRIER = "DELETE FROM " + TABLE_BARRIER + " WHERE " + COL_IDC_JOB_NAME + " = ? AND "
+			+ COL_IDC_JOB_GROUP + " = ? ";
     
-    public static final String IDC_UPDATE_JOB_INSTANCE = "UPDATE idc.t_idc_job_instance SET status = ?, end_time= ?  WHERE instance_id = ?";
     
+    // WAITING --> ACQUIRED
 	@Override
 	public List<TriggerKey> selectTriggerToAcquire(Connection conn, long noLaterThan, long noEarlierThan, int maxCount)
 			throws SQLException {
@@ -69,6 +52,11 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
         ResultSet rs = null;
         List<TriggerKey> nextTriggers = new LinkedList<>();
         try {
+        	
+        	////////////////////////////////////////////////////////////////////////////
+        	// 加入 barrier 判断
+        	// ps = conn.prepareStatement(rtp(SELECT_NEXT_TRIGGER_TO_ACQUIRE));
+        	////////////////////////////////////////////////////////////////////////////
             ps = conn.prepareStatement(rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE));
             
             // Set max rows to retrieve
@@ -80,10 +68,9 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
             // Note: in some jdbc drivers, such as MySQL, you must set maxRows before fetchSize, or you get exception!
             ps.setFetchSize(maxCount);
             
-            ps.setInt(1, JobInstanceStatus.FINISHED.ordinal());
-            ps.setString(2, STATE_WAITING);
-            ps.setBigDecimal(3, new BigDecimal(String.valueOf(noLaterThan)));
-            ps.setBigDecimal(4, new BigDecimal(String.valueOf(noEarlierThan)));
+            ps.setString(1, STATE_WAITING);
+            ps.setBigDecimal(2, new BigDecimal(String.valueOf(noLaterThan)));
+            ps.setBigDecimal(3, new BigDecimal(String.valueOf(noEarlierThan)));
             rs = ps.executeQuery();
             
             while (rs.next() && nextTriggers.size() <= maxCount) {
@@ -99,11 +86,34 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
         }      
     }
 	
+	// INSERT BARRIER
+	public int insertBarrier(Connection conn) throws SQLException {
+		PreparedStatement ps = null;
+		try {
+			ps = conn.prepareStatement(rtp(INSERT_BARRIER));
+			return ps.executeUpdate();
+		} finally {
+			closeStatement(ps);
+		}   
+	}
 	
+	// DELETE BARRIER
+	
+	public int deleteBarrier(Connection conn) throws SQLException {
+		PreparedStatement ps = null;
+		try {
+			ps = conn.prepareStatement(rtp(DELETE_BARRIER));
+			return ps.executeUpdate();
+		} finally {
+			closeStatement(ps);
+		}   
+	}
+	
+	// ASYNC CALL: BLOCKED --> WAITING
 	public int updateTriggerStateForIDC(Connection conn, CompleteEvent event) throws SQLException {
 		PreparedStatement ps = null;
 		try {
-			ps = conn.prepareStatement(IDC_UPDATE_JOB_INSTANCE);
+			ps = conn.prepareStatement(IDC_UPDATE_JOB_BARRIER_STATE);
 			ps.setInt(1, event.getFinalStatus().ordinal()); // status
 			ps.setTimestamp(2, new Timestamp(IDCPlugin.toEpochMilli(event.getEndTime()))); // 时间
 			ps.setInt(3, event.getInstanceId());
@@ -113,15 +123,9 @@ public class IDCDriverDelegate extends StdJDBCDelegate {
 		}   
 	}
 	
-	public static  String  as(String alias, String name) {
-		return alias + "." + name;
-	}
 	
 	public static void main(String[] args) {
-		
 		String msg = Util.rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE, "QRTZ_", "IDCScheduler");
-		
 		System.out.println(msg);
-		
 	}
 }
