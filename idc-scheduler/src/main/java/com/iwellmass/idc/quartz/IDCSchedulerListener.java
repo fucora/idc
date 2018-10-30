@@ -1,7 +1,7 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCPlugin.asJobKey;
-import static com.iwellmass.idc.quartz.IDCPlugin.parseJobKey;
+import static com.iwellmass.idc.quartz.IDCUtils.asJobKey;
+import static com.iwellmass.idc.quartz.IDCUtils.parseJobKey;
 import static com.iwellmass.idc.quartz.IDCPlugin.getContext;
 
 import org.quartz.SchedulerException;

@@ -56,8 +56,8 @@ public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
         	////////////////////////////////////////////////////////////////////////////
         	// 加入 barrier 判断
         	// ps = conn.prepareStatement(rtp(SELECT_NEXT_TRIGGER_TO_ACQUIRE));
-        	////////////////////////////////////////////////////////////////////////////
             ps = conn.prepareStatement(rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE));
+            ////////////////////////////////////////////////////////////////////////////
             
             // Set max rows to retrieve
             if (maxCount < 1)
@@ -115,7 +115,7 @@ public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
 		try {
 			ps = conn.prepareStatement(IDC_UPDATE_JOB_BARRIER_STATE);
 			ps.setInt(1, event.getFinalStatus().ordinal()); // status
-			ps.setTimestamp(2, new Timestamp(IDCPlugin.toEpochMilli(event.getEndTime()))); // 时间
+			ps.setTimestamp(2, new Timestamp(IDCUtils.toEpochMilli(event.getEndTime()))); // 时间
 			ps.setInt(3, event.getInstanceId());
 			return ps.executeUpdate();
 		} finally {

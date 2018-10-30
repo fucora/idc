@@ -2,8 +2,8 @@ package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 import static com.iwellmass.idc.quartz.IDCPlugin.getContext;
-import static com.iwellmass.idc.quartz.IDCPlugin.parseJobKey;
-import static com.iwellmass.idc.quartz.IDCPlugin.parseLoadDate;
+import static com.iwellmass.idc.quartz.IDCUtils.parseJobKey;
+import static com.iwellmass.idc.quartz.IDCUtils.parseLoadDate;
 
 import java.time.LocalDateTime;
 

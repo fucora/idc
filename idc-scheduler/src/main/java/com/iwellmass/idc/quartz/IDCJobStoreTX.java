@@ -5,7 +5,7 @@ import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_JSON;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
-import static com.iwellmass.idc.quartz.IDCPlugin.toLocalDateTime;
+import static com.iwellmass.idc.quartz.IDCUtils.toLocalDateTime;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -234,7 +234,7 @@ public class IDCJobStoreTX extends JobStoreTX {
 					LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
 					newIns.setLoadDate(loadDate);
 					newIns.setNextLoadDate(null);
-					newIns.setShouldFireTime(IDCPlugin.toEpochMilli(loadDate));
+					newIns.setShouldFireTime(IDCUtils.toEpochMilli(loadDate));
 				} else {
 					Date shouldFireTime = trigger.getPreviousFireTime();
 					LocalDateTime loadDate = toLocalDateTime(shouldFireTime);
@@ -260,7 +260,7 @@ public class IDCJobStoreTX extends JobStoreTX {
 	}
 
 
-	// BLOCKED -->
+	// BLOCKED --> WAITING/ERROR
 	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event) {
         retryExecuteInNonManagedTXLock(
                 LOCK_TRIGGER_ACCESS,
