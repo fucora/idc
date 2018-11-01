@@ -1,59 +1,40 @@
 package com.iwellmass.idc.quartz;
 
+import static com.iwellmass.idc.quartz.IDCContextKey.IDC_LOGGER;
 import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.TriggerKey;
 import org.quartz.spi.ClassLoadHelper;
 import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.common.exception.AppException;
-import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
+import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
-import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
-import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.PluginVersion;
-import com.iwellmass.idc.quartz.IDCPluginContext.BatchLogger;
 
 public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCPlugin.class);
 	
-	private static IDCPluginContext pluginContext;
+	private IDCJobStoreTX idcJobStore;
 	
-	private IDCJobStoreTX jobStore;
+	private IDCLogger idcLogger;
 	
 	public IDCPlugin(IDCJobStoreTX jobStore) {
-		this.jobStore = jobStore;
+		this.idcJobStore = jobStore;
 	}
 
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		LOGGER.info("加载 IDCPlugin...");
-		if (pluginContext == null) {
-			throw new SchedulerException("未设置 IDCPluginContext...");
-		}
 		// 将其设置在上下文中
 		IDC_PLUGIN.applyPut(scheduler.getContext(), this);
 		
@@ -61,12 +42,10 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		scheduler.getListenerManager().addSchedulerListener(new IDCSchedulerListener());
 		scheduler.getListenerManager().addTriggerListener(new IDCTriggerListener());
 		
+		idcLogger = IDC_LOGGER.applyGet(scheduler);
+		
 		PluginVersion version = new PluginVersion();
 		LOGGER.info("IDCPlugin 已加载, VERSION: {}", version.getVersion());
-	}
-
-	public static final <T> List<T> nullable(List<T> list) {
-		return list == null ? Collections.emptyList() : list;
 	}
 
 	@Override
@@ -79,102 +58,52 @@ public class IDCPlugin implements SchedulerPlugin, IDCConstants, IDCStatusServic
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
-	public static IDCPluginContext getContext() {
-		return pluginContext;
-	}
-	
 	@Override
 	public void fireStartEvent(StartEvent event) {
 		LOGGER.info("Get event {}", event);
+		idcLogger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
 		// 更新实例状态
-
-		pluginContext.updateJobInstance(event.getInstanceId(), (jobInstance)->{
-			jobInstance.setStartTime(event.getStartTime());
-			jobInstance.setStatus(JobInstanceStatus.RUNNING);
-		});
-		pluginContext.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
-	}
-
-	@Override
-	@Transactional
-	public void fireCompleteEvent(CompleteEvent event) {
-		
-		LOGGER.info("更新任务状态, {}", event);
-		
-		BatchLogger logger = pluginContext.batchLogger(event.getInstanceId());
 		try {
-			logger.log(event.getMessage()).log("任务结束, 执行结果: {}", event.getFinalStatus());
-			
-			JobInstance ins = pluginContext.getJobInstance(event.getInstanceId());
-			
-			Assert.isTrue(ins != null, "实例 %s 不存在", event.getInstanceId());
-		
-			event.setScheduledFireTime(ins.getShouldFireTime());
-			jobStore.triggeredAsyncJobComplete(asTriggerKey(ins.getJobKey()), event);
+			// 更新实例状态
+			idcJobStore.updateJobInstance(event.getInstanceId(), (jobInstance)->{
+				jobInstance.setStartTime(event.getStartTime());
+				jobInstance.setStatus(JobInstanceStatus.RUNNING);
+			});
 		} catch (Exception e) {
-			String error = "无法更新任务状态" + e.getMessage();
-			logger.log(error);
+			String error = "更新任务状态出错" + e.getMessage();
+			idcLogger.log(event.getInstanceId(), error);
 			throw new AppException(error, e);
-		} finally {
-			logger.end();
 		}
 	}
-	
-	public void cancleJob(String jobId, String jobGroup) {
+
+	public void fireProgressEvent(ProgressEvent event) {
+		LOGGER.info("Get event {}", event);
+		idcLogger.log(event.getInstanceId(), event.getMessage());
 		
-	}
-	
-	public static void setDefaultContext(IDCPluginContext pluginContext) {
-		IDCPlugin.pluginContext = pluginContext;
-	}
-
-	public static JobKey parseJobKey(Trigger trigger) {
-		JobDataMap jdm = trigger.getJobDataMap();
-		boolean isRedo = JOB_REOD.applyGet(jdm);
-		if (isRedo) {
-			String jobId = JOB_ID.applyGet(jdm);
-			String groupId = JOB_GROUP.applyGet(jdm);
-			return new JobKey(jobId, groupId);
-		} else {
-			return new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
+		// 更新实例状态
+		try {
+			idcJobStore.updateJobInstance(event.getInstanceId(), (jobInstance)->{
+				jobInstance.setStatus(JobInstanceStatus.RUNNING);
+			});
+		} catch (Exception e) {
+			String error = "更新任务状态出错" + e.getMessage();
+			idcLogger.log(event.getInstanceId(), error);
+			throw new AppException(error, e);
 		}
 	}
 	
-	public static LocalDateTime parseLoadDate(Trigger trigger, JobExecutionContext context) {
-		JobDataMap jdm = trigger.getJobDataMap();
-		boolean isRedo = JOB_REOD.applyGet(jdm);
-		if (isRedo) {
-			return IDCContextKey.CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
-		} else {
-			return toLocalDateTime(context.getScheduledFireTime());
+	@Override
+	public void fireCompleteEvent(CompleteEvent event) {
+		LOGGER.info("Get event {}", event);
+		idcLogger.log(event.getInstanceId(), event.getMessage())
+			.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
+		try {
+			// 更新实例状态
+			idcJobStore.triggeredAsyncJobComplete(event);
+		} catch (Exception e) {
+			String error = "更新任务状态出错" + e.getMessage();
+			idcLogger.log(event.getInstanceId(), error);
+			throw new AppException(error, e);
 		}
-	}
-	
-	
-	public static JobKey asJobKey(TriggerKey triggerKey) {
-		return new JobKey(triggerKey.getName(), triggerKey.getGroup());
-	}
-	public static TriggerKey asTriggerKey(JobKey jobKey) {
-		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
-	}
-	
-	public static final LocalDateTime toLocalDateTime(Date date) {
-		if (date == null) {
-			return null;
-		}
-		long mill = date.getTime();
-		return Instant.ofEpochMilli(mill).atZone(ZoneId.systemDefault()).toLocalDateTime();
-	}
-
-	public static final Date toDate(LocalDateTime localDateTime) {
-		if (localDateTime == null) {
-			return null;
-		}
-		long mill = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-		return new Date(mill);
-	}
-
-	public static Long toEpochMilli(LocalDateTime loadDate) {
-		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
 }

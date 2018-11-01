@@ -1,6 +1,6 @@
 package com.iwellmass.idc.scheduler;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_INSTANCE;
 
 import javax.inject.Inject;
 
@@ -26,11 +26,14 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
-		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context.getMergedJobDataMap());
+		JobInstance jobInstance = JOB_INSTANCE.applyGet(context.getMergedJobDataMap());
 		
 		// 工作流任务
 		if (jobInstance.getTaskType() == TaskType.WORKFLOW) {
 			throw new JobExecutionException("not supported yet.");
+			
+			
+			
 			// TODO 获取所有子任务
 			// 执行它们
 		}

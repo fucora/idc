@@ -3,7 +3,7 @@ package com.iwellmass.idc.service;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCPlugin.toDate;
+import static com.iwellmass.idc.quartz.IDCUtils.toDate;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -49,7 +49,6 @@ import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.quartz.IDCPluginContext.Dependency;
 import com.iwellmass.idc.quartz.JobKeyGenerator;
 import com.iwellmass.idc.repo.JobDependencyRepository;
 import com.iwellmass.idc.repo.JobRepository;

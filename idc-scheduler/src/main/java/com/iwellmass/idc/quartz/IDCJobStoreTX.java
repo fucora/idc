@@ -1,16 +1,19 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_JSON;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
-import static com.iwellmass.idc.quartz.IDCUtils.toLocalDateTime;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_JSON;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_INSTANCE;
+
+import static com.iwellmass.idc.quartz.IDCUtils.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.function.Consumer;
 
 import org.quartz.Calendar;
 import org.quartz.JobDetail;
@@ -19,7 +22,9 @@ import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.Scheduler;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerKey;
+import org.quartz.impl.jdbcjobstore.DriverDelegate;
 import org.quartz.impl.jdbcjobstore.JobStoreTX;
+import org.quartz.impl.jdbcjobstore.NoSuchDelegateException;
 import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
 
@@ -86,7 +91,9 @@ public class IDCJobStoreTX extends JobStoreTX {
                 ///////////////////////////////////////////////////////////
                 // 同步创建 Job
                 if (!recovering) {
-                	insertIDCJob(conn, newTrigger, job);
+            		String jobJson = JOB_JSON.applyGet(newTrigger.getJobDataMap());
+            		Job idcJob = JSON.parseObject(jobJson, Job.class);
+                	getIDCDriverDelegate().insertIDCJob(conn, idcJob);
                 }
                 ////////////////////////////////////////////////////////////
             }
@@ -95,12 +102,6 @@ public class IDCJobStoreTX extends JobStoreTX {
                     + newTrigger.getJobKey() + "' job:" + e.getMessage(), e);
         }
     }
-	
-	private void insertIDCJob(Connection conn, OperableTrigger newTrigger, JobDetail job) throws JobPersistenceException {
-		String jobJson = JOB_JSON.applyGet(newTrigger.getJobDataMap());
-		Job idcJob = JSON.parseObject(jobJson, Job.class);
-		IDCPlugin.getContext().createJob(idcJob);
-	}
 	
 	// WAITING --> ACQUIRED
 	@Override
@@ -180,7 +181,8 @@ public class IDCJobStoreTX extends JobStoreTX {
 
         ///////////////////////////////////////////
         // 生成 instance 记录
-        insertIDCJobInstance(conn, trigger);
+        JobInstance v = storeIDCJobInstance(conn, trigger);
+        JOB_INSTANCE.applyPut(trigger.getJobDataMap(), v);
         ///////////////////////////////////////////
         
         job.getJobDataMap().clearDirtyFlag();
@@ -190,7 +192,7 @@ public class IDCJobStoreTX extends JobStoreTX {
                 .getPreviousFireTime(), prevFireTime, trigger.getNextFireTime());
     }
 	
-	private void insertIDCJobInstance(Connection conn, OperableTrigger trigger) {
+	protected JobInstance storeIDCJobInstance(Connection conn, OperableTrigger trigger) throws JobPersistenceException {
 		Boolean isRedo = JOB_REOD.applyGet(trigger.getJobDataMap());
 			
 		ParameterParser parser = IDCContextKey.JOB_PARAMETER_PARSER.applyGet(trigger.getJobDataMap());
@@ -199,7 +201,7 @@ public class IDCJobStoreTX extends JobStoreTX {
 		
 		if (isRedo) {
 			int instanceId = CONTEXT_INSTANCE_ID.applyGet(trigger.getJobDataMap());
-			IDCPlugin.getContext().updateJobInstance(instanceId, (ins -> {
+			return updateJobInstance(conn, instanceId, (ins -> {
 				ins.setStartTime(LocalDateTime.now());
 				ins.setEndTime(null);
 				ins.setStatus(JobInstanceStatus.NEW);
@@ -208,44 +210,46 @@ public class IDCJobStoreTX extends JobStoreTX {
 		} else {
 			JobKey jobKey = new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
 			DispatchType type = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
-			IDCPlugin.getContext().createJobInstance(jobKey, (job) -> {
-				JobInstance newIns = new JobInstance();
-				// 基本信息
-				newIns.setJobId(job.getJobId());
-				newIns.setJobGroup(job.getJobGroup());
-				newIns.setTaskId(job.getTaskId());
-				newIns.setGroupId(job.getGroupId());
-				newIns.setTaskName(job.getTaskName());
-				newIns.setDescription(job.getDescription());
-				newIns.setContentType(job.getContentType());
-				newIns.setTaskType(job.getTaskType());
-				newIns.setAssignee(job.getAssignee());
-				newIns.setParameter(job.getParameter());
-				newIns.setScheduleType(job.getScheduleType());
-				newIns.setStartTime(LocalDateTime.now());
-				newIns.setEndTime(null);
-				newIns.setStatus(JobInstanceStatus.NEW);
-				newIns.setInstanceType(type);
-				// 参数
-				newIns.setParameter(parser.parse(job.getParameter(), contextParameter));
-				
-				// 其他参数
-				if (type == DispatchType.MANUAL) {
-					LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
-					newIns.setLoadDate(loadDate);
-					newIns.setNextLoadDate(null);
-					newIns.setShouldFireTime(IDCUtils.toEpochMilli(loadDate));
-				} else {
-					Date shouldFireTime = trigger.getPreviousFireTime();
-					LocalDateTime loadDate = toLocalDateTime(shouldFireTime);
-					newIns.setLoadDate(loadDate);
-					newIns.setNextLoadDate(toLocalDateTime(trigger.getNextFireTime()));
-					newIns.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
-				}
-				return newIns;
-			});
+			
+			Job job = getIDCDriverDelegate().getIDCJob(conn, jobKey);
+			
+			JobInstance newIns = new JobInstance();
+			// 基本信息
+			newIns.setJobId(job.getJobId());
+			newIns.setJobGroup(job.getJobGroup());
+			newIns.setTaskId(job.getTaskId());
+			newIns.setGroupId(job.getGroupId());
+			newIns.setTaskName(job.getTaskName());
+			newIns.setDescription(job.getDescription());
+			newIns.setContentType(job.getContentType());
+			newIns.setTaskType(job.getTaskType());
+			newIns.setAssignee(job.getAssignee());
+			newIns.setParameter(job.getParameter());
+			newIns.setScheduleType(job.getScheduleType());
+			newIns.setStartTime(LocalDateTime.now());
+			newIns.setEndTime(null);
+			newIns.setStatus(JobInstanceStatus.NEW);
+			newIns.setInstanceType(type);
+			// 参数
+			newIns.setParameter(parser.parse(job.getParameter(), contextParameter));
+			
+			// 其他参数
+			if (type == DispatchType.MANUAL) {
+				LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
+				newIns.setLoadDate(loadDate);
+				newIns.setNextLoadDate(null);
+				newIns.setShouldFireTime(IDCUtils.toEpochMilli(loadDate));
+			} else {
+				Date shouldFireTime = trigger.getPreviousFireTime();
+				LocalDateTime loadDate = toLocalDateTime(shouldFireTime);
+				newIns.setLoadDate(loadDate);
+				newIns.setNextLoadDate(toLocalDateTime(trigger.getNextFireTime()));
+				newIns.setShouldFireTime(shouldFireTime == null ? -1 : shouldFireTime.getTime());
+			}
+			return getIDCDriverDelegate().insertIDCJobInstance(conn, newIns);
 		}
 	}
+	
 	
 	// ACQUIRED --> BLOCKED
 	public void triggeredJobComplete(OperableTrigger trigger, JobDetail jobDetail,
@@ -259,20 +263,32 @@ public class IDCJobStoreTX extends JobStoreTX {
 		});*/
 	}
 
-
 	// BLOCKED --> WAITING/ERROR
-	public void triggeredAsyncJobComplete(TriggerKey triggerKey, CompleteEvent event) {
+	public void triggeredAsyncJobComplete(CompleteEvent event) {
         retryExecuteInNonManagedTXLock(
                 LOCK_TRIGGER_ACCESS,
                 new TransactionCallback<Void>() {
                     public Void execute(Connection conn) throws JobPersistenceException {
-                    	OperableTrigger trigger = retrieveTrigger(triggerKey);
+                    	JobInstance instance = getIDCDriverDelegate().getIDCJobInstance(conn, event.getInstanceId());
+                    	if (instance == null) {
+                    		return null;
+                    	}
+                    	JobKey idcJobKey = instance.getJobKey();
+                    	OperableTrigger trigger = retrieveTrigger(new TriggerKey(idcJobKey.getJobId(), idcJobKey.getJobGroup()));
                     	JobDetail jobDetail = retrieveJob(trigger.getJobKey());
                     	CompletedExecutionInstruction instruction = executionCompleteAsync(trigger, event);
                         triggeredJobComplete(conn, trigger, jobDetail, instruction);
                         return null;
                     }
                 });    
+	}
+	
+	protected IDCDriverDelegate getIDCDriverDelegate() throws NoSuchDelegateException {
+		DriverDelegate delegate = getDelegate();
+		if (delegate instanceof IDCDriverDelegate) {
+			return (IDCDriverDelegate) delegate;
+		}
+		throw new NoSuchDelegateException("Not an IDCDriverDelegate");
 	}
 	
 	private CompletedExecutionInstruction executionCompleteAsync(OperableTrigger trigger, CompleteEvent event) {
@@ -286,6 +302,27 @@ public class IDCJobStoreTX extends JobStoreTX {
 			return CompletedExecutionInstruction.SET_TRIGGER_ERROR;
 		}
 		throw new UnsupportedOperationException("Unsupported event status: " + event.getFinalStatus());
+	}
+
+	public void updateJobInstance(Integer instanceId, Consumer<JobInstance> func) throws JobPersistenceException {
+		executeInLock(null, new TransactionCallback<Void>() {
+			@Override
+			public Void execute(Connection conn) throws JobPersistenceException {
+				updateJobInstance(conn, instanceId, func);
+				return null;
+			}
+		});
+	}
+	protected JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func) throws JobPersistenceException {
+
+		IDCDriverDelegate delegate = getIDCDriverDelegate();
+		JobInstance ins = delegate.getIDCJobInstance(conn, instanceId);
+		if (ins == null) {
+			return null;
+		}
+		func.accept(ins);
+		getIDCDriverDelegate().updateIDCJobInstance(conn, ins);
+		return ins;
 	}
 	
 }

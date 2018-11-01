@@ -33,6 +33,7 @@ public final class IDCSchedulerFactory {
 
 	private int threadCount = 4;
 	private DataSource dataSource;
+	private String idcDriverDelegateClass;
 	
 	public Scheduler getScheduler() throws SchedulerException {
 		if (!inited) {
@@ -69,8 +70,13 @@ public final class IDCSchedulerFactory {
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);
+		
+		if (idcDriverDelegateClass ==  null) {
+			throw new NullPointerException("IDCDriverDelegate not set");
+		}
+		
 		try {
-			jobStore.setDriverDelegateClass(IDCDriverDelegate.class.getName());
+			jobStore.setDriverDelegateClass(idcDriverDelegateClass);
 		} catch (InvalidConfigurationException e) {
 			throw new SchedulerException("初始化 JobStore 时出错", e);
 		}
@@ -96,6 +102,17 @@ public final class IDCSchedulerFactory {
 	public void setThreadCount(int threadCount) {
 		this.threadCount = threadCount;
 	}
+
+	public String getIdcDriverDelegateClass() {
+		return idcDriverDelegateClass;
+	}
+
+	public void setIdcDriverDelegateClass(String idcDriverDelegateClass) {
+		this.idcDriverDelegateClass = idcDriverDelegateClass;
+	}
+
+
+
 
 	class SimpleConnectionProvider implements ConnectionProvider {
 

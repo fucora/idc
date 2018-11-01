@@ -20,12 +20,6 @@ import com.iwellmass.idc.model.JobKey;
 
 public class IDCUtils {
 
-
-	public static final <T> List<T> nullable(List<T> list) {
-		return list == null ? Collections.emptyList() : list;
-	}
-
-	
 	public static JobKey parseJobKey(Trigger trigger) {
 		JobDataMap jdm = trigger.getJobDataMap();
 		boolean isRedo = JOB_REOD.applyGet(jdm);
@@ -74,5 +68,9 @@ public class IDCUtils {
 
 	public static Long toEpochMilli(LocalDateTime loadDate) {
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+	}
+	
+	public static final <T> List<T> nullable(List<T> list) {
+		return list == null ? Collections.emptyList() : list;
 	}
 }

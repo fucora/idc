@@ -1,8 +1,6 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCUtils.asJobKey;
 import static com.iwellmass.idc.quartz.IDCUtils.parseJobKey;
-import static com.iwellmass.idc.quartz.IDCPlugin.getContext;
 
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -20,8 +18,7 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 
 	/* 撤销调度 */
 	public void jobUnscheduled(TriggerKey triggerKey) {
-		JobKey JobKey = asJobKey(triggerKey);
-		getContext().remove(JobKey);
+		LOGGER.info("调度任务 {} 已撤销", triggerKey);
 	}
 
 	/* 调度冻结 */

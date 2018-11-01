@@ -17,7 +17,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
-import com.iwellmass.idc.quartz.IDCPluginContext;
 import com.iwellmass.idc.quartz.IDCSchedulerFactory;
 
 @Configuration
@@ -39,10 +38,10 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	}
 
 	@Bean
-	public Scheduler scheduler(DataSource dataSource, IDCPluginContext pluginContext) throws SchedulerException {
-		IDCPlugin.setDefaultContext(pluginContext);
+	public Scheduler scheduler(DataSource dataSource) throws SchedulerException {
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setDataSource(dataSource);
+		factory.setIdcDriverDelegateClass(JpaIDCDriverDelegate.class.getName());
 		
 		scheduler = factory.getScheduler();
 		scheduler.setJobFactory(idcJobFactory());

@@ -38,6 +38,7 @@ import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
+import com.iwellmass.idc.quartz.IDCUtils;
 import com.iwellmass.idc.repo.ExecutionLogRepository;
 import com.iwellmass.idc.repo.JobInstanceRepository;
 
@@ -100,7 +101,7 @@ public class JobInstanceService {
 				.setInstanceId(instanceId)
 				.setEndTime(LocalDateTime.now());
 			plugin.fireCompleteEvent(event);
-			scheduler.resetTriggerFromErrorState(IDCPlugin.asTriggerKey(instance.getJobKey()));
+			scheduler.resetTriggerFromErrorState(IDCUtils.asTriggerKey(instance.getJobKey()));
 		} catch (SchedulerException e) {
 			throw new AppException("强制结束任务时出错: " + e.getMessage());
 		}
@@ -113,7 +114,7 @@ public class JobInstanceService {
 		
 		try {
 			IDCPlugin plugin = IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
-			plugin.cancleJob(instance.getJobId(), instance.getJobGroup());
+			// plugin.cancleJob(instance.getJobId(), instance.getJobGroup());
 			
 		} catch (SchedulerException e) {
 			LOGGER.error(e.getMessage(), e);

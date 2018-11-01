@@ -1,11 +1,6 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
-import static com.iwellmass.idc.quartz.IDCPlugin.getContext;
-import static com.iwellmass.idc.quartz.IDCUtils.parseJobKey;
-import static com.iwellmass.idc.quartz.IDCUtils.parseLoadDate;
-
-import java.time.LocalDateTime;
+import static com.iwellmass.idc.quartz.IDCContextKey.IDC_LOGGER;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
@@ -15,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobKey;
 
 /**
  * 同步生成 JobInstance 记录
@@ -27,20 +21,17 @@ public class IDCTriggerListener extends TriggerListenerSupport {
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		
-		JobKey jobKey = parseJobKey(trigger);
-		LocalDateTime loadDate = parseLoadDate(trigger, context);
+		IDCLogger idcLogger = IDC_LOGGER.applyGet(context.getScheduler());
 		
-		JobInstance ins = getContext().getJobInstance(jobKey, loadDate);
+		JobInstance ins = IDCContextKey.JOB_INSTANCE.applyGet(trigger.getJobDataMap());
 		
-		LOGGER.debug("任务 {} 已触发, DispatchType {}", jobKey, ins.getInstanceType());
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("任务 {} 已触发, DispatchType {}", ins.getJobKey(), ins.getInstanceType());
+		}
 		
-		getContext().clearLog(ins.getInstanceId());
-		getContext().batchLogger(ins.getInstanceId())
-			.log("创建任务实例 {}, 实例类型 {} ", ins.getInstanceId(), ins.getInstanceType())
-			.log("运行参数:  {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter())
-			.end();
-		
-		CONTEXT_INSTANCE.applyPut(context.getMergedJobDataMap(), ins);
+		idcLogger.clearLog(ins.getInstanceId())
+			.log(ins.getInstanceId(), "创建任务实例 {}, 实例类型 {} ", ins.getInstanceId(), ins.getInstanceType())
+			.log(ins.getInstanceId(), "运行参数:  {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter());
 		
 	}
 

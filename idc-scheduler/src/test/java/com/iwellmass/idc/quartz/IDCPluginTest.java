@@ -32,11 +32,10 @@ public class IDCPluginTest {
 	@Test
 	public void testSchedule() throws Exception {
 
-		IDCPlugin.setDefaultContext(new SimpleIDCPluginContext());
-		
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setDataSource(dataSource());
+		factory.setIdcDriverDelegateClass(SimpleIDCDriverDelegate.class.getName());
 		
 		Scheduler scheduler = factory.getScheduler();
 		

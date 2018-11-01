@@ -11,14 +11,18 @@ import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.quartz.JobPersistenceException;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.StdJDBCDelegate;
 import org.quartz.impl.jdbcjobstore.Util;
 
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobKey;
 
-public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
+public abstract class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
 
     public static final String IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE = "SELECT "
 	        + "T." + COL_TRIGGER_NAME + ", T." + COL_TRIGGER_GROUP + ", "
@@ -98,7 +102,6 @@ public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
 	}
 	
 	// DELETE BARRIER
-	
 	public int deleteBarrier(Connection conn) throws SQLException {
 		PreparedStatement ps = null;
 		try {
@@ -123,9 +126,24 @@ public class IDCDriverDelegate extends StdJDBCDelegate implements IDCConstants {
 		}   
 	}
 	
+	// INSERT IDC-Job
+	public abstract Job insertIDCJob(Connection conn, Job idcJob) throws JobPersistenceException;
+	
+	// GET IDC-Job
+	public abstract Job getIDCJob(Connection conn, JobKey jobKey);
+
+	// INSERT IDC-JobInstance
+	public abstract JobInstance insertIDCJobInstance(Connection conn, JobInstance jobInstance);
+	
+	// UPDATE IDC-JobInstance
+	public abstract void updateIDCJobInstance(Connection conn, JobInstance ins);
+	
+	// GET IDC-JobInstance
+	public abstract JobInstance getIDCJobInstance(Connection conn, Integer instanceId);
 	
 	public static void main(String[] args) {
 		String msg = Util.rtp(IDC_SELECT_NEXT_TRIGGER_TO_ACQUIRE, "QRTZ_", "IDCScheduler");
 		System.out.println(msg);
 	}
+
 }
