@@ -9,6 +9,13 @@ public class TaskKey implements Serializable{
 	private String taskId;
 	
 	private String groupId;
+	
+	public TaskKey() {}
+	
+	public TaskKey(String taskId, String groupId) {
+		this.taskId = taskId;
+		this.groupId = groupId;
+	}
 
 	public String getTaskId() {
 		return taskId;

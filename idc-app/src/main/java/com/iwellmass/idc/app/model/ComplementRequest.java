@@ -3,11 +3,11 @@ package com.iwellmass.idc.app.model;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.JobKey;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class ComplementRequest extends TaskKey {
+public class ComplementRequest extends JobKey {
 
 	private static final long serialVersionUID = 4804767124348623643L;
 

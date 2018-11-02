@@ -10,7 +10,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerContext;
 import org.quartz.SchedulerException;
 
-import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.ScheduleType;
 
@@ -26,7 +25,7 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<IDCLogger> IDC_LOGGER = defOpt("idc.logger", IDCLogger.class, new SimpleIDCLogger());
 
 	// ~~ TASK ~~
-	public static final IDCContextKey<String> JOB_JSON = defReq("idc.task.json", String.class);
+	public static final IDCContextKey<String> JOB_JSON = defOpt("idc.task.json", String.class, null);
 	
 	// ~~ JOB ~~
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
@@ -36,8 +35,6 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
 	/** 调度类型（日、月、周、年） */
 	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
-	/** 自动调度 OR 手动调度*/
-	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.job.dispatchType", DispatchType.class);
 	/** 参数解析 */
 	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
 	/** Trigger as JobInstance */
@@ -83,6 +80,16 @@ public class IDCContextKey<T> {
 			throw new NullPointerException("未设置 " + this.key + " 值");
 		}
 		return (T) o;
+	}
+	
+	public final void applyPut(Scheduler scheduler, T v) {
+		SchedulerContext context;
+		try {
+			context = scheduler.getContext();
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		context.put(this.key, v);
 	}
 	
 	@SuppressWarnings("unchecked")

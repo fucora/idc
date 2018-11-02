@@ -18,7 +18,6 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
-import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobQueryService;
@@ -88,11 +87,17 @@ public class JobController {
 		jobService.reschedule(job);
 		return ServiceResult.success("提交成功");
 	}
+	
+	@ApiOperation("重新调度任务 Fast 模式")
+	@PostMapping(path = "/reschedule-fast")
+	public ServiceResult<String> rescheduleFast(@RequestBody JobKey jobKey) {
+		jobService.reschedule(jobKey);
+		return ServiceResult.success("提交成功");
+	}
 
 	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
-	public ServiceResult<String> unschedule(@RequestBody TaskKey taskKey) {
-		JobKey jobKey = valueOf(taskKey);
+	public ServiceResult<String> unschedule(@RequestBody JobKey jobKey) {
 		jobService.unschedule(jobKey);
 		return ServiceResult.success("提交成功");
 	}
@@ -100,15 +105,13 @@ public class JobController {
 	@PostMapping(value = "/pause")
 	@ApiOperation("冻结 Job")
 	public ServiceResult<String> pause(@RequestBody PauseRequest request) {
-		JobKey jobKey = valueOf(request);
-		jobService.pause(jobKey, request.isForceLock());
+		jobService.pause(request, request.isForceLock());
 		return ServiceResult.success("任务已冻结");
 	}
 
 	@PostMapping(value = "/resume")
 	@ApiOperation("恢复 Job")
-	public ServiceResult<String> resume(@RequestBody TaskKey taskKey) {
-		JobKey jobKey = valueOf(taskKey);
+	public ServiceResult<String> resume(@RequestBody JobKey jobKey) {
 		jobService.resume(jobKey);
 		return ServiceResult.success("任务已恢复");
 	}
@@ -117,13 +120,6 @@ public class JobController {
 	@PostMapping("/complement")
 	public ServiceResult<String> complement(@RequestBody ComplementRequest request) {
 		jobService.complement(request);
-		return ServiceResult.success("提交成功");
-	}
-
-	@ApiOperation("手动执行任务")
-	@PostMapping("/execution")
-	public ServiceResult<String> execution(@RequestBody ExecutionRequest request) {
-		jobService.execute(request);
 		return ServiceResult.success("提交成功");
 	}
 }

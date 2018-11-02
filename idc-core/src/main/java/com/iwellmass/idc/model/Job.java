@@ -135,6 +135,11 @@ public class Job {
 		return new JobKey(jobId, jobGroup);
 	}
 	
+	@Transient
+	public TaskKey getTaskKey() {
+		return new TaskKey(taskId, groupId);
+	}
+	
 	public void setJobKey(JobKey pk) {
 		this.jobId = pk.getJobId();
 		this.jobGroup = pk.getJobGroup();

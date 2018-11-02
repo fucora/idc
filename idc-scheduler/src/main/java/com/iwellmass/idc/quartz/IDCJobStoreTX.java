@@ -1,13 +1,11 @@
 package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_JSON;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_INSTANCE;
-
-import static com.iwellmass.idc.quartz.IDCUtils.*;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_JSON;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
+import static com.iwellmass.idc.quartz.IDCUtils.toLocalDateTime;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -37,6 +35,16 @@ import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
 
 public class IDCJobStoreTX extends JobStoreTX {
+
+	public void storeIdcJob(Job job) throws JobPersistenceException {
+		executeInLock(null, new TransactionCallback<Void>() {
+			@Override
+			public Void execute(Connection conn) throws JobPersistenceException {
+				getIDCDriverDelegate().insertIDCJob(conn, job);
+				return null;
+			}
+		});
+	}
 	
 	// NONE --> WAITING
 	@Override
@@ -91,9 +99,11 @@ public class IDCJobStoreTX extends JobStoreTX {
                 ///////////////////////////////////////////////////////////
                 // 同步创建 Job
                 if (!recovering) {
-            		String jobJson = JOB_JSON.applyGet(newTrigger.getJobDataMap());
-            		Job idcJob = JSON.parseObject(jobJson, Job.class);
-                	getIDCDriverDelegate().insertIDCJob(conn, idcJob);
+                	String jobJson = JOB_JSON.applyGet(newTrigger.getJobDataMap());
+                	if (jobJson != null) {
+                		Job idcJob = JSON.parseObject(jobJson, Job.class);
+                		getIDCDriverDelegate().insertIDCJob(conn, idcJob);
+                	}
                 }
                 ////////////////////////////////////////////////////////////
             }
@@ -209,7 +219,6 @@ public class IDCJobStoreTX extends JobStoreTX {
 			}));
 		} else {
 			JobKey jobKey = new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
-			DispatchType type = JOB_DISPATCH_TYPE.applyGet(trigger.getJobDataMap());
 			
 			Job job = getIDCDriverDelegate().getIDCJob(conn, jobKey);
 			
@@ -229,12 +238,12 @@ public class IDCJobStoreTX extends JobStoreTX {
 			newIns.setStartTime(LocalDateTime.now());
 			newIns.setEndTime(null);
 			newIns.setStatus(JobInstanceStatus.NEW);
-			newIns.setInstanceType(type);
+			newIns.setInstanceType(job.getDispatchType());
 			// 参数
 			newIns.setParameter(parser.parse(job.getParameter(), contextParameter));
 			
 			// 其他参数
-			if (type == DispatchType.MANUAL) {
+			if (newIns.getDispatchType() == DispatchType.MANUAL) {
 				LocalDateTime loadDate = CONTEXT_LOAD_DATE.applyGet(trigger.getJobDataMap());
 				newIns.setLoadDate(loadDate);
 				newIns.setNextLoadDate(null);
@@ -249,7 +258,6 @@ public class IDCJobStoreTX extends JobStoreTX {
 			return getIDCDriverDelegate().insertIDCJobInstance(conn, newIns);
 		}
 	}
-	
 	
 	// ACQUIRED --> BLOCKED
 	public void triggeredJobComplete(OperableTrigger trigger, JobDetail jobDetail,

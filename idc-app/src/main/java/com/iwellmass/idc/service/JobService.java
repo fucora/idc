@@ -2,8 +2,6 @@ package com.iwellmass.idc.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_LOAD_DATE;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_PARAMETER;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-import static com.iwellmass.idc.quartz.IDCUtils.toDate;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -17,11 +15,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
-import org.quartz.CronExpression;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
-import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -31,10 +25,6 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
@@ -49,6 +39,7 @@ import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.quartz.JobKeyGenerator;
 import com.iwellmass.idc.repo.JobDependencyRepository;
 import com.iwellmass.idc.repo.JobRepository;
@@ -64,34 +55,58 @@ public class JobService {
 
 	@Inject
 	private JobDependencyRepository dependencyRepo;
+	
+	@Inject
+	private IDCPlugin idcPlugin;
 
 	@Inject
 	private Scheduler scheduler;
 
 	@Inject
-	private JobScriptFactory jobScriptFactory;
+	private TaskFactory taskFactory;
 
 	@Inject
 	private JobKeyGenerator jobPKGenerator;
 
-	@Inject
-	private PlatformTransactionManager transactionManager;
-	
 	public void schedule(Job job) throws AppException {
-
-
-		JobKey jobPK = jobPKGenerator.generate(job);
-		Assert.isTrue(jobRepository.findOne(jobPK) == null, "不可重复调度任务");
 		
-		validate(jobPK, job.getDependencies());
+		Task task = taskFactory.getOrCreateTask(job.getTaskKey());
+		Assert.isTrue(task != null, "无法获取 Task 信息");
+		
+		JobKey jobKey = jobPKGenerator.generate(job);
+		Assert.isTrue(jobRepository.findOne(jobKey) == null, "不可重复调度任务");
+		
+		validate(jobKey, job.getDependencies());
 
-		LOGGER.info("创建调度任务 {}", jobPK);
+		LOGGER.info("创建调度任务 {}", jobKey);
 
-		job.setJobKey(jobPK);
+		job.setJobKey(jobKey);
 		job.setCreateTime(LocalDateTime.now());
 		job.setUpdateTime(null);
 		
-		doScheduleJob(job, false);
+		try {
+			if (job.getDispatchType() == DispatchType.MANUAL) {
+				idcPlugin.addJob(job);
+			} else {
+				Trigger trigger = idcPlugin.buildTrigger(job, true);
+				
+				TriggerState state = scheduler.getTriggerState(trigger.getKey());
+				if (state != TriggerState.NONE) {
+					throw new AppException("不可重复创建调度任务");
+				}
+				scheduler.scheduleJob(trigger);
+			}
+		} catch(AppException e) {
+			throw e;
+		} catch (SchedulerException e) {
+			throw new AppException("无法调度任务: " + e.getMessage(), e);
+		} catch (ParseException e) {
+			LOGGER.error(e.getMessage());
+			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new AppException("调度失败: " + e.getMessage());
+		}
 	}
 
 	@Transactional
@@ -103,7 +118,7 @@ public class JobService {
 
 		// 没有正在执行的任务计划便可以重新调度计划任务
 		Job pj = jobRepository.findOne(jobPk);
-		if (pj != null) {
+		if (pj != null && pj.getStatus() != ScheduleStatus.NONE) {
 			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
 		
@@ -112,94 +127,43 @@ public class JobService {
 
 		LOGGER.info("重新调度任务 {}", jobPk);
 		
-		doScheduleJob(job, true);
+		try {
+			Trigger trigger = idcPlugin.buildTrigger(job, true);
+			if (pj.getStatus() == ScheduleStatus.NONE) {
+				scheduler.scheduleJob(trigger);
+			} else {
+				scheduler.rescheduleJob(trigger.getKey(), trigger);
+			}
+		} catch (ParseException e) {
+			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
+		} catch (SchedulerException e) {
+			throw new AppException("无法调度任务: " + e.getMessage(), e);
+		}
+		
 	}
-
-	private void doScheduleJob(Job job, boolean replace) {
-
-		// TODO 以后扩展
-		Task script = jobScriptFactory.getJobScript(job);
-		if (script == null) {
-			throw new AppException("未找到对应的 JobScript");
+	
+	@Transactional
+	public void reschedule(JobKey jobKey) {
+		// 没有正在执行的任务计划便可以重新调度计划任务
+		Job job = jobRepository.findOne(jobKey);
+		if (job != null && job.getStatus() != ScheduleStatus.NONE) {
+			Assert.isTrue(job.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
 		}
 
-		JobKey jobPK = jobPKGenerator.generate(job);
-		TriggerKey triggerKey = new TriggerKey(jobPK.getJobId(), jobPK.getJobGroup());
-
-		// 默认值
-		ScheduleProperties sp = job.getScheduleProperties();
-		job.setScheduleType(sp.getScheduleType());
-
+		LOGGER.info("重新调度任务 {}", jobKey);
 		
-		TransactionTemplate template = new TransactionTemplate(transactionManager);
-		template.execute(new TransactionCallbackWithoutResult() {
-			@Override
-			protected void doInTransactionWithoutResult(TransactionStatus status) {
-				// save idc job
-				jobRepository.save(job);
-				// save dependencies
-				dependencyRepo.cleanJobDependencies(jobPK.getJobId(), jobPK.getJobGroup());
-				dependencyRepo.save(job.getDependencies());
-			}
-		});
-		
-		
-		boolean success = false;
 		try {
-			if (job.getDispatchType() == DispatchType.AUTO) {
-				
-				
-				JobDataMap newJobDataMap = new JobDataMap();
-				
-				JOB_DISPATCH_TYPE.applyPut(newJobDataMap, job.getDispatchType());
-				
-				// 让 QZ 可以知道调度类型
-				TriggerBuilder<CronTrigger> triggerBuilder = TriggerBuilder.newTrigger()
-						.withIdentity(jobPK.getJobId(), jobPK.getJobGroup())
-						.forJob(script.getTaskId(), script.getTaskGroup())
-						.usingJobData(newJobDataMap)
-						.withSchedule(CronScheduleBuilder.cronSchedule(new CronExpression(toCronExpression(sp)))
-								.withMisfireHandlingInstructionIgnoreMisfires());
+			Trigger trigger = idcPlugin.buildTrigger(job, false);
 
-				
-				if (job.getStartTime() != null) {
-					triggerBuilder.startAt(toDate(job.getStartTime()));
-				}
-				if (job.getEndTime() != null) {
-					triggerBuilder.endAt(toDate(job.getEndTime()));
-				}
-				
-				// 保存到 quartz
-				if (!scheduler.checkExists(triggerKey)) {
-					scheduler.scheduleJob(triggerBuilder.build());
-				} else {
-					if (replace) {
-						scheduler.rescheduleJob(triggerKey, triggerBuilder.build());
-					} else {
-						throw new AppException("不可重复创建调度任务");
-					}
-				}
+			if (job.getStatus() == ScheduleStatus.NONE) {
+				scheduler.scheduleJob(trigger);
+			} else {
+				scheduler.rescheduleJob(trigger.getKey(), trigger);
 			}
-			success = true;
-		} catch (AppException e) {
-			throw e;
-		} catch (ObjectAlreadyExistsException e) {
-			LOGGER.error(e.getMessage());
-			throw new AppException("不可重复创建调度任务");
 		} catch (ParseException e) {
-			LOGGER.error(e.getMessage());
 			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
-			throw new AppException("调度失败: " + e.getMessage());
-		} finally {
-			if (!success) {
-				try {
-					scheduler.unscheduleJob(triggerKey);
-				} catch (Throwable e) {
-					// ignore
-				}
-			}
+		} catch (SchedulerException e) {
+			throw new AppException("无法调度任务: " + e.getMessage(), e);
 		}
 	}
 
@@ -298,6 +262,7 @@ public class JobService {
 		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结");
 		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 存在正在执行的任务实例");
 
+		
 		LocalDateTime loadDate = job.getScheduleType().parse(request.getLoadDate());
 
 		try {
@@ -306,7 +271,6 @@ public class JobService {
 
 			// ~~ 调度参数 ~~
 			JobDataMap jdm = new JobDataMap();
-			JOB_DISPATCH_TYPE.applyPut(jdm, job.getDispatchType());
 			CONTEXT_PARAMETER.applyPut(jdm, request.getJobParameter());
 			CONTEXT_LOAD_DATE.applyPut(jdm, loadDate);
 			Trigger trigger = TriggerBuilder.newTrigger()
@@ -322,6 +286,8 @@ public class JobService {
 		} catch (SchedulerException e) {
 			throw new AppException("执行失败: " + e.getMessage());
 		}
+		
+		
 	}
 
 	public static String toCronExpression(ScheduleProperties scheduleProperties) {

@@ -4,7 +4,6 @@ import javax.inject.Inject;
 
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -12,22 +11,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.scheduler.IDCDispatcherJob;
 
 @Component
-public class JobScriptFactory {
+public class TaskFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobScriptFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TaskFactory.class);
 	
 	@Inject
 	private Scheduler scheduler;
 
-	public Task getJobScript(Job job) {
+	public Task getOrCreateTask(TaskKey key) {
 		try {
-			
-			JobKey jobKey = new JobKey(job.getTaskId(), job.getGroupId());
+			org.quartz.JobKey jobKey = new org.quartz.JobKey(key.getTaskId(), key.getGroupId());
 			
 			if (!scheduler.checkExists(jobKey)) {
 				// 首先生成 JobDetails

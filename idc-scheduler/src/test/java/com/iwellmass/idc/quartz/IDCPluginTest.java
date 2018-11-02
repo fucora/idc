@@ -1,7 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_DISPATCH_TYPE;
-
 import java.util.Date;
 
 import javax.sql.DataSource;
@@ -63,7 +61,6 @@ public class IDCPluginTest {
 		job.setDispatchType(DispatchType.AUTO);
 		
 		IDCContextKey.JOB_JSON.applyPut(trigger.getJobDataMap(), JSON.toJSONString(job));
-		JOB_DISPATCH_TYPE.applyPut(trigger.getJobDataMap(), DispatchType.AUTO);
 		
 		scheduler.scheduleJob(jdt, trigger);
 		
