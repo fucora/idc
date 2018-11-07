@@ -1,72 +1,84 @@
 package com.iwellmass.idc.quartz;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
 
 import javax.sql.DataSource;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
 import org.quartz.Scheduler;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
+import org.quartz.SchedulerException;
+import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-import com.alibaba.fastjson.JSON;
+import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.TaskType;
 
 public class IDCPluginTest {
-	
+
 	private static final String lqd_01 = "lqd_01";
 	private static final String group = "test";
+
+	private static final LocalDateTime _1_1 = LocalDateTime.of(LocalDate.of(2018, 1, 1), LocalTime.MIN);
+	private static final LocalDateTime _9_1 = LocalDateTime.of(LocalDate.of(2018, 9, 1), LocalTime.MIN);
+
+	Scheduler scheduler;
+	IDCPlugin plugin;
 	
-	private static final Date _1_1 = new Date(1514736000000L);
-	private static final Date _9_1 = new Date(1535731200000L);
-
-	@Test
-	public void testSchedule() throws Exception {
-
+	@Before
+	public void setup() throws SchedulerException {
+		plugin = new SimpleIDCPlugin();
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
+		factory.setIDCPlugin(plugin);
+		factory.setIdcDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
-		factory.setIdcDriverDelegateClass(SimpleIDCDriverDelegate.class.getName());
-		
-		Scheduler scheduler = factory.getScheduler();
-		
+
+		scheduler = factory.getScheduler();
 		scheduler.clear();
-		
 		scheduler.start();
+	}
+	
+	@Test
+	public void testSimpleSchedule() throws Exception {
 		
-		JobDetail jdt = JobBuilder.newJob(SimpleJob.class)
-			.withIdentity(lqd_01, group)
-			.requestRecovery()
-			.storeDurably()
-			.build();
-		
-		
-		Trigger trigger = TriggerBuilder.newTrigger()
-			.withSchedule(CronScheduleBuilder.cronSchedule("0 0 0 L * ? *")
-				.withMisfireHandlingInstructionIgnoreMisfires())
-			.startAt(_1_1)
-			.withIdentity(lqd_01, group)
-			.build();
-		
+		ScheduleProperties sp = new ScheduleProperties();
+		sp.setScheduleType(ScheduleType.MONTHLY);
+		sp.setStartTime(_1_1);
+		sp.setEndTime(_9_1);
+		sp.setDays(Arrays.asList(-1));
+		sp.setDuetime("00:00:00");
+
+		// Job = JobDetails + Trigger
 		Job job = new Job();
 		job.setJobKey(new JobKey(lqd_01, group));
+		job.setTaskKey(new TaskKey(lqd_01, group));
 		job.setScheduleType(ScheduleType.MONTHLY);
 		job.setDispatchType(DispatchType.AUTO);
+		job.setWorkflowId(1);
+		job.setScheduleProperties(sp);
+		job.setTaskType(TaskType.NODE_TASK);
+
+		plugin.schedule(job);
+
+		scheduler.getTriggerState(new TriggerKey(lqd_01, group));
 		
-		IDCContextKey.JOB_JSON.applyPut(trigger.getJobDataMap(), JSON.toJSONString(job));
 		
-		scheduler.scheduleJob(jdt, trigger);
+		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent().setInstanceId(123));
 		
 		Thread.sleep(10 * 60 * 1000);
-		
+
 	}
+
 	private DataSource dataSource() {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 		dataSource.setDriverClass(com.mysql.jdbc.Driver.class);

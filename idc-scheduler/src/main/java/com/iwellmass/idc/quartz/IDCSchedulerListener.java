@@ -1,7 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCUtils.parseJobKey;
-
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
@@ -9,32 +7,35 @@ import org.quartz.listeners.SchedulerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.model.JobKey;
-
 public class IDCSchedulerListener extends SchedulerListenerSupport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCSchedulerListener.class);
 
+	/* 保存任务到数据库 */
+	public void jobScheduled(Trigger trigger) {}
 
 	/* 撤销调度 */
 	public void jobUnscheduled(TriggerKey triggerKey) {
-		LOGGER.info("调度任务 {} 已撤销", triggerKey);
+//		LOGGER.info("调度任务 {} 已撤销", triggerKey);
 	}
 
 	/* 调度冻结 */
 	public void triggerPaused(TriggerKey triggerKey) {
-		LOGGER.info("调度任务 {} 已冻结", triggerKey);
+//		LOGGER.info("调度任务 {} 已冻结", triggerKey);
+		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
 	/* 调度恢复 */
 	public void triggerResumed(TriggerKey triggerKey) {
-		LOGGER.info("调度任务 {} 已恢复", triggerKey);
+//		LOGGER.info("调度任务 {} 已恢复", triggerKey);
+		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
 	/* 调度完结 */
 	public void triggerFinalized(Trigger trigger) {
-		JobKey JobKey = parseJobKey(trigger);
-		LOGGER.info("调度任务 {} 已完结", JobKey);
+//		JobKey JobKey = parseJobKey(trigger);
+//		LOGGER.info("调度任务 {} 已完结", JobKey);
+		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
 	@Override

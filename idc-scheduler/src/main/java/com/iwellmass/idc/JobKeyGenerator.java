@@ -1,4 +1,4 @@
-package com.iwellmass.idc.quartz;
+package com.iwellmass.idc;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;

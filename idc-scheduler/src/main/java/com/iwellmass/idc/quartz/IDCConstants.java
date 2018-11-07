@@ -3,7 +3,7 @@ package com.iwellmass.idc.quartz;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 
-public interface IDCConstants {
+public interface IDCConstants  {
 
 	SimpleDateFormat DEFAULT_LOAD_DATE_DF = new SimpleDateFormat("yyyyMMddHHmmss");
 	DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
@@ -28,5 +28,6 @@ public interface IDCConstants {
 	String COL_BARRIER_GROUP = "BARRIER_GROUP";
 	String COL_BARRIER_SHOULD_FIRE_TIME = "BARRIER_SHOULD_FIRE_TIME";
 	String COL_BARRIER_STATE = "STATE";
+    
 
 }

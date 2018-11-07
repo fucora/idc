@@ -1,4 +1,4 @@
-package com.iwellmass.idc.quartz;
+package com.iwellmass.idc;
 
 public interface IDCLogger {
 

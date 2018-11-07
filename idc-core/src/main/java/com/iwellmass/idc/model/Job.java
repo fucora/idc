@@ -46,15 +46,6 @@ public class Job {
 	@Transient
 	private List<JobDependency> dependencies;
 
-	@ApiModelProperty("调度配置")
-	@Column(name = "schedule_config")
-	@Convert(converter = SchedulePropertiesConverter.class)
-	private ScheduleProperties scheduleProperties;
-
-	@ApiModelProperty("调度类型")
-	@Column(name = "schedule_type")
-	private ScheduleType scheduleType;
-
 	@ApiModelProperty("创建日期")
 	@Column(name = "createtime")
 	private LocalDateTime createTime;
@@ -71,33 +62,21 @@ public class Job {
 	@Column(name = "workflow_id")
 	private Integer workflowId;
 
-	// ~~ SecondaryTable 运行时信息 ~~
-	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
-	@Column(table = TABLE_TRIGGERS, name = "START_TIME")
-	@Convert(converter = LocalDateTimeMillsConverter.class)
-	private LocalDateTime startTime;
+	// ~~ 节点任务，流程主任务 ~~
+	@ApiModelProperty("调度配置")
+	@Column(name = "schedule_config")
+	@Convert(converter = SchedulePropertiesConverter.class)
+	private ScheduleProperties scheduleProperties;
+	
+	@ApiModelProperty("执行方式")
+	@Column(name = "dispatch_type")
+	private DispatchType dispatchType;
 
-	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
-	@Column(table = TABLE_TRIGGERS, name = "END_TIME")
-	@Convert(converter = LocalDateTimeMillsConverter.class)
-	private LocalDateTime endTime;
-
-	@ApiModelProperty("最近一次业务日期")
-	@Column(table = TABLE_TRIGGERS, name = "PREV_FIRE_TIME")
-	@Convert(converter = LocalDateTimeMillsConverter.class)
-	private LocalDateTime prevLoadDate;
-
-	@ApiModelProperty("下一次业务日期")
-	@Column(table = TABLE_TRIGGERS, name = "NEXT_FIRE_TIME")
-	@Convert(converter = LocalDateTimeMillsConverter.class)
-	private LocalDateTime nextLoadDate;
-
-	@ApiModelProperty("任务状态")
-	@Column(table = TABLE_TRIGGERS, name = "TRIGGER_STATE")
-	@Convert(converter = ScheduleStatusConverter.class)
-	private ScheduleStatus status = ScheduleStatus.NONE;
-
-	// ~~ Task 属性 ~~
+	@ApiModelProperty("调度类型")
+	@Column(name = "schedule_type")
+	private ScheduleType scheduleType;
+	
+	// ~~ JobDetails 属性 ~~
 	@ApiModelProperty("业务ID")
 	@Column(name = "task_id")
 	private String taskId;
@@ -125,14 +104,41 @@ public class Job {
 	@ApiModelProperty("责任人")
 	@Column(name = "assignee")
 	private String assignee;
+	
+	// ~~ SecondaryTable 运行时信息 ~~
+	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
+	@Column(table = TABLE_TRIGGERS, name = "START_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	private LocalDateTime startTime;
 
-	@ApiModelProperty("执行方式")
-	@Column(name = "dispatch_type")
-	private DispatchType dispatchType;
+	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
+	@Column(table = TABLE_TRIGGERS, name = "END_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	private LocalDateTime endTime;
+
+	@ApiModelProperty("最近一次业务日期")
+	@Column(table = TABLE_TRIGGERS, name = "PREV_FIRE_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	private LocalDateTime prevLoadDate;
+
+	@ApiModelProperty("下一次业务日期")
+	@Column(table = TABLE_TRIGGERS, name = "NEXT_FIRE_TIME")
+	@Convert(converter = LocalDateTimeMillsConverter.class)
+	private LocalDateTime nextLoadDate;
+
+	@ApiModelProperty("任务状态")
+	@Column(table = TABLE_TRIGGERS, name = "TRIGGER_STATE")
+	@Convert(converter = ScheduleStatusConverter.class)
+	private ScheduleStatus status = ScheduleStatus.NONE;
 
 	@Transient
 	public JobKey getJobKey() {
 		return new JobKey(jobId, jobGroup);
+	}
+	
+	public void setJobKey(JobKey pk) {
+		this.jobId = pk.getJobId();
+		this.jobGroup = pk.getJobGroup();
 	}
 	
 	@Transient
@@ -140,9 +146,9 @@ public class Job {
 		return new TaskKey(taskId, groupId);
 	}
 	
-	public void setJobKey(JobKey pk) {
-		this.jobId = pk.getJobId();
-		this.jobGroup = pk.getJobGroup();
+	public void setTaskKey(TaskKey taskKey) {
+		this.taskId = taskKey.getTaskId();
+		this.groupId = taskKey.getGroupId();
 	}
 
 	@Override

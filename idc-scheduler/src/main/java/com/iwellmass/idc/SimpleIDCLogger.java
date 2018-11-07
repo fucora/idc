@@ -1,4 +1,4 @@
-package com.iwellmass.idc.quartz;
+package com.iwellmass.idc;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

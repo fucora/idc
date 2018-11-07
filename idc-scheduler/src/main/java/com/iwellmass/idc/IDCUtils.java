@@ -1,4 +1,4 @@
-package com.iwellmass.idc.quartz;
+package com.iwellmass.idc;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
@@ -10,6 +10,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -17,19 +18,27 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.quartz.IDCContextKey;
 
 public class IDCUtils {
 
 	public static JobKey parseJobKey(Trigger trigger) {
+		return parseJobInstanceKey(trigger)._1;
+	}
+	
+	public static TwoTuple<JobKey, Long> parseJobInstanceKey(Trigger trigger) {
 		JobDataMap jdm = trigger.getJobDataMap();
 		boolean isRedo = JOB_REOD.applyGet(jdm);
+		JobKey key = null;
 		if (isRedo) {
-			String jobId = JOB_ID.applyGet(jdm);
-			String groupId = JOB_GROUP.applyGet(jdm);
-			return new JobKey(jobId, groupId);
+			key = new JobKey(JOB_ID.applyGet(jdm), JOB_GROUP.applyGet(jdm));
 		} else {
-			return new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
+			key = new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup());
 		}
+		
+		return new TwoTuple<JobKey, Long>(key, 
+			Optional.ofNullable(trigger.getPreviousFireTime()).map(Date::getTime).orElse(-1L));
 	}
 	
 	public static LocalDateTime parseLoadDate(Trigger trigger, JobExecutionContext context) {
@@ -42,10 +51,10 @@ public class IDCUtils {
 		}
 	}
 	
-	
 	public static JobKey asJobKey(TriggerKey triggerKey) {
 		return new JobKey(triggerKey.getName(), triggerKey.getGroup());
 	}
+	
 	public static TriggerKey asTriggerKey(JobKey jobKey) {
 		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
 	}
@@ -67,10 +76,17 @@ public class IDCUtils {
 	}
 
 	public static Long toEpochMilli(LocalDateTime loadDate) {
+		if (loadDate == null) {
+			return -1L;
+		}
 		return loadDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
 	
 	public static final <T> List<T> nullable(List<T> list) {
 		return list == null ? Collections.emptyList() : list;
+	}
+
+	public static TaskKey getTaskKey(Trigger trigger) {
+		return new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup());
 	}
 }
