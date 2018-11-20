@@ -1,4 +1,4 @@
-package com.iwellmass.idc.scheduler;
+package com.iwellmass.idc.app.scheduler;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;

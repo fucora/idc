@@ -1,39 +1,14 @@
 package com.iwellmass.idc.model;
 
-import java.time.LocalDateTime;
-import java.util.List;
+public interface Job2 {
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 
-import com.iwellmass.idc.jpa.LocalDateTimeMillsConverter;
-import com.iwellmass.idc.jpa.SchedulePropertiesConverter;
-import com.iwellmass.idc.jpa.ScheduleStatusConverter;
-
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
-@Data
-@Entity
-@Table(name = "t_idc_job")
-@IdClass(JobKey.class)
-@SecondaryTable(name = Job.TABLE_TRIGGERS, pkJoinColumns = {
-		@PrimaryKeyJoinColumn(name = Job.COL_JOB_ID, referencedColumnName = "job_id"),
-		@PrimaryKeyJoinColumn(name = Job.COL_JOB_GROUP, referencedColumnName = "job_group") })
-public class Job {
-
-	public static final String TABLE_TRIGGERS = "QRTZ_TRIGGERS";
-	public static final String COL_JOB_ID = "TRIGGER_NAME";
-	public static final String COL_JOB_GROUP = "TRIGGER_GROUP";
-
-	// ~~ 任务属性 ~~
+	public String getJobId();
+	
+	public String getJobGroup();
+	
+	
+/*	// ~~ 任务属性 ~~
 	@Id
 	@Column(name = "job_id", length = 50)
 	private String jobId;
@@ -154,5 +129,5 @@ public class Job {
 	@Override
 	public String toString() {
 		return "Job [jobId=" + jobId + ", jobGroup=" + jobGroup + ", taskName=" + taskName + "]";
-	}
+	}*/
 }

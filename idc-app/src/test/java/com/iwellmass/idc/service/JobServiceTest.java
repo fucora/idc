@@ -12,12 +12,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.iwellmass.idc.app.model.ExecutionRequest;
+import com.iwellmass.idc.app.config.IDCSchedulerConfiguration;
+import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.scheduler.IDCSchedulerConfiguration;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @EnableAutoConfiguration
@@ -75,16 +75,4 @@ public class JobServiceTest {
 		
 		Thread.sleep(60 * 10 * 1000);
 	}
-	@Test
-	public void executeJob() throws InterruptedException {
-		ExecutionRequest request = new ExecutionRequest();
-		request.setTaskId("2");
-		request.setGroupId("idc-demo");
-		request.setJobParameter("");
-		jobService.execute(request);
-		Thread.sleep(60 * 10 * 1000);
-	}
-
-
-
 }

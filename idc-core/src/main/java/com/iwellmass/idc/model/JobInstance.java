@@ -30,8 +30,6 @@ public class JobInstance {
 	@Column(name = "instance_id")
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer instanceId;
-
-	
 	
 	// ~~ 调度相关 ~~
 	@Column(name = "job_id")
@@ -48,7 +46,9 @@ public class JobInstance {
 	@JsonFormat(pattern = "yyyyMMddHHmmss", timezone = "GMT+8")
 	private LocalDateTime loadDate;
 
-	
+	@ApiModelProperty("参数设置")
+	@Column(name = "parameter", length = 4000)
+	private String parameter;
 	
 	// ~~ 任务相关 ~~
 	@ApiModelProperty("任务 ID")
@@ -85,12 +85,7 @@ public class JobInstance {
 	private ScheduleType scheduleType;
 
 	
-	
 	// ~~ 运行相关 ~~
-	@ApiModelProperty("参数设置")
-	@Column(name = "parameter", length = 4000)
-	private String parameter;
-
 	@ApiModelProperty("开始时间")
 	@Column(name = "start_time")
 	private LocalDateTime startTime;
@@ -102,10 +97,6 @@ public class JobInstance {
 	@ApiModelProperty("任务实例状态")
 	@Column(name = "status")
 	private JobInstanceStatus status;
-
-	@ApiModelProperty("上次触发时间")
-	@Column(name = "next_load_date")
-	private LocalDateTime nextLoadDate;
 
 	@ApiModelProperty("实例类型")
 	@Column(name = "instance_type")
@@ -135,6 +126,12 @@ public class JobInstance {
 		this.jobId = jobKey.getJobId();
 		this.jobGroup = jobKey.getJobGroup();
 	}
+	
+	@Transient
+	public TaskKey getTaskKey() {
+		return new TaskKey(taskId, groupId);
+	}
+	
 
 	@Override
 	public String toString() {

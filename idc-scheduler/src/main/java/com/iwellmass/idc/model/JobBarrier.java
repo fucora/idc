@@ -1,5 +1,6 @@
 package com.iwellmass.idc.model;
 
+import static com.iwellmass.idc.quartz.IDCConstants.COL_BARRIER_STATE;
 import static com.iwellmass.idc.quartz.IDCConstants.COL_BARRIER_GROUP;
 import static com.iwellmass.idc.quartz.IDCConstants.COL_BARRIER_NAME;
 import static com.iwellmass.idc.quartz.IDCConstants.COL_BARRIER_SHOULD_FIRE_TIME;
@@ -43,6 +44,19 @@ public class JobBarrier implements Serializable {
 
 	@Column(name = COL_BARRIER_SHOULD_FIRE_TIME)
 	private Long shouldFireTime;
+	
+	@Column(name = COL_BARRIER_STATE)
+	private BarrierState state;
+	
+	public void setBarrierKey(JobKey barrierKey) {
+		this.barrierId = barrierKey.getJobId();
+		this.barrierGroup = barrierKey.getJobGroup();
+	}
+	
+	public void setJobKey(JobKey jobKey) {
+		this.jobId = jobKey.getJobId();
+		this.jobGroup = jobKey.getJobGroup();
+	}
 
 	@Override
 	public String toString() {

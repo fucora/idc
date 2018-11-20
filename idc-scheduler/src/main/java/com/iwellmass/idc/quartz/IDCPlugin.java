@@ -1,6 +1,6 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
+import static com.iwellmass.idc.quartz.IDCContextKey.*;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -13,10 +13,12 @@ import java.util.stream.Collectors;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.spi.ClassLoadHelper;
@@ -31,16 +33,19 @@ import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.IDCLogger;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.SimpleIDCLogger;
-import com.iwellmass.idc.dag.Workflow;
 import com.iwellmass.idc.dag.WorkflowService;
+import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
+import com.iwellmass.idc.executor.ProgressEvent;
+import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
 
 import lombok.Getter;
@@ -49,50 +54,53 @@ import lombok.Setter;
 public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCPlugin.class);
-	
+
+	// ~~ init from factory ~~
+	private IDCJobStore idcJobStore;
 	private Scheduler scheduler;
 	
-	protected IDCStore store;
+	// ~~ internal component ~~
+	private IDCStatusService idcStatusService;
 	
-	@Getter
-	private IDCStatusService statusService;
+	// ~~ set ~~
+	@Setter
 	@Getter
 	private WorkflowService workflowService;
 	
-	@Getter
 	@Setter
-	protected IDCLogger logger = new SimpleIDCLogger();
+	@Getter
+	private IDCLogger logger;
 	
-	
-	public void initialize(IDCStore store) {
-		this.store = store;
+	public void initialize(IDCJobStore store) {
+		this.idcJobStore = store;
+		this.logger = new SimpleIDCLogger();
 	}
 	
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		LOGGER.info("加载 IDCPlugin...");
+		
+		Objects.requireNonNull(idcJobStore, "IDCJobStore cannot be null");
+		Objects.requireNonNull(workflowService, "WorkflowService cannot be null");
+
+		// set
+		this.idcStatusService = new StdStatusService();
 		this.scheduler = scheduler;
 		
 		// 将其设置在上下文中
 		IDC_PLUGIN.applyPut(scheduler.getContext(), this);
 		
 		scheduler.getListenerManager().addJobListener(new IDCJobListener());
+		scheduler.getListenerManager().addTriggerListener(new IDCTriggerListener(idcJobStore));
 		scheduler.getListenerManager().addSchedulerListener(new IDCSchedulerListener());
-		scheduler.getListenerManager().addTriggerListener(new IDCTriggerListener());
 		
 		PluginVersion version = new PluginVersion();
 		LOGGER.info("IDCPlugin 已加载, VERSION: {}", version.getVersion());
-		
-		this.statusService = initIDCStatusService();
-		this.workflowService = initWorkflowService();
 	}
 
 	@Override
 	public void start() {
 		LOGGER.info("启动 IDCPlugin");
-		Objects.requireNonNull(store, "未设置 IDCStore..");
-		Objects.requireNonNull(statusService, "状态服务不能为空");
-		Objects.requireNonNull(workflowService, "工作流服务不能为空");
 	}
 
 	@Override
@@ -100,66 +108,107 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
-	
 	/** 调度任务 */
-	public void schedule(Job job) throws SchedulerException {
-		if (job.getTaskType() == TaskType.WORKFLOW) {
-			 TaskKey key = job.getTaskKey();
-			 Workflow workflow = workflowService.getWorkflow(key);
-			 List<Job> subJobs = workflow.getAllSubJob();
-			 // 保存子任务
-			 for (Job subJob : subJobs) {
-				 JobDetail jdt = buildJobDetail(subJob);
-				 scheduler.addJob(jdt, true);
-			 }
-			 // 保存主任务
-			 JobDetail jdt = JobBuilder
-				.newJob(IDCWorkflowJob.class)
-				.withIdentity(job.getTaskId(), job.getGroupId())
-				.requestRecovery()
-				.storeDurably().build();
-			 scheduler.addJob(jdt, true);
+	public void schedule(Task task, ScheduleProperties schdProps) throws SchedulerException {
+		JobDetail jobDetail = null;
+		// 工作流任务
+		if (task.getTaskType() == TaskType.WORKFLOW_TASK) {
+			 jobDetail = JobBuilder.newJob(IDCWorkflowJob.class)
+				 .withIdentity(task.getTaskId(), task.getTaskGroup())
+				 .storeDurably()
+				 .requestRecovery()
+				 .build();
 		} else {
-			JobDetail jdt = buildJobDetail(job);
-			scheduler.addJob(jdt, true);
+			jobDetail = buildJobDetail(task);
 		}
 		
+		TASK_JSON.applyPut(jobDetail.getJobDataMap(), JSON.toJSONString(task));
+		
+		
+		
+		Trigger trigger = buildTrigger(task, schdProps);
 		// 调度此任务
-		scheduler.scheduleJob(buildTrigger(job));
+		scheduler.scheduleJob(jobDetail, trigger);
 	}
 	
-	/** 调度子任务 */
-	public void scheduleSubJob(Job mainJob, Job subJob) throws SchedulerException {
-		Trigger trigger = TriggerBuilder.newTrigger()
-			.forJob(mainJob.getTaskId(), mainJob.getGroupId())
-			.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires())
-			.withIdentity(subJob.getJobId(), subJob.getJobGroup()).build();
-		scheduler.scheduleJob(trigger);
-	}
-	
-	protected abstract JobDetail buildJobDetail(Job job);
-	protected abstract IDCStatusService initIDCStatusService();
-	protected abstract WorkflowService initWorkflowService();
+	/** 重新调度任务 */
+	public void reschedule(Job job) throws SchedulerException {
+		
+		/*JobKey jobPk = idcPlugin.buildJobKey(job);
+		
+		validate(jobPk, job.getDependencies());
 
-	private Trigger buildTrigger(Job job) {
-		ScheduleProperties sp = job.getScheduleProperties();
-		// 构建 CRON 表达式
-		CronScheduleBuilder cronBuilder = CronScheduleBuilder.cronSchedule(toCronExpression(sp))
-			.withMisfireHandlingInstructionIgnoreMisfires();
-		// 构建 TriggerBuilder
-		TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
-			.withIdentity(job.getJobId(), job.getJobGroup())
-			.forJob(job.getTaskId(), job.getGroupId())
-			.usingJobData(IDCContextKey.JOB_JSON.key(), JSON.toJSONString(job)) // IDCJob JSON
-			.withSchedule(cronBuilder);
-		// 设置开始时间
-		Optional.ofNullable(sp.getStartTime()).map(IDCUtils::toDate).ifPresent(builder::startAt);
-		// 设置结束时间
-		Optional.ofNullable(sp.getEndTime()).map(IDCUtils::toDate).ifPresent(builder::endAt);
+		// 没有正在执行的任务计划便可以重新调度计划任务
+		Job pj = jobRepository.findOne(jobPk);
+		if (pj != null && pj.getStatus() != ScheduleStatus.NONE) {
+			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
+		}
 		
+		job.setJobKey(jobPk);
+		job.setUpdateTime(LocalDateTime.now());
+
+		LOGGER.info("重新调度任务 {}", jobPk);*/
+		throw new SchedulerException("Not supported yet.");
+	}
+	
+	/** 重新调度任务 */
+	public void reschedule(Job job, JobDataMap jobData) throws SchedulerException {
 		
-		return builder.build();
-	};
+		/*JobKey jobPk = idcPlugin.buildJobKey(job);
+		
+		validate(jobPk, job.getDependencies());
+
+		// 没有正在执行的任务计划便可以重新调度计划任务
+		Job pj = jobRepository.findOne(jobPk);
+		if (pj != null && pj.getStatus() != ScheduleStatus.NONE) {
+			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
+		}
+		
+		job.setJobKey(jobPk);
+		job.setUpdateTime(LocalDateTime.now());
+
+		LOGGER.info("重新调度任务 {}", jobPk);*/
+		throw new SchedulerException("Not supported yet.");
+	}
+	
+	protected abstract JobDetail buildJobDetail(Task task);
+
+	protected Trigger buildTrigger(Task task, ScheduleProperties sp) {
+		
+		JobDataMap jobData = new JobDataMap();
+		JOB_SCHEDULE_PROPERTIES.applyPut(jobData, JSON.toJSONString(sp));
+		
+		if (task.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+			JobKey jobKey = new JobKey(task.getTaskId(), task.getTaskGroup());
+			// 构建常量
+			TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
+				.withIdentity(IDCUtils.asTriggerKey(jobKey))
+				.forJob(task.getTaskId(), task.getTaskGroup())
+				.usingJobData(jobData)
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule());
+			return builder.build();
+		} else {
+			JobKey jobKey = new JobKey(task.getTaskId(), task.getTaskGroup());
+			// 构建 CRON 表达式
+			CronScheduleBuilder cronBuilder = CronScheduleBuilder.cronSchedule(toCronExpression(sp))
+					.withMisfireHandlingInstructionIgnoreMisfires();
+			// 构建 TriggerBuilder
+			TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
+					.withIdentity(IDCUtils.asTriggerKey(jobKey))
+					.forJob(task.getTaskId(), task.getTaskGroup())
+					.usingJobData(jobData) // IDCJob JSON
+					.withSchedule(cronBuilder);
+			// 设置开始时间
+			Optional.ofNullable(sp.getStartTime()).map(IDCUtils::toDate).ifPresent(builder::startAt);
+			// 设置结束时间
+			Optional.ofNullable(sp.getEndTime()).map(IDCUtils::toDate).ifPresent(builder::endAt);
+			return builder.build();
+		}
+	}
+	
+	public IDCStatusService getStatusService() {
+		return this.idcStatusService;
+	}
 	
 	public static String toCronExpression(ScheduleProperties scheduleProperties) {
 		LocalTime duetime = LocalTime.parse(scheduleProperties.getDuetime(), DateTimeFormatter.ISO_TIME);
@@ -187,9 +236,54 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 	}
 	
+	// ~~ 事件服务~~
+	private class StdStatusService implements IDCStatusService {
+		@Override
+		public void fireStartEvent(StartEvent event) {
+			LOGGER.info("Get event {}", event);
+			logger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
+			// 更新实例状态
+			try {
+				// 更新实例状态
+				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
+					jobInstance.setStartTime(event.getStartTime());
+					jobInstance.setStatus(JobInstanceStatus.RUNNING);
+				});
+			} catch (Exception e) {
+				String error = "更新任务状态出错" + e.getMessage();
+				logger.log(event.getInstanceId(), error);
+				throw new AppException(error, e);
+			}
+		}
 
-	// ~~ Getters ~~
-	public JobInstance getJobInstance(JobKey jobKey, Long shouldFireTime) {
-		return this.store.retrieveIDCJobInstance(jobKey, shouldFireTime);
+		public void fireProgressEvent(ProgressEvent event) {
+			LOGGER.info("Get event {}", event);
+			logger.log(event.getInstanceId(), event.getMessage());
+			// 更新实例状态
+			try {
+				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
+					jobInstance.setStatus(JobInstanceStatus.RUNNING);
+				});
+			} catch (Exception e) {
+				String error = "更新任务状态出错" + e.getMessage();
+				logger.log(event.getInstanceId(), error);
+				throw new AppException(error, e);
+			}
+		}
+		
+		@Override
+		public void fireCompleteEvent(CompleteEvent event) {
+			LOGGER.info("Get event {}", event);
+			logger.log(event.getInstanceId(), event.getMessage())
+				.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
+			try {
+				// 完成这个实例
+				idcJobStore.completeIDCJobInstance(event);
+			} catch (Exception e) {
+				String error = "更新任务状态出错: " + e.getMessage();
+				logger.log(event.getInstanceId(), error);
+				throw new AppException(error, e);
+			}
+		}
 	}
 }

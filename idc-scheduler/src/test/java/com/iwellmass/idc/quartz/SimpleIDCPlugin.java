@@ -3,33 +3,19 @@ package com.iwellmass.idc.quartz;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 
-import com.iwellmass.idc.StdIDCStatusService;
-import com.iwellmass.idc.dag.WorkflowService;
-import com.iwellmass.idc.executor.IDCStatusService;
-import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.Task;
 
 public class SimpleIDCPlugin extends IDCPlugin {
-
-
-	protected JobDetail buildJobDetail(Job job) {
+	
+	@Override
+	protected JobDetail buildJobDetail(Task task) {
+		
+		System.out.println(123);
 		return JobBuilder
 				.newJob(SimpleJob.class)
-				.withIdentity(job.getTaskId(), job.getGroupId())
+				.withIdentity(task.getTaskId(), task.getTaskGroup())
 				.requestRecovery()
 				.storeDurably().build();
-	}
-
-	@Override
-	protected IDCStatusService initIDCStatusService() {
-		StdIDCStatusService service = new StdIDCStatusService();
-		service.setIdcLogger(logger);
-		service.setIdcStore(store);
-		return service;
-	}
-
-	@Override
-	protected WorkflowService initWorkflowService() {
-		return new WorkflowService();
 	}
 
 }

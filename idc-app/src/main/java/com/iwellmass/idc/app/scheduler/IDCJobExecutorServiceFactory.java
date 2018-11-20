@@ -1,4 +1,4 @@
-package com.iwellmass.idc.scheduler;
+package com.iwellmass.idc.app.scheduler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

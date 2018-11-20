@@ -1,10 +1,11 @@
-package com.iwellmass.idc.scheduler;
+package com.iwellmass.idc.app.config;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.spi.JobFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,16 +17,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import com.iwellmass.idc.quartz.IDCContextKey;
+import com.iwellmass.idc.quartz.IDCDriverDelegate;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.quartz.IDCSchedulerFactory;
-import com.iwellmass.idc.repo.JobInstanceRepository;
-import com.iwellmass.idc.repo.JobRepository;
 
 @Configuration
 @ComponentScan
-@EnableJpaRepositories("com.iwellmass.idc.repo")
-@EntityScan("com.iwellmass.idc.model")
 public class IDCSchedulerConfiguration implements ApplicationListener<ContextRefreshedEvent> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCSchedulerConfiguration.class);
@@ -35,41 +32,30 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	@Value(value="${idc.scheduler.start-auto:true}")
 	private Boolean startAuto;
 	
-	@Inject
-	private JpaIDCLogger idcLogger;
-	
 	@Inject 
-	private JobRepository jobRepository;
+	private IDCDriverDelegate idcDriverDelegate;
 	
 	@Inject
-	private JobInstanceRepository jobInstanceRepository;
+	private JobFactory jobFactory;
 	
-	@Bean
-	public AutowireJobFactory idcJobFactory() {
-		return new AutowireJobFactory();
-	}
-
+	@Inject
+	private IDCPlugin idcPlugin;
+	
 	@Bean
 	public Scheduler scheduler(DataSource dataSource) throws SchedulerException {
-		
-		
-		IDCContext.setJobInstanceRepository(jobInstanceRepository);
-		IDCContext.setJobRepository(jobRepository);
-		
+
+		// 创建 scheduler
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
+		factory.setDriverDelegate(idcDriverDelegate);
 		factory.setDataSource(dataSource);
-		factory.setIdcDriverDelegateClass(JpaIDCDriverDelegate.class.getName());
+		factory.setPlugin(idcPlugin);
+		
+		// 设置 scheduler 信息
 		scheduler = factory.getScheduler();
-		scheduler.setJobFactory(idcJobFactory());
-		IDCContextKey.IDC_LOGGER.applyPut(scheduler, idcLogger);
+		scheduler.setJobFactory(jobFactory);
 		return scheduler;
 	}
 	
-	@Bean
-	public IDCPlugin idcPlugin(Scheduler scheduler) throws SchedulerException {
-		return IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
-	}
-
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
 		try {

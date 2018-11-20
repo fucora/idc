@@ -14,6 +14,9 @@ import lombok.Setter;
 @Setter
 public class ScheduleProperties {
 
+	@ApiModelProperty("负责人")
+	private String assignee;
+	
 	@ApiModelProperty("哪一天")
 	private List<Integer> days;
 
@@ -34,5 +37,7 @@ public class ScheduleProperties {
 
 	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime endTime;
-
+	
+	@ApiModelProperty("运行参数")
+	private String parameter;
 }

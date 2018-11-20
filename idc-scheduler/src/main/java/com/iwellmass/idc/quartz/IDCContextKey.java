@@ -11,7 +11,9 @@ import org.quartz.SchedulerContext;
 import org.quartz.SchedulerException;
 
 import com.iwellmass.idc.ParameterParser;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.ScheduleEnv;
 import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCContextKey<T> {
@@ -24,11 +26,18 @@ public class IDCContextKey<T> {
 	// ~~ 调度器 ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 	
+	// ~~ TASK ~~
+	public static final IDCContextKey<String> TASK_JSON = defOpt("idc.task.json", String.class, null);
+	
 	// ~~ JOB ~~
 	/** Job JSON */
-	public static final IDCContextKey<String> JOB_JSON = defOpt("idc.job.json", String.class, null);
+	public static final IDCContextKey<String> JOB_SCHEDULE_PROPERTIES = defOpt("idc.job.scheduleProperties", String.class, null);
+	public static final IDCContextKey<String> JOB_SCHEDULE_ENV = defOpt("idc.job.scheduleEnv", String.class, null);
 	
 	public static final IDCContextKey<Boolean> JOB_ASYNC = defOpt("idc.job.async", Boolean.class, Boolean.TRUE);
+	
+	public static final IDCContextKey<Long> JOB_SHOULD_FIRETIME = defReq("idc.job.shouldFireTime", Long.class);
+	
 	
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
 	/** JobName */
@@ -39,8 +48,13 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
 	/** 参数解析 */
 	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
-	/** Trigger as JobInstance */
+	
+	/** 任务 */
+	public static final IDCContextKey<Job> CONTEXT_JOB = defReq("idc.context.job", Job.class);
+	/** 任务实例 */
 	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
+	
+	
 	// ~~ runtime ~~
 	/** 实例 ID */
 	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = defReq("idc.context.instanceId", Integer.class);

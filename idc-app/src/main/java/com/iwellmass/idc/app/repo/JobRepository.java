@@ -1,4 +1,4 @@
-package com.iwellmass.idc.repo;
+package com.iwellmass.idc.app.repo;
 
 import java.util.List;
 

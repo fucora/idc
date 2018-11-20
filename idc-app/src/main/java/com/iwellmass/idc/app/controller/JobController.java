@@ -1,7 +1,5 @@
 package com.iwellmass.idc.app.controller;
  
-import static com.iwellmass.idc.scheduler.StdJobKeyGenerator.valueOf;
-
 import java.util.List;
 
 import javax.inject.Inject;
@@ -10,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
@@ -20,57 +17,41 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.service.JobQueryService;
+import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping("/job")
+@RequestMapping("/job/v2")
 public class JobController {
 	
 	@Inject
 	private JobService jobService;
 	
-	@Inject
-	private JobQueryService jobQueryService;
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping
-	public ServiceResult<Job> getJob(TaskKey taskKey) {
-		
-		JobKey jobKey = valueOf(taskKey);
-		
-		Job job = jobQueryService.findJob(jobKey);
+	public ServiceResult<Job> getJob(JobKey jobKey) {
+		Job job = jobService.findJob(jobKey);
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
 		}
 		return ServiceResult.success(job);
 	}
 	
-
 	@ApiOperation("查询任务，分页")
 	@PostMapping("/query")
 	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
-		PageData<Job> data = jobQueryService.findJob(jobQuery, pager);
+		PageData<Job> data = jobService.findJob(jobQuery, pager);
 		return ServiceResult.success(data);
-	}
-	
-	@ApiOperation("查询依赖列表")
-	@GetMapping("/dependency-list")
-	public ServiceResult<List<Job>> query(@RequestParam("scheduleType") ScheduleType scheduleType) {
-		List<Job> deps = jobQueryService.findAvailableDependency(scheduleType);
-		return ServiceResult.success(deps);
 	}
 	
 	@ApiOperation("查询负责人信息")
 	@GetMapping("/assignee")
 	public ServiceResult<List<Assignee>> getAssignee() {
-		List<Assignee> data = jobQueryService.getAllAssignee();
+		List<Assignee> data = jobService.getAllAssignee();
 		return ServiceResult.success(data);
 	}
 

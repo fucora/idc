@@ -10,7 +10,11 @@ import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class JobQuery implements SpecificationBuilder {
 
 	@ApiModelProperty("任务名")
@@ -33,44 +37,4 @@ public class JobQuery implements SpecificationBuilder {
 	@Equal
 	private String assignee;
 
-	public String getTaskName() {
-		return taskName;
-	}
-
-	public void setTaskName(String taskName) {
-		this.taskName = taskName;
-	}
-
-	public String getContentType() {
-		return contentType;
-	}
-
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}
-
-	public String getAssignee() {
-		return assignee;
-	}
-
-	public void setAssignee(String assignee) {
-		this.assignee = assignee;
-	}
-
-	public List<TaskType> getTaskTypes() {
-		return taskTypes;
-	}
-
-	public void setTaskTypes(List<TaskType> taskTypes) {
-		this.taskTypes = taskTypes;
-	}
-
-	public DispatchType getDispatchType() {
-		return dispatchType;
-	}
-
-	public void setDispatchType(DispatchType dispatchType) {
-		this.dispatchType = dispatchType;
-	}
-	
 }

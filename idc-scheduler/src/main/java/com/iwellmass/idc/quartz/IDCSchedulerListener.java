@@ -35,7 +35,6 @@ public class IDCSchedulerListener extends SchedulerListenerSupport {
 	public void triggerFinalized(Trigger trigger) {
 //		JobKey JobKey = parseJobKey(trigger);
 //		LOGGER.info("调度任务 {} 已完结", JobKey);
-		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
 	@Override

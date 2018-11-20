@@ -10,29 +10,27 @@ import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
-import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.quartz.IDCStore;
+import com.iwellmass.idc.quartz.IDCJobStore;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 import lombok.Setter;
 
-public class StdIDCStatusService implements IDCStatusService {
+public abstract class AbstractIDCStatusService implements IDCStatusService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(StdIDCStatusService.class);
-
-	@Setter
-	private IDCLogger idcLogger;
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractIDCStatusService.class);
 
 	@Setter
-	private IDCStore idcStore;
+	private IDCPlugin plugin;
+
+	@Setter
+	private IDCJobStore idcStore;
 	
 	// ~~ 事件服务~~
 	@Override
 	public void fireStartEvent(StartEvent event) {
 		LOGGER.info("Get event {}", event);
-		idcLogger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
+		plugin.getLogger().log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
 		// 更新实例状态
 		try {
 			// 更新实例状态
@@ -42,14 +40,14 @@ public class StdIDCStatusService implements IDCStatusService {
 			});
 		} catch (Exception e) {
 			String error = "更新任务状态出错" + e.getMessage();
-			idcLogger.log(event.getInstanceId(), error);
+			plugin.getLogger().log(event.getInstanceId(), error);
 			throw new AppException(error, e);
 		}
 	}
 
 	public void fireProgressEvent(ProgressEvent event) {
 		LOGGER.info("Get event {}", event);
-		idcLogger.log(event.getInstanceId(), event.getMessage());
+		plugin.getLogger().log(event.getInstanceId(), event.getMessage());
 		// 更新实例状态
 		try {
 			idcStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
@@ -57,7 +55,7 @@ public class StdIDCStatusService implements IDCStatusService {
 			});
 		} catch (Exception e) {
 			String error = "更新任务状态出错" + e.getMessage();
-			idcLogger.log(event.getInstanceId(), error);
+			plugin.getLogger().log(event.getInstanceId(), error);
 			throw new AppException(error, e);
 		}
 	}
@@ -65,23 +63,16 @@ public class StdIDCStatusService implements IDCStatusService {
 	@Override
 	public void fireCompleteEvent(CompleteEvent event) {
 		LOGGER.info("Get event {}", event);
-		idcLogger.log(event.getInstanceId(), event.getMessage())
+		plugin.getLogger().log(event.getInstanceId(), event.getMessage())
 			.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
 		try {
+			// 完成这个实例
+			idcStore.completeIDCJobInstance(event);
 			
-			JobInstance ins = idcStore.retrieveIDCJobInstance(event.getInstanceId());
-			
-			Job job = idcStore.retrieveIDCJob(ins.getJobKey());
-			ScheduleProperties sp = job.getScheduleProperties();
-			
-			// 更新实例状态
-			if (!sp.getBlockOnError() ||
-					event.getFinalStatus() == JobInstanceStatus.FINISHED) {
-				idcStore.removeIDCJobBarriers(ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
-			}
+			// 如果是
 		} catch (Exception e) {
 			String error = "更新任务状态出错: " + e.getMessage();
-			idcLogger.log(event.getInstanceId(), error);
+			plugin.getLogger().log(event.getInstanceId(), error);
 			throw new AppException(error, e);
 		}
 	}

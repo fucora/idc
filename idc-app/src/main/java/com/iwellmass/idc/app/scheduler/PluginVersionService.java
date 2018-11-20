@@ -1,12 +1,12 @@
-package com.iwellmass.idc.scheduler;
+package com.iwellmass.idc.app.scheduler;
 
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Component;
 
+import com.iwellmass.idc.app.repo.PluginVersionRepository;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.quartz.IDCPlugin;
-import com.iwellmass.idc.repo.PluginVersionRepository;
 
 @Component
 public class PluginVersionService {

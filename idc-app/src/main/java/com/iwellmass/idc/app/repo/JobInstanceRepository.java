@@ -1,6 +1,5 @@
-package com.iwellmass.idc.repo;
+package com.iwellmass.idc.app.repo;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -20,8 +19,8 @@ public interface JobInstanceRepository
 	@Query("SELECT u FROM JobInstance u WHERE u.instanceId = ?1")
 	JobInstance findOne(Integer id);
 
-	@Query("SELECT u FROM JobInstance u WHERE u.jobId = ?1 and u.jobGroup = ?2 and loadDate = ?3")
-	JobInstance findOne(String jobId, String jobGroup, LocalDateTime loadDate);
+	@Query("SELECT u FROM JobInstance u WHERE u.jobId = ?1 and u.jobGroup = ?2 and shouldFireTime = ?3")
+	JobInstance findOne(String jobId, String jobGroup, Long shouldFireTime);
 
 	@Query("SELECT DISTINCT assignee FROM JobInstance WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();

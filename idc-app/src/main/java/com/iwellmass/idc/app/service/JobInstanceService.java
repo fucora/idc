@@ -1,4 +1,4 @@
-package com.iwellmass.idc.service;
+package com.iwellmass.idc.app.service;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
@@ -7,6 +7,8 @@ import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -30,17 +32,19 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.IDCUtils;
+import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.CancleRequest;
+import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.model.RedoRequest;
+import com.iwellmass.idc.app.repo.ExecutionLogRepository;
+import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
-import com.iwellmass.idc.quartz.IDCUtils;
-import com.iwellmass.idc.repo.ExecutionLogRepository;
-import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Service
 public class JobInstanceService {
@@ -100,7 +104,7 @@ public class JobInstanceService {
 				.successEvent("强制结束")
 				.setInstanceId(instanceId)
 				.setEndTime(LocalDateTime.now());
-			plugin.fireCompleteEvent(event);
+			plugin.getStatusService().fireCompleteEvent(event);
 			scheduler.resetTriggerFromErrorState(IDCUtils.asTriggerKey(instance.getJobKey()));
 		} catch (SchedulerException e) {
 			throw new AppException("强制结束任务时出错: " + e.getMessage());
@@ -133,5 +137,38 @@ public class JobInstanceService {
 		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
 		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}
+	
+	
+
+
+	@Inject
+	private JobInstanceRepository repository;
+
+	public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
+		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
+		Page<JobInstance> result = queryObject == null ? repository.findAll(pgr)
+				: repository.findAll(queryObject.toSpecification(), pgr);
+		return new PageData<>(result.getNumberOfElements(), result.getContent());
+	}
+
+	public JobInstance getJobInstance(Integer id) {
+		JobInstance instance = repository.findOne(id);
+		Assert.isTrue(instance != null, "任务实例 %s 不存在", id);
+		return instance;
+	}
+
+	public List<JobInstance> getWorkflowSubInstance(Integer id) {
+		throw new UnsupportedOperationException("not supported yet.");
+	}
+
+	public List<Assignee> getAllAssignee() {
+		return repository.findAllAssignee().stream().map(id -> {
+			Assignee assignee = new Assignee();
+			assignee.setAssignee(id);
+			return assignee;
+		}).collect(Collectors.toList());
+		
+	}
+
 
 }

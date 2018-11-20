@@ -2,6 +2,9 @@ package com.iwellmass.idc.model;
 
 import java.io.Serializable;
 
+import lombok.Data;
+
+@Data
 public class TaskKey implements Serializable{
 
 	private static final long serialVersionUID = -5528099807403193969L;
@@ -14,22 +17,6 @@ public class TaskKey implements Serializable{
 	
 	public TaskKey(String taskId, String groupId) {
 		this.taskId = taskId;
-		this.groupId = groupId;
-	}
-
-	public String getTaskId() {
-		return taskId;
-	}
-
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String groupId) {
 		this.groupId = groupId;
 	}
 	

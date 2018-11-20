@@ -7,11 +7,14 @@ import java.util.function.Consumer;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
+import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
 
 public interface IDCDriverDelegate {
 
+	Integer nextInstanceId();
+	
 	Job insertJob(Connection conn, Job job) throws SQLException;
 
 	Job selectJob(Connection conn, JobKey jobKey) throws SQLException;
@@ -24,15 +27,15 @@ public interface IDCDriverDelegate {
 	
 	JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException;
 	
-	List<Job> selectJobDependencies(Connection conn, Job idcJob) throws SQLException;
+	List<JobDependency> selectJobDependencies(Connection conn, JobKey idcJob) throws SQLException;
 	
 	void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException;
 
 	void deleteBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime) throws SQLException;
 
 	void clearJobBarrier(Connection conn, String jobId, String jobGroup) throws SQLException;
-	
-	Integer nextInstanceId();
 
+	int countSuccessor(JobKey jobKey, long shouldFireTime);
+	
 	
 }

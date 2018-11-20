@@ -6,6 +6,7 @@ import static org.quartz.impl.jdbcjobstore.Constants.COL_TRIGGER_NAME;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.function.Consumer;
 import com.iwellmass.idc.model.BarrierState;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
+import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
 
@@ -81,8 +83,8 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	}
 
 	@Override
-	public List<Job> selectJobDependencies(Connection conn, Job idcJob) {
-		return null;
+	public List<JobDependency> selectJobDependencies(Connection conn, JobKey idcJob) {
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -151,5 +153,10 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 				// ignore
 			}
 		}
+	}
+
+	@Override
+	public int countSuccessor(JobKey jobKey, long shouldFireTime) {
+		return 0;
 	}
 }

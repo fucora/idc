@@ -1,6 +1,4 @@
-package com.iwellmass.idc.repo;
-
-import javax.transaction.Transactional;
+package com.iwellmass.idc.app.repo;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,13 +6,13 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.PluginVersion;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Repository
 public interface PluginVersionRepository extends CrudRepository<PluginVersion, String>{
 
-	@Transactional
 	@Modifying
-	@Query("UPDATE PluginVersion set instanceSeq = instanceSeq + 1 where version = ?1")
-	public int increaseInstanceSeqAndGet(String version);
+	@Query("UPDATE PluginVersion set instanceSeq = instanceSeq + 1 where version = " + IDCPlugin.VERSION)
+	public int increaseInstanceSeqAndGet();
 
 }

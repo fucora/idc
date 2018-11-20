@@ -1,6 +1,6 @@
-package com.iwellmass.idc.scheduler;
+package com.iwellmass.idc.app.scheduler;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_INSTANCE;
+import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 
 import javax.inject.Inject;
 
@@ -25,7 +25,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 
-		JobInstance jobInstance = JOB_INSTANCE.applyGet(context.getMergedJobDataMap());
+		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance);
 		// 使用 eureka 来做 HA & balance
 		try {
