@@ -14,9 +14,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.iwellmass.idc.StdWorkflowService;
 import com.iwellmass.idc.WorkflowService;
-import com.iwellmass.idc.model.CronPicker;
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
@@ -78,10 +76,6 @@ public class IDCPluginTest {
 		Scheduler scheduler = factory.getScheduler();
 		scheduler.clear();
 		scheduler.start();
-		
-		CronPicker cronPicker = new CronPicker();
-		cronPicker.setDays(Arrays.asList(-1));
-		cronPicker.setDuetime(LocalTime.MIN);
 		
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.MONTHLY);

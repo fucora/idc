@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.Task;
 

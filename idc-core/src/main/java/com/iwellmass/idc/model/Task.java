@@ -2,15 +2,19 @@ package com.iwellmass.idc.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @IdClass(TaskKey.class)
 @Table(name = "t_idc_task")
@@ -36,6 +40,7 @@ public class Task {
 
 	@ApiModelProperty("任务类型，工作流任务，节点任务")
 	@Column(name = "task_type")
+	@Enumerated(EnumType.STRING)
 	private TaskType taskType;
 
 	@ApiModelProperty("业务类型，业务方自定义")
@@ -44,6 +49,7 @@ public class Task {
 	
 	@ApiModelProperty("执行方式")
 	@Column(name = "dispatch_type")
+	@Enumerated(EnumType.STRING)
 	private DispatchType dispatchType;
 	
 	@ApiModelProperty("工作流ID")
@@ -58,5 +64,5 @@ public class Task {
 	public void setTaskKey(TaskKey taskKey) {
 		setTaskId(taskKey.getTaskId());
 		setTaskGroup(taskKey.getTaskGroup());
-	};
+	}
 }

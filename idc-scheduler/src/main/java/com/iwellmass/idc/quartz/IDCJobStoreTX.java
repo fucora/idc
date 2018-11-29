@@ -124,7 +124,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					/////////////////////////////////////// BEGIN check
 					// check barrier
 					////////////////
-					JobEnv jr = initJobRuntime(nextTrigger);                    
+					JobEnv jr = createJobInstance(nextTrigger);                    
 					Task task = taskService.getTask(jr.getTaskKey());
 					List<JobBarrier> barriers = computeBarriers(conn, task, jr);
 					// clear first
@@ -178,13 +178,12 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	}
 	
 	
-	private JobInstance storeJobInstance(Connection conn, JobEnv jr, Task task) throws JobPersistenceException, SQLException {
+	
+	private JobEnv createJobInstance(OperableTrigger trigger, Task task, Job job, JobEnv jobEnv) {
 		
 		JobInstance jobInstance = new JobInstance();
 		// ~~ 基本信息 ~~
-		jobInstance.setTaskId(task.getTaskId());
-		jobInstance.setGroupId(task.getTaskGroup());
-		jobInstance.setTaskName(task.getTaskName());
+		jobInstance.setTaskKey(task.getTaskKey());
 		jobInstance.setDescription(task.getDescription());
 		jobInstance.setContentType(task.getContentType());
 		jobInstance.setTaskType(task.getTaskType());
@@ -192,12 +191,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		jobInstance.setWorkflowId(task.getWorkflowId());
 		
 		// ~~ 运行时信息 ~~
-		jobInstance.setJobId(jr.getJobKey().getJobId());
-		jobInstance.setJobGroup(jr.getJobKey().getJobGroup());
-		jobInstance.setAssignee(jr.getAssignee());
-		jobInstance.setScheduleType(jr.getScheduleType());
+		jobInstance.setJobKey(job.getJobKey());
+		jobInstance.setAssignee(job.getAssignee());
+		jobInstance.setScheduleType(job.getScheduleType());
 		// instance id
-		jobInstance.setInstanceId(jr.getInstanceId());
+		jobInstance.setInstanceId(job.getInstanceId());
 		// 执行参数
 		jobInstance.setParameter(jr.getParameter());
 		// 批次
@@ -211,10 +209,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		jobInstance.setStatus(JobInstanceStatus.NEW);
 		// 父任务ID
 		jobInstance.setWorkflowInstanceId(jr.getWorkflowInstanceId());
-		return idcDriverDelegate.insertJobInstance(conn, jobInstance);
-	}
-	
-	private JobEnv initJobRuntime(OperableTrigger trigger) {
+		
+		
 		Job job = JSON.parseObject(JOB_JSON.applyGet(trigger.getJobDataMap()), Job.class);
 		JobEnv jr = JSON.parseObject(JOB_RUNTIME.applyGet(trigger.getJobDataMap()), JobEnv.class);
 		if (jr == null) {

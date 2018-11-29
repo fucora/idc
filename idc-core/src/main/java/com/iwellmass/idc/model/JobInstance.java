@@ -64,8 +64,8 @@ public class JobInstance {
 	@Column(name = "task_id")
 	private String taskId;
 
-	@Column(name = "group_id", length = 50)
-	private String groupId;
+	@Column(name = "task_group", length = 50)
+	private String taskGroup;
 
 	@Column(name = "task_name", length = 200)
 	private String taskName;
@@ -135,7 +135,12 @@ public class JobInstance {
 	
 	@Transient
 	public TaskKey getTaskKey() {
-		return new TaskKey(taskId, groupId);
+		return new TaskKey(taskId, taskGroup);
+	}
+	
+	public void setTaskKey(TaskKey taskKey) {
+		this.taskId = taskKey.getTaskId();
+		this.taskGroup = taskKey.getTaskGroup();
 	}
 	
 

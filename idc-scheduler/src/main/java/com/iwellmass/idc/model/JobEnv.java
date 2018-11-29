@@ -1,25 +1,12 @@
 package com.iwellmass.idc.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class JobEnv {
 
-	private Integer instanceId;
-	
-	private JobKey jobKey;
-	
-	private TaskKey taskKey;
-	
-	private Long shouldFireTime;
-	
-	private Long prevFireTime;
-	
-	private String parameter;
-
-	private ScheduleType scheduleType;
-	
-	private String assignee;
 	
 	private Integer workflowInstanceId;
 	
