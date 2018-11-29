@@ -18,6 +18,7 @@ import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -40,6 +41,12 @@ public class JobController {
 			return ServiceResult.failure("任务不存在");
 		}
 		return ServiceResult.success(job);
+	}
+	
+	@ApiOperation("获取任务信息")
+	@GetMapping("/job/runtime")
+	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
+		return ServiceResult.failure("not supported yet.");
 	}
 	
 	@ApiOperation("查询任务，分页")

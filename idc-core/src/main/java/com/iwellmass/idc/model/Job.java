@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +31,7 @@ public class Job {
 	private String jobGroup;
 	
 	@Column(name = "job_name", length = 50)
+	@ApiModelProperty("任务名称")
 	private String jobName;
 	
 	@ApiModelProperty("责任人")
