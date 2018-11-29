@@ -44,7 +44,7 @@ public class JobController {
 	}
 	
 	@ApiOperation("获取任务信息")
-	@GetMapping("/job/runtime")
+	@GetMapping("/runtime")
 	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
 		return ServiceResult.failure("not supported yet.");
 	}
