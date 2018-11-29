@@ -16,7 +16,7 @@ import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.WorkflowService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobRuntime;
+import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 
@@ -49,7 +49,7 @@ public class IDCWorkflowJob implements org.quartz.Job {
 				job.setUpdateTime(null);
 				
 				// 构建 runtime 信息
-				JobRuntime jr = new JobRuntime();
+				JobEnv jr = new JobEnv();
 				jr.setParameter(jobInstance.getParameter());
 				jr.setShouldFireTime(jobInstance.getShouldFireTime());
 				jr.setWorkflowInstanceId(jobInstance.getInstanceId());

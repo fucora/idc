@@ -35,7 +35,7 @@ import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.JobRuntime;
+import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -124,7 +124,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					/////////////////////////////////////// BEGIN check
 					// check barrier
 					////////////////
-					JobRuntime jr = initJobRuntime(nextTrigger);                    
+					JobEnv jr = initJobRuntime(nextTrigger);                    
 					Task task = taskService.getTask(jr.getTaskKey());
 					List<JobBarrier> barriers = computeBarriers(conn, task, jr);
 					// clear first
@@ -178,7 +178,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	}
 	
 	
-	private JobInstance storeJobInstance(Connection conn, JobRuntime jr, Task task) throws JobPersistenceException, SQLException {
+	private JobInstance storeJobInstance(Connection conn, JobEnv jr, Task task) throws JobPersistenceException, SQLException {
 		
 		JobInstance jobInstance = new JobInstance();
 		// ~~ 基本信息 ~~
@@ -214,11 +214,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		return idcDriverDelegate.insertJobInstance(conn, jobInstance);
 	}
 	
-	private JobRuntime initJobRuntime(OperableTrigger trigger) {
+	private JobEnv initJobRuntime(OperableTrigger trigger) {
 		Job job = JSON.parseObject(JOB_JSON.applyGet(trigger.getJobDataMap()), Job.class);
-		JobRuntime jr = JSON.parseObject(JOB_RUNTIME.applyGet(trigger.getJobDataMap()), JobRuntime.class);
+		JobEnv jr = JSON.parseObject(JOB_RUNTIME.applyGet(trigger.getJobDataMap()), JobEnv.class);
 		if (jr == null) {
-			jr = new JobRuntime();
+			jr = new JobEnv();
 		}
 		// job key
 		if (jr.getJobKey() == null) {
@@ -264,7 +264,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		return barrier;
 	}
 	
-	private List<JobBarrier> computeBarriers(Connection conn, Task task, JobRuntime jr) throws SQLException {
+	private List<JobBarrier> computeBarriers(Connection conn, Task task, JobEnv jr) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
 		if (task.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {

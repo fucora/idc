@@ -48,7 +48,7 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.JobRuntime;
+import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
@@ -145,7 +145,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	/** 调度子任务 */
-	public void scheduleSubTask(Task task, Job mainJob, JobRuntime jrt) throws SchedulerException {
+	public void scheduleSubTask(Task task, Job mainJob, JobEnv jrt) throws SchedulerException {
 		Job subJob = new Job();
 		subJob.setJobKey(aquireSubJobKey(task, mainJob));
 		subJob.setJobName(task.getTaskName());
@@ -167,7 +167,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
 	}
 	
-	void schedule(Task task, Job job, JobRuntime jrt) throws SchedulerException {
+	void schedule(Task task, Job job, JobEnv jrt) throws SchedulerException {
 		// build Task
 		JobDetail jobDetail = buildJobDetail(task);
 				

@@ -3,7 +3,7 @@ package com.iwellmass.idc.model;
 import lombok.Data;
 
 @Data
-public class JobRuntime {
+public class JobEnv {
 
 	private Integer instanceId;
 	
