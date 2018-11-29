@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.sql.DataSource;
 
@@ -19,24 +20,49 @@ import org.quartz.utils.DBConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.idc.TaskService;
+import com.iwellmass.idc.WorkflowService;
+
+import lombok.Setter;
+
 /**
  * 创建 Scheduler 单例
  */
 public final class IDCSchedulerFactory {
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCSchedulerFactory.class);
-	
+
 	private static final String SCHED_ID = "IDC";
 	private static final String SCHED_NAME = "IDCScheduler";
-	
+
 	private boolean inited = false;
 
 	private int threadCount = 4;
+
+	// ~~ Components ~~
+	@Setter
 	private DataSource dataSource;
 	
+	@Setter
+	private IDCPlugin plugin;
+	
+	@Setter
+	private IDCDriverDelegate driverDelegate;
+	
+	@Setter
+	private WorkflowService workflowService;
+	
+	@Setter
+	private TaskService taskService;
+
 	public Scheduler getScheduler() throws SchedulerException {
 		if (!inited) {
 			LOGGER.info("创建 {}...", SCHED_NAME);
+
+			Objects.requireNonNull(plugin);
+			Objects.requireNonNull(dataSource);
+			Objects.requireNonNull(driverDelegate);
+
 			// threadPool
 			SimpleThreadPool threadPool = new SimpleThreadPool();
 			threadPool.setInstanceId(SCHED_ID);
@@ -56,39 +82,34 @@ public final class IDCSchedulerFactory {
 		}
 		return DirectSchedulerFactory.getInstance().getScheduler(SCHED_NAME);
 	}
-	
+
 	private void createScheduler(ThreadPool threadPool) throws SchedulerException {
-		
+
 		String dsName = "idc";
-		
+
 		// db
 		DBConnectionManager.getInstance().addConnectionProvider(dsName, new SimpleConnectionProvider());
-		
+
 		// JobStroe
-		IDCJobStore jobStore = new IDCJobStore();
+		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, workflowService);
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);
+
 		try {
-			jobStore.setDriverDelegateClass(IDCDriverDelegate.class.getName());
+			jobStore.setDriverDelegateClass(IDCStdJDBCDelegate.class.getName());
 		} catch (InvalidConfigurationException e) {
 			throw new SchedulerException("初始化 JobStore 时出错", e);
 		}
-		
+
 		// IDCPlugin
+		plugin.initialize(jobStore, workflowService, taskService);
 		Map<String, SchedulerPlugin> schedulerPluginMap = new HashMap<>();
-		schedulerPluginMap.put(IDCPlugin.class.getSimpleName(), new IDCPlugin(jobStore));
-		DirectSchedulerFactory.getInstance().createScheduler(SCHED_NAME, SCHED_ID, threadPool, jobStore, schedulerPluginMap, null, 0, -1, -1, false, null);
-	}
-	
-	public DataSource getDataSource() {
-		return dataSource;
+		schedulerPluginMap.put(IDCPlugin.class.getSimpleName(), plugin);
+		DirectSchedulerFactory.getInstance().createScheduler(SCHED_NAME, SCHED_ID, threadPool, jobStore,
+				schedulerPluginMap, null, 0, -1, -1, false, null);
 	}
 
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
-	
 	public int getThreadCount() {
 		return threadCount;
 	}
@@ -112,4 +133,5 @@ public final class IDCSchedulerFactory {
 		public void initialize() throws SQLException {
 		}
 	}
+
 }

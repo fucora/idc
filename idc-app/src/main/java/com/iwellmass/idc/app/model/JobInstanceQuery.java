@@ -10,7 +10,7 @@ import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.In;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.criteria.SpecificationBuilder;
-import com.iwellmass.idc.model.JobInstanceType;
+import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -31,7 +31,7 @@ public class JobInstanceQuery implements SpecificationBuilder {
 
 	@ApiModelProperty("实例类型")
 	@Equal
-	private JobInstanceType instanceType;
+	private DispatchType instanceType;
 
 	@ApiModelProperty("节点类型")
 	@In("taskType")
@@ -143,11 +143,11 @@ public class JobInstanceQuery implements SpecificationBuilder {
 		this.executeTimeTo = executeTimeTo;
 	}
 
-	public JobInstanceType getInstanceType() {
+	public DispatchType getInstanceType() {
 		return instanceType;
 	}
 
-	public void setInstanceType(JobInstanceType instanceType) {
+	public void setInstanceType(DispatchType instanceType) {
 		this.instanceType = instanceType;
 	}
 

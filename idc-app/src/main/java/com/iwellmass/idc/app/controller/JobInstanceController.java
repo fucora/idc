@@ -19,9 +19,9 @@ import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
+import com.iwellmass.idc.app.service.JobInstanceService;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.service.JobInstanceService;
 
 import io.swagger.annotations.ApiOperation;
 

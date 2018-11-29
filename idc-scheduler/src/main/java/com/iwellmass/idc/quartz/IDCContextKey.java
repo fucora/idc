@@ -1,13 +1,16 @@
 package com.iwellmass.idc.quartz;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.iwellmass.idc.model.DispatchType;
+import org.quartz.JobExecutionContext;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerContext;
+import org.quartz.SchedulerException;
+
+import com.iwellmass.idc.ParameterParser;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCContextKey<T> {
 
@@ -16,30 +19,20 @@ public class IDCContextKey<T> {
 	// NULL_VALUE
 	private static final Object NIL = new Object();
 
-	// ~~ 调度器 ~~
+	// ~~ scheduler ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
-
+	
 	// ~~ JOB ~~
+	public static final IDCContextKey<String> JOB_JSON = defOpt("idc.job.json", String.class, null);
+	public static final IDCContextKey<String> JOB_RUNTIME = defOpt("idc.job.jobRuntime", String.class, null);
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
-	/** JobName */
-	public static final IDCContextKey<String> JOB_ID = defReq("idc.job.id", String.class);
-	/** JobGroup */
-	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
-	/** 调度类型 */
-	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
-	/** 自动调度 OR 手动调度*/
-	public static final IDCContextKey<DispatchType> JOB_DISPATCH_TYPE = defReq("idc.job.dispatchType", DispatchType.class);
-
-	// ~~ runtime ~~
-	/** 实例 ID */
-	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = defReq("idc.context.instanceId", Integer.class);
-	/** 获取业务日期 */
-	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = defReq("idc.context.loadDate", LocalDateTime.class);
-	/** 实例对象 */
+	/** 参数解析 */
+	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
+	
+	// ~~ Context ~~
+	/** 任务实例 */
 	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
-	/** 运行时参数 */
-	public static final IDCContextKey<String> CONTEXT_PARAMETER = defOpt("idc.context.parameter", String.class, null);
-
+	
 	private String key;
 	private Class<T> type;
 	private Object defaultValue = NIL;
@@ -58,27 +51,63 @@ public class IDCContextKey<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public T applyGet(Scheduler scheduler) {
+		SchedulerContext context;
+		try {
+			context = scheduler.getContext();
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		Object o = context.get(this.key);
+		if (o == null) {
+			if (defaultValue != NIL) {
+				return (T) defaultValue;
+			}
+			throw new NullPointerException("未设置 " + this.key + " 值");
+		}
+		return (T) o;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public T applyGet(Map<String, Object> jobDataMap) {
 		Object o = jobDataMap.get(this.key);
-		return (T) get0(o, true);
+		if (o == null) {
+			if (defaultValue != NIL) {
+				return (T) defaultValue;
+			}
+			throw new NullPointerException("未设置 " + this.key + " 值");
+		}
+		return (T) o;
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	public T applyGet(JobExecutionContext context) {
+		Object o = context.get(this.key);
+		if (o == null) {
+			if (defaultValue != NIL) {
+				return (T) defaultValue;
+			}
+			throw new NullPointerException("未设置 " + this.key + " 值");
+		}
+		return (T) o;
+	}
+	
+	public final void applyPut(Scheduler scheduler, T v) {
+		SchedulerContext context;
+		try {
+			context = scheduler.getContext();
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		context.put(this.key, v);
+	}
+	
 	public final void applyPut(Map<String, Object> map, T v) {
 		map.put(this.key, v);
 	}
-
-	private Object get0(Object o, boolean required) {
-		if (o == null) {
-			if (defaultValue != NIL) {
-				return defaultValue;
-			}
-			if (required) {
-				throw new NullPointerException("未设置 " + this.key + " 值");
-			} else {
-				return NIL;
-			}
-		}
-		return o;
+	
+	public final void applyPut(JobExecutionContext context, T v) {
+		context.put(this.key, v);
 	}
 
 	/** define required key-value */
@@ -99,5 +128,4 @@ public class IDCContextKey<T> {
 	public static final Collection<IDCContextKey<?>> keys() {
 		return cache.values();
 	}
-
 }

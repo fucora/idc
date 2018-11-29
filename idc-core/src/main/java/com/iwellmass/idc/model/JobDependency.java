@@ -2,102 +2,42 @@ package com.iwellmass.idc.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import io.swagger.annotations.ApiOperation;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "t_idc_dependency")
-@IdClass(JobDependencyPK.class)
 public class JobDependency {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Integer id;
+
+	@Column(name = "src_job_id", length = 50)
 	private String srcJobId;
 
+	@Column(name = "src_job_group", length = 50)
 	private String srcJobGroup;
 
+	@Column(name = "job_id")
 	private String jobId;
 
+	@Column(name = "job_group")
 	private String jobGroup;
 
-	@Id
-	@Column(name = "src_job_id", length = 50)
-	public String getSrcJobId() {
-		return srcJobId;
-	}
-
-	public void setSrcJobId(String srcJobId) {
-		this.srcJobId = srcJobId;
-	}
-
-	@Id
-	@Column(name = "src_job_group", length = 50)
-	public String getSrcJobGroup() {
-		return srcJobGroup;
-	}
-
-	public void setSrcJobGroup(String srcJobGroup) {
-		this.srcJobGroup = srcJobGroup;
-	}
-
-	@Id
-	@Column(name = "job_id", length = 50)
-	@ApiOperation("依赖的 taskId")
-	public String getJobId() {
-		return jobId;
-	}
-
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
-	}
-
-	@Id
-	@Column(name = "job_group", length = 50)
-	@ApiOperation("依赖的 groupId")
-	public String getJobGroup() {
-		return jobGroup;
-	}
-
-	public void setJobGroup(String jobGroup) {
-		this.jobGroup = jobGroup;
+	@Transient
+	public JobKey getSrcJobKey() {
+		return new JobKey(srcJobId, srcJobGroup);
 	}
 
 	@Transient
-	public String getSrcTaskId() {
-		return this.getSrcJobId();
+	public JobKey getDependencyJobKey() {
+		return new JobKey(jobId, jobGroup);
 	}
-
-	public void setSrcTaskId(String srcTaskId) {
-		this.setSrcJobId(srcTaskId);
-	}
-
-	@Transient
-	public String getSrcGroupId() {
-		return this.getSrcJobGroup();
-	}
-
-	public void setSrcGroupId(String srcGroupId) {
-		this.setSrcJobGroup(srcGroupId);
-	}
-
-	@Transient
-	public String getTaskId() {
-		return this.getJobId();
-	}
-
-	public void setTaskId(String taskId) {
-		this.setJobId(taskId);
-	}
-
-	@Transient
-	public String getGroupId() {
-		return this.getJobGroup();
-	}
-
-	public void setGroupId(String groupId) {
-		this.setJobGroup(groupId);
-	}
-
 }

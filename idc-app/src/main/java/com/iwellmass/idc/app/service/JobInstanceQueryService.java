@@ -17,8 +17,8 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
+import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.repo.JobInstanceRepository;
 
 @Service
 public class JobInstanceQueryService {
