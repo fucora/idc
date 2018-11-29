@@ -20,16 +20,17 @@ import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.model.Task;
 
 import io.swagger.annotations.ApiOperation;
 
 @RestController
-@RequestMapping("/job/v2")
+@RequestMapping("/job")
 public class JobController {
 	
 	@Inject
 	private JobService jobService;
-	
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping
@@ -57,8 +58,8 @@ public class JobController {
 
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
-	public ServiceResult<String> schedule(@RequestBody Job job) {
-		jobService.schedule(job);
+	public ServiceResult<String> schedule(@RequestBody Task task, @RequestBody ScheduleProperties sp) {
+		jobService.schedule(task, sp);
 		return ServiceResult.success("提交成功");
 	}
 	

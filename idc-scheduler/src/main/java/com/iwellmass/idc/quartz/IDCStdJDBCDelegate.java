@@ -22,13 +22,13 @@ public class IDCStdJDBCDelegate extends StdJDBCDelegate implements IDCConstants 
 	        + "T." + COL_TRIGGER_NAME + ", T." + COL_TRIGGER_GROUP + ", "
 	        + "T." + COL_NEXT_FIRE_TIME + ", T." + COL_PRIORITY + " FROM "
 	        + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " T"
-	        + " LEFT JOIN " + TABLE_PREFIX_SUBST + TABLE_BARRIER + " B ON T." + COL_TRIGGER_NAME + " = B." + COL_TRIGGER_NAME
-	        + " AND T." + COL_TRIGGER_GROUP + " = B." + COL_TRIGGER_GROUP + " AND B." + COL_BARRIER_STATE + " = " + BarrierState.VALID.ordinal()
+	        + " LEFT JOIN " + TABLE_BARRIER + " B ON T." + COL_TRIGGER_NAME + " = B." + COL_IDC_JOB_NAME
+	        + " AND T." + COL_TRIGGER_GROUP + " = B." + COL_IDC_JOB_GROUP + " AND B." + COL_BARRIER_STATE + " = " + BarrierState.VALID.ordinal()
 	        + " WHERE "
 	        + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
 	        + " AND " + COL_TRIGGER_STATE + " = ? AND " + COL_NEXT_FIRE_TIME + " <= ? " 
 	        + "AND (" + COL_MISFIRE_INSTRUCTION + " = -1 OR (" +COL_MISFIRE_INSTRUCTION+ " != -1 AND "+ COL_NEXT_FIRE_TIME + " >= ?)) "
-	        + "AND B." + COL_TRIGGER_NAME + " IS NULL "
+	        + "AND B." + COL_IDC_JOB_NAME + " IS NULL "
 	        + "ORDER BY "+ COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
     
     /* WAITING --> ACQUIRED */

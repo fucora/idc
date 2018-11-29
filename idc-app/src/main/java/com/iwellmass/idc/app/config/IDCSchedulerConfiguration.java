@@ -21,8 +21,8 @@ import com.iwellmass.idc.quartz.IDCDriverDelegate;
 import com.iwellmass.idc.quartz.IDCPlugin;
 import com.iwellmass.idc.quartz.IDCSchedulerFactory;
 
-@Configuration
-@ComponentScan
+//@Configuration
+//@ComponentScan
 public class IDCSchedulerConfiguration implements ApplicationListener<ContextRefreshedEvent> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCSchedulerConfiguration.class);

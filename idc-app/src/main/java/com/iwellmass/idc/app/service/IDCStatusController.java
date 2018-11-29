@@ -41,17 +41,16 @@ public class IDCStatusController {
 	public void fireStartEvent(@RequestBody StartEvent event) {
 		idcPlugin.getStatusService().fireStartEvent(event);
 	}
-
 	
 	@ApiOperation("获取任务信息")
 	@GetMapping("/schedule-properties")
 	public ScheduleProperties getScheduleProperties(TaskKey taskKey) {
-		JobKey jobPK = new JobKey(taskKey.getTaskId(), taskKey.getGroupId());
+		JobKey jobPK = new JobKey(taskKey.getTaskId(), taskKey.getTaskGroup());
 		Job job = jobService.findJob(jobPK);
 		if (job == null) {
 			return null;
 		}
-		return job.getScheduleProperties();
+		return null;
 	}
 	
 	@ExceptionHandler({ Throwable.class })

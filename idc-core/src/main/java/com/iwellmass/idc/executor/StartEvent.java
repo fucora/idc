@@ -45,4 +45,11 @@ public class StartEvent implements IDCJobEvent {
 		return this;
 	}
 
+	
+	public static StartEvent newEvent(Integer instanceId) {
+		StartEvent event = new StartEvent();
+		event.setInstanceId(instanceId);
+		event.startTime = LocalDateTime.now();
+		return event;
+	}
 }

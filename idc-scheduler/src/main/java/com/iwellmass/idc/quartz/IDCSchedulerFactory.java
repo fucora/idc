@@ -20,7 +20,8 @@ import org.quartz.utils.DBConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.dag.WorkflowService;
+import com.iwellmass.idc.TaskService;
+import com.iwellmass.idc.WorkflowService;
 
 import lombok.Setter;
 
@@ -43,13 +44,16 @@ public final class IDCSchedulerFactory {
 	private DataSource dataSource;
 	
 	@Setter
-	private IDCDriverDelegate driverDelegate;
-	
-	@Setter
 	private IDCPlugin plugin;
 	
 	@Setter
+	private IDCDriverDelegate driverDelegate;
+	
+	@Setter
 	private WorkflowService workflowService;
+	
+	@Setter
+	private TaskService taskService;
 
 	public Scheduler getScheduler() throws SchedulerException {
 		if (!inited) {
@@ -87,7 +91,7 @@ public final class IDCSchedulerFactory {
 		DBConnectionManager.getInstance().addConnectionProvider(dsName, new SimpleConnectionProvider());
 
 		// JobStroe
-		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate);
+		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, workflowService);
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);
@@ -99,8 +103,7 @@ public final class IDCSchedulerFactory {
 		}
 
 		// IDCPlugin
-		plugin.initialize(jobStore);
-		plugin.setWorkflowService(workflowService);
+		plugin.initialize(jobStore, workflowService, taskService);
 		Map<String, SchedulerPlugin> schedulerPluginMap = new HashMap<>();
 		schedulerPluginMap.put(IDCPlugin.class.getSimpleName(), plugin);
 		DirectSchedulerFactory.getInstance().createScheduler(SCHED_NAME, SCHED_ID, threadPool, jobStore,

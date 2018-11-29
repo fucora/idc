@@ -11,7 +11,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.alibaba.fastjson.JSON;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -31,7 +30,7 @@ public class JobInstance {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer instanceId;
 	
-	// ~~ 调度相关 ~~
+	// ~~ 调度相关（主） ~~
 	@Column(name = "job_id")
 	private String jobId;
 
@@ -43,12 +42,20 @@ public class JobInstance {
 
 	@ApiModelProperty("业务日期")
 	@Column(name = "load_date")
-	@JsonFormat(pattern = "yyyyMMddHHmmss", timezone = "GMT+8")
-	private LocalDateTime loadDate;
+	private String loadDate;
 
 	@ApiModelProperty("参数设置")
 	@Column(name = "parameter", length = 4000)
 	private String parameter;
+	
+	@ApiModelProperty("工作流ID")
+	@Column(name = "workflow_id")
+	private Integer workflowId;
+	
+	// ~~ 调度相关（子）~~
+	@ApiModelProperty("父实例ID")
+	@Column(name = "workflow_instance_id;")
+	private Integer workflowInstanceId;
 	
 	// ~~ 任务相关 ~~
 	@ApiModelProperty("任务 ID")
@@ -71,10 +78,6 @@ public class JobInstance {
 	@ApiModelProperty("ContentType")
 	@Column(name = "content_type")
 	private String contentType;
-
-	@ApiModelProperty("工作流ID")
-	@Column(name = "workflow_id")
-	private Integer workflowId;
 
 	@ApiModelProperty("责任人")
 	@Column(name = "assignee")

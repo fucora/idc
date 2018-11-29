@@ -18,7 +18,7 @@ import com.iwellmass.common.exception.AppException;
 @EnableFeignClients
 @Configuration
 @EnableResourceServer
-@EnableJpaRepositories("com.iwellmass.idc.repo")
+@EnableJpaRepositories("com.iwellmass.idc.app.repo")
 @EntityScan("com.iwellmass.idc.model")
 public class IDCApplication {
 	

@@ -1,10 +1,6 @@
 package com.iwellmass.idc.app.service;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE_ID;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_GROUP;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ID;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_SCHEDULE_TYPE;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,7 +53,7 @@ public class JobInstanceService {
 	@Inject
 	private ExecutionLogRepository logRepository;
 
-	@Inject
+//	@Inject
 	private Scheduler scheduler;
 
 	public void redo(RedoRequest request) {
@@ -80,10 +76,6 @@ public class JobInstanceService {
 			
 			JobDataMap jdm = trigger.getJobDataMap();
 			JOB_REOD.applyPut(jdm, true);
-			JOB_ID.applyPut(jdm, instance.getJobId());
-			JOB_GROUP.applyPut(jdm, instance.getJobGroup());
-			JOB_SCHEDULE_TYPE.applyPut(jdm, instance.getScheduleType());
-			CONTEXT_INSTANCE_ID.applyPut(jdm, instanceId);
 			
 			scheduler.scheduleJob(trigger);
 		} catch (SchedulerException e) {
@@ -105,7 +97,7 @@ public class JobInstanceService {
 				.setInstanceId(instanceId)
 				.setEndTime(LocalDateTime.now());
 			plugin.getStatusService().fireCompleteEvent(event);
-			scheduler.resetTriggerFromErrorState(IDCUtils.asTriggerKey(instance.getJobKey()));
+			scheduler.resetTriggerFromErrorState(IDCUtils.toTriggerKey(instance.getJobKey()));
 		} catch (SchedulerException e) {
 			throw new AppException("强制结束任务时出错: " + e.getMessage());
 		}

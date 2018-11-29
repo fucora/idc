@@ -1,8 +1,5 @@
 package com.iwellmass.idc.app.service;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,8 +23,6 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.common.util.Utils;
-import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
@@ -37,10 +32,9 @@ import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -51,16 +45,15 @@ public class JobService {
 	@Inject
 	private JobRepository jobRepository;
 
-	@Inject
+//	@Inject
 	private IDCPlugin idcPlugin;
 
-	@Inject
+//	@Inject
 	private Scheduler scheduler;
 
-	@Transactional
-	public void schedule(Job job) throws AppException {
+	public void schedule(Task task, ScheduleProperties schdProps) {
 		try {
-			idcPlugin.schedule(job);
+			idcPlugin.schedule(task, schdProps);
 		} catch (SchedulerException e) {
 			throw new AppException("调度失败: " + e.getMessage(), e);
 		}
@@ -141,7 +134,6 @@ public class JobService {
 			Assert.isTrue(job != null, "调度任务 %s 不存在", jobKey);
 			scheduler.resumeTrigger(tk);
 			TriggerState state = scheduler.getTriggerState(tk);
-			job.setStatus(ScheduleStatus.values()[state.ordinal()]);
 			jobRepository.save(job);
 		} catch (SchedulerException e) {
 			throw new AppException("无法恢复此任务");
@@ -153,8 +145,6 @@ public class JobService {
 			Job job = jobRepository.findOne(request);
 			
 			JobDataMap jobData = new JobDataMap();
-			IDCContextKey.JOB_SHOULD_FIRETIME.applyPut(jobData, IDCUtils.toEpochMilli(request.getShouldFireTime()));
-			IDCContextKey.CONTEXT_PARAMETER.applyPut(jobData, request.getJobParameter());
 			
 			idcPlugin.reschedule(job, jobData);
 		} catch (SchedulerException e) {
@@ -199,32 +189,6 @@ public class JobService {
 		}*/
 		
 		
-	}
-
-	public static String toCronExpression(ScheduleProperties scheduleProperties) {
-		LocalTime duetime = LocalTime.parse(scheduleProperties.getDuetime(), DateTimeFormatter.ISO_TIME);
-		switch (scheduleProperties.getScheduleType()) {
-		case MONTHLY: {
-			List<Integer> days = scheduleProperties.getDays();
-			Assert.isFalse(Utils.isNullOrEmpty(days), "月调度配置不能为空");
-			
-			boolean isLast = days.stream().filter(i -> i < 0).count() == 1;
-			if(isLast && days.size() > 1) {
-				throw new AppException("最后 T 天不能使用组合配置模式");
-			};
-			
-			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
-				isLast ? days.get(0) == -1 ? "L" : "L" + (days.get(0) + 1)
-					: String.join(",", days.stream().map(String::valueOf).collect(Collectors.toList())));
-		}
-		case WEEKLY: {
-			throw new UnsupportedOperationException("not supported yet");
-		}
-		case DAILY:
-			return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
-		default:
-			throw new AppException("未指定周期调度类型, 接收的周期调度类型" + Arrays.asList(ScheduleType.values()));
-		}
 	}
 
 	public void complement(ComplementRequest request) {
@@ -278,14 +242,14 @@ public class JobService {
 		Specification<Job> spec = (root, cq, cb) -> {
 			return cb.and(
 					cb.equal(root.get("scheduleType"), scheduleType),
-					root.get("taskType").in(TaskType.WORKFLOW, TaskType.NODE_TASK)
+					root.get("taskType").in(TaskType.WORKFLOW_TASK, TaskType.NODE_TASK)
 			);
 		};
 		return jobRepository.findAll(spec);
 	}
 
 	public List<Job> getWorkflowJob() {
-		return jobRepository.findByTaskType(TaskType.WORKFLOW);
+		return jobRepository.findByTaskType(TaskType.WORKFLOW_TASK);
 	}
 
 	public List<Job> getWorkflowJob(JobKey jobKey) {
@@ -307,12 +271,13 @@ public class JobService {
 	}
 
 	public Job findJob(JobKey jobKey) {
-		Job job = jobRepository.findOne(jobKey);
+		/*Job job = jobRepository.findOne(jobKey);
 		if (job != null) {
-			List<Job> depJobs = dependencyRepository.findDependencies(job.getTaskId(), job.getGroupId());
+			List<Job> depJobs = dependencyRepository.findDependencies(job.getTaskId(), job.getTaskGroup());
 			// job.setDependencies(dependencies);
 		}
-		return job;
+		return job;*/
+		return null;
 	}
 
 

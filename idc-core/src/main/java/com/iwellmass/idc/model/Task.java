@@ -1,14 +1,24 @@
 package com.iwellmass.idc.model;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Table;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
+@Entity
+@IdClass(TaskKey.class)
+@Table(name = "t_idc_task")
 public class Task {
 
+	@Id
 	@ApiModelProperty("业务ID")
 	private String taskId;
 
+	@Id
 	@ApiModelProperty("业务域")
 	private String taskGroup;
 
@@ -32,10 +42,10 @@ public class Task {
 
 	public TaskKey getTaskKey() {
 		return new TaskKey(getTaskId(), getTaskGroup());
-	};
+	}
 	
 	public void setTaskKey(TaskKey taskKey) {
 		setTaskId(taskKey.getTaskId());
-		setTaskGroup(taskKey.getGroupId());
+		setTaskGroup(taskKey.getTaskGroup());
 	};
 }

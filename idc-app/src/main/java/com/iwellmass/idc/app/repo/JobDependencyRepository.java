@@ -7,15 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobKey;
 
 @Repository
 public interface JobDependencyRepository extends CrudRepository<JobDependency, Integer>{
 
-	@Query("SELECT J FROM JobDependency D LEFT JOIN Job J ON D.barrierId = J.taskId AND D.barrierGroup = J.taskGroup WHERE D.srcJobId = ?1 AND D.srcJobGroup = ?2")
-	List<Job> findDependencies(String jobId, String jobGroup);
+	@Query("SELECT D FROM JobDependency D WHERE D.srcJobId = ?1 AND D.srcJobGroup = ?2")
+	List<JobDependency> findDependencies(String jobId, String jobGroup);
 
 	
 	@Query("SELECT D FROM JobDependency D")

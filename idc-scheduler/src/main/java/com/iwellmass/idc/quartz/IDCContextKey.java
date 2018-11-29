@@ -1,6 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,10 +10,7 @@ import org.quartz.SchedulerContext;
 import org.quartz.SchedulerException;
 
 import com.iwellmass.idc.ParameterParser;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.ScheduleEnv;
-import com.iwellmass.idc.model.ScheduleType;
 
 public class IDCContextKey<T> {
 
@@ -23,46 +19,20 @@ public class IDCContextKey<T> {
 	// NULL_VALUE
 	private static final Object NIL = new Object();
 
-	// ~~ 调度器 ~~
+	// ~~ scheduler ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 	
-	// ~~ TASK ~~
-	public static final IDCContextKey<String> TASK_JSON = defOpt("idc.task.json", String.class, null);
-	
 	// ~~ JOB ~~
-	/** Job JSON */
-	public static final IDCContextKey<String> JOB_SCHEDULE_PROPERTIES = defOpt("idc.job.scheduleProperties", String.class, null);
-	public static final IDCContextKey<String> JOB_SCHEDULE_ENV = defOpt("idc.job.scheduleEnv", String.class, null);
-	
-	public static final IDCContextKey<Boolean> JOB_ASYNC = defOpt("idc.job.async", Boolean.class, Boolean.TRUE);
-	
-	public static final IDCContextKey<Long> JOB_SHOULD_FIRETIME = defReq("idc.job.shouldFireTime", Long.class);
-	
-	
+	public static final IDCContextKey<String> JOB_JSON = defOpt("idc.job.json", String.class, null);
+	public static final IDCContextKey<String> JOB_RUNTIME = defOpt("idc.job.jobRuntime", String.class, null);
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
-	/** JobName */
-	public static final IDCContextKey<String> JOB_ID = defReq("idc.job.id", String.class);
-	/** JobGroup */
-	public static final IDCContextKey<String> JOB_GROUP = defReq("idc.job.jobGroup", String.class);
-	/** 调度类型（日、月、周、年） */
-	public static final IDCContextKey<ScheduleType> JOB_SCHEDULE_TYPE = defReq("idc.job.scheduleType", ScheduleType.class);
 	/** 参数解析 */
 	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
 	
-	/** 任务 */
-	public static final IDCContextKey<Job> CONTEXT_JOB = defReq("idc.context.job", Job.class);
+	// ~~ Context ~~
 	/** 任务实例 */
 	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
 	
-	
-	// ~~ runtime ~~
-	/** 实例 ID */
-	public static final IDCContextKey<Integer> CONTEXT_INSTANCE_ID = defReq("idc.context.instanceId", Integer.class);
-	/** 获取业务日期 */
-	public static final IDCContextKey<LocalDateTime> CONTEXT_LOAD_DATE = defReq("idc.context.loadDate", LocalDateTime.class);
-	/** 运行时参数 */
-	public static final IDCContextKey<String> CONTEXT_PARAMETER = defOpt("idc.context.parameter", String.class, null);
-
 	private String key;
 	private Class<T> type;
 	private Object defaultValue = NIL;
@@ -121,9 +91,6 @@ public class IDCContextKey<T> {
 		}
 		return (T) o;
 	}
-	
-
-
 	
 	public final void applyPut(Scheduler scheduler, T v) {
 		SchedulerContext context;

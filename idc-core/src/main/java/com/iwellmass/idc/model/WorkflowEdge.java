@@ -1,26 +1,36 @@
 package com.iwellmass.idc.model;
 
+import java.io.Serializable;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 @Entity
-@Table(name = "t_idc_workflow")
-public class Workflow {
+@Table(name = "t_idc_workflow_edge")
+public class WorkflowEdge implements Serializable{
 	
+	private static final long serialVersionUID = 866853625098155270L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Integer id;
+	
 	private Integer workflowId;
+	
+	private String srcTaskId;
+	
+	private String srcTaskGroup;
 	
 	private String taskId;
 	
 	private String taskGroup;
 	
-	// 前端用，流程都画图
-	private String graph;
 }

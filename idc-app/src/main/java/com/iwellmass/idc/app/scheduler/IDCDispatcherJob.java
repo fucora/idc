@@ -29,7 +29,7 @@ public class IDCDispatcherJob implements org.quartz.Job {
 		IDCJobExecutorService executorService = executorFactory.getExecutor(jobInstance);
 		// 使用 eureka 来做 HA & balance
 		try {
-			String loadDate = jobInstance.getScheduleType().format(jobInstance.getLoadDate());
+			String loadDate = jobInstance.getLoadDate();
 			LOGGER.info("派发任务 {}_{}, 实例 ID {}", jobInstance.getJobKey(), loadDate, jobInstance.getInstanceId());
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("instance -> {}", JSON.toJSONString(jobInstance));

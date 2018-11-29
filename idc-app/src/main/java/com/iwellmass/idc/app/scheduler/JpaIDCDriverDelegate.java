@@ -17,8 +17,11 @@ import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.PluginVersionRepository;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
+import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
 
 @Component
@@ -39,15 +42,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Inject
 	private PluginVersionRepository pluginRepo; 
 
-	@Override
-	public Job insertJob(Connection conn, Job job) throws SQLException {
-		return jobRepo.save(job);
-	}
-
-	@Override
-	public Job selectJob(Connection conn, JobKey jobKey) throws SQLException {
-		return jobRepo.findOne(jobKey);
-	}
 
 	@Transactional
 	public JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func)
@@ -73,11 +67,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	}
 
 	@Override
-	public List<Job> selectJobDependencies(Connection conn, Job idcJob) throws SQLException {
-		return dependencyRepo.findDependencies(idcJob.getTaskId(), idcJob.getGroupId());
-	}
-
-	@Override
 	public void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException {
 		barrierRepo.save(barriers);
 	}
@@ -89,13 +78,23 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	}
 
 	@Override
-	public void clearJobBarrier(Connection conn, String jobId, String jobGroup) throws SQLException {
-		barrierRepo.clearJobBarrier(jobId, jobGroup);
+	public Integer nextInstanceId() {
+		return pluginRepo.increaseInstanceSeqAndGet();
 	}
 
 	@Override
-	public Integer nextInstanceId() {
-		return pluginRepo.increaseInstanceSeqAndGet();
+	public void clearJobBarrier(Connection conn) throws SQLException {
+		barrierRepo.deleteAll();
+	}
+
+	@Override
+	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
+		// todo
+	}
+
+	@Override
+	public List<JobDependency> selectJobDependencies(Connection conn, JobKey jobKey) throws SQLException {
+		return dependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
 }

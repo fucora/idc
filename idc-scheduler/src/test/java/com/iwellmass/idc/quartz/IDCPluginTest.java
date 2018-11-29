@@ -7,18 +7,16 @@ import java.util.Arrays;
 
 import javax.sql.DataSource;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-import com.iwellmass.idc.dag.WorkflowService;
-import com.iwellmass.idc.executor.CompleteEvent;
+import com.iwellmass.idc.StdWorkflowService;
+import com.iwellmass.idc.WorkflowService;
+import com.iwellmass.idc.model.CronPicker;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
@@ -35,59 +33,15 @@ public class IDCPluginTest {
 	private static final LocalDateTime _9_1 = LocalDateTime.of(LocalDate.of(2018, 9, 1), LocalTime.MIN);
 
 	@Test
-	public void testSimpleSchedule() throws Exception {
-		
-		IDCPlugin plugin = new SimpleIDCPlugin();
-		
-		SimpleWorkflowService sws = new SimpleWorkflowService();
-		
-		IDCSchedulerFactory factory = new IDCSchedulerFactory();
-		factory.setPlugin(plugin);
-		factory.setWorkflowService(sws);
-		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
-		factory.setDataSource(dataSource());
-		
-
-		Scheduler scheduler = factory.getScheduler();
-		scheduler.clear();
-		scheduler.start();
-		
-		ScheduleProperties sp = new ScheduleProperties();
-		sp.setScheduleType(ScheduleType.MONTHLY);
-		sp.setStartTime(_1_1);
-		sp.setEndTime(_9_1);
-		sp.setDays(Arrays.asList(-1));
-		sp.setDuetime("00:00:00");
-
-		// Job = JobDetails + Trigger
-		Task task = new Task();
-		task.setTaskKey(new TaskKey(lqd_01, group));
-		task.setTaskName("simple task");
-		task.setDispatchType(DispatchType.AUTO);
-		task.setWorkflowId(1);
-		task.setTaskType(TaskType.NODE_TASK);
-
-		plugin.schedule(task, sp);
-
-		scheduler.getTriggerState(new TriggerKey(lqd_01, group));
-		
-		Thread.sleep(500);
-		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent().setInstanceId(123));
-		
-		Thread.sleep(10 * 60 * 1000);
-
-	}
-	@Test
 	public void testWorkflowSchedule() throws Exception {
 		
 		IDCPlugin plugin = new SimpleIDCPlugin();
 		
-		SimpleWorkflowService sws = new SimpleWorkflowService();
-		
+		StdWorkflowService taskService = new StdWorkflowService();
 		
 		// 主任务
 		Task task = new Task();
-		task.setTaskKey(new TaskKey(lqd_02, group));
+		task.setTaskKey(new TaskKey(lqd_01, group));
 		task.setTaskName("工作流的任务");
 		task.setDispatchType(DispatchType.AUTO);
 		task.setTaskType(TaskType.WORKFLOW_TASK);
@@ -103,11 +57,21 @@ public class IDCPluginTest {
 		sub1.setContentType("simple-test");
 		sub1.setWorkflowId(1);
 		
-		sws.addTask(1, sub1, WorkflowService.START, WorkflowService.END);
+		Task sub2 = new Task();
+		sub2.setTaskKey(new TaskKey(lqd_02 + "_sub2", group));
+		sub2.setTaskName("sub2");
+		sub2.setDispatchType(DispatchType.AUTO);
+		sub2.setTaskType(TaskType.WORKFLOW_SUB_TASK);
+		sub2.setContentType("simple-test");
+		sub2.setWorkflowId(1);
+		
+		taskService.addTask(task, sub1, WorkflowService.START, sub2.getTaskKey());
+		taskService.addTask(task, sub2, sub1.getTaskKey(), WorkflowService.END);
+		
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);
-		factory.setWorkflowService(sws);
+		factory.setWorkflowService(taskService);
 		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
 		
@@ -115,17 +79,20 @@ public class IDCPluginTest {
 		scheduler.clear();
 		scheduler.start();
 		
+		CronPicker cronPicker = new CronPicker();
+		cronPicker.setDays(Arrays.asList(-1));
+		cronPicker.setDuetime(LocalTime.MIN);
 		
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.MONTHLY);
 		sp.setStartTime(_1_1);
 		sp.setEndTime(_9_1);
 		sp.setDays(Arrays.asList(-1));
-		sp.setDuetime("00:00:00");
-		
 		plugin.schedule(task, sp);
-		
 		scheduler.getTriggerState(new TriggerKey(lqd_02, group));
+		
+//		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent()
+//			.setInstanceId(1001));
 		
 		Thread.sleep(10 * 60 * 1000);
 		
