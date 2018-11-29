@@ -1,9 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
-import java.util.List;
-
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.Task;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -20,9 +17,7 @@ public class JobRuntimeVO {
 	@ApiModelProperty("调度信息")
 	private Job job;
 	
-	@ApiModelProperty("调度信息")
-	private ScheduleStatus status;
+	@ApiModelProperty("运行时信息")
+	private JobRuntime jobRuntime;
 	
-	@ApiModelProperty("依赖信息")
-	private List<JobBarrierVO> barriers;
 }

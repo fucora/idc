@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -33,6 +35,9 @@ public class JobController {
 	@Inject
 	private JobService jobService;
 	
+	@Inject
+	private TaskService taskService;
+	
 	@ApiOperation("获取任务信息")
 	@GetMapping
 	public ServiceResult<Job> getJob(JobKey jobKey) {
@@ -46,7 +51,17 @@ public class JobController {
 	@ApiOperation("获取任务信息")
 	@GetMapping("/runtime")
 	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
-		return ServiceResult.failure("not supported yet.");
+
+		JobRuntime jr = jobService.getJobRuntime(jobKey);
+		Job job = jobService.findJob(jobKey);
+		Task task = taskService.getTask(job.getTaskKey());
+		
+		JobRuntimeVO vo = new JobRuntimeVO();
+		vo.setJob(job);
+		vo.setTask(task);
+		vo.setJobRuntime(jr);
+		
+		return ServiceResult.success(vo);
 	}
 	
 	@ApiOperation("查询任务，分页")

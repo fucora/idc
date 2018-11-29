@@ -23,15 +23,19 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
+import com.iwellmass.idc.app.vo.JobBarrierVO;
+import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
@@ -45,11 +49,22 @@ public class JobService {
 	@Inject
 	private JobRepository jobRepository;
 
+	@Inject
+	private JobRuntimeMapper jobRuntimeMapper;
+	
 //	@Inject
 	private IDCPlugin idcPlugin;
 
 //	@Inject
 	private Scheduler scheduler;
+
+	public JobRuntime getJobRuntime(JobKey jobKey) {
+		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
+		JobRuntime jr = new JobRuntime();
+		jr.setBarriers(barriers);
+		jr.setStatus(ScheduleStatus.ERROR);
+		return  jr;
+	}
 
 	public void schedule(Task task, ScheduleProperties schdProps) {
 		try {
@@ -271,13 +286,7 @@ public class JobService {
 	}
 
 	public Job findJob(JobKey jobKey) {
-		/*Job job = jobRepository.findOne(jobKey);
-		if (job != null) {
-			List<Job> depJobs = dependencyRepository.findDependencies(job.getTaskId(), job.getTaskGroup());
-			// job.setDependencies(dependencies);
-		}
-		return job;*/
-		return null;
+		return jobRepository.findOne(jobKey);
 	}
 
 

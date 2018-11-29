@@ -30,12 +30,18 @@ public class JobBarrier implements Serializable {
 
 	@Column(name = "job_group")
 	private String jobGroup;
+	
+	@Column(name = "job_name")
+	private String jobName;
 
 	@Column(name = "barrier_id")
 	private String barrierId;
 
 	@Column(name = "barrier_group")
 	private String barrierGroup;
+	
+	@Column(name = "barrier_name")
+	private String barrierName;
 
 	@Column(name = "barrier_should_fire_time")
 	private Long barrierShouldFireTime;

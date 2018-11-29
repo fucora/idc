@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -99,6 +101,7 @@ public class JobInstance {
 
 	@ApiModelProperty("任务实例状态")
 	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
 	private JobInstanceStatus status;
 
 	@ApiModelProperty("实例类型")

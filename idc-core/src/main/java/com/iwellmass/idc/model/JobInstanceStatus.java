@@ -3,6 +3,9 @@ package com.iwellmass.idc.model;
 // copy-of-YARN :) NEW, NEW_SAVING, SUBMITTED, ACCEPTED, RUNNING, FINISHED, FAILED, KILLED
 public enum JobInstanceStatus {
 	
+	// 未调度
+	NONE,
+	
 	//等待派发
 	NEW,
 	
