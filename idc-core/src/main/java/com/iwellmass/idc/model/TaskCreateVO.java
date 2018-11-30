@@ -1,7 +1,5 @@
-package com.iwellmass.idc.app.vo;
+package com.iwellmass.idc.model;
 
-import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.TaskType;
 import lombok.Getter;
 import lombok.Setter;
 

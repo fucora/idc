@@ -1,10 +1,9 @@
 package com.iwellmass.idc.app.service;
 
-import com.iwellmass.common.util.PageData;
 import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.vo.TaskCreateVO;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskCreateVO;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 

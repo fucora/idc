@@ -7,7 +7,6 @@ import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import com.iwellmass.idc.app.vo.TaskCreateVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -17,7 +16,10 @@ import lombok.Data;
 @Table(name = "t_idc_task")
 public class Task {
 
-	public Task(TaskCreateVO taskCreateVO){
+    public Task() {
+    }
+
+    public Task(TaskCreateVO taskCreateVO){
 		this.taskId = String.valueOf(System.currentTimeMillis());
 		this.taskGroup = taskCreateVO.getTaskGroup();
 		this.taskName = taskCreateVO.getTaskName();
