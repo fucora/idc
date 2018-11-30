@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.TriggerState;
@@ -89,11 +88,6 @@ public class JobServiceImpl implements JobService {
 
 	@Transactional
 	public void reschedule(Job job) {
-		try {
-			idcPlugin.reschedule(job);
-		} catch (SchedulerException e) {
-			throw new AppException("调度失败: " + e.getMessage(), e);
-		}
 	}
 	
 	@Transactional
@@ -169,15 +163,6 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public void execute(ExecutionRequest request) {
-		try {
-			Job job = jobRepository.findOne(request);
-			
-			JobDataMap jobData = new JobDataMap();
-			
-			idcPlugin.reschedule(job, jobData);
-		} catch (SchedulerException e) {
-			throw new AppException("执行失败: " + e.getMessage());
-		}
 		/*JobKey jobPk = StdJobKeyGeneratorImpl.valueOf(request);
 		
 		TriggerKey tk = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());

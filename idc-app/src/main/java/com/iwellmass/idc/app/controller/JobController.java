@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
@@ -57,7 +58,7 @@ public class JobController {
 		Task task = taskService.getTask(job.getTaskKey());
 		
 		JobRuntimeVO vo = new JobRuntimeVO();
-		vo.setJob(job);
+		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));
 		vo.setTask(task);
 		vo.setJobRuntime(jr);
 		

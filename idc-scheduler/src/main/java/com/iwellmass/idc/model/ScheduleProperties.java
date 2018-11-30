@@ -31,7 +31,7 @@ public class ScheduleProperties {
 	@ApiModelProperty("具体时间")
 	private LocalTime duetime = LocalTime.MIN;
 
-	@ApiModelProperty("调度类型")
+	@ApiModelProperty("周期类型")
 	private ScheduleType scheduleType;
 	
 	@ApiModelProperty("失败重试")

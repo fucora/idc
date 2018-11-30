@@ -35,7 +35,7 @@ public class IDCPluginTest {
 		
 		IDCPlugin plugin = new SimpleIDCPlugin();
 		
-		AllSimpleService taskService = new AllSimpleService();
+		AllSimpleService allService = new AllSimpleService();
 		
 		// 主任务
 		Task task = new Task();
@@ -61,13 +61,15 @@ public class IDCPluginTest {
 		sub2.setTaskType(TaskType.NODE_TASK);
 		sub2.setContentType("simple-test");
 		
-		taskService.saveTask(task);
-		taskService.saveTask(sub1);
-		taskService.saveTask(sub2);
+		allService.saveTask(task);
+		allService.saveTask(sub1);
+		allService.saveTask(sub2);
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);
-		factory.setWorkflowService(taskService);
+		factory.setTaskService(allService);
+		factory.setJobService(allService);
+		factory.setWorkflowService(allService);
 		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
 		

@@ -1,7 +1,7 @@
 package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.idc.app.model.JobRuntime;
-import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -16,7 +16,7 @@ public class JobRuntimeVO {
 	private Task task;
 	
 	@ApiModelProperty("调度信息")
-	private Job job;
+	private ScheduleProperties scheduleConfig;
 	
 	@ApiModelProperty("运行时信息")
 	private JobRuntime jobRuntime;

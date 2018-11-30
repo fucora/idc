@@ -37,15 +37,15 @@ public class Job {
 	@Column(name = "assignee")
 	private String assignee;
 	
-	@ApiModelProperty("调度类型")
+	@ApiModelProperty("周期类型")
 	@Column(name = "schedule_type")
 	private ScheduleType scheduleType;
 	
-	@ApiModelProperty("调度类型")
+	@ApiModelProperty("出错重试")
 	@Column(name = "is_retry")
 	private Boolean isRetry;
 	
-	@ApiModelProperty("调度类型")
+	@ApiModelProperty("阻塞下游任务")
 	@Column(name = "block_on_error")
 	private Boolean blockOnError;
 	
@@ -69,9 +69,12 @@ public class Job {
 	@Column(name = "update_time")
 	private LocalDateTime updateTime;
 	
-	@ApiModelProperty("Cron 表达式")
+	@ApiModelProperty("cron 表达式")
 	@Column(name = "cron_expr")
 	private String cronExpr;
+	
+	@Column(name = "schedule_config")
+	private String scheduleConfig;
 	
 	// ~~ Task 相关 ~~
 	@ApiModelProperty("业务ID")
@@ -94,8 +97,6 @@ public class Job {
 	@Column(name = "dispatch_type")
 	private DispatchType dispatchType;
 
-	// ~~ 前端用 ~~
-	
 	@Transient
 	public JobKey getJobKey() {
 		return new JobKey(jobId, jobGroup);

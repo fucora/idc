@@ -149,11 +149,13 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	/** 调度子任务 */
-	public void scheduleSubTask(Task task, JobEnv jrt) throws SchedulerException {
+	public void scheduleSubTask(Task task, JobEnv env) throws SchedulerException {
 		
-		Integer wfInsId = jrt.getMainInstanceId();
-		JobInstance pins = idcJobStore.retrieveIDCJobInstance(wfInsId);
-		Job mainJob = jobService.getJob(pins.getJobKey());
+		Integer wfInsId = env.getMainInstanceId();
+		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(wfInsId);
+		
+		// 取出主任务
+		Job mainJob = jobService.getJob(sfIns.getJobKey());
 		
 		Job subJob = new Job();
 		subJob.setJobKey(aquireSubJobKey(task, mainJob));
@@ -165,9 +167,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		subJob.setContentType(task.getContentType());
 		subJob.setDispatchType(task.getDispatchType());
 		
-		jrt.setJobKey(subJob.getJobKey());
+		env.setJobKey(subJob.getJobKey());
 		
-		schedule(task, subJob, jrt);
+		schedule(task, subJob, env);
 	}
 	
 	private JobKey aquireSubJobKey(Task tk, Job mainJob) {
@@ -188,47 +190,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		scheduler.scheduleJob(jobDetail, trigger);
 	}
 	
-	/** 重新调度任务 */
-	public void reschedule(Job job) throws SchedulerException {
-		
-		/*JobKey jobPk = idcPlugin.buildJobKey(job);
-		
-		validate(jobPk, job.getDependencies());
-
-		// 没有正在执行的任务计划便可以重新调度计划任务
-		Job pj = jobRepository.findOne(jobPk);
-		if (pj != null && pj.getStatus() != ScheduleStatus.NONE) {
-			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
-		}
-		
-		job.setJobKey(jobPk);
-		job.setUpdateTime(LocalDateTime.now());
-
-		LOGGER.info("重新调度任务 {}", jobPk);*/
-		throw new SchedulerException("Not supported yet.");
-	}
-	
-	/** 重新调度任务 */
-	public void reschedule(Job job, JobDataMap jobData) throws SchedulerException {
-		
-		/*JobKey jobPk = idcPlugin.buildJobKey(job);
-		
-		validate(jobPk, job.getDependencies());
-
-		// 没有正在执行的任务计划便可以重新调度计划任务
-		Job pj = jobRepository.findOne(jobPk);
-		if (pj != null && pj.getStatus() != ScheduleStatus.NONE) {
-			Assert.isTrue(pj.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
-		}
-		
-		job.setJobKey(jobPk);
-		job.setUpdateTime(LocalDateTime.now());
-
-		LOGGER.info("重新调度任务 {}", jobPk);*/
-		throw new SchedulerException("Not supported yet.");
-	}
-	
-	protected JobDetail buildJobDetail(Task task) {
+	private JobDetail buildJobDetail(Task task) {
 		JobDataMap jobData = new JobDataMap();
 		JobDetail jobDetail = null;
 		if (task.getTaskType() == TaskType.WORKFLOW_TASK) {
@@ -249,7 +211,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return jobDetail;
 	}
 	
-	protected Trigger buildTrigger(Job job) {
+	private Trigger buildTrigger(Job job) {
 		
 		if (job.getTaskType() == TaskType.NODE_TASK) {
 			JobKey jobKey = new JobKey(job.getTaskId(), job.getTaskGroup());

@@ -56,6 +56,7 @@ public final class IDCSchedulerFactory {
 	@Setter
 	private TaskService taskService;
 	
+	@Setter
 	private JobService jobService;
 
 	public Scheduler getScheduler() throws SchedulerException {
