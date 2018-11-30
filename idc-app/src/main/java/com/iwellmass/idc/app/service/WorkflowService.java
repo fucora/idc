@@ -39,10 +39,6 @@ public class WorkflowService {
         return workflowEdgeRepository.findByWorkflowId(id).orElseThrow(() -> new Exception("未查找到该工作流信息"));
     }
 
-    public Workflow itemWorkflow(Integer id) throws Exception {
-        return workflowRepository.findByWorkflowId(id).orElseThrow(() -> new Exception("未查找到该工作流基本信息"));
-    }
-
     public Workflow item(TaskKey taskKey) throws Exception {
         if (taskKey == null || taskKey.getTaskGroup() == null || taskKey.getTaskId() == null) {
             throw new Exception("传入所有参数");
@@ -56,15 +52,9 @@ public class WorkflowService {
         if (workflowEnableVO.getTaskDependencies() == null || workflowEnableVO.getTaskDependencies().size() == 0) {
             throw new Exception("未传入需要执行的工作流");
         }
-        Task task = taskRepository.findOne(workflowEnableVO.getTaskKey());
-        if (task == null) {
-            throw new Exception("未查找到指定task");
-        }
-        Workflow workflow = workflowRepository.findOne(workflowEnableVO.getTaskKey());
-        if (workflow == null) {
-            throw new Exception("未查找到指定工作流");
-        }
+        Workflow workflow = workflowRepository.findByWorkflowId(workflowEnableVO.getWorkflowId()).orElseThrow(() -> new Exception("未查找到指定工作流"));
         // 更新task
+        Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(),workflow.getTaskGroup()));
         task.setWorkflowId(workflow.getWorkflowId());
         taskRepository.save(task);
         // 保存edgs信息
@@ -74,6 +64,5 @@ public class WorkflowService {
         }
         return "提交成功";
     }
-
 
 }

@@ -21,10 +21,10 @@ public class WorkflowEdge implements Serializable{
 
 	public WorkflowEdge(String workflowId, TaskDependency taskDependency) {
 		this.workflowId = workflowId;
-		this.srcTaskId = taskDependency.getSrcTaskKey().getTaskId();
-		this.srcTaskGroup = taskDependency.getSrcTaskKey().getTaskGroup();
-		this.taskId = taskDependency.getTaskKey().getTaskId();
-		this.taskGroup = taskDependency.getTaskKey().getTaskGroup();
+		this.srcTaskId = taskDependency.getSrcTaskId();
+		this.srcTaskGroup = taskDependency.getSrcTaskGroup();
+		this.taskId = taskDependency.getTaskId();
+		this.taskGroup = taskDependency.getTaskGroup();
 	}
 
 	@Id

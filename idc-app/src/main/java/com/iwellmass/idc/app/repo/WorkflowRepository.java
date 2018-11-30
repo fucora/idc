@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface WorkflowRepository extends CrudRepository<Workflow, TaskKey>,JpaSpecificationExecutor {
-    Optional<Workflow> findByWorkflowId(Integer workflowId);
+    Optional<Workflow> findByWorkflowId(String workflowId);
 
     Optional<Workflow> findByTaskIdAndTaskGroup(String taskId,String taskGroup);
 }

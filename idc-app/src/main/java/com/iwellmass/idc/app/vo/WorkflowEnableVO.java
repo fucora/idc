@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 public class WorkflowEnableVO {
 
-    private TaskKey taskKey;
+    private String workflowId;
 
     private List<TaskDependency> taskDependencies;
 }

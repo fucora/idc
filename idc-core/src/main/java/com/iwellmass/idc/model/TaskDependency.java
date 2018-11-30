@@ -8,7 +8,18 @@ import lombok.Setter;
 @Setter
 public class TaskDependency {
 
-    private TaskKey srcTaskKey;
+    public TaskDependency(String srcTaskId, String srcTaskGroup, String taskId, String taskGroup) {
+        this.srcTaskId = srcTaskId;
+        this.srcTaskGroup = srcTaskGroup;
+        this.taskId = taskId;
+        this.taskGroup = taskGroup;
+    }
 
-    private TaskKey taskKey;
+    private String srcTaskId;
+
+    private String srcTaskGroup;
+
+    private String taskId;
+
+    private String taskGroup;
 }
