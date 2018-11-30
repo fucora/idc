@@ -35,7 +35,7 @@ public class TaskController {
     @ApiOperation("获取所有工作流子任务")
     @GetMapping("/all-sub-task")
     public ServiceResult<List<Task>> getAllSubTask() {
-    	List<Task> ret = taskService.getTasksByType(TaskType.WORKFLOW_SUB_TASK);
+    	List<Task> ret = taskService.getTasksByType(TaskType.NODE_TASK);
     	return ServiceResult.success(ret);
     }
 }

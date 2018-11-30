@@ -251,7 +251,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	protected Trigger buildTrigger(Job job) {
 		
-		if (job.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+		if (job.getTaskType() == TaskType.NODE_TASK) {
 			JobKey jobKey = new JobKey(job.getTaskId(), job.getTaskGroup());
 			// 构建常量
 			TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
@@ -347,11 +347,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				// log this
 				logger.log(event.getInstanceId(), event.getMessage())
 					.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
-				if (ins.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+				if (ins.getTaskType() == TaskType.NODE_TASK) {
 					logger.log(ins.getWorkflowInstanceId(), "子任务 {} 结束, 执行结果: {}", ins.getInstanceId(), event.getFinalStatus());
 				}
 				// 工作流任务，执行子任务
-				if (ins.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+				if (ins.getTaskType() == TaskType.NODE_TASK) {
 					List<TaskKey> nextTasks = workflowService.getSuccessors(ins.getWorkflowId(), ins.getTaskKey());
 					if (!Utils.isNullOrEmpty(nextTasks)) {
 						for (Task subTask : taskService.getTasks(nextTasks)) {
@@ -420,7 +420,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 					.setMessage("派发任务，业务日期 {}", instance.getLoadDate()));
 			}
 
-			if (instance.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+			if (instance.getTaskType() == TaskType.NODE_TASK) {
 				idcStatusService.fireProgressEvent(ProgressEvent.newEvent(instance.getWorkflowInstanceId())
 						.setStatus(JobInstanceStatus.RUNNING)
 						.setMessage("派发子任务 {}...", instance.getInstanceId()));
@@ -449,7 +449,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 							.setStatus(JobInstanceStatus.ACCEPTED)	
 							.setMessage("等待执行结果...", instance.getInstanceId()));
 				}
-				if (instance.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+				if (instance.getTaskType() == TaskType.NODE_TASK) {
 					idcStatusService.fireProgressEvent(ProgressEvent.newEvent(instance.getWorkflowInstanceId())
 							.setStatus(JobInstanceStatus.ACCEPTED)	
 							.setMessage("等待 {} 执行结果...", instance.getInstanceId()));

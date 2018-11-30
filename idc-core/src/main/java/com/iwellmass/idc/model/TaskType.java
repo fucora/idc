@@ -8,9 +8,5 @@ public enum TaskType {
 	NODE_TASK,
 	
 	@ApiModelProperty("工作流子任务")
-	WORKFLOW_TASK,
-	
-	@ApiModelProperty("工作流子任务")
-	WORKFLOW_SUB_TASK;
-	
+	WORKFLOW_TASK;
 }

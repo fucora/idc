@@ -152,7 +152,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         			// save JobInstance & sequence barrier
         			//////////////////////////////////////
     				// 主任务，添加 seq barrier
-    				if (task.getTaskType() != TaskType.WORKFLOW_SUB_TASK) {
+    				if (task.getTaskType() != TaskType.WORKFLOW_TASK) {
     					JobBarrier seqBarrier = buildSeqBarriers(ins);
     					idcDriverDelegate.batchInsertJobBarrier(conn, Collections.singletonList(seqBarrier));
     				} 
@@ -242,7 +242,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	private List<JobBarrier> computeBarriers(Connection conn, JobInstance jr) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		if (jr.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+		if (jr.getTaskType() == TaskType.NODE_TASK) {
 			JobInstance wfIns = idcDriverDelegate.selectJobInstance(conn, jr.getWorkflowInstanceId());
 			List<TaskKey> depTasks = workflowService.getPredecessors(wfIns.getWorkflowId(), jr.getTaskKey());
 			if (!Utils.isNullOrEmpty(depTasks)) {
