@@ -14,6 +14,7 @@ import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskEdge;
 import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.TaskType;
 
 public class AllSimpleService implements WorkflowService, TaskService, JobService {
 	
@@ -89,6 +90,11 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 	@Override
 	public List<Task> getTasks(List<TaskKey> taskKey) {
 		return taskKey.stream().map(taskMap::get).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<Task> getTasksByType(TaskType workflowSubTask) {
+		return null;
 	}
 	
 }

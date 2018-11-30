@@ -11,6 +11,7 @@ import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.TaskType;
 
 @Service
 public class TaskServiceImpl implements TaskService{
@@ -34,5 +35,10 @@ public class TaskServiceImpl implements TaskService{
 	@Override
 	public void saveTask(Task task) {
 		taskRepository.save(task);
+	}
+
+	@Override
+	public List<Task> getTasksByType(TaskType taskType) {
+		return taskRepository.findByTaskType(taskType);
 	}
 }

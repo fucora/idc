@@ -1,5 +1,7 @@
 package com.iwellmass.idc.model;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -19,20 +21,6 @@ import lombok.Setter;
 @IdClass(TaskKey.class)
 @Table(name = "t_idc_task")
 public class Task {
-
-    public Task() {
-    }
-
-    public Task(TaskCreateVO taskCreateVO){
-		this.taskId = String.valueOf(System.currentTimeMillis());
-		this.taskGroup = taskCreateVO.getTaskGroup();
-		this.taskName = taskCreateVO.getTaskName();
-		this.description = taskCreateVO.getDescription();
-		this.taskType = taskCreateVO.getTaskType();
-		this.contentType = taskCreateVO.getContentType();
-		this.dispatchType = taskCreateVO.getDispatchType();
-		this.workflowId = taskCreateVO.getWorkflowId();
-	}
 
 	@Id
 	@ApiModelProperty("业务ID")
