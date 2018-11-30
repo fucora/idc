@@ -12,10 +12,10 @@ public interface IDCJobStore extends JobStore {
 
 	JobInstance retrieveIDCJobInstance(Integer instanceId) throws JobPersistenceException;
 	
+	JobInstance completeIDCJobInstance(CompleteEvent event) throws JobPersistenceException;
+	
 	void storeIDCJobInstance(Integer instanceId, Consumer<JobInstance> act) throws JobPersistenceException;
 
-	JobInstance completeIDCJobInstance(CompleteEvent event) throws JobPersistenceException;
-
 	void clearAllBarrier();
-
+	
 }

@@ -7,7 +7,16 @@ import lombok.Setter;
 @Setter
 public class JobEnv {
 
+	private TaskKey taskKey;
+	
+	private JobKey jobKey;
+	
+	private Integer instanceId;
 	
 	private Integer workflowInstanceId;
+
+	private Long shouldFireTime;
+	
+	private Long prevFireTime;
 	
 }

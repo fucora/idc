@@ -10,7 +10,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -95,7 +94,8 @@ public class Job {
 	@Column(name = "dispatch_type")
 	private DispatchType dispatchType;
 
-
+	// ~~ 前端用 ~~
+	
 	@Transient
 	public JobKey getJobKey() {
 		return new JobKey(jobId, jobGroup);

@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
@@ -93,7 +94,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 
 
 	@Override
-	public void deleteBarriers(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
+	public void disableBarriers(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_UPDATE_JOB_BARRIER);
@@ -138,7 +139,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	}
 
 	@Override
-	public void clearJobBarrier(Connection conn) throws SQLException {
+	public void clearAllBarrier(Connection conn) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_CLEAR_ALL_JOB_BARRIER);
@@ -151,4 +152,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 			}
 		}
 	}
+
+	private static final Map<JobKey, Job> jobMap = new HashMap<>();
+	
 }

@@ -41,6 +41,9 @@ public class JobInstance {
 
 	@Column(name = "should_fire_time")
 	private Long shouldFireTime;
+	
+	@Column(name = "prev_fire_time")
+	private Long prevFireTime;
 
 	@ApiModelProperty("业务日期")
 	@Column(name = "load_date")

@@ -37,6 +37,7 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.IDCLogger;
 import com.iwellmass.idc.IDCUtils;
+import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.SimpleIDCLogger;
 import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.WorkflowService;
@@ -45,10 +46,10 @@ import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
@@ -66,6 +67,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	private Scheduler scheduler;
 	private IDCJobStore idcJobStore;
 	private TaskService taskService;
+	private JobService jobService;
 	private WorkflowService workflowService;
 	
 	// ~~ internal component ~~
@@ -75,10 +77,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	@Getter
 	private IDCLogger logger = new SimpleIDCLogger();
 	
-	public void initialize(IDCJobStore store, WorkflowService workflowService, TaskService taskService) {
+	public void initialize(IDCJobStore store, TaskService taskService, JobService jobService, WorkflowService workflowService) {
 		this.idcJobStore = store;
 		this.workflowService = workflowService;
 		this.taskService = taskService;
+		this.jobService = jobService;
 		store.clearAllBarrier();
 	}
 	
@@ -88,6 +91,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		Objects.requireNonNull(idcJobStore, "IDCJobStore cannot be null");
 		Objects.requireNonNull(taskService, "TaskService cannot be null");
+		Objects.requireNonNull(jobService, "TaskService cannot be null");
 		Objects.requireNonNull(workflowService, "WorkflowService cannot be null");
 
 		this.scheduler = scheduler;
@@ -145,7 +149,12 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	/** 调度子任务 */
-	public void scheduleSubTask(Task task, Job mainJob, JobEnv jrt) throws SchedulerException {
+	public void scheduleSubTask(Task task, JobEnv jrt) throws SchedulerException {
+		
+		Integer wfInsId = jrt.getWorkflowInstanceId();
+		JobInstance pins = idcJobStore.retrieveIDCJobInstance(wfInsId);
+		Job mainJob = jobService.getJob(pins.getJobKey());
+		
 		Job subJob = new Job();
 		subJob.setJobKey(aquireSubJobKey(task, mainJob));
 		subJob.setJobName(task.getTaskName());
@@ -157,8 +166,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		subJob.setDispatchType(task.getDispatchType());
 		
 		jrt.setJobKey(subJob.getJobKey());
-		jrt.setParameter(mainJob.getParameter());
-		jrt.setScheduleType(mainJob.getScheduleType());
 		
 		schedule(task, subJob, jrt);
 	}
@@ -325,6 +332,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			}
 		}
 		
+		/* (non-Javadoc)
+		 * @see com.iwellmass.idc.executor.IDCStatusService#fireCompleteEvent(com.iwellmass.idc.executor.CompleteEvent)
+		 */
 		@Override
 		public void fireCompleteEvent(CompleteEvent event) {
 			LOGGER.info("Get event {}", event);
@@ -343,7 +353,14 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				// 工作流任务，执行子任务
 				if (ins.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
 					List<TaskKey> nextTasks = workflowService.getSuccessors(ins.getWorkflowId(), ins.getTaskKey());
-					
+					if (!Utils.isNullOrEmpty(nextTasks)) {
+						for (Task subTask : taskService.getTasks(nextTasks)) {
+							JobEnv env = new JobEnv();
+							env.setWorkflowInstanceId(ins.getWorkflowInstanceId());
+							scheduleSubTask(subTask, env);
+						}
+						
+					}
 					
 				}
 			} catch (Exception e) {
