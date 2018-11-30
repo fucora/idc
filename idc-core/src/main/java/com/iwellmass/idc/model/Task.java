@@ -56,7 +56,7 @@ public class Task {
 	
 	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")
-	private Integer workflowId;
+	private String workflowId;
 
 	@Transient
 	public TaskKey getTaskKey() {

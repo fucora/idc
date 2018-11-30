@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiOperation;
 public class IDCStatusController {
 
 	@Inject
-	private JobService jobService;
+	private JobServiceImpl jobService;
 	
 	@Inject
 	private IDCPlugin idcPlugin;

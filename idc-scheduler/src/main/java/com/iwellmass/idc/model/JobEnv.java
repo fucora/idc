@@ -13,7 +13,7 @@ public class JobEnv {
 	
 	private Integer instanceId;
 	
-	private Integer workflowInstanceId;
+	private Integer mainInstanceId;
 
 	private Long shouldFireTime;
 	

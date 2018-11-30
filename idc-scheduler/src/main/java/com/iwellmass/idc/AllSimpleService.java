@@ -18,7 +18,7 @@ import com.iwellmass.idc.model.TaskType;
 
 public class AllSimpleService implements WorkflowService, TaskService, JobService {
 	
-	private final Map<Integer, Graph<TaskKey, TaskEdge>> workflowMap = new HashMap<>(); 
+	private final Map<String, Graph<TaskKey, TaskEdge>> workflowMap = new HashMap<>(); 
 	
 	private final Map<TaskKey, Task> taskMap = new HashMap<>();
 
@@ -49,13 +49,13 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 
 	@Override
 	public Graph<TaskKey, TaskEdge> getWorkflow(TaskKey taskKey) {
-		Integer id = Objects.requireNonNull(taskMap.get(taskKey)).getWorkflowId();
+		String id = Objects.requireNonNull(taskMap.get(taskKey)).getWorkflowId();
 		Graph<TaskKey, TaskEdge> aa = workflowMap.get(id);
 		return Objects.requireNonNull(aa);
 	}
 
 	@Override
-	public List<TaskKey> getSuccessors(int workflowId, TaskKey taskKey) {
+	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
 		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
 		return Graphs.successorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(START) && !t.equals(END);
@@ -63,7 +63,7 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 	}
 
 	@Override
-	public List<TaskKey> getPredecessors(int workflowId, TaskKey taskKey) {
+	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
 		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
 		return Graphs.predecessorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(START) && !t.equals(END);
@@ -96,5 +96,6 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 	public List<Task> getTasksByType(TaskType workflowSubTask) {
 		return null;
 	}
+
 	
 }

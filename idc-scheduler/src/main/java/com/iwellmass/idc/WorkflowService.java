@@ -15,8 +15,8 @@ public interface WorkflowService {
 	
 	public Graph<TaskKey, TaskEdge> getWorkflow(TaskKey taskKey);
 	
-	public List<TaskKey> getSuccessors(int workflowId, TaskKey taskKey);
+	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey);
 	
-	public List<TaskKey> getPredecessors(int workflowId, TaskKey taskKey);
+	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey);
 
 }

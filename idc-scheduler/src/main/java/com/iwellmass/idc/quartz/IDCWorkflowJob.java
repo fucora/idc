@@ -30,7 +30,7 @@ public class IDCWorkflowJob implements org.quartz.Job {
 		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		
 		// next tasks
-		List<TaskKey> successors = plugin.getWorkflowService().getSuccessors(jobInstance.getInstanceId(), WorkflowService.START);
+		List<TaskKey> successors = plugin.getWorkflowService().getSuccessors(jobInstance.getWorkflowId(), WorkflowService.START);
 		Assert.isFalse(Utils.isNullOrEmpty(successors), "获取工作流子任务失败");
 		
 		List<Task> subTasks = plugin.getTaskService().getTasks(successors);
@@ -38,7 +38,7 @@ public class IDCWorkflowJob implements org.quartz.Job {
 			try {
 				// 构建 runtime 信息
 				JobEnv env = new JobEnv();
-				env.setWorkflowInstanceId(jobInstance.getInstanceId());
+				env.setMainInstanceId(jobInstance.getInstanceId());
 				plugin.scheduleSubTask(subTask, env);
 			} catch (SchedulerException e) {
 				throw new JobExecutionException("执行工作流子任务失败: " + e.getMessage(), e);

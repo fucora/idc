@@ -44,7 +44,7 @@ public class IDCPluginTest {
 		task.setDispatchType(DispatchType.AUTO);
 		task.setTaskType(TaskType.WORKFLOW_TASK);
 		task.setContentType("simple-test");
-		task.setWorkflowId(1);
+		task.setWorkflowId("1");
 		
 		// 子任务
 		Task sub1 = new Task();
@@ -53,7 +53,6 @@ public class IDCPluginTest {
 		sub1.setDispatchType(DispatchType.AUTO);
 		sub1.setTaskType(TaskType.NODE_TASK);
 		sub1.setContentType("simple-test");
-		sub1.setWorkflowId(1);
 		
 		Task sub2 = new Task();
 		sub2.setTaskKey(new TaskKey(lqd_02 + "_sub2", group));
@@ -61,7 +60,6 @@ public class IDCPluginTest {
 		sub2.setDispatchType(DispatchType.AUTO);
 		sub2.setTaskType(TaskType.NODE_TASK);
 		sub2.setContentType("simple-test");
-		sub2.setWorkflowId(1);
 		
 		taskService.saveTask(task);
 		taskService.saveTask(sub1);

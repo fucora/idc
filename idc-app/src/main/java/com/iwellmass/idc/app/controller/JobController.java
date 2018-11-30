@@ -19,7 +19,7 @@ import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.service.JobServiceImpl;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiOperation;
 public class JobController {
 	
 	@Inject
-	private JobService jobService;
+	private JobServiceImpl jobService;
 	
 	@Inject
 	private TaskService taskService;

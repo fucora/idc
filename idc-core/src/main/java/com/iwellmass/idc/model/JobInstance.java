@@ -55,12 +55,12 @@ public class JobInstance {
 	
 	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")
-	private Integer workflowId;
+	private String workflowId;
 	
 	// ~~ 调度相关（子）~~
 	@ApiModelProperty("父实例ID")
 	@Column(name = "workflow_instance_id;")
-	private Integer workflowInstanceId;
+	private Integer mainInstanceId;
 	
 	// ~~ 任务相关 ~~
 	@ApiModelProperty("任务 ID")

@@ -225,7 +225,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		ParameterParser parser = IDCContextKey.JOB_PARAMETER_PARSER.applyGet(trigger.getJobDataMap());
 		jobInstance.setParameter(parser.parse(job.getParameter()));
 		// ~~ job env ~~
-		jobInstance.setWorkflowInstanceId(jobEnv.getWorkflowInstanceId());
+		jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
 		return jobInstance;
 	}
 	
@@ -243,7 +243,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
 		if (jr.getTaskType() == TaskType.NODE_TASK) {
-			JobInstance wfIns = idcDriverDelegate.selectJobInstance(conn, jr.getWorkflowInstanceId());
+			JobInstance wfIns = idcDriverDelegate.selectJobInstance(conn, jr.getMainInstanceId());
 			List<TaskKey> depTasks = workflowService.getPredecessors(wfIns.getWorkflowId(), jr.getTaskKey());
 			if (!Utils.isNullOrEmpty(depTasks)) {
 				for (TaskKey tk : depTasks) {

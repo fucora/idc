@@ -23,6 +23,7 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
@@ -42,9 +43,9 @@ import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
-public class JobService {
+public class JobServiceImpl implements JobService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobServiceImpl.class);
 
 	@Inject
 	private JobRepository jobRepository;
@@ -57,6 +58,18 @@ public class JobService {
 
 //	@Inject
 	private Scheduler scheduler;
+	
+	
+	@Override
+	public Job getJob(JobKey jobKey) {
+		return jobRepository.findOne(jobKey);
+	}
+	
+	@Override
+	public void saveJob(Job job) {
+		jobRepository.save(job);
+	}
+	
 
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
