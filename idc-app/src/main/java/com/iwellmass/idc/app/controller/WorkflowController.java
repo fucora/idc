@@ -22,7 +22,7 @@ public class WorkflowController {
 
     @PostMapping("")
     @ApiOperation("保存workflow画图信息,以及最新workflowId")
-    public ServiceResult<Workflow> save(Workflow workflow) {
+    public ServiceResult<Workflow> save(@RequestBody Workflow workflow) {
         return ServiceResult.success(workflowService.saveWorkflow(workflow));
     }
 
@@ -38,7 +38,7 @@ public class WorkflowController {
 
     @PostMapping("enable")
     @ApiOperation("/启用指定工作流")
-    public ServiceResult<String> enable(WorkflowEnableVO workflowEnableVO) {
+    public ServiceResult<String> enable(@RequestBody WorkflowEnableVO workflowEnableVO) {
         try {
             return ServiceResult.success(workflowService.enable(workflowEnableVO));
         } catch (Exception e) {
