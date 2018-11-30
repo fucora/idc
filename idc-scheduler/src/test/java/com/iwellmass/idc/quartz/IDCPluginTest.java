@@ -12,7 +12,7 @@ import org.quartz.Scheduler;
 import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-import com.iwellmass.idc.StdWorkflowService;
+import com.iwellmass.idc.AllSimpleService;
 import com.iwellmass.idc.WorkflowService;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -35,7 +35,7 @@ public class IDCPluginTest {
 		
 		IDCPlugin plugin = new SimpleIDCPlugin();
 		
-		StdWorkflowService taskService = new StdWorkflowService();
+		AllSimpleService taskService = new AllSimpleService();
 		
 		// 主任务
 		Task task = new Task();
@@ -63,9 +63,9 @@ public class IDCPluginTest {
 		sub2.setContentType("simple-test");
 		sub2.setWorkflowId(1);
 		
-		taskService.addTask(task, sub1, WorkflowService.START, sub2.getTaskKey());
-		taskService.addTask(task, sub2, sub1.getTaskKey(), WorkflowService.END);
-		
+		taskService.saveTask(task);
+		taskService.saveTask(sub1);
+		taskService.saveTask(sub2);
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);

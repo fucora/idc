@@ -7,6 +7,8 @@ import com.iwellmass.idc.model.TaskKey;
 
 public interface TaskService {
 
+	void saveTask(Task task);
+	
 	Task getTask(TaskKey taskKey);
 	
 	List<Task> getTasks(List<TaskKey> taskKey);

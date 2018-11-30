@@ -5,6 +5,8 @@ import com.iwellmass.idc.model.JobKey;
 
 public interface JobService {
 	
+	public void saveJob(Job job);
+	
 	public Job getJob(JobKey jobKey);
 
 }

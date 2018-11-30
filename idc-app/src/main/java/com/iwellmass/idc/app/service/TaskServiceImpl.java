@@ -30,4 +30,9 @@ public class TaskServiceImpl implements TaskService{
 	public List<Task> getTasks(List<TaskKey> taskKeys) {
 		return taskMapper.selectBatch(taskKeys);
 	}
+
+	@Override
+	public void saveTask(Task task) {
+		taskRepository.save(task);
+	}
 }

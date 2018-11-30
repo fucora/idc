@@ -42,9 +42,9 @@ public class IDCJobExecutorServiceFactory {
 
 	public IDCJobExecutorService getExecutor(JobInstance instance) {
 		// 域 + contentType
-		String _key = instance.getGroupId() + instance.getContentType();
+		String _key = instance.getTaskGroup() + instance.getContentType();
 		IDCJobExecutorService service = registryMap.computeIfAbsent(_key, (key) -> {
-			return newFeignClient(instance.getGroupId(), instance.getContentType());
+			return newFeignClient(instance.getTaskGroup(), instance.getContentType());
 		});
 		return service;
 	}
