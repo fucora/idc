@@ -1,14 +1,18 @@
 package com.iwellmass.idc.model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Table;
 
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "t_idc_workflow")
+@IdClass(TaskKey.class)
 public class Workflow {
 
     @Id
