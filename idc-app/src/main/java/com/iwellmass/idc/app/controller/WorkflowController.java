@@ -17,19 +17,19 @@ public class WorkflowController {
     @Inject
     private WorkflowService workflowService;
 
-    @PostMapping("/workflowedge")
+    @PostMapping("/edge")
     @ApiOperation("保存工作流边点信息")
     public ServiceResult<WorkflowEdge> saveWorkflowEdge(@RequestBody WorkflowEdge workflowEdge){
         return ServiceResult.success(workflowService.saveWorkflowEdge(workflowEdge));
     }
 
-    @PostMapping("/workflow")
+    @PostMapping("")
     @ApiOperation("保存工作流基本信息")
     public ServiceResult<Workflow> saveWorkflow(@RequestBody Workflow workflow){
         return ServiceResult.success(workflowService.saveWorkflow(workflow));
     }
 
-    @GetMapping("/workflowedge/{id}")
+    @GetMapping("/edge/{id}")
     @ApiOperation("查询工作流边点信息")
     public ServiceResult<WorkflowEdge> itemWorkflowEdge(@PathVariable("id") Integer id){
         try {
@@ -39,7 +39,7 @@ public class WorkflowController {
         }
     }
 
-    @GetMapping("/workflow/{id}")
+    @GetMapping("/{id}")
     @ApiOperation("查询工作流基本信息")
     public ServiceResult<Workflow> itemWorkflow(@PathVariable("id") Integer id){
         try {
