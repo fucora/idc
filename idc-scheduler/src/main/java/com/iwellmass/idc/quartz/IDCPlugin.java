@@ -140,6 +140,10 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setEndTime(sp.getEndTime());
 		job.setParameter(sp.getParameter());
 		job.setCronExpr(sp.toCronExpression());
+		// ~~ 前端用 ~~
+		job.setScheduleConfig(JSON.toJSONString(sp));
+		
+		jobService.saveJob(job);
 		
 		schedule(task, job, null);
 	}

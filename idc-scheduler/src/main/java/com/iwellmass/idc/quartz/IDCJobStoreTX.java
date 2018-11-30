@@ -46,12 +46,10 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	private final IDCDriverDelegate idcDriverDelegate;
 	private final WorkflowService workflowService;
 	private final TaskService taskService;
-	private final JobService jobService;
 	
 	IDCJobStoreTX(IDCDriverDelegate idcDelegate, TaskService taskService, JobService jobService, WorkflowService workflowService) {
 		this.idcDriverDelegate = idcDelegate;
 		this.taskService = taskService;
-		this.jobService = jobService;
 		this.workflowService = workflowService;
 	}
 	
@@ -129,8 +127,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					////////////////
                     JobEnv jobEnv = initJobEnv(nextTrigger);
                     Task task = taskService.getTask(jobEnv.getTaskKey());
-                    Job idcJob = jobService.getJob(jobEnv.getJobKey());
-					JobInstance ins = createJobInstance(nextTrigger, task, idcJob, jobEnv);
+					JobInstance ins = createJobInstance(nextTrigger, task, jobEnv);
 					List<JobBarrier> barriers = computeBarriers(conn, ins);
 					// clear first
 					idcDriverDelegate.clearJobBarrier(conn, ins.getJobKey());
@@ -191,10 +188,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	}
 	
 	
-	private JobInstance createJobInstance(OperableTrigger trigger, Task task, Job job, JobEnv jobEnv) {
+	private JobInstance createJobInstance(OperableTrigger trigger, Task task, JobEnv jobEnv) {
 		JobInstance jobInstance = new JobInstance();
 		// ~~ 基本信息 ~~
-		jobInstance.setInstanceId(jobEnv.getInstanceId());
 		jobInstance.setTaskKey(task.getTaskKey());
 		jobInstance.setDescription(task.getDescription());
 		jobInstance.setContentType(task.getContentType());
@@ -203,12 +199,14 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		jobInstance.setWorkflowId(task.getWorkflowId());
 		
 		// ~~ 运行时信息 ~~
-		jobInstance.setJobKey(job.getJobKey());
-		jobInstance.setAssignee(job.getAssignee());
+		// id
+		jobInstance.setInstanceId(jobEnv.getInstanceId());
+		// 所属计划
+		jobInstance.setJobKey(jobEnv.getJobKey());
+		// 责任人
+		jobInstance.setAssignee(jobEnv.getAssignee());
 		// 调度类型
-		jobInstance.setScheduleType(job.getScheduleType());
-		// 执行参数
-		jobInstance.setParameter(job.getParameter());
+		jobInstance.setScheduleType(jobEnv.getScheduleType());
 		// 批次
 		jobInstance.setShouldFireTime(jobEnv.getShouldFireTime());
 		// prev 批次
@@ -223,7 +221,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		jobInstance.setStatus(JobInstanceStatus.NEW);
 		// parameter
 		ParameterParser parser = IDCContextKey.JOB_PARAMETER_PARSER.applyGet(trigger.getJobDataMap());
-		jobInstance.setParameter(parser.parse(job.getParameter()));
+		jobInstance.setParameter(parser.parse(jobEnv.getParameter()));
 		// ~~ job env ~~
 		jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
 		return jobInstance;

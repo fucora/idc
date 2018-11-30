@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class JobEnv {
+public class JobEnv extends Job{
 
 	private TaskKey taskKey;
 	
