@@ -9,6 +9,8 @@ import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,8 +57,15 @@ public class Task {
 	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")
 	private String workflowId;
+	
+	@Transient
+	private String graphId;
+	
+	@Transient
+	private String graph;
 
 	@Transient
+	@JsonIgnore
 	public TaskKey getTaskKey() {
 		return new TaskKey(getTaskId(), getTaskGroup());
 	}

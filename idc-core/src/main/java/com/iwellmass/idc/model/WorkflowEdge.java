@@ -18,6 +18,9 @@ import lombok.Setter;
 public class WorkflowEdge implements Serializable{
 	
 	private static final long serialVersionUID = 866853625098155270L;
+	
+	public WorkflowEdge() {
+	}
 
 	public WorkflowEdge(String workflowId, TaskDependency taskDependency) {
 		this.workflowId = workflowId;

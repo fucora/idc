@@ -10,5 +10,7 @@ import com.iwellmass.idc.model.TaskKey;
 
 @Mapper
 public interface TaskMapper {
+	
 	public List<Task> selectBatch(@Param("taskKeys") List<TaskKey> taskKeys);
+
 }

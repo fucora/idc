@@ -1,5 +1,9 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.common.criteria.Equal;
+import com.iwellmass.common.criteria.Like;
+import com.iwellmass.idc.model.TaskType;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,7 +11,9 @@ import lombok.Setter;
 @Setter
 public class TaskQueryVO {
 
-    private Integer teskType;
+	@Equal
+    private TaskType teskType;
 
+    @Like
     private String taskName;
 }

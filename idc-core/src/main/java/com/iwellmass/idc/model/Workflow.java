@@ -25,9 +25,9 @@ public class Workflow {
     @ApiModelProperty("任务组")
     private String taskGroup;
 
-    @Column(name = "workflow_id")
+    @Column(name = "graph_id")
     @ApiModelProperty("所属工作流")
-	private String workflowId;
+	private String graphId;
 	
 	// 前端用，流程都画图
     @Column(name = "graph")

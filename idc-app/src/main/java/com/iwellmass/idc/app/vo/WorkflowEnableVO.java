@@ -1,17 +1,17 @@
 package com.iwellmass.idc.app.vo;
 
+import java.util.List;
+
 import com.iwellmass.idc.model.TaskDependency;
-import com.iwellmass.idc.model.TaskKey;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter
 public class WorkflowEnableVO {
 
-    private String workflowId;
+    private String graphId;
 
     private List<TaskDependency> taskDependencies;
 }

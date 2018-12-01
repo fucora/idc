@@ -1,12 +1,13 @@
 package com.iwellmass.idc.model;
 
-import com.iwellmass.idc.model.TaskKey;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class TaskDependency {
+	
+	public TaskDependency() {}
 
     public TaskDependency(String srcTaskId, String srcTaskGroup, String taskId, String taskGroup) {
         this.srcTaskId = srcTaskId;

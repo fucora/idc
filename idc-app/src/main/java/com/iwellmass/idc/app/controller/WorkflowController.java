@@ -1,17 +1,20 @@
 package com.iwellmass.idc.app.controller;
 
+import javax.inject.Inject;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.iwellmass.common.ServiceResult;
-import com.iwellmass.common.util.PageData;
-import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.service.WorkflowService;
 import com.iwellmass.idc.app.vo.WorkflowEnableVO;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.Workflow;
-import com.iwellmass.idc.model.WorkflowEdge;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/workflow")

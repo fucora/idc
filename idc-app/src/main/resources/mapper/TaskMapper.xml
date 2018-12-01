@@ -14,5 +14,4 @@
 				( #{taskKey.taskId}, #{taskKey.taskGroup} )
 			</foreach>
 	</select>
-
 </mapper>

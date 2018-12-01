@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -23,13 +24,11 @@ import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.IDCUtils;
-import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.ParameterParser;
 import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.WorkflowService;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.BarrierState;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobEnv;
@@ -47,7 +46,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	private final WorkflowService workflowService;
 	private final TaskService taskService;
 	
-	IDCJobStoreTX(IDCDriverDelegate idcDelegate, TaskService taskService, JobService jobService, WorkflowService workflowService) {
+	IDCJobStoreTX(IDCDriverDelegate idcDelegate, TaskService taskService, WorkflowService workflowService) {
 		this.idcDriverDelegate = idcDelegate;
 		this.taskService = taskService;
 		this.workflowService = workflowService;
@@ -180,25 +179,28 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	
 	private JobEnv initJobEnv(OperableTrigger trigger) {
 		JobEnv env = Optional.ofNullable(JOB_RUNTIME.applyGet(trigger.getJobDataMap()))
-				.map(str -> JSON.parseObject(str, JobEnv.class)).orElseGet(JobEnv::new);
+			.map(str -> JSON.parseObject(str, JobEnv.class))
+			.orElseGet(JobEnv::new);
 		env.setJobKey(new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup()));
 		env.setTaskKey(new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup()));
 		env.setInstanceId(Integer.parseInt(trigger.getFireInstanceId()));
+		if (env.getShouldFireTime() == null) {
+			env.setShouldFireTime(Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L));
+		}
 		return env;
 	}
 	
 	
 	private JobInstance createJobInstance(OperableTrigger trigger, Task task, JobEnv jobEnv) {
+		
 		JobInstance jobInstance = new JobInstance();
+		
 		// ~~ 基本信息 ~~
 		jobInstance.setTaskKey(task.getTaskKey());
-		jobInstance.setDescription(task.getDescription());
 		jobInstance.setContentType(task.getContentType());
 		jobInstance.setTaskType(task.getTaskType());
-		jobInstance.setInstanceType(task.getDispatchType());
-		jobInstance.setWorkflowId(task.getWorkflowId());
 		
-		// ~~ 运行时信息 ~~
+		// ~~ 调度信息 ~~
 		// id
 		jobInstance.setInstanceId(jobEnv.getInstanceId());
 		// 所属计划
