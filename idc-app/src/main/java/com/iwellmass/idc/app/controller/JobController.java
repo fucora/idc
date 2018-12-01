@@ -39,14 +39,14 @@ public class JobController {
 	@Inject
 	private TaskService taskService;
 	
-	@ApiOperation("查询调度计划列表")
+	@ApiOperation("查询调度列表")
 	@PostMapping("/query")
 	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
 		PageData<Job> data = jobService.findJob(jobQuery, pager);
 		return ServiceResult.success(data);
 	}
 	
-	@ApiOperation("获取任务信息")
+	@ApiOperation("获取调度信息")
 	@GetMapping
 	public ServiceResult<Job> getJob(JobKey jobKey) {
 		Job job = jobService.findJob(jobKey);
@@ -56,13 +56,15 @@ public class JobController {
 		return ServiceResult.success(job);
 	}
 	
-	@ApiOperation("获取任务信息")
+	@ApiOperation("获取调度运行时信息")
 	@GetMapping("/runtime")
 	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
 
 		JobRuntime jr = jobService.getJobRuntime(jobKey);
 		Job job = jobService.findJob(jobKey);
 		Task task = taskService.getTask(job.getTaskKey());
+		task.setGraphId(job.getWorkflowId());
+		task.setGraph(job.getWorkflowGraph());
 		
 		JobRuntimeVO vo = new JobRuntimeVO();
 		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));
