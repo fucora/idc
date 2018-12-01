@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 // copy-of-quartz TriggerState
 public enum ScheduleStatus {
 
-	@ApiModelProperty("等待调度")
+	@ApiModelProperty("未调度")
 	NONE,
 
 	@ApiModelProperty("正常")

@@ -25,13 +25,15 @@ public class JobEnv {
 	// 调度类型
 	private ScheduleType scheduleType;
 	
-	// ~~ 工作流 ~~
-	private Integer mainInstanceId;
-
 	// ~~ 执行参数 ~~
 	private String parameter;
 	
 	// ~~ 节点类型 ~~
 	private TaskType taskType;
+	
+	// ~~ SUB_TASK ~~
+	private Integer mainInstanceId;
+	
+	private String workflowId;
 	
 }

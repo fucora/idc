@@ -1,9 +1,6 @@
 package com.iwellmass.idc.app.model;
 
-import java.util.List;
-
 import com.iwellmass.common.criteria.Equal;
-import com.iwellmass.common.criteria.In;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.model.DispatchType;
@@ -17,19 +14,19 @@ import lombok.Setter;
 @Setter
 public class JobQuery implements SpecificationBuilder {
 
-	@ApiModelProperty("任务名")
+	@ApiModelProperty("计划名称")
 	@Like
-	private String taskName;
+	private String jobName;
 
-	@ApiModelProperty("任务类型")
+	@ApiModelProperty("节点类型")
+	@Equal
+	private TaskType taskType;
+	
+	@ApiModelProperty("业务类型")
 	@Equal
 	private String contentType;
 
-	@ApiModelProperty("节点类型")
-	@In("taskType")
-	private List<TaskType> taskTypes;
-
-	@ApiModelProperty("调度类型类型")
+	@ApiModelProperty("调度类型")
 	@Equal
 	private DispatchType dispatchType;
 

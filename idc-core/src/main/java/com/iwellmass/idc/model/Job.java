@@ -4,10 +4,14 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -30,7 +34,7 @@ public class Job {
 	private String jobGroup;
 	
 	@Column(name = "job_name", length = 50)
-	@ApiModelProperty("任务名称")
+	@ApiModelProperty("计划名称")
 	private String jobName;
 	
 	@ApiModelProperty("责任人")
@@ -39,6 +43,7 @@ public class Job {
 	
 	@ApiModelProperty("周期类型")
 	@Column(name = "schedule_type")
+	@Enumerated(EnumType.STRING)
 	private ScheduleType scheduleType;
 	
 	@ApiModelProperty("出错重试")
@@ -85,19 +90,31 @@ public class Job {
 	@Column(name = "task_group")
 	private String taskGroup;
 	
-	@ApiModelProperty("任务类型，工作流任务，节点任务")
+	@ApiModelProperty("任务类型")
 	@Column(name = "task_type")
+	@Enumerated(EnumType.STRING)
+
 	private TaskType taskType;
 
-	@ApiModelProperty("业务类型，业务方自定义")
+	@ApiModelProperty("业务类型")
 	@Column(name = "content_type")
 	private String contentType;
 	
 	@ApiModelProperty("执行方式")
 	@Column(name = "dispatch_type")
+	@Enumerated(EnumType.STRING)
 	private DispatchType dispatchType;
+	
+	@ApiModelProperty("workflow_id")
+	@Column(name = "workflow_id")
+	private String workflowId;
+	
+	@ApiModelProperty("graph")
+	@Column(name = "workflow_graph")
+	private String workflowGraph;
 
 	@Transient
+	@JsonIgnore
 	public JobKey getJobKey() {
 		return new JobKey(jobId, jobGroup);
 	}
@@ -108,6 +125,7 @@ public class Job {
 	}
 	
 	@Transient
+	@JsonIgnore
 	public TaskKey getTaskKey() {
 		return new TaskKey(taskId, taskGroup);
 	}

@@ -123,8 +123,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     Task task = JSON.parseObject(TASK_JSON.applyGet(job.getJobDataMap()), Task.class);
                     JobEnv jobEnv = initJobEnv(task, nextTrigger);
 					JobInstance ins = createJobInstance(task, jobEnv);
-					
-					List<JobBarrier> barriers = computeBarriers(conn, ins);
+					// 计算依赖
+					List<JobBarrier> barriers = task.getTaskType() == TaskType.SUB_TASK ? computeSubBarriers(conn, ins, jobEnv.getWorkflowId()) : computeBarriers(conn, ins);
 					// clear first
 					idcDriverDelegate.clearJobBarrier(conn, ins.getJobKey());
 					// double check
@@ -199,9 +199,6 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		
 		// ~~ 调度信息 ~~
 		jobInstance.setTaskType(jobEnv.getTaskType());
-		if (jobEnv.getTaskType() == TaskType.WORKFLOW) {
-			jobInstance.setWorkflowId(task.getWorkflowId());
-		}
 		if (jobEnv.getTaskType() == TaskType.SUB_TASK) {
 			jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
 		}
@@ -231,37 +228,38 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		return jobInstance;
 	}
 	
+	private List<JobBarrier> computeSubBarriers(Connection conn, JobInstance jr, String workflowId) throws SQLException {
+		List<JobBarrier> barriers = new ArrayList<>();
+		// 流程子任务，检查上游任务是否都已完成
+		List<TaskKey> depTasks = dependencyService.getPredecessors(workflowId, jr.getTaskKey());
+		if (!Utils.isNullOrEmpty(depTasks)) {
+			for (TaskKey tk : depTasks) {
+				JobKey barrierKey = IDCUtils.getSubJobKey(jr.getJobKey(), tk);
+				JobBarrier b = buildBarrier(conn, jr.getJobKey(), barrierKey, jr.getShouldFireTime());
+				if (b != null) {
+					barriers.add(b);
+				}
+			}
+		}
+		return barriers;
+	}
 	private List<JobBarrier> computeBarriers(Connection conn, JobInstance jr) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		if (jr.getTaskType() == TaskType.SUB_TASK) {
-			JobInstance wfIns = idcDriverDelegate.selectJobInstance(conn, jr.getMainInstanceId());
-			List<TaskKey> depTasks = dependencyService.getPredecessors(wfIns.getWorkflowId(), jr.getTaskKey());
-			if (!Utils.isNullOrEmpty(depTasks)) {
-				for (TaskKey tk : depTasks) {
-					JobKey barrierKey = IDCUtils.getSubJobKey(jr.getJobKey(), tk);
-					JobBarrier b = buildBarrier(conn, jr.getJobKey(), barrierKey, jr.getShouldFireTime());
-					if (b != null) {
-						barriers.add(b);
-					}
-				}
-			}
-		} else {
-			// 同周期任务是否完成
-			JobBarrier b = buildBarrier(conn, jr.getJobKey(), jr.getJobKey(), jr.getPrevFireTime());
-			if (b != null) {
-				barriers.add(b);
-			}
-			// 任务间依赖
-			List<JobDependency> jobDependencies = idcDriverDelegate.selectJobDependencies(conn, jr.getJobKey());
-			if (!Utils.isNullOrEmpty(jobDependencies)) {
-				for (JobDependency jdep : jobDependencies) {
-					// TODO 计算 shouldFireTime
-					Long shouldFireTime = jr.getShouldFireTime();
-					JobBarrier a = buildBarrier(conn, jr.getJobKey(), jdep.getDependencyJobKey(), shouldFireTime);
-					if (a != null) {
-						barriers.add(a);
-					}
+		// 同周期任务是否完成
+		JobBarrier b = buildBarrier(conn, jr.getJobKey(), jr.getJobKey(), jr.getPrevFireTime());
+		if (b != null) {
+			barriers.add(b);
+		}
+		// 任务间依赖
+		List<JobDependency> jobDependencies = idcDriverDelegate.selectJobDependencies(conn, jr.getJobKey());
+		if (!Utils.isNullOrEmpty(jobDependencies)) {
+			for (JobDependency jdep : jobDependencies) {
+				// TODO 计算 shouldFireTime
+				Long shouldFireTime = jr.getShouldFireTime();
+				JobBarrier a = buildBarrier(conn, jr.getJobKey(), jdep.getDependencyJobKey(), shouldFireTime);
+				if (a != null) {
+					barriers.add(a);
 				}
 			}
 		}

@@ -316,14 +316,15 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				
 				// 工作流任务，执行子任务
 				if (ins.getTaskType() == TaskType.SUB_TASK) {
-					List<TaskKey> nextTasks = dependencyService.getSuccessors(ins.getWorkflowId(), ins.getTaskKey());
+					// TODO 
+					/*List<TaskKey> nextTasks = dependencyService.getSuccessors(ins.getWorkflowId(), ins.getTaskKey());
 					if (!Utils.isNullOrEmpty(nextTasks)) {
 						for (Task subTask : taskService.getTasks(nextTasks)) {
 							JobEnv env = new JobEnv();
 							env.setMainInstanceId(ins.getMainInstanceId());
 							// scheduleSubTask(subTask, env);
 						}
-					}
+					}*/
 				}
 			} catch (Exception e) {
 				LOGGER.error("更新任务状态出错: " + e.getMessage());

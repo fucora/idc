@@ -39,6 +39,13 @@ public class JobController {
 	@Inject
 	private TaskService taskService;
 	
+	@ApiOperation("查询调度计划列表")
+	@PostMapping("/query")
+	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
+		PageData<Job> data = jobService.findJob(jobQuery, pager);
+		return ServiceResult.success(data);
+	}
+	
 	@ApiOperation("获取任务信息")
 	@GetMapping
 	public ServiceResult<Job> getJob(JobKey jobKey) {
@@ -63,13 +70,6 @@ public class JobController {
 		vo.setJobRuntime(jr);
 		
 		return ServiceResult.success(vo);
-	}
-	
-	@ApiOperation("查询任务，分页")
-	@PostMapping("/query")
-	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
-		PageData<Job> data = jobService.findJob(jobQuery, pager);
-		return ServiceResult.success(data);
 	}
 	
 	@ApiOperation("查询负责人信息")

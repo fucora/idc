@@ -33,14 +33,36 @@ public class JobInstance {
 	private Integer instanceId;
 	
 	// ~~ 调度相关（主） ~~
-	@ApiModelProperty("调度ID")
+	@ApiModelProperty("计划ID")
 	@Column(name = "job_id")
 	private String jobId;
 
-	@ApiModelProperty("调度Group")
+	@ApiModelProperty("计划Group")
 	@Column(name = "job_group")
 	private String jobGroup;
+	
+	@ApiModelProperty("计划名称")
+	@Column(name = "job_name")
+	private String jobName;
 
+	@ApiModelProperty("业务日期")
+	@Column(name = "load_date")
+	private String loadDate;
+	
+	@ApiModelProperty("周期类型")
+	@Column(name = "schedule_type")
+	@Enumerated(EnumType.STRING)
+	private ScheduleType scheduleType;
+
+	@ApiModelProperty("参数设置")
+	@Column(name = "parameter")
+	private String parameter;
+	
+	@ApiModelProperty("责任人")
+	@Column(name = "assignee")
+	private String assignee;
+	
+	// ~~ 运行相关 ~~
 	@ApiModelProperty("本次调度日期")
 	@Column(name = "should_fire_time")
 	private Long shouldFireTime;
@@ -49,33 +71,29 @@ public class JobInstance {
 	@Column(name = "prev_fire_time")
 	private Long prevFireTime;
 	
-	@ApiModelProperty("周期类型")
-	@Column(name = "schedule_type")
+	@ApiModelProperty("开始时间")
+	@Column(name = "start_time")
+	private LocalDateTime startTime;
+
+	@ApiModelProperty("结束时间")
+	@Column(name = "end_time")
+	private LocalDateTime endTime;
+
+	@ApiModelProperty("任务实例状态")
+	@Column(name = "status")
 	@Enumerated(EnumType.STRING)
-	private ScheduleType scheduleType;
-
-	@ApiModelProperty("业务日期")
-	@Column(name = "load_date")
-	private String loadDate;
-
-	@ApiModelProperty("参数设置")
-	@Column(name = "parameter", length = 4000)
-	private String parameter;
+	private JobInstanceStatus status;
 	
 	@ApiModelProperty("父实例ID")
-	@Column(name = "mainInstanceId;")
+	@Column(name = "main_instance_id;")
 	private Integer mainInstanceId;
-	
-	@ApiModelProperty("责任人")
-	@Column(name = "assignee")
-	private String assignee;
 	
 	// ~~ 任务相关 ~~
 	@ApiModelProperty("任务ID")
 	@Column(name = "task_id")
 	private String taskId;
 
-	@ApiModelProperty("任务组")
+	@ApiModelProperty("任务域")
 	@Column(name = "task_group", length = 50)
 	private String taskGroup;
 
@@ -90,25 +108,6 @@ public class JobInstance {
 	@ApiModelProperty("执行方式")
 	@Column(name = "dispatch_type")
 	private DispatchType dispatchType;
-	
-	@ApiModelProperty("工作流ID")
-	@Column(name = "workflow_id")
-	private String workflowId;
-
-	// ~~ 运行相关 ~~
-	@ApiModelProperty("开始时间")
-	@Column(name = "start_time")
-	private LocalDateTime startTime;
-
-	@ApiModelProperty("结束时间")
-	@Column(name = "end_time")
-	private LocalDateTime endTime;
-
-	@ApiModelProperty("任务实例状态")
-	@Column(name = "status")
-	@Enumerated(EnumType.STRING)
-	private JobInstanceStatus status;
-
 	
 	@Transient
 	public <T> T getParameterObject(Class<T> type) {
