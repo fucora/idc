@@ -171,9 +171,16 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			.orElseGet(JobEnv::new);
 		env.setJobKey(new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup()));
 		env.setTaskKey(new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup()));
-		env.setInstanceId(Integer.parseInt(trigger.getFireInstanceId()));
+
+		// 构建默认值
+		if (env.getInstanceId() == null) {
+			env.setInstanceId(Integer.parseInt(trigger.getFireInstanceId()));
+		}
 		if (env.getShouldFireTime() == null) {
 			env.setShouldFireTime(Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L));
+		}
+		if (env.getPrevFireTime() == null) {
+			env.setPrevFireTime(Optional.ofNullable(trigger.getPreviousFireTime()).map(Date::getTime).orElse(-1L));
 		}
 		if (env.getTaskType() == null) {
 			env.setTaskType(task.getTaskType());
@@ -188,12 +195,17 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		// ~~ 基本信息 ~~
 		jobInstance.setTaskKey(task.getTaskKey());
 		jobInstance.setContentType(task.getContentType());
+		jobInstance.setDispatchType(task.getDispatchType());
 		
 		// ~~ 调度信息 ~~
 		jobInstance.setTaskType(jobEnv.getTaskType());
-		if (task.getTaskType() == TaskType.WORKFLOW_TASK) {
+		if (jobEnv.getTaskType() == TaskType.WORKFLOW) {
 			jobInstance.setWorkflowId(task.getWorkflowId());
 		}
+		if (jobEnv.getTaskType() == TaskType.SUB_TASK) {
+			jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
+		}
+		
 		// id
 		jobInstance.setInstanceId(jobEnv.getInstanceId());
 		// 所属计划
@@ -216,15 +228,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		jobInstance.setStatus(JobInstanceStatus.NEW);
 		// parameter
 		jobInstance.setParameter(jobEnv.getParameter());
-		// ~~ job env ~~
-		jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
 		return jobInstance;
 	}
 	
 	private List<JobBarrier> computeBarriers(Connection conn, JobInstance jr) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		if (jr.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+		if (jr.getTaskType() == TaskType.SUB_TASK) {
 			JobInstance wfIns = idcDriverDelegate.selectJobInstance(conn, jr.getMainInstanceId());
 			List<TaskKey> depTasks = dependencyService.getPredecessors(wfIns.getWorkflowId(), jr.getTaskKey());
 			if (!Utils.isNullOrEmpty(depTasks)) {

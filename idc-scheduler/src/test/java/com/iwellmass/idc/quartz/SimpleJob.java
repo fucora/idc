@@ -9,6 +9,9 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
+import com.iwellmass.idc.model.JobInstance;
+
 @DisallowConcurrentExecution
 public class SimpleJob implements Job{
 
@@ -17,11 +20,12 @@ public class SimpleJob implements Job{
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		
 		LOGGER.info("execute job: {}", sdf.format(context.getScheduledFireTime()));
+
+		JobInstance jobIns = IDCContextKey.CONTEXT_INSTANCE.applyGet(context);
 		
-		String instanceId = context.getFireInstanceId();
-		
-		
-		// throw new JobExecutionException("执行失败");
+		System.out.println(JSON.toJSONString(jobIns));
+		throw new JobExecutionException("failure");
 	}
 }

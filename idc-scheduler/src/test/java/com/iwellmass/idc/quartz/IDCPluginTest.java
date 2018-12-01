@@ -42,9 +42,10 @@ public class IDCPluginTest {
 		task.setTaskKey(new TaskKey(lqd_01, group));
 		task.setTaskName("工作流的任务");
 		task.setDispatchType(DispatchType.AUTO);
-		task.setTaskType(TaskType.WORKFLOW_TASK);
+		task.setTaskType(TaskType.WORKFLOW);
 		task.setContentType("simple-test");
 		task.setWorkflowId("1");
+		task.setDispatchType(DispatchType.AUTO);
 		
 		// 子任务
 		Task sub1 = new Task();

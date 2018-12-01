@@ -255,14 +255,14 @@ public class JobServiceImpl implements JobService {
 		Specification<Job> spec = (root, cq, cb) -> {
 			return cb.and(
 					cb.equal(root.get("scheduleType"), scheduleType),
-					root.get("taskType").in(TaskType.WORKFLOW_TASK, TaskType.NODE_TASK)
+					root.get("taskType").in(TaskType.WORKFLOW, TaskType.NODE_TASK)
 			);
 		};
 		return jobRepository.findAll(spec);
 	}
 
 	public List<Job> getWorkflowJob() {
-		return jobRepository.findByTaskType(TaskType.WORKFLOW_TASK);
+		return jobRepository.findByTaskType(TaskType.WORKFLOW);
 	}
 
 	public List<Job> getWorkflowJob(JobKey jobKey) {

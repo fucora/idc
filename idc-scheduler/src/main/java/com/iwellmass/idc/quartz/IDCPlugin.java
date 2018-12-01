@@ -205,7 +205,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		// mark
 		jobEnv.setMainInstanceId(mainJobInsId);
-		jobEnv.setTaskType(TaskType.WORKFLOW_SUB_TASK);
+		jobEnv.setTaskType(TaskType.SUB_TASK);
 		
 		// seam as main job
 		jobEnv.setAssignee(mainJob.getAssignee());
@@ -243,7 +243,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		TASK_JSON.applyPut(jobData, JSON.toJSONString(task));
 		
 		JobDetail jobDetail = null;
-		if (task.getTaskType() == TaskType.WORKFLOW_TASK) {
+		if (task.getTaskType() == TaskType.WORKFLOW) {
 			 jobDetail = JobBuilder.newJob(IDCWorkflowJob.class)
 				 .withIdentity(task.getTaskId(), task.getTaskGroup())
 				 .usingJobData(jobData)
@@ -298,9 +298,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			}
 		}
 		
-		/* (non-Javadoc)
-		 * @see com.iwellmass.idc.executor.IDCStatusService#fireCompleteEvent(com.iwellmass.idc.executor.CompleteEvent)
-		 */
 		@Override
 		public void fireCompleteEvent(CompleteEvent event) {
 			LOGGER.info("Get event {}", event);
@@ -313,12 +310,12 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				// log this
 				logger.log(event.getInstanceId(), event.getMessage())
 					.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
-				if (ins.getTaskType() == TaskType.NODE_TASK) {
+				if (ins.getTaskType() == TaskType.SUB_TASK) {
 					logger.log(ins.getMainInstanceId(), "子任务 {} 结束, 执行结果: {}", ins.getInstanceId(), event.getFinalStatus());
 				}
 				
 				// 工作流任务，执行子任务
-				if (ins.getTaskType() == TaskType.WORKFLOW_SUB_TASK) {
+				if (ins.getTaskType() == TaskType.SUB_TASK) {
 					List<TaskKey> nextTasks = dependencyService.getSuccessors(ins.getWorkflowId(), ins.getTaskKey());
 					if (!Utils.isNullOrEmpty(nextTasks)) {
 						for (Task subTask : taskService.getTasks(nextTasks)) {
@@ -329,9 +326,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 					}
 				}
 			} catch (Exception e) {
-				String error = "更新任务状态出错: " + e.getMessage();
-				logger.log(event.getInstanceId(), error);
-				throw new AppException(error, e);
+				LOGGER.error("更新任务状态出错: " + e.getMessage());
 			}
 		}
 	}
@@ -388,7 +383,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				
 				logger.clearLog(ins.getInstanceId())
 				.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 任务类型 {}", ins.getInstanceId(), ins.getDispatchType(), ins.getTaskType())
-				.log(ins.getInstanceId(), "业务日期 {}, 批次 {}", ins.getLoadDate(), SDF.format(new Date(ins.getShouldFireTime())))
+				.log(ins.getInstanceId(), "周期类型 {}, 业务日期 {}, 批次 {}", ins.getScheduleType(), ins.getLoadDate(), SDF.format(new Date(ins.getShouldFireTime())))
 				.log(ins.getInstanceId(), "运行参数: {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter());
 				
 				IDCContextKey.CONTEXT_INSTANCE.applyPut(context, ins);
@@ -417,7 +412,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			JobInstance instance = CONTEXT_INSTANCE.applyGet(context);
 			
 			// 记录任务
-			if (instance.getTaskType() == TaskType.WORKFLOW_TASK) {
+			if (instance.getTaskType() == TaskType.WORKFLOW) {
 				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getInstanceId())
 					.setStatus(JobInstanceStatus.NEW)
 					.setMessage("执行工作流，业务日期 {}", instance.getLoadDate()));
@@ -440,7 +435,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			JobInstance instance = CONTEXT_INSTANCE.applyGet(context);
 			if (jobException != null) {
 				// 通知任务已经完成
-				if (instance.getTaskType() == TaskType.WORKFLOW_TASK) {
+				if (instance.getTaskType() == TaskType.WORKFLOW) {
 					statusService.fireCompleteEvent(CompleteEvent.failureEvent()
 						.setInstanceId(instance.getInstanceId())
 						.setMessage("执行失败: {}", jobException.getMessage()));
@@ -451,7 +446,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				}
 			} else {
 				// 本任务日志
-				if (instance.getTaskType() != TaskType.WORKFLOW_TASK) {
+				if (instance.getTaskType() != TaskType.WORKFLOW) {
 					statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getInstanceId())
 							.setStatus(JobInstanceStatus.ACCEPTED)	
 							.setMessage("等待执行结果...", instance.getInstanceId()));
