@@ -31,4 +31,7 @@ public class JobEnv {
 	// ~~ 执行参数 ~~
 	private String parameter;
 	
+	// ~~ 节点类型 ~~
+	private TaskType taskType;
+	
 }

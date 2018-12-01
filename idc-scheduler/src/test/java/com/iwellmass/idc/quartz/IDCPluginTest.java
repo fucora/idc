@@ -13,13 +13,13 @@ import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.iwellmass.idc.AllSimpleService;
-import com.iwellmass.idc.WorkflowService;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.WorkflowEdge;
 
 public class IDCPluginTest {
 
@@ -48,14 +48,14 @@ public class IDCPluginTest {
 		
 		// 子任务
 		Task sub1 = new Task();
-		sub1.setTaskKey(new TaskKey(lqd_02 + "_sub1", group));
+		sub1.setTaskKey(new TaskKey("sub1", group));
 		sub1.setTaskName("sub1");
 		sub1.setDispatchType(DispatchType.AUTO);
 		sub1.setTaskType(TaskType.NODE_TASK);
 		sub1.setContentType("simple-test");
 		
 		Task sub2 = new Task();
-		sub2.setTaskKey(new TaskKey(lqd_02 + "_sub2", group));
+		sub2.setTaskKey(new TaskKey("sub2", group));
 		sub2.setTaskName("sub2");
 		sub2.setDispatchType(DispatchType.AUTO);
 		sub2.setTaskType(TaskType.NODE_TASK);
@@ -65,11 +65,13 @@ public class IDCPluginTest {
 		allService.saveTask(sub1);
 		allService.saveTask(sub2);
 		
+		allService.addTaskDependency("1", WorkflowEdge.START, sub1.getTaskKey(), sub2.getTaskKey(), WorkflowEdge.END);
+		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);
 		factory.setTaskService(allService);
 		factory.setJobService(allService);
-		factory.setWorkflowService(allService);
+		factory.setDependencyService(allService);
 		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
 		

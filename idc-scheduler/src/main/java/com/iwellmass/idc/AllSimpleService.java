@@ -3,11 +3,11 @@ package com.iwellmass.idc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -15,8 +15,9 @@ import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskEdge;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.WorkflowEdge;
 
-public class AllSimpleService implements WorkflowService, TaskService, JobService {
+public class AllSimpleService implements DependencyService, TaskService, JobService {
 	
 	private final Map<String, Graph<TaskKey, TaskEdge>> workflowMap = new HashMap<>(); 
 	
@@ -26,39 +27,11 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 		return taskMap.get(taskKey);
 	}
 	
-//	public void addTask(Task mainTask, Task subTask, TaskKey prev, TaskKey next) {
-//		
-//		Graph<TaskKey, TaskEdge> graph = workflowMap.get(mainTask.getWorkflowId());
-//		if (graph == null) {
-//			graph = new DirectedAcyclicGraph<>(TaskEdge.class);
-//			graph.addVertex(START);
-//			graph.addVertex(END);
-//			workflowMap.put(mainTask.getWorkflowId(), graph);
-//		}
-//		
-//		taskMap.put(mainTask.getTaskKey(), mainTask);
-//		taskMap.put(subTask.getTaskKey(), subTask);
-//		
-//		graph.addVertex(prev);
-//		graph.addVertex(subTask.getTaskKey());
-//		graph.addVertex(next);
-//		
-//		graph.addEdge(prev, subTask.getTaskKey());
-//		graph.addEdge(subTask.getTaskKey(), next);
-//	}
-
-	@Override
-	public Graph<TaskKey, TaskEdge> getWorkflow(TaskKey taskKey) {
-		String id = Objects.requireNonNull(taskMap.get(taskKey)).getWorkflowId();
-		Graph<TaskKey, TaskEdge> aa = workflowMap.get(id);
-		return Objects.requireNonNull(aa);
-	}
-
 	@Override
 	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
 		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
 		return Graphs.successorListOf(wf, taskKey).stream().filter(t -> {
-			return !t.equals(START) && !t.equals(END);
+			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());
 	}
 
@@ -66,7 +39,7 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
 		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
 		return Graphs.predecessorListOf(wf, taskKey).stream().filter(t -> {
-			return !t.equals(START) && !t.equals(END);
+			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());
 	}
 
@@ -95,6 +68,23 @@ public class AllSimpleService implements WorkflowService, TaskService, JobServic
 	@Override
 	public List<Task> getTasksByType(TaskType workflowSubTask) {
 		return null;
+	}
+
+	public void addTaskDependency(String workflowId, TaskKey... depChain) {
+		Graph<TaskKey, TaskEdge> graph = workflowMap.get(workflowId);
+		if (graph == null) {
+			graph = new DirectedAcyclicGraph<>(TaskEdge.class);
+			graph.addVertex(WorkflowEdge.START);
+			graph.addVertex(WorkflowEdge.END);
+			workflowMap.put(workflowId, graph);
+		}
+		graph.addVertex(depChain[0]);
+		for (int i = 0; i < depChain.length - 1; i++) {
+			TaskKey src = depChain[i];
+			TaskKey target = depChain[i + 1];
+			graph.addVertex(target);
+			graph.addEdge(src, target);
+		}
 	}
 
 	

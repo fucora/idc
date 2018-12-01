@@ -46,6 +46,11 @@ public class QTaskService implements TaskService {
 
 	@Override
 	public void saveTask(Task task) {
+		
+		if (task.getTaskId() == null) {
+			task.setTaskId(System.currentTimeMillis() + "");
+		}
+		
 		taskRepository.save(task);
 	}
 

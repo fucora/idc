@@ -91,7 +91,7 @@ public class JobInstance {
 	@Column(name = "dispatch_type")
 	private DispatchType dispatchType;
 	
-	@ApiModelProperty("执行方式")
+	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")
 	private String workflowId;
 

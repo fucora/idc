@@ -22,12 +22,14 @@ public class IDCContextKey<T> {
 	// ~~ scheduler ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 	
+	// TASK
+	public static final IDCContextKey<String> TASK_JSON = defOpt("idc.task.json", String.class, null);
+	
 	// ~~ JOB ~~
-	public static final IDCContextKey<String> JOB_JSON = defOpt("idc.job.json", String.class, null);
 	public static final IDCContextKey<String> JOB_RUNTIME = defOpt("idc.job.jobRuntime", String.class, null);
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
 	/** 参数解析 */
-	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
+//	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
 	
 	// ~~ Context ~~
 	/** 任务实例 */
