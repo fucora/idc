@@ -49,8 +49,8 @@ public class JobInstanceController {
 		return ServiceResult.success(queryService.getAllAssignee());
 	}
 
-	@ApiOperation("获取工作流实例")
-	@GetMapping("/{id}/workflow-job")
+	@ApiOperation("获取子任务实例")
+	@GetMapping("/{id}/sub-job-instance")
 	public ServiceResult<List<JobInstance>> getWorkflowTask(@PathVariable("id") Integer id) {
 		List<JobInstance> result = queryService.getWorkflowSubInstance(id);
 		return ServiceResult.success(result);

@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.quartz.SchedulerException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,16 +17,17 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobServiceImpl;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
+import com.iwellmass.idc.app.vo.ScheduleRequest;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -38,6 +40,9 @@ public class JobController {
 	
 	@Inject
 	private TaskService taskService;
+	
+	@Inject
+	private IDCPlugin idcPlugin;
 	
 	@ApiOperation("查询调度列表")
 	@PostMapping("/query")
@@ -80,53 +85,64 @@ public class JobController {
 		List<Assignee> data = jobService.getAllAssignee();
 		return ServiceResult.success(data);
 	}
+	
+	// ~~~~~~~~~~~~~ 调度器接口 should be called by rpc  ~~~~~~~~~~~~~
+	
 
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
-	public ServiceResult<String> schedule(@RequestBody Task task, @RequestBody ScheduleProperties sp) {
-		jobService.schedule(task, sp);
-		return ServiceResult.success("提交成功");
+	public ServiceResult<String> schedule(ScheduleRequest sr) {
+		try {
+			Task task = sr.getTask();
+			ScheduleProperties sp = sr.getScheduleConfig();
+			idcPlugin.schedule(task, sp);
+			return ServiceResult.success("提交成功");
+		} catch (SchedulerException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
 	}
 	
 	@ApiOperation("重新调度任务")
 	@PostMapping(path = "/reschedule")
-	public ServiceResult<String> reschedule(@RequestBody Job job) {
-		jobService.reschedule(job);
-		return ServiceResult.success("提交成功");
+	public ServiceResult<String> reschedule(@RequestBody JobKey jobKey, @RequestBody ScheduleProperties scheduleConfig) {
+		try {
+			idcPlugin.reschedule(jobKey, scheduleConfig);
+			return ServiceResult.success("提交成功");
+		} catch (SchedulerException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
 	}
 	
-	@ApiOperation("重新调度任务 Fast 模式")
-	@PostMapping(path = "/reschedule-fast")
-	public ServiceResult<String> rescheduleFast(@RequestBody JobKey jobKey) {
-		jobService.reschedule(jobKey);
-		return ServiceResult.success("提交成功");
-	}
-
 	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
 	public ServiceResult<String> unschedule(@RequestBody JobKey jobKey) {
-		jobService.unschedule(jobKey);
-		return ServiceResult.success("提交成功");
+		try {
+			idcPlugin.unschedule(jobKey);
+			return ServiceResult.success("提交成功");
+		} catch (SchedulerException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
 	}
 
 	@PostMapping(value = "/pause")
-	@ApiOperation("冻结 Job")
+	@ApiOperation("冻结调度")
 	public ServiceResult<String> pause(@RequestBody PauseRequest request) {
-		jobService.pause(request, request.isForceLock());
-		return ServiceResult.success("任务已冻结");
+		try {
+			idcPlugin.pause(request);
+			return ServiceResult.success("任务已冻结");
+		} catch (SchedulerException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
 	}
 
 	@PostMapping(value = "/resume")
-	@ApiOperation("恢复 Job")
+	@ApiOperation("恢复调度")
 	public ServiceResult<String> resume(@RequestBody JobKey jobKey) {
-		jobService.resume(jobKey);
-		return ServiceResult.success("任务已恢复");
-	}
-
-	@ApiOperation("补数")
-	@PostMapping("/complement")
-	public ServiceResult<String> complement(@RequestBody ComplementRequest request) {
-		jobService.complement(request);
-		return ServiceResult.success("提交成功");
+		try {
+			idcPlugin.resume(jobKey);
+			return ServiceResult.success("任务已冻结");
+		} catch (SchedulerException e) {
+			return ServiceResult.failure(e.getMessage());
+		}
 	}
 }
