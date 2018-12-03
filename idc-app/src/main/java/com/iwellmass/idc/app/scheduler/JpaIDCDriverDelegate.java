@@ -13,22 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
-import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.PluginVersionRepository;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
 
 @Component
 public class JpaIDCDriverDelegate implements IDCDriverDelegate {
-
-	@Inject
-	private JobRepository jobRepo;
 
 	@Inject
 	private JobInstanceRepository instanceRepo;
@@ -72,19 +65,8 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	}
 
 	@Override
-	public void deleteBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
-			throws SQLException {
-		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);
-	}
-
-	@Override
 	public Integer nextInstanceId() {
 		return pluginRepo.increaseInstanceSeqAndGet();
-	}
-
-	@Override
-	public void clearJobBarrier(Connection conn) throws SQLException {
-		barrierRepo.deleteAll();
 	}
 
 	@Override
@@ -97,4 +79,14 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 		return dependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
+	@Override
+	public void clearAllBarrier(Connection conn) throws SQLException {
+		barrierRepo.deleteAll();
+	}
+
+	@Override
+	public void disableBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
+			throws SQLException {
+		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);
+	}
 }

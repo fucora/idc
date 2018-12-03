@@ -37,7 +37,7 @@ public class JobInstanceController {
 
 	@ApiOperation("通过条件检索实例（分页显示）")
 	@PostMapping("/query")
-	public ServiceResult<PageData<JobInstance>> findTaskInstanceByCondition(
+	public ServiceResult<PageData<JobInstance>> queryJobInstance(
 			@RequestBody(required = false) JobInstanceQuery query, Pager pager) {
 		PageData<JobInstance> taskInstance = queryService.findJobInstance(query, pager);
 		return ServiceResult.success(taskInstance);

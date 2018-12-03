@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,64 +33,44 @@ public class JobInstance {
 	private Integer instanceId;
 	
 	// ~~ 调度相关（主） ~~
+	@ApiModelProperty("计划ID")
 	@Column(name = "job_id")
 	private String jobId;
 
+	@ApiModelProperty("计划Group")
 	@Column(name = "job_group")
 	private String jobGroup;
-
-	@Column(name = "should_fire_time")
-	private Long shouldFireTime;
+	
+	@ApiModelProperty("计划名称")
+	@Column(name = "job_name")
+	private String jobName;
 
 	@ApiModelProperty("业务日期")
 	@Column(name = "load_date")
 	private String loadDate;
+	
+	@ApiModelProperty("周期类型")
+	@Column(name = "schedule_type")
+	@Enumerated(EnumType.STRING)
+	private ScheduleType scheduleType;
 
 	@ApiModelProperty("参数设置")
-	@Column(name = "parameter", length = 4000)
+	@Column(name = "parameter")
 	private String parameter;
 	
-	@ApiModelProperty("工作流ID")
-	@Column(name = "workflow_id")
-	private Integer workflowId;
-	
-	// ~~ 调度相关（子）~~
-	@ApiModelProperty("父实例ID")
-	@Column(name = "workflow_instance_id;")
-	private Integer workflowInstanceId;
-	
-	// ~~ 任务相关 ~~
-	@ApiModelProperty("任务 ID")
-	@Column(name = "task_id")
-	private String taskId;
-
-	@Column(name = "group_id", length = 50)
-	private String groupId;
-
-	@Column(name = "task_name", length = 200)
-	private String taskName;
-
-	@ApiModelProperty("描述")
-	@Column(name = "description", length = 500)
-	private String description;
-
-	@Column(name = "task_type")
-	private TaskType taskType;
-
-	@ApiModelProperty("ContentType")
-	@Column(name = "content_type")
-	private String contentType;
-
 	@ApiModelProperty("责任人")
 	@Column(name = "assignee")
 	private String assignee;
-
-	@ApiModelProperty("schedule_type")
-	@Column(name = "schedule_type")
-	private ScheduleType scheduleType;
-
 	
 	// ~~ 运行相关 ~~
+	@ApiModelProperty("本次调度日期")
+	@Column(name = "should_fire_time")
+	private Long shouldFireTime;
+	
+	@ApiModelProperty("上次调度日期")
+	@Column(name = "prev_fire_time")
+	private Long prevFireTime;
+	
 	@ApiModelProperty("开始时间")
 	@Column(name = "start_time")
 	private LocalDateTime startTime;
@@ -99,12 +81,33 @@ public class JobInstance {
 
 	@ApiModelProperty("任务实例状态")
 	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
 	private JobInstanceStatus status;
-
-	@ApiModelProperty("实例类型")
-	@Column(name = "instance_type")
-	private DispatchType instanceType;
 	
+	@ApiModelProperty("父实例ID")
+	@Column(name = "main_instance_id;")
+	private Integer mainInstanceId;
+	
+	// ~~ 任务相关 ~~
+	@ApiModelProperty("任务ID")
+	@Column(name = "task_id")
+	private String taskId;
+
+	@ApiModelProperty("任务域")
+	@Column(name = "task_group", length = 50)
+	private String taskGroup;
+
+	@ApiModelProperty("任务类型")
+	@Column(name = "task_type")
+	private TaskType taskType;
+
+	@ApiModelProperty("ContentType")
+	@Column(name = "content_type")
+	private String contentType;
+	
+	@ApiModelProperty("执行方式")
+	@Column(name = "dispatch_type")
+	private DispatchType dispatchType;
 	
 	@Transient
 	public <T> T getParameterObject(Class<T> type) {
@@ -116,7 +119,7 @@ public class JobInstance {
 
 	@Transient
 	public DispatchType getDispatchType() {
-		return instanceType;
+		return dispatchType;
 	}
 
 	@Transient
@@ -132,10 +135,14 @@ public class JobInstance {
 	
 	@Transient
 	public TaskKey getTaskKey() {
-		return new TaskKey(taskId, groupId);
+		return new TaskKey(taskId, taskGroup);
 	}
 	
-
+	public void setTaskKey(TaskKey taskKey) {
+		this.taskId = taskKey.getTaskId();
+		this.taskGroup = taskKey.getTaskGroup();
+	}
+	
 	@Override
 	public String toString() {
 		return "JobInstance [instanceId=" + instanceId + ", jobId=" + jobId + ", jobGroup=" + jobGroup + ", loadDate="

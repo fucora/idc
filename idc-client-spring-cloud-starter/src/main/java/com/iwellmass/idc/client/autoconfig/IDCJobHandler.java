@@ -52,7 +52,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		// safe execute
 		execute(jobInstance);
 		LOGGER.info("任务 {} [groupId={}, taskId={}] accepted, timestamp: {}", jobInstance.getInstanceId(),
-				jobInstance.getTaskId(), jobInstance.getGroupId(), System.currentTimeMillis());
+				jobInstance.getTaskId(), jobInstance.getTaskGroup(), System.currentTimeMillis());
 		return ServiceResult.success("任务已提交");
 	}
 	

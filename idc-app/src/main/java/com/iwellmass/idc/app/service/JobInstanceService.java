@@ -71,7 +71,7 @@ public class JobInstanceService {
 			Trigger trigger = TriggerBuilder.newTrigger()
 				.withIdentity(triggerKey)
 				.withSchedule(SimpleScheduleBuilder.simpleSchedule())
-				.forJob(instance.getTaskId(), instance.getGroupId()) // 哪个业务
+				.forJob(instance.getTaskId(), instance.getTaskGroup()) // 哪个业务
 				.startNow().build();
 			
 			JobDataMap jdm = trigger.getJobDataMap();

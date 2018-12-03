@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iwellmass.idc.app.mapper.JobRuntimeMapper">
+
+
+	<select id="selectJobBarrierVO"  resultType="com.iwellmass.idc.app.vo.JobBarrierVO" >
+		SELECT
+			b.barrier_id,
+			b.barrier_group,
+			b.barrier_name,
+			b.barrier_should_fire_time,
+			i.`status` as barrier_status
+		FROM
+			t_idc_barrier b
+			LEFT JOIN t_idc_job_instance i ON b.barrier_id = i.job_id  AND b.barrier_group = i.job_group 
+		WHERE
+			b.job_id = #{jobKey.jobId}
+			AND b.job_group = #{jobKey.jobGroup}
+	</select>
+	
+</mapper>

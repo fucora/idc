@@ -10,14 +10,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.JobQuery;
+import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.service.JobServiceImpl;
+import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -30,9 +34,19 @@ import io.swagger.annotations.ApiOperation;
 public class JobController {
 	
 	@Inject
-	private JobService jobService;
+	private JobServiceImpl jobService;
 	
-	@ApiOperation("获取任务信息")
+	@Inject
+	private TaskService taskService;
+	
+	@ApiOperation("查询调度列表")
+	@PostMapping("/query")
+	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
+		PageData<Job> data = jobService.findJob(jobQuery, pager);
+		return ServiceResult.success(data);
+	}
+	
+	@ApiOperation("获取调度信息")
 	@GetMapping
 	public ServiceResult<Job> getJob(JobKey jobKey) {
 		Job job = jobService.findJob(jobKey);
@@ -42,11 +56,22 @@ public class JobController {
 		return ServiceResult.success(job);
 	}
 	
-	@ApiOperation("查询任务，分页")
-	@PostMapping("/query")
-	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
-		PageData<Job> data = jobService.findJob(jobQuery, pager);
-		return ServiceResult.success(data);
+	@ApiOperation("获取调度运行时信息")
+	@GetMapping("/runtime")
+	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
+
+		JobRuntime jr = jobService.getJobRuntime(jobKey);
+		Job job = jobService.findJob(jobKey);
+		Task task = taskService.getTask(job.getTaskKey());
+		task.setGraphId(job.getWorkflowId());
+		task.setGraph(job.getWorkflowGraph());
+		
+		JobRuntimeVO vo = new JobRuntimeVO();
+		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));
+		vo.setTask(task);
+		vo.setJobRuntime(jr);
+		
+		return ServiceResult.success(vo);
 	}
 	
 	@ApiOperation("查询负责人信息")

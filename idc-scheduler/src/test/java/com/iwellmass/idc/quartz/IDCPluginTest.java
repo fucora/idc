@@ -12,16 +12,14 @@ import org.quartz.Scheduler;
 import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-import com.iwellmass.idc.StdWorkflowService;
-import com.iwellmass.idc.WorkflowService;
-import com.iwellmass.idc.model.CronPicker;
+import com.iwellmass.idc.AllSimpleService;
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.WorkflowEdge;
 
 public class IDCPluginTest {
 
@@ -37,51 +35,50 @@ public class IDCPluginTest {
 		
 		IDCPlugin plugin = new SimpleIDCPlugin();
 		
-		StdWorkflowService taskService = new StdWorkflowService();
+		AllSimpleService allService = new AllSimpleService();
 		
 		// 主任务
 		Task task = new Task();
 		task.setTaskKey(new TaskKey(lqd_01, group));
 		task.setTaskName("工作流的任务");
 		task.setDispatchType(DispatchType.AUTO);
-		task.setTaskType(TaskType.WORKFLOW_TASK);
+		task.setTaskType(TaskType.WORKFLOW);
 		task.setContentType("simple-test");
-		task.setWorkflowId(1);
+		task.setWorkflowId("1");
+		task.setDispatchType(DispatchType.AUTO);
 		
 		// 子任务
 		Task sub1 = new Task();
-		sub1.setTaskKey(new TaskKey(lqd_02 + "_sub1", group));
+		sub1.setTaskKey(new TaskKey("sub1", group));
 		sub1.setTaskName("sub1");
 		sub1.setDispatchType(DispatchType.AUTO);
-		sub1.setTaskType(TaskType.WORKFLOW_SUB_TASK);
+		sub1.setTaskType(TaskType.NODE_TASK);
 		sub1.setContentType("simple-test");
-		sub1.setWorkflowId(1);
 		
 		Task sub2 = new Task();
-		sub2.setTaskKey(new TaskKey(lqd_02 + "_sub2", group));
+		sub2.setTaskKey(new TaskKey("sub2", group));
 		sub2.setTaskName("sub2");
 		sub2.setDispatchType(DispatchType.AUTO);
-		sub2.setTaskType(TaskType.WORKFLOW_SUB_TASK);
+		sub2.setTaskType(TaskType.NODE_TASK);
 		sub2.setContentType("simple-test");
-		sub2.setWorkflowId(1);
 		
-		taskService.addTask(task, sub1, WorkflowService.START, sub2.getTaskKey());
-		taskService.addTask(task, sub2, sub1.getTaskKey(), WorkflowService.END);
+		allService.saveTask(task);
+		allService.saveTask(sub1);
+		allService.saveTask(sub2);
 		
+		allService.addTaskDependency("1", WorkflowEdge.START, sub1.getTaskKey(), sub2.getTaskKey(), WorkflowEdge.END);
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);
-		factory.setWorkflowService(taskService);
+		factory.setTaskService(allService);
+		factory.setJobService(allService);
+		factory.setDependencyService(allService);
 		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
 		
 		Scheduler scheduler = factory.getScheduler();
 		scheduler.clear();
 		scheduler.start();
-		
-		CronPicker cronPicker = new CronPicker();
-		cronPicker.setDays(Arrays.asList(-1));
-		cronPicker.setDuetime(LocalTime.MIN);
 		
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.MONTHLY);

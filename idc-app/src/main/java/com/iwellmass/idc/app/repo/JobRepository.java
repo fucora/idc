@@ -19,7 +19,7 @@ public interface JobRepository extends CrudRepository<Job, JobKey>, JpaSpecifica
 
 	List<Job> findByTaskType(TaskType workflow);
 	
-	@Query("SELECT J FROM Job J WHERE J.jobId = ?1 AND J.jobGroup = ?2 AND J.taskType = com.iwellmass.idc.model.TaskType.WORKFLOW_TASK")
+	@Query("SELECT J FROM Job J WHERE J.jobId = ?1 AND J.jobGroup = ?2 AND J.taskType = com.iwellmass.idc.model.TaskType.WORKFLOW")
 	List<Job> findSubJobs(String jobId, String jobGroup);
 
 }

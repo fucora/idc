@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.TriggerState;
@@ -23,33 +22,61 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.JobService;
+import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
+import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
+import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
-public class JobService {
+public class JobServiceImpl implements JobService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobServiceImpl.class);
 
 	@Inject
 	private JobRepository jobRepository;
 
+	@Inject
+	private JobRuntimeMapper jobRuntimeMapper;
+	
 //	@Inject
 	private IDCPlugin idcPlugin;
 
 //	@Inject
 	private Scheduler scheduler;
+	
+	
+	@Override
+	public Job getJob(JobKey jobKey) {
+		return jobRepository.findOne(jobKey);
+	}
+	
+	@Override
+	public void saveJob(Job job) {
+		jobRepository.save(job);
+	}
+	
+
+	public JobRuntime getJobRuntime(JobKey jobKey) {
+		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
+		JobRuntime jr = new JobRuntime();
+		jr.setBarriers(barriers);
+		jr.setStatus(ScheduleStatus.ERROR);
+		return  jr;
+	}
 
 	public void schedule(Task task, ScheduleProperties schdProps) {
 		try {
@@ -61,11 +88,6 @@ public class JobService {
 
 	@Transactional
 	public void reschedule(Job job) {
-		try {
-			idcPlugin.reschedule(job);
-		} catch (SchedulerException e) {
-			throw new AppException("调度失败: " + e.getMessage(), e);
-		}
 	}
 	
 	@Transactional
@@ -141,15 +163,6 @@ public class JobService {
 	}
 
 	public void execute(ExecutionRequest request) {
-		try {
-			Job job = jobRepository.findOne(request);
-			
-			JobDataMap jobData = new JobDataMap();
-			
-			idcPlugin.reschedule(job, jobData);
-		} catch (SchedulerException e) {
-			throw new AppException("执行失败: " + e.getMessage());
-		}
 		/*JobKey jobPk = StdJobKeyGeneratorImpl.valueOf(request);
 		
 		TriggerKey tk = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
@@ -242,14 +255,14 @@ public class JobService {
 		Specification<Job> spec = (root, cq, cb) -> {
 			return cb.and(
 					cb.equal(root.get("scheduleType"), scheduleType),
-					root.get("taskType").in(TaskType.WORKFLOW_TASK, TaskType.NODE_TASK)
+					root.get("taskType").in(TaskType.WORKFLOW, TaskType.NODE_TASK)
 			);
 		};
 		return jobRepository.findAll(spec);
 	}
 
 	public List<Job> getWorkflowJob() {
-		return jobRepository.findByTaskType(TaskType.WORKFLOW_TASK);
+		return jobRepository.findByTaskType(TaskType.WORKFLOW);
 	}
 
 	public List<Job> getWorkflowJob(JobKey jobKey) {
@@ -271,13 +284,7 @@ public class JobService {
 	}
 
 	public Job findJob(JobKey jobKey) {
-		/*Job job = jobRepository.findOne(jobKey);
-		if (job != null) {
-			List<Job> depJobs = dependencyRepository.findDependencies(job.getTaskId(), job.getTaskGroup());
-			// job.setDependencies(dependencies);
-		}
-		return job;*/
-		return null;
+		return jobRepository.findOne(jobKey);
 	}
 
 

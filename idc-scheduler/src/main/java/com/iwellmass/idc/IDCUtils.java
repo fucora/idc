@@ -4,14 +4,26 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
+import java.util.function.Function;
 
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.quartz.IDCContextKey;
 
 public class IDCUtils {
+	
+	
+	public static <T> Function<IDCContextKey<String>, T> getObject(Map<String, Object> map, Class<T> type) {
+		return ( key ) -> {
+			String str =  key.applyGet(map);
+			return JSON.parseObject(str, type);
+		};
+	}
 	
 	public static TriggerKey toTriggerKey(JobKey jobKey) {
 		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());

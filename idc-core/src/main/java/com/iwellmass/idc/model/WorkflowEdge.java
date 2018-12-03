@@ -18,12 +18,27 @@ import lombok.Setter;
 public class WorkflowEdge implements Serializable{
 	
 	private static final long serialVersionUID = 866853625098155270L;
+	
+	public static final TaskKey START = new TaskKey("start", "idc");
+	
+	public static final TaskKey END = new TaskKey("end", "idc");
+	
+	public WorkflowEdge() {
+	}
+
+	public WorkflowEdge(String workflowId, TaskDependency taskDependency) {
+		this.workflowId = workflowId;
+		this.srcTaskId = taskDependency.getSrcTaskId();
+		this.srcTaskGroup = taskDependency.getSrcTaskGroup();
+		this.taskId = taskDependency.getTaskId();
+		this.taskGroup = taskDependency.getTaskGroup();
+	}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 	
-	private Integer workflowId;
+	private String workflowId;
 	
 	private String srcTaskId;
 	
