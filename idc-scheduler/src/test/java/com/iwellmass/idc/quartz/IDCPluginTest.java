@@ -12,6 +12,7 @@ import org.quartz.Scheduler;
 import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
+import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.AllSimpleService;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -85,8 +86,16 @@ public class IDCPluginTest {
 		sp.setStartTime(_1_1);
 		sp.setEndTime(_9_1);
 		sp.setDays(Arrays.asList(-1));
-		plugin.schedule(task, sp);
-		scheduler.getTriggerState(new TriggerKey(lqd_02, group));
+		sp.setAssignee("lqd");
+		sp.setBlockOnError(false);
+		sp.setDuetime(LocalTime.MIN);
+		sp.setIsRetry(false);
+		sp.setParameter("[{\"name\":\"loadDate\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"201611\"},{\"name\":\"arg1\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"123\"}]");
+		
+		System.out.println(JSON.toJSONString(sp));
+		
+//		plugin.schedule(task, sp);
+//		scheduler.getTriggerState(new TriggerKey(lqd_02, group));
 		
 //		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent()
 //			.setInstanceId(1001));

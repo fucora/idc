@@ -93,7 +93,6 @@ public class Job {
 	@ApiModelProperty("任务类型")
 	@Column(name = "task_type")
 	@Enumerated(EnumType.STRING)
-
 	private TaskType taskType;
 
 	@ApiModelProperty("业务类型")

@@ -25,12 +25,12 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.ComplementRequest;
 import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
+import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -57,6 +57,9 @@ public class JobServiceImpl implements JobService {
 
 //	@Inject
 	private Scheduler scheduler;
+
+	@Inject
+	private TaskRepository taskRepository;
 	
 	
 	@Override
@@ -78,8 +81,10 @@ public class JobServiceImpl implements JobService {
 		return  jr;
 	}
 
+	@Transactional
 	public void schedule(Task task, ScheduleProperties schdProps) {
 		try {
+			taskRepository.save(task);
 			idcPlugin.schedule(task, schdProps);
 		} catch (SchedulerException e) {
 			throw new AppException("调度失败: " + e.getMessage(), e);
@@ -87,35 +92,12 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Transactional
-	public void reschedule(Job job) {
-	}
-	
-	@Transactional
-	public void reschedule(JobKey jobKey) {
-		// 没有正在执行的任务计划便可以重新调度计划任务
-		/*Job job = jobRepository.findOne(jobKey);
-		if (job != null && job.getStatus() != ScheduleStatus.NONE) {
-			Assert.isTrue(job.getStatus() == ScheduleStatus.PAUSED, "任务未冻结");
-		}
-
-		LOGGER.info("重新调度任务 {}", jobKey);
-		
+	public void reschedule(JobKey jobKey, ScheduleProperties scheduleConfig) {
 		try {
-			
-			idcPlugin.reschedule(job);
-			
-			Trigger trigger = idcPlugin.buildTrigger(job, false);
-
-			if (job.getStatus() == ScheduleStatus.NONE) {
-				scheduler.scheduleJob(trigger);
-			} else {
-				scheduler.rescheduleJob(trigger.getKey(), trigger);
-			}
-		} catch (reschedu e) {
-			throw new AppException("生成 Cron 表达式时错误, " + e.getMessage());
+			idcPlugin.reschedule(jobKey, scheduleConfig);
 		} catch (SchedulerException e) {
-			throw new AppException("无法调度任务: " + e.getMessage(), e);
-		}*/
+			throw new AppException(e.getMessage(), e);
+		}
 	}
 
 	@Transactional
@@ -204,38 +186,6 @@ public class JobServiceImpl implements JobService {
 		
 	}
 
-	public void complement(ComplementRequest request) {
-		/*
-		 * try { String taskId = request.getTaskId(); String groupId =
-		 * request.getGroupId();
-		 *
-		 * Trigger mainTrigger =
-		 * scheduler.getTrigger(buildTriggerKey(JobInstanceType.CRON, taskId, groupId));
-		 * Assert.isTrue(mainTrigger != null, "任务未提交");
-		 *
-		 * ScheduleBuilder<? extends Trigger> sbt = mainTrigger.getScheduleBuilder();
-		 *
-		 * TriggerKey triggerKey = buildTriggerKey(JobInstanceType.COMPLEMENT, taskId,
-		 * groupId);
-		 *
-		 * Trigger trigger = scheduler.getTrigger(triggerKey);
-		 *
-		 * Assert.isTrue(trigger == null, "存在正在执行的补数任务");
-		 *
-		 * TriggerBuilder<?> complementTriggerBuilder =
-		 * TriggerBuilder.newTrigger().withIdentity(triggerKey)
-		 * .forJob(mainTrigger.getJobKey()).withSchedule(sbt)
-		 * .startAt(toDate(LocalDateTime.of(request.getStartTime(), LocalTime.MIN)))
-		 * .endAt(toDate(LocalDateTime.of(request.getEndTime(), LocalTime.MAX)));
-		 *
-		 * if (trigger == null) {
-		 * scheduler.scheduleJob(complementTriggerBuilder.build()); } else {
-		 * scheduler.rescheduleJob(triggerKey, complementTriggerBuilder.build()); }
-		 *
-		 * } catch (SchedulerException e) { throw new AppException("补数异常: " +
-		 * e.getMessage()); }
-		 */
-	}
 	
 	
 

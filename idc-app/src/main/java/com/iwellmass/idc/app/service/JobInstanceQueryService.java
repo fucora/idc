@@ -40,7 +40,7 @@ public class JobInstanceQueryService {
 	}
 
 	public List<JobInstance> getWorkflowSubInstance(Integer id) {
-		throw new UnsupportedOperationException("not supported yet.");
+		return repository.findByMainInstanceId(id);
 	}
 
 	public List<Assignee> getAllAssignee() {
