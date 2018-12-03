@@ -20,6 +20,7 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
+import com.iwellmass.idc.app.service.JobInstanceService;
 import com.iwellmass.idc.app.service.JobServiceImpl;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.app.vo.ScheduleRequest;
@@ -37,6 +38,9 @@ public class JobController {
 	
 	@Inject
 	private JobServiceImpl jobService;
+	
+	@Inject
+	private JobInstanceService jobInstanceService;
 	
 	@Inject
 	private TaskService taskService;
@@ -66,6 +70,7 @@ public class JobController {
 	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
 
 		JobRuntime jr = jobService.getJobRuntime(jobKey);
+		
 		Job job = jobService.findJob(jobKey);
 		Task task = taskService.getTask(job.getTaskKey());
 		task.setGraphId(job.getWorkflowId());
@@ -75,6 +80,8 @@ public class JobController {
 		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));
 		vo.setTask(task);
 		vo.setJobRuntime(jr);
+		
+		jr.setInstanceId(1);
 		
 		return ServiceResult.success(vo);
 	}
