@@ -10,37 +10,28 @@ import org.springframework.data.domain.Persistable;
 
 import com.iwellmass.idc.quartz.IDCPlugin;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "t_idc_plugin")
-public class PluginVersion implements Persistable<String>{
+public class PluginVersion implements Persistable<String> {
 
 	private static final long serialVersionUID = 3774081184231467500L;
 
+	@Id
 	private String version = IDCPlugin.VERSION;
-	
-	private Long dependencyVersion;
+
+	@Column(name = "task_seq")
+	private int taskSeq;
+
+	@Column(name = "instance_seq")
+	private int instanceSeq;
 
 	@Transient
 	private boolean isNew = false;
-
-	@Id
-	@Column(length = 10)
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
-	}
-
-	@Column(name = "dependency_version")
-	public Long getDependencyVersion() {
-		return dependencyVersion;
-	}
-
-	public void setDependencyVersion(Long dependencyVersion) {
-		this.dependencyVersion = dependencyVersion;
-	}
 
 	@Transient
 	@Override
@@ -53,7 +44,7 @@ public class PluginVersion implements Persistable<String>{
 	public boolean isNew() {
 		return isNew;
 	}
-	
+
 	@Transient
 	public PluginVersion asNew() {
 		this.isNew = true;

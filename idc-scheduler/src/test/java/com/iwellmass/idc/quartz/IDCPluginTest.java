@@ -1,7 +1,6 @@
 package com.iwellmass.idc.quartz;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 
@@ -9,7 +8,6 @@ import javax.sql.DataSource;
 
 import org.junit.Test;
 import org.quartz.Scheduler;
-import org.quartz.TriggerKey;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.alibaba.fastjson.JSON;
@@ -28,15 +26,16 @@ public class IDCPluginTest {
 	private static final String lqd_01 = "lqd_01";
 	private static final String group = "test";
 
-	private static final LocalDateTime _1_1 = LocalDateTime.of(LocalDate.of(2018, 1, 1), LocalTime.MIN);
-	private static final LocalDateTime _9_1 = LocalDateTime.of(LocalDate.of(2018, 9, 1), LocalTime.MIN);
+	private static final LocalDate _1_1 = LocalDate.of(2018, 1, 1);
+	private static final LocalDate _9_1 = LocalDate.of(2018, 9, 1);
 
 	@Test
 	public void testWorkflowSchedule() throws Exception {
 		
-		IDCPlugin plugin = new SimpleIDCPlugin();
 		
 		AllSimpleService allService = new AllSimpleService();
+		IDCPlugin plugin = new SimpleIDCPlugin(allService);
+		
 		
 		// 主任务
 		Task task = new Task();
@@ -71,9 +70,6 @@ public class IDCPluginTest {
 		
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setPlugin(plugin);
-		factory.setTaskService(allService);
-		factory.setJobService(allService);
-		factory.setDependencyService(allService);
 		factory.setDriverDelegate(new SimpleIDCDriverDelegate());
 		factory.setDataSource(dataSource());
 		
