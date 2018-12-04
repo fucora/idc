@@ -20,8 +20,8 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.service.JobInstanceService;
 import com.iwellmass.idc.app.service.JobServiceImpl;
+import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.app.vo.ScheduleRequest;
 import com.iwellmass.idc.model.Job;
@@ -40,9 +40,6 @@ public class JobController {
 	private JobServiceImpl jobService;
 	
 	@Inject
-	private JobInstanceService jobInstanceService;
-	
-	@Inject
 	private TaskService taskService;
 	
 	@Inject
@@ -50,8 +47,8 @@ public class JobController {
 	
 	@ApiOperation("查询调度列表")
 	@PostMapping("/query")
-	public ServiceResult<PageData<Job>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
-		PageData<Job> data = jobService.findJob(jobQuery, pager);
+	public ServiceResult<PageData<JobRuntimeListVO>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
+		PageData<JobRuntimeListVO> data = jobService.getJobRuntime(jobQuery, pager);
 		return ServiceResult.success(data);
 	}
 	
