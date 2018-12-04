@@ -4,12 +4,8 @@ import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
 import com.iwellmass.idc.app.repo.WorkflowRepository;
 import com.iwellmass.idc.app.vo.WorkflowSaveVO;
-import com.iwellmass.idc.model.TaskDependency;
+import com.iwellmass.idc.model.*;
 import com.iwellmass.idc.app.vo.WorkflowEnableVO;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.model.Workflow;
-import com.iwellmass.idc.model.WorkflowEdge;
 import org.jgrapht.Graph;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.springframework.stereotype.Service;
@@ -42,7 +38,15 @@ public class WorkflowService {
             throw new Exception("未传入相关数据!");
         }
         // 校验dependency是否成环
-        DirectedAcyclicGraph<TaskKey,String> directedAcyclicGraph = new DirectedAcyclicGraph(String.class);
+        checkAcyclicGraph(taskDependencies);
+        // 生成workflowId
+        workflow.setGraphId(UUID.randomUUID().toString());
+        return workflowRepository.save(workflow);
+    }
+
+    // 校验dependency是否成环
+    private void checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
+        DirectedAcyclicGraph<TaskKey,TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
         for (TaskDependency taskDependency : taskDependencies) {
             try {
                 directedAcyclicGraph.addDagEdge(new TaskKey(taskDependency.getSrcTaskId(),taskDependency.getSrcTaskGroup()),new TaskKey(taskDependency.getTaskId(),taskDependency.getTaskGroup()));
@@ -50,9 +54,6 @@ public class WorkflowService {
                 throw new Exception("工作流中存在环,请重新编辑");
             }
         }
-        // 生成workflowId
-        workflow.setGraphId(UUID.randomUUID().toString());
-        return workflowRepository.save(workflow);
     }
 
     public WorkflowEdge itemWorkflowEdge(Integer id) throws Exception {
@@ -75,6 +76,8 @@ public class WorkflowService {
         }
         Workflow workflow = workflowRepository.findByGraphId(workflowEnableVO.getGraphId())
                 .orElseThrow(() -> new Exception("未查找到指定工作流"));
+
+        checkAcyclicGraph(workflowEnableVO.getTaskDependencies());
         // 更新task
         Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(), workflow.getTaskGroup()));
         task.setWorkflowId(workflow.getGraphId());
