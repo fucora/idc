@@ -3,70 +3,88 @@ package com.iwellmass.idc.app.service;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
 import com.iwellmass.idc.app.repo.WorkflowRepository;
+import com.iwellmass.idc.app.vo.WorkflowSaveVO;
 import com.iwellmass.idc.model.TaskDependency;
 import com.iwellmass.idc.app.vo.WorkflowEnableVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.Workflow;
 import com.iwellmass.idc.model.WorkflowEdge;
+import org.jgrapht.Graph;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class WorkflowService {
 
-	@Inject
-	private WorkflowRepository workflowRepository;
-	
-	@Inject
-	private WorkflowEdgeRepository workflowEdgeRepository;
-	
-	@Inject
-	private TaskRepository taskRepository;
+    @Inject
+    private WorkflowRepository workflowRepository;
 
-	public WorkflowEdge saveWorkflowEdge(WorkflowEdge workflowEdge) {
-		return workflowEdgeRepository.save(workflowEdge);
-	}
+    @Inject
+    private WorkflowEdgeRepository workflowEdgeRepository;
 
-	public Workflow saveWorkflow(Workflow workflow) {
-		// 生成workflowId
-		workflow.setGraphId(UUID.randomUUID().toString());
-		return workflowRepository.save(workflow);
-	}
+    @Inject
+    private TaskRepository taskRepository;
 
-	public WorkflowEdge itemWorkflowEdge(Integer id) throws Exception {
-		return workflowEdgeRepository.findByWorkflowId(id).orElseThrow(() -> new Exception("未查找到该工作流信息"));
-	}
+    public WorkflowEdge saveWorkflowEdge(WorkflowEdge workflowEdge) {
+        return workflowEdgeRepository.save(workflowEdge);
+    }
 
-	public Workflow item(TaskKey taskKey) throws Exception {
-		if (taskKey == null || taskKey.getTaskGroup() == null || taskKey.getTaskId() == null) {
-			throw new Exception("传入所有参数");
-		}
-		return workflowRepository.findByTaskIdAndTaskGroup(taskKey.getTaskId(), taskKey.getTaskGroup())
-				.orElseThrow(() -> new Exception("未查找到指定workflow!"));
-	}
+    public Workflow saveWorkflow(WorkflowSaveVO workflowSaveVO) throws Exception {
+        Workflow workflow = workflowSaveVO.getWorkflow();
+        List<TaskDependency> taskDependencies = workflowSaveVO.getTaskDependencies();
+        if (workflow == null || taskDependencies == null || taskDependencies.size() == 0) {
+            throw new Exception("未传入相关数据!");
+        }
+        // 校验dependency是否成环
+        DirectedAcyclicGraph<TaskKey,String> directedAcyclicGraph = new DirectedAcyclicGraph(String.class);
+        for (TaskDependency taskDependency : taskDependencies) {
+            try {
+                directedAcyclicGraph.addDagEdge(new TaskKey(taskDependency.getSrcTaskId(),taskDependency.getSrcTaskGroup()),new TaskKey(taskDependency.getTaskId(),taskDependency.getTaskGroup()));
+            } catch (DirectedAcyclicGraph.CycleFoundException e) {
+                throw new Exception("工作流中存在环,请重新编辑");
+            }
+        }
+        // 生成workflowId
+        workflow.setGraphId(UUID.randomUUID().toString());
+        return workflowRepository.save(workflow);
+    }
 
-	@Transactional
-	public String enable(WorkflowEnableVO workflowEnableVO) throws Exception {
-		// 将task表中的workflowId更新
-		if (workflowEnableVO.getTaskDependencies() == null || workflowEnableVO.getTaskDependencies().size() == 0) {
-			throw new Exception("未传入需要执行的工作流");
-		}
-		Workflow workflow = workflowRepository.findByGraphId(workflowEnableVO.getGraphId())
-				.orElseThrow(() -> new Exception("未查找到指定工作流"));
-		// 更新task
-		Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(), workflow.getTaskGroup()));
-		task.setWorkflowId(workflow.getGraphId());
-		taskRepository.save(task);
-		// 保存edgs信息
-		for (TaskDependency taskDependency : workflowEnableVO.getTaskDependencies()) {
-			WorkflowEdge workflowEdge = new WorkflowEdge(workflow.getGraphId(), taskDependency);
-			workflowEdgeRepository.save(workflowEdge);
-		}
-		return "提交成功";
-	}
+    public WorkflowEdge itemWorkflowEdge(Integer id) throws Exception {
+        return workflowEdgeRepository.findByWorkflowId(id).orElseThrow(() -> new Exception("未查找到该工作流信息"));
+    }
+
+    public Workflow item(TaskKey taskKey) throws Exception {
+        if (taskKey == null || taskKey.getTaskGroup() == null || taskKey.getTaskId() == null) {
+            throw new Exception("传入所有参数");
+        }
+        return workflowRepository.findByTaskIdAndTaskGroup(taskKey.getTaskId(), taskKey.getTaskGroup())
+                .orElseThrow(() -> new Exception("未查找到指定workflow!"));
+    }
+
+    @Transactional
+    public String enable(WorkflowEnableVO workflowEnableVO) throws Exception {
+        // 将task表中的workflowId更新
+        if (workflowEnableVO.getTaskDependencies() == null || workflowEnableVO.getTaskDependencies().size() == 0) {
+            throw new Exception("未传入需要执行的工作流");
+        }
+        Workflow workflow = workflowRepository.findByGraphId(workflowEnableVO.getGraphId())
+                .orElseThrow(() -> new Exception("未查找到指定工作流"));
+        // 更新task
+        Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(), workflow.getTaskGroup()));
+        task.setWorkflowId(workflow.getGraphId());
+        taskRepository.save(task);
+        // 保存edgs信息
+        for (TaskDependency taskDependency : workflowEnableVO.getTaskDependencies()) {
+            WorkflowEdge workflowEdge = new WorkflowEdge(workflow.getGraphId(), taskDependency);
+            workflowEdgeRepository.save(workflowEdge);
+        }
+        return "提交成功";
+    }
 
 }
