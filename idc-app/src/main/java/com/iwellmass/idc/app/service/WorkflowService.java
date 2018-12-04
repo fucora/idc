@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Service
 public class WorkflowService {
@@ -38,7 +40,9 @@ public class WorkflowService {
             throw new Exception("未传入相关数据!");
         }
         // 校验dependency是否成环
-        checkAcyclicGraph(taskDependencies);
+        DirectedAcyclicGraph<TaskKey, TaskEdge> directedAcyclicGraph = checkAcyclicGraph(taskDependencies);
+        // 检查是否存在孤立点
+        checkIsolatedPoints(directedAcyclicGraph);
         // 生成workflowId
         workflow.setGraphId(UUID.randomUUID().toString());
         return workflowRepository.save(workflow);
@@ -64,8 +68,10 @@ public class WorkflowService {
         }
         Workflow workflow = workflowRepository.findByGraphId(workflowEnableVO.getGraphId())
                 .orElseThrow(() -> new Exception("未查找到指定工作流"));
-
-        checkAcyclicGraph(workflowEnableVO.getTaskDependencies());
+        // 校验dependency是否成环
+        DirectedAcyclicGraph<TaskKey, TaskEdge> directedAcyclicGraph = checkAcyclicGraph(workflowEnableVO.getTaskDependencies());
+        // 检查是否存在孤立点
+        checkIsolatedPoints(directedAcyclicGraph);
         // 更新task
         Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(), workflow.getTaskGroup()));
         task.setWorkflowId(workflow.getGraphId());
@@ -80,13 +86,35 @@ public class WorkflowService {
 
 
     // 校验dependency是否成环
-    private void checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
-        DirectedAcyclicGraph<TaskKey,TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
+    private DirectedAcyclicGraph<TaskKey, TaskEdge> checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
+        DirectedAcyclicGraph<TaskKey, TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
         for (TaskDependency taskDependency : taskDependencies) {
-            try {
-                directedAcyclicGraph.addDagEdge(new TaskKey(taskDependency.getSrcTaskId(),taskDependency.getSrcTaskGroup()),new TaskKey(taskDependency.getTaskId(),taskDependency.getTaskGroup()));
-            } catch (DirectedAcyclicGraph.CycleFoundException e) {
-                throw new Exception("工作流中存在环,请重新编辑");
+            TaskKey srcTaskKey = new TaskKey(taskDependency.getSrcTaskId(), taskDependency.getSrcTaskGroup());
+            TaskKey taskKey = new TaskKey(taskDependency.getTaskId(), taskDependency.getTaskGroup());
+            if (srcTaskKey.getTaskId() != null && srcTaskKey.getTaskGroup() != null) {
+                directedAcyclicGraph.addVertex(srcTaskKey);
+            }
+            if (taskKey.getTaskId() != null && taskKey.getTaskGroup() != null) {
+                directedAcyclicGraph.addVertex(taskKey);
+            }
+            if (srcTaskKey.getTaskId() != null && srcTaskKey.getTaskGroup() != null && taskKey.getTaskId() != null && taskKey.getTaskGroup() != null){
+                try {
+                    directedAcyclicGraph.addDagEdge(srcTaskKey,taskKey);
+                } catch (DirectedAcyclicGraph.CycleFoundException e) {
+                    throw new Exception("工作流中存在环,请重新编辑");
+                }
+            }
+        }
+        return directedAcyclicGraph;
+    }
+
+    // 检查孤立点
+    private void checkIsolatedPoints(DirectedAcyclicGraph<TaskKey, TaskEdge> directedAcyclicGraph) throws Exception {
+        Iterator<TaskKey> iterator = directedAcyclicGraph.vertexSet().iterator();
+        while (iterator.hasNext()) {
+            TaskKey taskKey = iterator.next();
+            if (directedAcyclicGraph.inDegreeOf(taskKey) == 0 && directedAcyclicGraph.outDegreeOf(taskKey) == 0){
+                throw new Exception("工作流中存在孤立任务,请重新编辑");
             }
         }
     }
