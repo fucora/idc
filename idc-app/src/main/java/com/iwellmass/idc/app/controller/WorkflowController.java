@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.controller;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.vo.WorkflowSaveVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,8 +26,12 @@ public class WorkflowController {
 
     @PostMapping("")
     @ApiOperation("保存workflow画图信息,以及最新workflowId")
-    public ServiceResult<Workflow> save(@RequestBody Workflow workflow) {
-        return ServiceResult.success(workflowService.saveWorkflow(workflow));
+    public ServiceResult<Workflow> save(@RequestBody WorkflowSaveVO workflowSaveVO) {
+        try {
+            return ServiceResult.success(workflowService.saveWorkflow(workflowSaveVO));
+        } catch (Exception e) {
+            return ServiceResult.failure(e.getMessage());
+        }
     }
 
     @GetMapping("")
