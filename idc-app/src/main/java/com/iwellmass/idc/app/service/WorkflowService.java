@@ -44,18 +44,6 @@ public class WorkflowService {
         return workflowRepository.save(workflow);
     }
 
-    // 校验dependency是否成环
-    private void checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
-        DirectedAcyclicGraph<TaskKey,TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
-        for (TaskDependency taskDependency : taskDependencies) {
-            try {
-                directedAcyclicGraph.addDagEdge(new TaskKey(taskDependency.getSrcTaskId(),taskDependency.getSrcTaskGroup()),new TaskKey(taskDependency.getTaskId(),taskDependency.getTaskGroup()));
-            } catch (DirectedAcyclicGraph.CycleFoundException e) {
-                throw new Exception("工作流中存在环,请重新编辑");
-            }
-        }
-    }
-
     public WorkflowEdge itemWorkflowEdge(Integer id) throws Exception {
         return workflowEdgeRepository.findByWorkflowId(id).orElseThrow(() -> new Exception("未查找到该工作流信息"));
     }
@@ -88,6 +76,18 @@ public class WorkflowService {
             workflowEdgeRepository.save(workflowEdge);
         }
         return "提交成功";
+    }
+
+    // 校验dependency是否成环
+    private void checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
+        DirectedAcyclicGraph<TaskKey,TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
+        for (TaskDependency taskDependency : taskDependencies) {
+            try {
+                directedAcyclicGraph.addDagEdge(new TaskKey(taskDependency.getSrcTaskId(),taskDependency.getSrcTaskGroup()),new TaskKey(taskDependency.getTaskId(),taskDependency.getTaskGroup()));
+            } catch (DirectedAcyclicGraph.CycleFoundException e) {
+                throw new Exception("工作流中存在环,请重新编辑");
+            }
+        }
     }
 
 }
