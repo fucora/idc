@@ -13,6 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.JobService;
@@ -23,7 +25,6 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.model.Job;
@@ -157,10 +158,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		
-		
-		
-		return null;
+		PageInfo<JobRuntimeListVO> pageInfo = PageHelper.startPage(pager.getPage(),pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
+		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
 
