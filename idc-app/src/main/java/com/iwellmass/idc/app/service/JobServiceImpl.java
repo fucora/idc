@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.TriggerState;
@@ -239,10 +241,8 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		
-		
-		
-		return null;
+		PageInfo pageInfo = PageHelper.startPage(pager).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
+		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
 

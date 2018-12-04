@@ -26,12 +26,25 @@
 			j.job_name,
 			j.task_id,
 			j.assignee,
-			t.PREV_FIRE_TIME AS should_fire_time,
-			t.NEXT_FIRE_TIME AS next_fire_time,
+			COALESCE(t.PREV_FIRE_TIME,-1) AS should_fire_time,
+			COALESCE(t.NEXT_FIRE_TIME,-1) AS next_fire_time,
 			t.TRIGGER_STATE AS schedule_status 
 		FROM
 			t_idc_job j
 			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
 			AND j.job_group = t.TRIGGER_GROUP
+		WHERE 1=1
+			<if test="jobName!='' AND jobName!=null">
+				AND j.job_name LIKE #{q.jobName}
+			</if>
+			<if test="taskType!='' AND taskType!=null">
+				AND j.task_type LIKE #{q.taskType}
+			</if>
+			<if test="contentType!='' AND contentType!=null">
+				AND j.content_type LIKE #{q.contentType}
+			</if>
+			<if test="assignee!='' AND assignee!=null">
+				AND j.assignee = #{q.assignee}
+			</if>
 	</select>
 </mapper>
