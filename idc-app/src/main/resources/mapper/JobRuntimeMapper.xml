@@ -19,7 +19,7 @@
 	</select>
 	
 	
-	<select id="selectJobRuntimeList" resultType="com.iwellmass.idc.app.vo.JobRuntimeListVO">
+	<select id="selectJobRuntimeList" parameterType="com.iwellmass.idc.app.model.JobQuery" resultType="com.iwellmass.idc.app.vo.JobRuntimeListVO">
 		SELECT
 			j.job_id,
 			j.job_group,
@@ -34,17 +34,19 @@
 			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
 			AND j.job_group = t.TRIGGER_GROUP
 		WHERE 1=1
-			<if test="q.jobName!='' AND q.jobName!=null">
-				AND j.job_name LIKE #{q.jobName}
-			</if>
-			<if test="q.taskType!='' AND q.taskType!=null">
-				AND j.task_type LIKE #{q.taskType}
-			</if>
-			<if test="q.contentType!='' AND q.contentType!=null">
-				AND j.content_type LIKE #{q.contentType}
-			</if>
-			<if test="q.assignee!='' AND q.assignee!=null">
-				AND j.assignee = #{q.assignee}
+		    <if test="q!=null">
+				<if test="q.jobName!='' and q.jobName!=null">
+					AND j.job_name LIKE CONCAT(CONCAT('%', #{q.jobName}), '%')
+				</if>
+				<if test="q.taskType!='' and q.taskType!=null">
+					AND j.task_type = #{q.taskType}
+				</if>
+				<if test="q.contentType!='' and q.contentType!=null">
+					AND j.content_type = #{q.contentType}
+				</if>
+				<if test="q.assignee!='' and q.assignee!=null">
+					AND j.assignee = #{q.assignee}
+				</if>
 			</if>
 	</select>
 </mapper>
