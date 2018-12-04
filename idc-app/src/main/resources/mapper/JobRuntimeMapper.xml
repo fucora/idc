@@ -7,6 +7,7 @@
 		<result property="contentType" column="contentType"  jdbcType="VARCHAR"/>
 		<result property="jobName" column="jobName"  jdbcType="VARCHAR"/>
 		<result property="assignee" column="assignee"  jdbcType="VARCHAR"/>
+		<result property="jobGroup" column="jobGroup"  jdbcType="VARCHAR"/>
 		<result property="shouldFireTime" column="shouldFireTime" jdbcType="BIGINT"/>
 		<result property="nextFireTime" column="nextFireTime"  jdbcType="BIGINT"/>
 		<result property="scheduleStatus" column="scheduleStatus" javaType="com.iwellmass.idc.model.ScheduleStatus" jdbcType="VARCHAR"
@@ -35,6 +36,7 @@
 			j.content_type as contentType,
 			j.job_name as jobName,
 			j.assignee as assignee,
+			j.job_group as jobGroup,
 			COALESCE(t.PREV_FIRE_TIME,-1) AS shouldFireTime,
 			COALESCE(t.NEXT_FIRE_TIME,-1) AS nextFireTime,
 			t.TRIGGER_STATE AS scheduleStatus
