@@ -28,4 +28,6 @@ public interface JobInstanceRepository
 	@Modifying
 	@Query("DELETE FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup}")
 	void deleteByJob(@Param("jk") JobKey jobPk);
+
+	List<JobInstance> findByMainInstanceId(Integer mainInstanceId);
 }

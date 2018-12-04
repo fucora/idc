@@ -39,6 +39,7 @@ import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
@@ -143,6 +144,11 @@ public class JobInstanceService {
 		return new PageData<>(result.getNumberOfElements(), result.getContent());
 	}
 
+	
+	public JobInstance getJobInstance(JobKey jobKey, long shouldFireTime) {
+		return repository.findOne(jobKey.getJobId(), jobKey.getJobGroup(), shouldFireTime);
+	}
+	
 	public JobInstance getJobInstance(Integer id) {
 		JobInstance instance = repository.findOne(id);
 		Assert.isTrue(instance != null, "任务实例 %s 不存在", id);

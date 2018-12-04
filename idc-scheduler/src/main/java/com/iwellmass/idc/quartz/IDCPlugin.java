@@ -8,7 +8,6 @@ import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCLogger;
@@ -57,7 +57,6 @@ import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
 
 import lombok.Getter;
@@ -155,21 +154,48 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		jobService.saveJob(job);
 		
 		// 调度
-		doScheduleMainJob(task, job);
+		JobDetail jobDetail = buildJobDetail(task);
+		Trigger trigger = buildMainTrigger(job);
+		scheduler.scheduleJob(jobDetail, trigger);
 	}
 	
-	private void doScheduleMainJob(Task task, Job job) throws SchedulerException {
+	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
+		Job job = jobService.getJob(jobKey);
+		if (job == null) {
+			throw new SchedulerException("调度计划 " + jobKey + " 不存在");
+		}
+		// 调度信息
+		job.setAssignee(sp.getAssignee());
+		job.setScheduleType(sp.getScheduleType());
+		job.setIsRetry(sp.getIsRetry());
+		job.setBlockOnError(sp.getBlockOnError());
+		job.setStartTime(sp.getStartTime());
+		job.setEndTime(sp.getEndTime());
+		job.setParameter(sp.getParameter());
+		job.setCronExpr(sp.toCronExpression());
+		// ~~ 前端用 ~~
+		job.setScheduleConfig(JSON.toJSONString(sp));
+		jobService.saveJob(job);
 		
+		// 调度
+		Trigger trigger = buildMainTrigger(job);
+		Date ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
+		
+		// 创建一个新的调度
+		if (ret == null) {
+			Task task = taskService.getTask(job.getTaskKey());
+			JobDetail jdt = buildJobDetail(task);
+			ret = scheduler.scheduleJob(jdt, trigger);
+		}
+		return ret;
+	}
+	
+	private Trigger buildMainTrigger(Job job) {
 		JobEnv jobEnv = new JobEnv();
 		jobEnv.setAssignee(job.getAssignee());
 		jobEnv.setJobKey(job.getJobKey());
 		jobEnv.setScheduleType(job.getScheduleType());
 		jobEnv.setParameter(job.getParameter());
-		
-		// 构建 Task
-		JobDetail jobDetail = buildJobDetail(task);
-		
-		// 构建 Trigger
 		JobDataMap jobData = new JobDataMap();
 		JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(jobEnv));
 		// 构建 TriggerBuilder
@@ -183,8 +209,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		// 设置结束时间
 		Optional.ofNullable(job.getEndTime()).map(IDCUtils::toDate).ifPresent(builder::endAt);
 		
-		// 执行调度计划
-		scheduler.scheduleJob(jobDetail, builder.build());
+		return builder.build();
 	}
 	
 	private JobKey aquireJobKey(Task tk) {
@@ -259,6 +284,23 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				.build();
 		}
 		return jobDetail;
+	}
+	
+	public void unschedule(JobKey jobKey) throws SchedulerException {
+		Job job = jobService.getJob(jobKey);
+		
+		Assert.isTrue(job != null, "调度计划 " + jobKey + "不存在");
+		
+		scheduler.unscheduleJob(IDCUtils.toTriggerKey(jobKey));
+		
+	}
+	
+	public void pause(JobKey jobKey) throws SchedulerException {
+		scheduler.pauseTrigger(IDCUtils.toTriggerKey(jobKey));
+	}
+	
+	public void resume(JobKey jobKey) throws SchedulerException {
+		scheduler.resumeTrigger(IDCUtils.toTriggerKey(jobKey));
 	}
 	
 	protected abstract Class<? extends org.quartz.Job> getJobClass(Task task);

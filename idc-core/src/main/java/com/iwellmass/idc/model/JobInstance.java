@@ -85,7 +85,7 @@ public class JobInstance {
 	private JobInstanceStatus status;
 	
 	@ApiModelProperty("父实例ID")
-	@Column(name = "main_instance_id;")
+	@Column(name = "main_instance_id")
 	private Integer mainInstanceId;
 	
 	// ~~ 任务相关 ~~
@@ -99,6 +99,7 @@ public class JobInstance {
 
 	@ApiModelProperty("任务类型")
 	@Column(name = "task_type")
+	@Enumerated(EnumType.STRING)
 	private TaskType taskType;
 
 	@ApiModelProperty("ContentType")
@@ -107,6 +108,7 @@ public class JobInstance {
 	
 	@ApiModelProperty("执行方式")
 	@Column(name = "dispatch_type")
+	@Enumerated(EnumType.STRING)
 	private DispatchType dispatchType;
 	
 	@Transient
@@ -134,6 +136,7 @@ public class JobInstance {
 	}
 	
 	@Transient
+	@JsonIgnore
 	public TaskKey getTaskKey() {
 		return new TaskKey(taskId, taskGroup);
 	}

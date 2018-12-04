@@ -3,19 +3,18 @@ package com.iwellmass.idc.app.config;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import com.iwellmass.idc.DependencyService;
+import com.iwellmass.idc.TaskService;
+import com.iwellmass.idc.app.service.JobServiceImpl;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
 import com.iwellmass.idc.quartz.IDCPlugin;
@@ -40,6 +39,15 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	
 	@Inject
 	private IDCPlugin idcPlugin;
+
+	@Inject
+    private JobServiceImpl jobService;
+
+	@Inject
+    private TaskService taskService;
+
+	@Inject
+    private DependencyService dependencyService;
 	
 	@Bean
 	public Scheduler scheduler(DataSource dataSource) throws SchedulerException {
@@ -49,7 +57,11 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 		factory.setDriverDelegate(idcDriverDelegate);
 		factory.setDataSource(dataSource);
 		factory.setPlugin(idcPlugin);
-		
+
+        factory.setTaskService(taskService);
+        factory.setJobService(jobService);
+        factory.setDependencyService(dependencyService);
+
 		// 设置 scheduler 信息
 		scheduler = factory.getScheduler();
 		scheduler.setJobFactory(jobFactory);

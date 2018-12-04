@@ -12,6 +12,8 @@ import lombok.Setter;
 @Setter
 public class JobRuntime {
 	
+	private Integer instanceId;
+	
 	private ScheduleStatus status;
 	
 	private List<JobBarrierVO> barriers;
