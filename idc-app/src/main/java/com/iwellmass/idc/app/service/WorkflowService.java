@@ -78,6 +78,7 @@ public class WorkflowService {
         return "提交成功";
     }
 
+
     // 校验dependency是否成环
     private void checkAcyclicGraph(List<TaskDependency> taskDependencies) throws Exception {
         DirectedAcyclicGraph<TaskKey,TaskEdge> directedAcyclicGraph = new DirectedAcyclicGraph(TaskEdge.class);
