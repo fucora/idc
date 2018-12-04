@@ -15,8 +15,8 @@ public class JobRuntimeListVO {
 	@ApiModelProperty("调度ID")
 	private String jobId;
 
-	@ApiModelProperty("任务类型")
-	private String contentType;
+	@ApiModelProperty("调度组")
+	private String jobGroup;
 	
 	@ApiModelProperty("任务名称")
 	private String jobName;
@@ -29,9 +29,12 @@ public class JobRuntimeListVO {
 	
 	@ApiModelProperty("下一批次")
 	private Long nextFireTime;
-	
+
 	@ApiModelProperty("实例ID")
 	private Integer instanceId;
+
+	@ApiModelProperty("任务类型")
+	private String contentType;
 	
 	@ApiModelProperty("调度状态")
 	private ScheduleStatus scheduleStatus;
