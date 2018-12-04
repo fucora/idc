@@ -21,7 +21,6 @@ mybatis:
   mapper-locations: /mapper/**
   type-aliases-package: com.iwellmass.idc.app.model
   type-handlers-packages: com.iwellmass.idc.app.typehandler
-#  type-handlers-package: com.realhyx.simple.mybatis.config
   configuration:
     map-underscore-to-camel-case: true
     default-fetch-size: 100
