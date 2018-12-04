@@ -1,40 +1,47 @@
 package com.iwellmass.idc.app.service;
 
-import com.iwellmass.idc.DependencyService;
-import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
-import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.iwellmass.idc.DependencyService;
+import com.iwellmass.idc.app.repo.JobDependencyRepository;
+import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
+import com.iwellmass.idc.model.JobDependency;
+import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.WorkflowEdge;
 
 @Service
 public class DependencyServiceImpl implements DependencyService {
 
     @Inject
-    private TaskRepository taskRepository;
-
+    private WorkflowEdgeRepository workflowRepo;
+    
     @Inject
-    private JobRepository jobRepository;
+    private JobDependencyRepository jobDependencyRepo;
 
-    @Override
-    public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
-        List<TaskKey> taskKeys = new ArrayList<>();
-        for (Task task : taskRepository.findSuccessors(workflowId, taskKey)) {
-            taskKeys.add(new TaskKey(task.getTaskId(), task.getTaskGroup()));
-        }
-        return taskKeys;
-    }
+	@Override
+	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
+		return workflowRepo.findSuccessors(workflowId, taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
+			.filter(edge -> !edge.getTaskKey().equals(WorkflowEdge.END))
+			.map(WorkflowEdge::getTaskKey)
+			.collect(Collectors.toList());
+	}
 
-    @Override
-    public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
-        List<TaskKey> taskKeys = new ArrayList<>();
-        for (Task task : taskRepository.findPredecessors(workflowId, taskKey)) {
-            taskKeys.add(new TaskKey(task.getTaskId(), task.getTaskGroup()));
-        }
-        return taskKeys;
-    }
+	@Override
+	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
+		return workflowRepo.findPredecessors(workflowId, taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
+			.filter(edge -> !edge.getTaskKey().equals(WorkflowEdge.END))
+			.map(WorkflowEdge::getSrcTaskKey)
+			.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<JobDependency> getJobDependencies(JobKey jobKey) {
+		return jobDependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
+	}
 }

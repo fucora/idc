@@ -20,13 +20,9 @@ public interface IDCDriverDelegate {
 	JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException;
 	JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException;
 	
-	// ~~ 依赖相关 ~~
-	List<JobDependency> selectJobDependencies(Connection conn, JobKey idcJob) throws SQLException;
-	
 	// ~~ barrier 相关 ~~
 	void clearAllBarrier(Connection conn) throws SQLException;
 	void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException;
 	void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException;
 	void disableBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime) throws SQLException;
-
 }

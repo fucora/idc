@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.vo;
 
 import java.time.LocalDateTime;
 
+import com.iwellmass.idc.model.ScheduleStatus;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,15 +25,18 @@ public class JobRuntimeListVO {
 	private String assignee;
 	
 	@ApiModelProperty("当前批次")
-	private LocalDateTime shouldFireTime;
+	private Long shouldFireTime;
 	
 	@ApiModelProperty("下一批次")
-	private LocalDateTime nextFireTime;
-	
+	private Long nextFireTime;
+
 	@ApiModelProperty("实例ID")
 	private Integer instanceId;
+
+	@ApiModelProperty("任务类型")
+	private String contentType;
 	
 	@ApiModelProperty("调度状态")
-	private Integer scheduleStatus;
+	private ScheduleStatus scheduleStatus;
 	
 }

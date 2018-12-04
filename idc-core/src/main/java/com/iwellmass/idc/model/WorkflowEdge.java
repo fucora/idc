@@ -2,11 +2,13 @@ package com.iwellmass.idc.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -38,14 +40,30 @@ public class WorkflowEdge implements Serializable{
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 	
+	@Column(name = "workflow_id")
 	private String workflowId;
 	
+	@Column(name = "src_task_id")
 	private String srcTaskId;
 	
+	@Column(name = "src_task_group")
 	private String srcTaskGroup;
 	
+	@Column(name = "task_id")
 	private String taskId;
 	
+	@Column(name = "task_group")
 	private String taskGroup;
+
+	@Transient
+	public TaskKey getSrcTaskKey() {
+		return new TaskKey(srcTaskId, srcTaskGroup);
+	}
+	
+	@Transient
+	public TaskKey getTaskKey() {
+		return new TaskKey(taskId, taskGroup);
+	}
+	
 	
 }

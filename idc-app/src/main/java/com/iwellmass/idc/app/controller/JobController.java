@@ -91,11 +91,9 @@ public class JobController {
 	}
 	
 	// ~~~~~~~~~~~~~ 调度器接口 should be called by rpc  ~~~~~~~~~~~~~
-	
-
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
-	public ServiceResult<String> schedule(ScheduleRequest sr) {
+	public ServiceResult<String> schedule(@RequestBody ScheduleRequest sr) {
 		try {
 			Task task = sr.getTask();
 			ScheduleProperties sp = sr.getScheduleConfig();
