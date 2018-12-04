@@ -15,8 +15,8 @@ public class JobRuntimeListVO {
 	@ApiModelProperty("调度ID")
 	private String jobId;
 
-	@ApiModelProperty("调度组")
-	private String jobGroup;
+	@ApiModelProperty("任务类型")
+	private String contentType;
 	
 	@ApiModelProperty("任务名称")
 	private String jobName;

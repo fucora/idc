@@ -22,7 +22,7 @@
 	<select id="selectJobRuntimeList" parameterType="com.iwellmass.idc.app.model.JobQuery" resultType="com.iwellmass.idc.app.vo.JobRuntimeListVO">
 		SELECT
 			j.job_id,
-			j.job_group,
+			j.content_type as contentType,
 			j.job_name,
 			j.task_id,
 			j.assignee,
