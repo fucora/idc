@@ -252,11 +252,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			barriers.add(b);
 		}
 		// 任务间依赖
-		List<JobDependency> jobDependencies = idcDriverDelegate.selectJobDependencies(conn, jr.getJobKey());
+		List<JobDependency> jobDependencies = dependencyService.getJobDependencies(jr.getJobKey());
 		if (!Utils.isNullOrEmpty(jobDependencies)) {
 			for (JobDependency jdep : jobDependencies) {
-				// TODO 计算 shouldFireTime
 				Long shouldFireTime = jr.getShouldFireTime();
+				// TODO 计算 shouldFireTime
 				JobBarrier a = buildBarrier(conn, jr.getJobKey(), jdep.getDependencyJobKey(), shouldFireTime);
 				if (a != null) {
 					barriers.add(a);
