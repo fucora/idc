@@ -241,7 +241,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		PageInfo pageInfo = PageHelper.startPage(pager).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
+		PageInfo pageInfo = PageHelper.startPage(pager.getPage(),pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
