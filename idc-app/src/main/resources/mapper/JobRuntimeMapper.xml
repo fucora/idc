@@ -18,4 +18,20 @@
 			AND b.job_group = #{jobKey.jobGroup}
 	</select>
 	
+	
+	<select id="selectJobRuntimeList" resultType="com.iwellmass.idc.app.vo.JobRuntimeListVO">
+		SELECT
+			j.job_id,
+			j.job_group,
+			j.job_name,
+			j.task_id,
+			j.assignee,
+			t.PREV_FIRE_TIME AS should_fire_time,
+			t.NEXT_FIRE_TIME AS next_fire_time,
+			t.TRIGGER_STATE AS schedule_status 
+		FROM
+			t_idc_job j
+			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
+			AND j.job_group = t.TRIGGER_GROUP
+	</select>
 </mapper>

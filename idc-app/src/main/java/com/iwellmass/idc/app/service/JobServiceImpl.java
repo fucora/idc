@@ -32,6 +32,7 @@ import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
+import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -235,6 +236,13 @@ public class JobServiceImpl implements JobService {
 
 	public Job findJob(JobKey jobKey) {
 		return jobRepository.findOne(jobKey);
+	}
+
+	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
+		
+		
+		
+		return null;
 	}
 
 
