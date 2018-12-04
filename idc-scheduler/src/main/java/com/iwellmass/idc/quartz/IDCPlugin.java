@@ -7,6 +7,7 @@ import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
@@ -70,15 +71,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	private Scheduler scheduler;
 	private IDCJobStore idcJobStore;
 	
-	@Getter
-	private TaskService taskService;
-	
-	@Getter
-	private JobService jobService;
-	
-	@Getter
-	private DependencyService dependencyService;
-	
 	// ~~ internal component ~~
 	@Getter
 	private IDCStatusService statusService;
@@ -87,11 +79,8 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	@Getter
 	private IDCLogger logger = new SimpleIDCLogger();
 	
-	public void initialize(IDCJobStore store, TaskService taskService, JobService jobService, DependencyService workflowService) {
+	public void initialize(IDCJobStore store) {
 		this.idcJobStore = store;
-		this.dependencyService = workflowService;
-		this.taskService = taskService;
-		this.jobService = jobService;
 		store.clearAllBarrier();
 	}
 	
@@ -100,9 +89,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("加载 IDCPlugin...");
 		
 		Objects.requireNonNull(idcJobStore, "IDCJobStore cannot be null");
-		Objects.requireNonNull(taskService, "TaskService cannot be null");
-		Objects.requireNonNull(jobService, "TaskService cannot be null");
-		Objects.requireNonNull(dependencyService, "WorkflowService cannot be null");
+		Objects.requireNonNull(getTaskService(), "TaskService cannot be null");
+		Objects.requireNonNull(getJobService(), "TaskService cannot be null");
+		Objects.requireNonNull(getDependencyService(), "DependencyService cannot be null");
 
 		this.scheduler = scheduler;
 		// new status service
@@ -130,6 +119,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	/** 调度主任务 */
 	public void schedule(Task task, ScheduleProperties sp) throws SchedulerException {
+		
+		getTaskService().saveTask(task);
+		
 		Job job = new Job();
 		// 任务信息
 		job.setJobKey(aquireJobKey(task));
@@ -145,13 +137,17 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setScheduleType(sp.getScheduleType());
 		job.setIsRetry(sp.getIsRetry());
 		job.setBlockOnError(sp.getBlockOnError());
-		job.setStartTime(sp.getStartTime());
-		job.setEndTime(sp.getEndTime());
+		if (sp.getStartTime() != null) {
+			job.setStartTime(sp.getStartTime().atTime(LocalTime.MIN));
+		}
+		if (sp.getEndTime() != null) {
+			job.setEndTime(sp.getEndTime().atTime(LocalTime.MAX));
+		}
 		job.setParameter(sp.getParameter());
 		job.setCronExpr(sp.toCronExpression());
 		// ~~ 前端用 ~~
 		job.setScheduleConfig(JSON.toJSONString(sp));
-		jobService.saveJob(job);
+		getJobService().saveJob(job);
 		
 		// 调度
 		JobDetail jobDetail = buildJobDetail(task);
@@ -160,22 +156,28 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
-		Job job = jobService.getJob(jobKey);
+		Job job = getJobService().getJob(jobKey);
 		if (job == null) {
 			throw new SchedulerException("调度计划 " + jobKey + " 不存在");
 		}
 		// 调度信息
-		job.setAssignee(sp.getAssignee());
-		job.setScheduleType(sp.getScheduleType());
-		job.setIsRetry(sp.getIsRetry());
-		job.setBlockOnError(sp.getBlockOnError());
-		job.setStartTime(sp.getStartTime());
-		job.setEndTime(sp.getEndTime());
-		job.setParameter(sp.getParameter());
-		job.setCronExpr(sp.toCronExpression());
-		// ~~ 前端用 ~~
-		job.setScheduleConfig(JSON.toJSONString(sp));
-		jobService.saveJob(job);
+		if (sp != null) {
+			job.setAssignee(sp.getAssignee());
+			job.setScheduleType(sp.getScheduleType());
+			job.setIsRetry(sp.getIsRetry());
+			job.setBlockOnError(sp.getBlockOnError());
+			if (sp.getStartTime() != null) {
+				job.setStartTime(sp.getStartTime().atTime(LocalTime.MIN));
+			}
+			if (sp.getEndTime() != null) {
+				job.setEndTime(sp.getEndTime().atTime(LocalTime.MAX));
+			}
+			job.setParameter(sp.getParameter());
+			job.setCronExpr(sp.toCronExpression());
+			// ~~ 前端用 ~~
+			job.setScheduleConfig(JSON.toJSONString(sp));
+			getJobService().saveJob(job);
+		}
 		
 		// 调度
 		Trigger trigger = buildMainTrigger(job);
@@ -183,7 +185,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		// 创建一个新的调度
 		if (ret == null) {
-			Task task = taskService.getTask(job.getTaskKey());
+			Task task = getTaskService().getTask(job.getTaskKey());
 			JobDetail jdt = buildJobDetail(task);
 			ret = scheduler.scheduleJob(jdt, trigger);
 		}
@@ -222,7 +224,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
 		
 		// 取出主任务
-		Job mainJob = jobService.getJob(sfIns.getJobKey());
+		Job mainJob = getJobService().getJob(sfIns.getJobKey());
 		
 		JobEnv jobEnv = new JobEnv();
 		jobEnv.setJobKey(aquireSubJobKey(task, mainJob));
@@ -287,7 +289,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	public void unschedule(JobKey jobKey) throws SchedulerException {
-		Job job = jobService.getJob(jobKey);
+		Job job = getJobService().getJob(jobKey);
 		
 		Assert.isTrue(job != null, "调度计划 " + jobKey + "不存在");
 		
@@ -304,6 +306,10 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	protected abstract Class<? extends org.quartz.Job> getJobClass(Task task);
+	
+	public abstract JobService getJobService();
+	public abstract TaskService getTaskService();
+	public abstract DependencyService getDependencyService();
 	
 	// ~~ 事件服务~~
 	private class StdStatusService implements IDCStatusService {

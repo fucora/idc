@@ -45,46 +45,55 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	}
 
 	@Override
+	@Transactional
 	public JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException {
 		return instanceRepo.findOne(jobKey.getJobId(), jobKey.getJobGroup(), shouldFireTime);
 	}
 
 	@Override
+	@Transactional
 	public JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException {
 		return instanceRepo.findOne(instanceId);
 	}
 
 	@Override
+	@Transactional
 	public JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException {
 		return instanceRepo.save(newIns);
 	}
 
 	@Override
+	@Transactional
 	public void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException {
 		barrierRepo.save(barriers);
 	}
 
 	@Override
+	@Transactional
 	public Integer nextInstanceId() {
 		return pluginRepo.increaseInstanceSeqAndGet();
 	}
 
 	@Override
+	@Transactional
 	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
 		// todo
 	}
 
 	@Override
+	@Transactional
 	public List<JobDependency> selectJobDependencies(Connection conn, JobKey jobKey) throws SQLException {
 		return dependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
 	@Override
+	@Transactional
 	public void clearAllBarrier(Connection conn) throws SQLException {
 		barrierRepo.deleteAll();
 	}
 
 	@Override
+	@Transactional
 	public void disableBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
 			throws SQLException {
 		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);

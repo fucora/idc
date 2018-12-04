@@ -50,15 +50,6 @@ public final class IDCSchedulerFactory {
 	@Setter
 	private IDCDriverDelegate driverDelegate;
 	
-	@Setter
-	private DependencyService dependencyService;
-	
-	@Setter
-	private TaskService taskService;
-	
-	@Setter
-	private JobService jobService;
-
 	public Scheduler getScheduler() throws SchedulerException {
 		if (!inited) {
 			LOGGER.info("创建 {}...", SCHED_NAME);
@@ -95,7 +86,7 @@ public final class IDCSchedulerFactory {
 		DBConnectionManager.getInstance().addConnectionProvider(dsName, new SimpleConnectionProvider());
 
 		// JobStroe
-		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, dependencyService);
+		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, plugin.getDependencyService());
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);
@@ -107,7 +98,7 @@ public final class IDCSchedulerFactory {
 		}
 
 		// IDCPlugin
-		plugin.initialize(jobStore, taskService, jobService, dependencyService);
+		plugin.initialize(jobStore);
 		Map<String, SchedulerPlugin> schedulerPluginMap = new HashMap<>();
 		schedulerPluginMap.put(IDCPlugin.class.getSimpleName(), plugin);
 		DirectSchedulerFactory.getInstance().createScheduler(SCHED_NAME, SCHED_ID, threadPool, jobStore,

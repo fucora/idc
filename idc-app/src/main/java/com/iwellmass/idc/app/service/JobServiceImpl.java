@@ -4,14 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger.TriggerState;
-import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,8 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
-import com.iwellmass.common.exception.AppException;
-import com.iwellmass.common.util.Assert;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.JobService;
@@ -32,17 +25,13 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
 public class JobServiceImpl implements JobService {
@@ -54,15 +43,6 @@ public class JobServiceImpl implements JobService {
 
 	@Inject
 	private JobRuntimeMapper jobRuntimeMapper;
-	
-//	@Inject
-	private IDCPlugin idcPlugin;
-
-//	@Inject
-	private Scheduler scheduler;
-
-	@Inject
-	private TaskRepository taskRepository;
 	
 	
 	@Override
@@ -82,69 +62,6 @@ public class JobServiceImpl implements JobService {
 		jr.setBarriers(barriers);
 		jr.setStatus(ScheduleStatus.ERROR);
 		return  jr;
-	}
-
-	@Transactional
-	public void schedule(Task task, ScheduleProperties schdProps) {
-		try {
-			taskRepository.save(task);
-			idcPlugin.schedule(task, schdProps);
-		} catch (SchedulerException e) {
-			throw new AppException("调度失败: " + e.getMessage(), e);
-		}
-	}
-
-	@Transactional
-	public void reschedule(JobKey jobKey, ScheduleProperties scheduleConfig) {
-		try {
-			idcPlugin.reschedule(jobKey, scheduleConfig);
-		} catch (SchedulerException e) {
-			throw new AppException(e.getMessage(), e);
-		}
-	}
-
-	@Transactional
-	public void unschedule(JobKey jobKey) throws AppException {
-		try {
-			LOGGER.info("撤销调度任务 {}", jobKey);
-			boolean result = scheduler.unscheduleJob(new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
-			if (!result) {
-				LOGGER.warn("调度任务 {} 不存在", jobKey);
-			}
-		} catch (SchedulerException e) {
-			throw new AppException(e);
-		}
-	}
-
-	@Transactional
-	public void pause(JobKey jobKey, boolean forcePause) {
-		LOGGER.info("冻结调度任务 {}", jobKey);
-		TriggerKey triggerKey = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
-		try {
-			if (!forcePause) {
-				TriggerState state = scheduler.getTriggerState(triggerKey);
-				Assert.isTrue(state != TriggerState.BLOCKED, "等待任务执行完毕");
-			} else {
-				// TODO 强制取消子任务
-			}
-			scheduler.pauseTrigger(triggerKey);
-		} catch (SchedulerException e) {
-			throw new AppException("无法冻结此任务");
-		}
-	}
-
-	@Transactional
-	public void resume(JobKey jobKey) {
-		TriggerKey tk = new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
-		try {
-			Job job = jobRepository.findOne(jobKey);
-			Assert.isTrue(job != null, "调度任务 %s 不存在", jobKey);
-			scheduler.resumeTrigger(tk);
-			TriggerState state = scheduler.getTriggerState(tk);
-			jobRepository.save(job);
-		} catch (SchedulerException e) {
-			throw new AppException("无法恢复此任务");
-		}
 	}
 
 	public void execute(ExecutionRequest request) {
@@ -241,7 +158,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		PageInfo pageInfo = PageHelper.startPage(pager.getPage(),pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
+		PageInfo<JobRuntimeListVO> pageInfo = PageHelper.startPage(pager.getPage(),pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 

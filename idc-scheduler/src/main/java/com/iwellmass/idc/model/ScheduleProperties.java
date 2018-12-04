@@ -1,5 +1,6 @@
 package com.iwellmass.idc.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -41,10 +42,10 @@ public class ScheduleProperties {
 	private Boolean blockOnError = true;
 	
 	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime startTime;
+	private LocalDate startTime;
 
 	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime endTime;
+	private LocalDate endTime;
 	
 	@ApiModelProperty("运行参数")
 	private String parameter;
