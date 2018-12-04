@@ -1,5 +1,6 @@
 package com.iwellmass.idc;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 
 import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskEdge;
@@ -85,6 +87,11 @@ public class AllSimpleService implements DependencyService, TaskService, JobServ
 			graph.addVertex(target);
 			graph.addEdge(src, target);
 		}
+	}
+
+	@Override
+	public List<JobDependency> getJobDependencies(JobKey jobKey) {
+		return Collections.emptyList();
 	}
 
 	

@@ -11,11 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.app.repo.JobBarrierRepo;
-import com.iwellmass.idc.app.repo.JobDependencyRepository;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.app.repo.PluginVersionRepository;
 import com.iwellmass.idc.model.JobBarrier;
-import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
@@ -27,14 +25,10 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	private JobInstanceRepository instanceRepo;
 	
 	@Inject
-	private JobDependencyRepository dependencyRepo;
-	
-	@Inject
 	private JobBarrierRepo barrierRepo;
 	
 	@Inject
 	private PluginVersionRepository pluginRepo; 
-
 
 	@Transactional
 	public JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func)
@@ -78,12 +72,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Transactional
 	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
 		// todo
-	}
-
-	@Override
-	@Transactional
-	public List<JobDependency> selectJobDependencies(Connection conn, JobKey jobKey) throws SQLException {
-		return dependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
 	@Override
