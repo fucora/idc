@@ -335,10 +335,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 				getLog().warn("任务 {} 不存在", event.getInstanceId());
 				return null;
 			}
-			// 删除 barrier
+			
 			JobKey jobKey = ins.getJobKey();
+			// 删除 barrier
 			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
-				idcDriverDelegate.disableBarriers(conn, jobKey.getJobId(), jobKey.getJobGroup(), ins.getShouldFireTime());
+				idcDriverDelegate.markBarrierInvalid(conn, jobKey.getJobId(), jobKey.getJobGroup(), ins.getShouldFireTime());
 			}
 			signalSchedulingChangeOnTxCompletion(0L);
 			return ins;

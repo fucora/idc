@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
@@ -34,6 +35,7 @@ public class ScheduleProperties {
 	private List<Integer> days;
 
 	@ApiModelProperty("具体时间")
+	@JsonFormat(timezone = "GMT+8", pattern="HH:mm:ss")
 	private LocalTime duetime = LocalTime.MIN;
 
 	@ApiModelProperty("周期类型")
@@ -45,10 +47,12 @@ public class ScheduleProperties {
 	@ApiModelProperty("出错时阻塞")
 	private Boolean blockOnError = true;
 	
-	@ApiModelProperty("生效日期始 yyyy-MM-dd HH:mm:ss")
+	@ApiModelProperty("生效日期 yyyy-MM-dd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDate startTime;
 
-	@ApiModelProperty("生效日期止, yyyy-MM-dd HH:mm:ss")
+	@ApiModelProperty("失效日期, yyyy-MM-dd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDate endTime;
 	
 	@ApiModelProperty("运行参数")

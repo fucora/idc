@@ -58,6 +58,10 @@ public class Task {
 	@Column(name = "workflow_id")
 	private String workflowId;
 	
+	@ApiModelProperty("参数")
+	@Column(name = "parameter")
+	private String parameter;
+	
 	@Transient
 	@ApiModelProperty("编辑ID")
 	private String graphId;
@@ -66,6 +70,7 @@ public class Task {
 	@ApiModelProperty("编辑图")
 	private String graph;
 
+	
 	@Transient
 	@JsonIgnore
 	public TaskKey getTaskKey() {

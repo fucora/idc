@@ -85,7 +85,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 
 
 	@Override
-	public void disableBarriers(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
+	public void markBarrierInvalid(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_UPDATE_JOB_BARRIER);
