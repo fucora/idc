@@ -33,7 +33,6 @@ import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
@@ -111,10 +110,10 @@ public class JobService {
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
-	public void schedule(Task task, ScheduleProperties sp) {
+	public void schedule(ScheduleProperties sp) {
 		try {
 			// TODO 检查 task 完整性
-			idcPlugin.schedule(task, sp);
+			idcPlugin.schedule(sp);
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
 		}

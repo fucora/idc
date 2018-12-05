@@ -1,7 +1,6 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
-import com.iwellmass.idc.model.ScheduleType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -22,6 +20,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ScheduleProperties {
+	
+	@ApiModelProperty("业务ID")
+	private String taskId;
+	
+	@ApiModelProperty("业务域")
+	private String taskGroup;
 
 	@ApiModelProperty("负责人")
 	private String assignee;

@@ -22,7 +22,6 @@ import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
-import com.iwellmass.idc.app.vo.ScheduleRequest;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -88,10 +87,8 @@ public class JobController {
 	// ~~~~~~~~~~~~~ 调度器接口 should be called by rpc  ~~~~~~~~~~~~~
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
-	public ServiceResult<String> schedule(@RequestBody ScheduleRequest sr) {
-		Task task = sr.getTask();
-		ScheduleProperties sp = sr.getScheduleConfig();
-		jobService.schedule(task, sp);
+	public ServiceResult<String> schedule(@RequestBody ScheduleProperties sp) {
+		jobService.schedule(sp);
 		return ServiceResult.success("提交成功");
 	}
 	

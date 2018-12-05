@@ -129,10 +129,17 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
+	public void schedule(ScheduleProperties sp) throws SchedulerException {
+		
+		Task task = pluginRepository.findTask(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
+		if (task == null) {
+			throw new SchedulerException("任务不存在");
+		}
+		schedule(task, sp);
+	}
+	
 	/** 调度主任务 */
 	public void schedule(Task task, ScheduleProperties sp) throws SchedulerException {
-		
-		pluginRepository.saveTask(task);
 		
 		Job job = new Job();
 		// 任务信息
