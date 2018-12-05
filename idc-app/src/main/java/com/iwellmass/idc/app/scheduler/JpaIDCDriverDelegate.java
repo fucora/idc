@@ -71,10 +71,10 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 		barrierRepo.deleteAll();
 	}
 
-	@Override
 	@Transactional
-	public void disableBarriers(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
+	public void markBarrierInvalid(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
 			throws SQLException {
 		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);
 	}
+	
 }
