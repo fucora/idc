@@ -11,8 +11,6 @@ import com.iwellmass.idc.model.JobKey;
 
 public interface IDCDriverDelegate {
 
-	Integer nextInstanceId();
-
 	// ~~ 实例相关 ~~
 	JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException;
 	JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func) throws SQLException;

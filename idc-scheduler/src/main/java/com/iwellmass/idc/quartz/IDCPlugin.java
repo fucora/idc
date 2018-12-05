@@ -218,13 +218,19 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 	}
 	
-	void scheduleSubTask(TaskKey taskKey, Integer mainJobInsId) throws SchedulerException {
+	void scheduleSubTask(TaskKey taskKey, Integer mainJobInsId) throws JobExecutionException {
 		Task task = pluginRepository.findTask(taskKey);
 		if (task == null) {
-			throw new SchedulerException("子任务不存在");
+			throw new JobExecutionException("子任务不存在");
 		}
 		
-		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
+		JobInstance sfIns = null;
+		try {
+			sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
+		} catch (JobPersistenceException e) {
+			throw new JobExecutionException("cannot retrieve JobInstance " + mainJobInsId);
+		}
+		
 		// 取出主任务
 		Job mainJob = pluginRepository.findJob(sfIns.getJobKey());
 		
@@ -257,7 +263,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			.usingJobData(jobData)
 			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
 		// just schedule
-		scheduler.scheduleJob(jobDetail, builder.build());
+		try {
+			scheduler.scheduleJob(jobDetail, builder.build());
+		} catch (SchedulerException e) {
+			throw new JobExecutionException(e.getMessage(), e);
+		}
 	}
 	
 	private JobKey aquireJobKey(Task tk) {

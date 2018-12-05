@@ -50,7 +50,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	
 	/* 生成 JobInstanceId */
 	protected String getFiredTriggerRecordId() {
-		return idcDriverDelegate.nextInstanceId().toString();
+		throw new UnsupportedOperationException("Please using JobInstance.getInstanceId().");
 	}
 	
 	/* WAITING --> ACQUIRED */
@@ -109,15 +109,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     if (nextTrigger.getNextFireTime().getTime() > batchEnd) {
                       break;
                     }
-                    // We now have a acquired trigger, let's add to return list.
-                    // If our trigger was no longer in the expected state, try a new one.
-                    int rowsUpdated = getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_ACQUIRED, STATE_WAITING);
-                    if (rowsUpdated <= 0) {
-                        continue; // next trigger
-                    }
-                    nextTrigger.setFireInstanceId(getFiredTriggerRecordId());
                     
-					/////////////////////////////////////// BEGIN check
+                    /////////////////////////////////////// BEGIN check
 					// check barrier
 					////////////////
                     Task task = JSON.parseObject(TASK_JSON.applyGet(job.getJobDataMap()), Task.class);
@@ -134,17 +127,27 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					}
 					//////////////////////////////////////// END check
                     
+                    
+                    // We now have a acquired trigger, let's add to return list.
+                    // If our trigger was no longer in the expected state, try a new one.
+                    int rowsUpdated = getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_ACQUIRED, STATE_WAITING);
+                    if (rowsUpdated <= 0) {
+                        continue; // next trigger
+                    }
+                    
+        			////////////////////////////////////////
+        			// save JobInstance
+                    Integer fid = idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId();
+    				//////////////////////////////////////// END save
+                    
+                    nextTrigger.setFireInstanceId(fid.toString());
+                    
                     getDelegate().insertFiredTrigger(conn, nextTrigger, STATE_ACQUIRED, null);
 
                     if(acquiredTriggers.isEmpty()) {
                         batchEnd = Math.max(nextTrigger.getNextFireTime().getTime(), System.currentTimeMillis()) + timeWindow;
                     }
                     acquiredTriggers.add(nextTrigger);
-                    
-        			////////////////////////////////////////
-        			// save JobInstance
-                    idcDriverDelegate.insertJobInstance(conn, ins);
-    				//////////////////////////////////////// END save
                 }
 
                 // if we didn't end up with any trigger to fire from that first
@@ -173,9 +176,6 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		env.setTaskKey(new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup()));
 
 		// 构建默认值
-		if (env.getInstanceId() == null) {
-			env.setInstanceId(Integer.parseInt(trigger.getFireInstanceId()));
-		}
 		if (env.getShouldFireTime() == null) {
 			env.setShouldFireTime(Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L));
 		}

@@ -103,14 +103,6 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 		}
 	}
 
-	int id = 1000;
-	
-
-	@Override
-	public Integer nextInstanceId() {
-		return id++;
-	}
-
 	@Override
 	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
 		PreparedStatement ps = null;

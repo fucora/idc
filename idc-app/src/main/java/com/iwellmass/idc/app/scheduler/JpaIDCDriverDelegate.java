@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
-import com.iwellmass.idc.app.repo.PluginVersionRepository;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
@@ -27,9 +26,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Inject
 	private JobBarrierRepo barrierRepo;
 	
-	@Inject
-	private PluginVersionRepository pluginRepo; 
-
 	@Transactional
 	public JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func)
 			throws SQLException {
@@ -62,11 +58,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 		barrierRepo.save(barriers);
 	}
 
-	@Override
-	@Transactional
-	public Integer nextInstanceId() {
-		return pluginRepo.increaseInstanceSeqAndGet();
-	}
 
 	@Override
 	@Transactional
