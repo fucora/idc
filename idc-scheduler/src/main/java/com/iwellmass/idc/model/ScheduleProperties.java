@@ -53,6 +53,9 @@ public class ScheduleProperties {
 	
 	@ApiModelProperty("运行参数")
 	private String parameter;
+	
+	@ApiModelProperty("执行方式")
+	private DispatchType dispatchType;
 
 	public String toCronExpression() {
 		switch (scheduleType) {

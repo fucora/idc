@@ -5,7 +5,6 @@ import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_RUNTIME;
 import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
@@ -49,6 +48,7 @@ import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
+import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.JobInstance;
@@ -129,17 +129,12 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
+	/** 新增调度计划*/
 	public void schedule(ScheduleProperties sp) throws SchedulerException {
-		
 		Task task = pluginRepository.findTask(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
 		if (task == null) {
 			throw new SchedulerException("任务不存在");
 		}
-		schedule(task, sp);
-	}
-	
-	/** 调度主任务 */
-	public void schedule(Task task, ScheduleProperties sp) throws SchedulerException {
 		
 		Job job = new Job();
 		// 任务信息
@@ -164,16 +159,17 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 		job.setParameter(sp.getParameter());
 		job.setCronExpr(sp.toCronExpression());
+		job.setDispatchType(sp.getDispatchType());
 		// ~~ 前端用 ~~
 		job.setScheduleConfig(JSON.toJSONString(sp));
 		pluginRepository.saveJob(job);
-		
-		// 调度
-		JobDetail jobDetail = buildJobDetail(task);
-		Trigger trigger = buildMainTrigger(job);
-		scheduler.scheduleJob(jobDetail, trigger);
+	
+		scheduleMainTask(task, job, null);
 	}
 	
+	/**
+	 * 重新调度
+	 */
 	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
 		Job job = pluginRepository.findJob(jobKey);
 		if (job == null) {
@@ -198,20 +194,81 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			pluginRepository.saveJob(job);
 		}
 		
-		// 调度
-		Trigger trigger = buildMainTrigger(job);
-		Date ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
-		
-		// 创建一个新的调度
+		// do schedule
+		Date ret = null;
+		if (job.getDispatchType() == DispatchType.AUTO) {
+			Trigger trigger = buildAutoTrigger(job);
+			ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
+		} else {
+			Trigger trigger = buildSimpleTrigger(job, null);
+			ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
+		}
 		if (ret == null) {
 			Task task = pluginRepository.findTask(job.getTaskKey());
-			JobDetail jdt = buildJobDetail(task);
-			ret = scheduler.scheduleJob(jdt, trigger);
+			scheduleMainTask(task, job, null);
 		}
 		return ret;
 	}
 	
-	private Trigger buildMainTrigger(Job job) {
+	private void scheduleMainTask(Task task, Job job, JobEnv jobEnv) throws SchedulerException {
+		if (job.getDispatchType() == DispatchType.AUTO) {
+			scheduler.scheduleJob(buildJobDetail(task), buildAutoTrigger(job));
+		} else {
+			scheduler.scheduleJob(buildJobDetail(task), buildSimpleTrigger(job, jobEnv));
+		}
+	}
+	
+	void scheduleSubTask(TaskKey taskKey, Integer mainJobInsId) throws SchedulerException {
+		Task task = pluginRepository.findTask(taskKey);
+		if (task == null) {
+			throw new SchedulerException("子任务不存在");
+		}
+		
+		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
+		// 取出主任务
+		Job mainJob = pluginRepository.findJob(sfIns.getJobKey());
+		
+		JobEnv jobEnv = new JobEnv();
+		jobEnv.setJobKey(aquireSubJobKey(task, mainJob));
+		jobEnv.setTaskKey(task.getTaskKey());
+		
+		// mark
+		jobEnv.setMainInstanceId(mainJobInsId);
+		jobEnv.setTaskType(TaskType.SUB_TASK);
+		
+		// seam as main job
+		jobEnv.setAssignee(mainJob.getAssignee());
+		jobEnv.setParameter(mainJob.getParameter());
+		jobEnv.setScheduleType(mainJob.getScheduleType());
+		
+		jobEnv.setPrevFireTime(sfIns.getPrevFireTime());
+		jobEnv.setShouldFireTime(sfIns.getShouldFireTime());
+		
+		// build Task
+		JobDetail jobDetail = buildJobDetail(task);
+				
+		// build Simple
+		JobDataMap jobData = new JobDataMap();
+		JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(jobEnv));
+		// 构建常量
+		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
+			.withIdentity(IDCUtils.toTriggerKey(jobEnv.getJobKey()))
+			.forJob(task.getTaskId(), task.getTaskGroup())
+			.usingJobData(jobData)
+			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
+		// just schedule
+		scheduler.scheduleJob(jobDetail, builder.build());
+	}
+	
+	private JobKey aquireJobKey(Task tk) {
+		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
+	}
+	
+	private JobKey aquireSubJobKey(Task tk, Job mainJob) {
+		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
+	}
+	
+	private Trigger buildAutoTrigger(Job job) {
 		JobEnv jobEnv = new JobEnv();
 		jobEnv.setAssignee(job.getAssignee());
 		jobEnv.setJobKey(job.getJobKey());
@@ -233,64 +290,19 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return builder.build();
 	}
 	
-	private JobKey aquireJobKey(Task tk) {
-		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
-	}
-	
-	void scheduleSubTask(TaskKey taskKey, Integer mainJobInsId) throws SchedulerException {
-		Task task = pluginRepository.findTask(taskKey);
-		if (task == null) {
-			throw new SchedulerException("子任务不存在");
-		}
-		scheduleSubTask(task, mainJobInsId);
-	}
-	
-	/** 调度子任务 */
-	void scheduleSubTask(Task task, Integer mainJobInsId) throws SchedulerException {
-		
-		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
-		
-		// 取出主任务
-		Job mainJob = pluginRepository.findJob(sfIns.getJobKey());
-		
-		JobEnv jobEnv = new JobEnv();
-		jobEnv.setJobKey(aquireSubJobKey(task, mainJob));
-		jobEnv.setTaskKey(task.getTaskKey());
-		
-		// mark
-		jobEnv.setMainInstanceId(mainJobInsId);
-		jobEnv.setTaskType(TaskType.SUB_TASK);
-		
-		// seam as main job
-		jobEnv.setAssignee(mainJob.getAssignee());
-		jobEnv.setParameter(mainJob.getParameter());
-		jobEnv.setScheduleType(mainJob.getScheduleType());
-		
-		jobEnv.setPrevFireTime(sfIns.getPrevFireTime());
-		jobEnv.setShouldFireTime(sfIns.getShouldFireTime());
-		
-
-		// build Task
-		JobDetail jobDetail = buildJobDetail(task);
-				
-		// build Trigger
+	private Trigger buildSimpleTrigger(Job job, JobEnv jobEnv) {	// build Trigger
 		JobDataMap jobData = new JobDataMap();
-		JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(jobEnv));
+		if (jobEnv != null) {
+			JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(jobEnv));
+		}
 		// 构建常量
 		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
 			.withIdentity(IDCUtils.toTriggerKey(jobEnv.getJobKey()))
-			.forJob(task.getTaskId(), task.getTaskGroup())
+			.forJob(job.getTaskId(), job.getTaskGroup())
 			.usingJobData(jobData)
 			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
-		
-		// just schedule
-		scheduler.scheduleJob(jobDetail, builder.build());
+		return builder.build();
 	}
-	
-	private JobKey aquireSubJobKey(Task tk, Job mainJob) {
-		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
-	}
-	
 	
 	private JobDetail buildJobDetail(Task task) {
 		JobDataMap jobData = new JobDataMap();
@@ -404,7 +416,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	// ~~ Scheduler Listener ~~
-	public class IDCSchedulerListener extends SchedulerListenerSupport {
+	private class IDCSchedulerListener extends SchedulerListenerSupport {
 
 		/* 保存任务到数据库 */
 		public void jobScheduled(Trigger trigger) {}
@@ -438,10 +450,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 	}
 
-	
-	
-	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	
 	// ~~ Trigger trace ~~
 	private class IDCTriggerListener extends TriggerListenerSupport {
 	
@@ -455,7 +463,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				
 				logger.clearLog(ins.getInstanceId())
 				.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 任务类型 {}", ins.getInstanceId(), ins.getDispatchType(), ins.getTaskType())
-				.log(ins.getInstanceId(), "周期类型 {}, 业务日期 {}, 批次 {}", ins.getScheduleType(), ins.getLoadDate(), SDF.format(new Date(ins.getShouldFireTime())))
+				.log(ins.getInstanceId(), "周期类型 {}, 业务日期 {}, 批次 {}", ins.getScheduleType(), ins.getLoadDate(), IDCConstants.FULL_DF.format(new Date(ins.getShouldFireTime())))
 				.log(ins.getInstanceId(), "运行参数: {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter());
 				
 				IDCContextKey.CONTEXT_INSTANCE.applyPut(context, ins);

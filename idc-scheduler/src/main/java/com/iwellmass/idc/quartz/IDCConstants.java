@@ -1,12 +1,10 @@
 package com.iwellmass.idc.quartz;
 
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 
 public interface IDCConstants  {
 
-	SimpleDateFormat DEFAULT_LOAD_DATE_DF = new SimpleDateFormat("yyyyMMddHHmmss");
-	DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
+	SimpleDateFormat FULL_DF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	// ~~ IDC quartz plugin ~~
 	String VERSION = "2.1.0";
