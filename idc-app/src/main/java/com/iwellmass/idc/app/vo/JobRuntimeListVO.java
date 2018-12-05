@@ -38,5 +38,11 @@ public class JobRuntimeListVO {
 	
 	@ApiModelProperty("调度状态")
 	private ScheduleStatus scheduleStatus;
+
+	@ApiModelProperty("总任务数")
+	private Integer sumTask;
+
+	@ApiModelProperty("已完成任务数")
+	private Integer finishedTask;
 	
 }
