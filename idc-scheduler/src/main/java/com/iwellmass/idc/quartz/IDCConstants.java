@@ -9,7 +9,7 @@ public interface IDCConstants  {
 	DateTimeFormatter DEFAULT_LOAD_DATE_DTF = DateTimeFormatter.ofPattern(DEFAULT_LOAD_DATE_DF.toPattern());
 
 	// ~~ IDC quartz plugin ~~
-	String VERSION = "2.0";
+	String VERSION = "2.1.0";
 
 	// ~~ barrier 表 ~~
 	String TABLE_BARRIER = "t_idc_barrier";

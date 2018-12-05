@@ -1,11 +1,9 @@
 package com.iwellmass.idc.app;
 
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.SpringCloudApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,8 +16,6 @@ import com.iwellmass.common.exception.AppException;
 @EnableFeignClients
 @Configuration
 @EnableResourceServer
-@EnableJpaRepositories("com.iwellmass.idc.app.repo")
-@EntityScan("com.iwellmass.idc.model")
 public class IDCApplication {
 	
 	public static void main(String[] args) {

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.app.service.QTaskService;
+import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiOperation;
 public class TaskController {
 	
 	@Inject
-    private QTaskService taskService;
+    private TaskService taskService;
 	
     @ApiOperation("保存任务")
     @PostMapping
@@ -35,17 +35,18 @@ public class TaskController {
         return ServiceResult.success(task.getTaskKey());
     }
 	
-	@ApiOperation("获取所有任务")
+	@ApiOperation("查询任务列表")
 	@PostMapping("/query")
 	public ServiceResult<PageData<Task>> get(@RequestBody(required = false) TaskQueryVO taskQuery, Pager pager) {
 		PageData<Task> ret = taskService.queryTask(taskQuery, pager);
 		return ServiceResult.success(ret);
 	}
     
-    @ApiOperation("获取所有工作流子任务")
+    @ApiOperation("获取所有可用子任务")
     @GetMapping("/all-sub-task")
     public ServiceResult<List<Task>> getAllSubTask() {
     	List<Task> ret = taskService.getTasksByType(TaskType.NODE_TASK);
     	return ServiceResult.success(ret);
     }
+    
 }

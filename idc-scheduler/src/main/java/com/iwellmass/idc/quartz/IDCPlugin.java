@@ -42,10 +42,9 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCLogger;
+import com.iwellmass.idc.IDCPluginService;
 import com.iwellmass.idc.IDCUtils;
-import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.SimpleIDCLogger;
-import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.ProgressEvent;
@@ -58,6 +57,7 @@ import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
 
 import lombok.Getter;
@@ -75,9 +75,22 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	@Getter
 	private IDCStatusService statusService;
 	
+	@Getter
+	private IDCPluginService pluginRepository;
+	
+	@Getter
+	private DependencyService dependencyService;
+	
 	@Setter
 	@Getter
 	private IDCLogger logger = new SimpleIDCLogger();
+	
+	
+	public IDCPlugin(IDCPluginService pluginRepository, DependencyService dependencyService) {
+		this.pluginRepository = pluginRepository;
+		this.dependencyService = dependencyService;
+	}
+	
 	
 	public void initialize(IDCJobStore store) {
 		this.idcJobStore = store;
@@ -89,8 +102,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("加载 IDCPlugin...");
 		
 		Objects.requireNonNull(idcJobStore, "IDCJobStore cannot be null");
-		Objects.requireNonNull(getTaskService(), "TaskService cannot be null");
-		Objects.requireNonNull(getJobService(), "TaskService cannot be null");
+		Objects.requireNonNull(pluginRepository, "IDCSchedulerService cannot be null");
 		Objects.requireNonNull(getDependencyService(), "DependencyService cannot be null");
 
 		this.scheduler = scheduler;
@@ -120,7 +132,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	/** 调度主任务 */
 	public void schedule(Task task, ScheduleProperties sp) throws SchedulerException {
 		
-		getTaskService().saveTask(task);
+		pluginRepository.saveTask(task);
 		
 		Job job = new Job();
 		// 任务信息
@@ -147,7 +159,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setCronExpr(sp.toCronExpression());
 		// ~~ 前端用 ~~
 		job.setScheduleConfig(JSON.toJSONString(sp));
-		getJobService().saveJob(job);
+		pluginRepository.saveJob(job);
 		
 		// 调度
 		JobDetail jobDetail = buildJobDetail(task);
@@ -156,7 +168,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
-		Job job = getJobService().getJob(jobKey);
+		Job job = pluginRepository.findJob(jobKey);
 		if (job == null) {
 			throw new SchedulerException("调度计划 " + jobKey + " 不存在");
 		}
@@ -176,7 +188,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setCronExpr(sp.toCronExpression());
 			// ~~ 前端用 ~~
 			job.setScheduleConfig(JSON.toJSONString(sp));
-			getJobService().saveJob(job);
+			pluginRepository.saveJob(job);
 		}
 		
 		// 调度
@@ -185,7 +197,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		// 创建一个新的调度
 		if (ret == null) {
-			Task task = getTaskService().getTask(job.getTaskKey());
+			Task task = pluginRepository.findTask(job.getTaskKey());
 			JobDetail jdt = buildJobDetail(task);
 			ret = scheduler.scheduleJob(jdt, trigger);
 		}
@@ -218,13 +230,21 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return new JobKey(tk.getTaskId(), tk.getTaskGroup());
 	}
 	
+	void scheduleSubTask(TaskKey taskKey, Integer mainJobInsId) throws SchedulerException {
+		Task task = pluginRepository.findTask(taskKey);
+		if (task == null) {
+			throw new SchedulerException("子任务不存在");
+		}
+		scheduleSubTask(task, mainJobInsId);
+	}
+	
 	/** 调度子任务 */
 	void scheduleSubTask(Task task, Integer mainJobInsId) throws SchedulerException {
 		
 		JobInstance sfIns = idcJobStore.retrieveIDCJobInstance(mainJobInsId);
 		
 		// 取出主任务
-		Job mainJob = getJobService().getJob(sfIns.getJobKey());
+		Job mainJob = pluginRepository.findJob(sfIns.getJobKey());
 		
 		JobEnv jobEnv = new JobEnv();
 		jobEnv.setJobKey(aquireSubJobKey(task, mainJob));
@@ -289,7 +309,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	public void unschedule(JobKey jobKey) throws SchedulerException {
-		Job job = getJobService().getJob(jobKey);
+		Job job = pluginRepository.findJob(jobKey);
 		
 		Assert.isTrue(job != null, "调度计划 " + jobKey + "不存在");
 		
@@ -306,10 +326,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	protected abstract Class<? extends org.quartz.Job> getJobClass(Task task);
-	
-	public abstract JobService getJobService();
-	public abstract TaskService getTaskService();
-	public abstract DependencyService getDependencyService();
 	
 	// ~~ 事件服务~~
 	private class StdStatusService implements IDCStatusService {

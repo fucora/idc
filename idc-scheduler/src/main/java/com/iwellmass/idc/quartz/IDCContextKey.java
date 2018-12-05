@@ -9,7 +9,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerContext;
 import org.quartz.SchedulerException;
 
-import com.iwellmass.idc.ParameterParser;
 import com.iwellmass.idc.model.JobInstance;
 
 public class IDCContextKey<T> {

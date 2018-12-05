@@ -59,9 +59,11 @@ public class Task {
 	private String workflowId;
 	
 	@Transient
+	@ApiModelProperty("编辑ID")
 	private String graphId;
 	
 	@Transient
+	@ApiModelProperty("编辑图")
 	private String graph;
 
 	@Transient

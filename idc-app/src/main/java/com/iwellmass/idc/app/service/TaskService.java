@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.repo.WorkflowRepository;
@@ -23,7 +22,7 @@ import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.model.Workflow;
 
 @Service
-public class QTaskService implements TaskService {
+public class TaskService {
 
 	@Inject
 	TaskRepository taskRepository;
@@ -34,27 +33,17 @@ public class QTaskService implements TaskService {
 	@Inject
 	private WorkflowRepository workflowRepo;
 	
-	@Override
+	public void saveTask(Task task) {
+		if (task.getTaskId() == null) {
+			task.setTaskId(System.currentTimeMillis() + "");
+		}
+		taskRepository.save(task);
+	}
+	
 	public Task getTask(TaskKey taskKey) {
 		return taskRepository.findOne(taskKey);
 	}
 
-	@Override
-	public List<Task> getTasks(List<TaskKey> taskKeys) {
-		return taskMapper.selectBatch(taskKeys);
-	}
-
-	@Override
-	public void saveTask(Task task) {
-		
-		if (task.getTaskId() == null) {
-			task.setTaskId(System.currentTimeMillis() + "");
-		}
-		
-		taskRepository.save(task);
-	}
-
-	@Override
 	public List<Task> getTasksByType(TaskType taskType) {
 		return taskRepository.findByTaskType(taskType);
 	}

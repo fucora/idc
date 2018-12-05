@@ -16,16 +16,15 @@ import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskEdge;
 import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.model.WorkflowEdge;
 
-public class AllSimpleService implements DependencyService, TaskService, JobService {
+public class AllSimpleService implements DependencyService, IDCPluginService {
 	
 	private final Map<String, Graph<TaskKey, TaskEdge>> workflowMap = new HashMap<>(); 
 	
 	private final Map<TaskKey, Task> taskMap = new HashMap<>();
 
-	public Task getTask(TaskKey taskKey) {
+	public Task findTask(TaskKey taskKey) {
 		return taskMap.get(taskKey);
 	}
 	
@@ -48,7 +47,7 @@ public class AllSimpleService implements DependencyService, TaskService, JobServ
 	private static final Map<JobKey, Job> jobMap = new HashMap<>();
 	
 	@Override
-	public Job getJob(JobKey jobKey) {
+	public Job findJob(JobKey jobKey) {
 		return jobMap.get(jobKey);
 	}
 
@@ -63,13 +62,8 @@ public class AllSimpleService implements DependencyService, TaskService, JobServ
 	}
 	
 	@Override
-	public List<Task> getTasks(List<TaskKey> taskKey) {
+	public List<Task> findTasks(List<TaskKey> taskKey) {
 		return taskKey.stream().map(taskMap::get).collect(Collectors.toList());
-	}
-
-	@Override
-	public List<Task> getTasksByType(TaskType workflowSubTask) {
-		return null;
 	}
 
 	public void addTaskDependency(String workflowId, TaskKey... depChain) {

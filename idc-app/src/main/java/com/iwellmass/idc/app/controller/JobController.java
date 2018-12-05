@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.quartz.SchedulerException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,12 +14,12 @@ import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.TaskService;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.service.JobServiceImpl;
+import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.app.vo.ScheduleRequest;
@@ -28,7 +27,6 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.quartz.IDCPlugin;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -37,13 +35,10 @@ import io.swagger.annotations.ApiOperation;
 public class JobController {
 	
 	@Inject
-	private JobServiceImpl jobService;
+	private JobService jobService;
 	
 	@Inject
 	private TaskService taskService;
-	
-	@Inject
-	private IDCPlugin idcPlugin;
 	
 	@ApiOperation("查询调度列表")
 	@PostMapping("/query")
@@ -94,57 +89,37 @@ public class JobController {
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
 	public ServiceResult<String> schedule(@RequestBody ScheduleRequest sr) {
-		try {
-			Task task = sr.getTask();
-			ScheduleProperties sp = sr.getScheduleConfig();
-			idcPlugin.schedule(task, sp);
-			return ServiceResult.success("提交成功");
-		} catch (SchedulerException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
+		Task task = sr.getTask();
+		ScheduleProperties sp = sr.getScheduleConfig();
+		jobService.schedule(task, sp);
+		return ServiceResult.success("提交成功");
 	}
 	
 	@ApiOperation("重新调度任务")
 	@PostMapping(path = "/reschedule")
 	public ServiceResult<String> reschedule(@RequestBody JobKey jobKey, @RequestBody ScheduleProperties scheduleConfig) {
-		try {
-			idcPlugin.reschedule(jobKey, scheduleConfig);
-			return ServiceResult.success("提交成功");
-		} catch (SchedulerException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
+		jobService.reschedule(jobKey, scheduleConfig);
+		return ServiceResult.success("提交成功");
 	}
 	
 	@ApiOperation("取消调度任务")
 	@PostMapping(path = "/unschedule")
 	public ServiceResult<String> unschedule(@RequestBody JobKey jobKey) {
-		try {
-			idcPlugin.unschedule(jobKey);
-			return ServiceResult.success("提交成功");
-		} catch (SchedulerException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
+		jobService.unschedule(jobKey);
+		return ServiceResult.success("提交成功");
 	}
 
 	@PostMapping(value = "/pause")
 	@ApiOperation("冻结调度")
 	public ServiceResult<String> pause(@RequestBody PauseRequest request) {
-		try {
-			idcPlugin.pause(request);
-			return ServiceResult.success("任务已冻结");
-		} catch (SchedulerException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
+		jobService.pause(request);
+		return ServiceResult.success("任务已冻结");
 	}
 
 	@PostMapping(value = "/resume")
 	@ApiOperation("恢复调度")
 	public ServiceResult<String> resume(@RequestBody JobKey jobKey) {
-		try {
-			idcPlugin.resume(jobKey);
-			return ServiceResult.success("任务已冻结");
-		} catch (SchedulerException e) {
-			return ServiceResult.failure(e.getMessage());
-		}
+		jobService.resume(jobKey);
+		return ServiceResult.success("任务已冻结");
 	}
 }

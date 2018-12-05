@@ -34,7 +34,7 @@ public class IDCPluginTest {
 		
 		
 		AllSimpleService allService = new AllSimpleService();
-		IDCPlugin plugin = new SimpleIDCPlugin(allService);
+		IDCPlugin plugin = new SimpleIDCPlugin(allService, allService);
 		
 		
 		// 主任务

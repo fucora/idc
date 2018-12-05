@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -15,28 +16,31 @@ import org.springframework.stereotype.Service;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.JobService;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
-import com.iwellmass.idc.app.repo.JobDependencyRepository;
+import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
-public class JobServiceImpl implements JobService {
+public class JobService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobServiceImpl.class);
+	static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
 	@Inject
 	private JobRepository jobRepository;
@@ -44,18 +48,9 @@ public class JobServiceImpl implements JobService {
 	@Inject
 	private JobRuntimeMapper jobRuntimeMapper;
 	
+	@Inject
+	private IDCPlugin idcPlugin;
 	
-	@Override
-	public Job getJob(JobKey jobKey) {
-		return jobRepository.findOne(jobKey);
-	}
-	
-	@Override
-	public void saveJob(Job job) {
-		jobRepository.save(job);
-	}
-	
-
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
 		JobRuntime jr = new JobRuntime();
@@ -65,55 +60,9 @@ public class JobServiceImpl implements JobService {
 	}
 
 	public void execute(ExecutionRequest request) {
-		/*JobKey jobPk = StdJobKeyGeneratorImpl.valueOf(request);
-		
-		TriggerKey tk = new TriggerKey(jobPk.getJobId(), jobPk.getJobGroup());
-		
-		Job job = jobRepository.findOne(jobPk);
-
-		Assert.isTrue(job != null, "调度任务 %s 不存在", jobPk);
-
-		ScheduleStatus status = job.getStatus();
-
-		Assert.isTrue(status != ScheduleStatus.PAUSED, "执行失败, 任务已冻结");
-		Assert.isTrue(status != ScheduleStatus.BLOCKED, "执行失败, 存在正在执行的任务实例");
-
-		
-		LocalDateTime loadDate = job.getScheduleType().parse(request.getLoadDate());
-
-		try {
-
-			TriggerState state = scheduler.getTriggerState(tk);
-
-			// ~~ 调度参数 ~~
-			JobDataMap jdm = new JobDataMap();
-			CONTEXT_PARAMETER.applyPut(jdm, request.getJobParameter());
-			CONTEXT_LOAD_DATE.applyPut(jdm, loadDate);
-			Trigger trigger = TriggerBuilder.newTrigger()
-				.usingJobData(jdm)
-				.withIdentity(tk)
-				.forJob(request.getTaskId(), request.getGroupId()).build();
-
-			if (state == TriggerState.NONE) {
-				scheduler.scheduleJob(trigger);
-			} else {
-				scheduler.rescheduleJob(tk, trigger);
-			}
-		} catch (SchedulerException e) {
-			throw new AppException("执行失败: " + e.getMessage());
-		}*/
-		
 		
 	}
-
 	
-	
-
-
-	
-	@Inject
-	private JobDependencyRepository dependencyRepository;
-
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
 		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
 		Page<Job> job = jobRepository.findAll(spec, new PageRequest(pager.getPage(), pager.getLimit()));
@@ -162,5 +111,45 @@ public class JobServiceImpl implements JobService {
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
+	public void schedule(Task task, ScheduleProperties sp) {
+		try {
+			// TODO 检查 task 完整性
+			idcPlugin.schedule(task, sp);
+		} catch (SchedulerException e) {
+			throw new AppException(e.getMessage(), e);
+		}
+	}
 
+	public void reschedule(JobKey jobKey, ScheduleProperties scheduleConfig) {
+		try {
+			idcPlugin.reschedule(jobKey, scheduleConfig);
+		} catch (SchedulerException e) {
+			throw new AppException(e.getMessage(), e);
+		}
+	}
+
+	public void unschedule(JobKey jobKey) {
+		try {
+			idcPlugin.unschedule(jobKey);
+		} catch (SchedulerException e) {
+			throw new AppException(e.getMessage(), e);
+		}
+		
+	}
+
+	public void pause(PauseRequest request) {
+		try {
+			idcPlugin.pause(request);
+		} catch (SchedulerException e) {
+			throw new AppException(e.getMessage(), e);
+		}
+	}
+
+	public void resume(JobKey jobKey) {
+		try {
+			idcPlugin.resume(jobKey);
+		} catch (SchedulerException e) {
+			throw new AppException(e.getMessage(), e);
+		}
+	}
 }

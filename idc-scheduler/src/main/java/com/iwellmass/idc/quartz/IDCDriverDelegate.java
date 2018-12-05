@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.iwellmass.idc.model.JobBarrier;
-import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
 

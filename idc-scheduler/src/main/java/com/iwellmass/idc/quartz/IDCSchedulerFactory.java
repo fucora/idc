@@ -20,10 +20,6 @@ import org.quartz.utils.DBConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.JobService;
-import com.iwellmass.idc.TaskService;
-import com.iwellmass.idc.DependencyService;
-
 import lombok.Setter;
 
 /**
