@@ -18,5 +18,5 @@ public interface IDCPluginService {
 	public void saveJob(Job job);
 	
 	public Job findJob(JobKey jobKey);
-	
+
 }

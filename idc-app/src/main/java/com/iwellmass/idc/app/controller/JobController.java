@@ -117,6 +117,13 @@ public class JobController {
 	@ApiOperation("恢复调度")
 	public ServiceResult<String> resume(@RequestBody JobKey jobKey) {
 		jobService.resume(jobKey);
-		return ServiceResult.success("任务已冻结");
+		return ServiceResult.success("任务已恢复");
 	}
+
+//	@ApiOperation("重新调度任务快速模式")
+//	@PostMapping(path = "/reschedule-fast")
+//	public ServiceResult<String> rescheduleFast(@RequestBody JobKey jobKey) {
+//		jobService.reschedule(jobKey,null);
+//		return ServiceResult.success("提交成功");
+//	}
 }
