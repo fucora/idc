@@ -113,7 +113,7 @@ public class JobService {
 			Integer sumTask = 0;
 			Integer finishedTask = 0;
 			if (jobBarriers.size()>0){
-				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals("1")).count());
+				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals(BarrierState.INVALID)).count());
 				sumTask = jobBarriers.size();
 			}
 			bean.setSumTask(sumTask);
