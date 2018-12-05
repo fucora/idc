@@ -16,6 +16,24 @@ import com.iwellmass.idc.model.ScheduleStatus;
 @MappedTypes(value = ScheduleStatus.class)
 public class ScheduleStatusHandler implements TypeHandler<ScheduleStatus> {
 
+    String STATE_WAITING = "WAITING";
+
+    String STATE_ACQUIRED = "ACQUIRED";
+
+    String STATE_EXECUTING = "EXECUTING";
+
+    String STATE_COMPLETE = "COMPLETE";
+
+    String STATE_BLOCKED = "BLOCKED";
+
+    String STATE_ERROR = "ERROR";
+
+    String STATE_PAUSED = "PAUSED";
+
+    String STATE_PAUSED_BLOCKED = "PAUSED_BLOCKED";
+
+    String STATE_DELETED = "DELETED";
+
 	@Override
 	public void setParameter(PreparedStatement ps, int i, ScheduleStatus parameter, JdbcType jdbcType)
 			throws SQLException {
@@ -46,27 +64,27 @@ public class ScheduleStatusHandler implements TypeHandler<ScheduleStatus> {
              return ScheduleStatus.NONE;
          }
 
-         if (ts.equals("STATE_DELETED")) {
+         if (ts.equals(STATE_DELETED)) {
              return ScheduleStatus.NONE;
          }
 
-         if (ts.equals("STATE_COMPLETE")) {
+         if (ts.equals(STATE_COMPLETE)) {
              return ScheduleStatus.COMPLETE;
          }
 
-         if (ts.equals("STATE_PAUSED")) {
+         if (ts.equals(STATE_PAUSED)) {
              return ScheduleStatus.PAUSED;
          }
 
-         if (ts.equals("STATE_PAUSED_BLOCKED")) {
+         if (ts.equals(STATE_PAUSED_BLOCKED)) {
              return ScheduleStatus.PAUSED;
          }
 
-         if (ts.equals("STATE_ERROR")) {
+         if (ts.equals(STATE_ERROR)) {
              return ScheduleStatus.ERROR;
          }
 
-         if (ts.equals("STATE_BLOCKED")) {
+         if (ts.equals(STATE_BLOCKED)) {
              return ScheduleStatus.BLOCKED;
          }
          
