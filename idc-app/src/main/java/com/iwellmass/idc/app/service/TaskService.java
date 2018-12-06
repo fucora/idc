@@ -61,7 +61,7 @@ public class TaskService {
 			
 			Workflow wf = workflowRepo.findOne(task.getTaskKey());
 			if (wf != null) {
-				task.setGraphId(wf.getGraphId());
+				task.setWorkflowId(wf.getWorkflowId());
 				task.setGraph(wf.getGraph());
 			}
 		});

@@ -44,7 +44,7 @@ public class WorkflowService {
         // 检查是否存在孤立点
         checkIsolatedPoints(directedAcyclicGraph);
         // 生成workflowId
-        workflow.setGraphId(UUID.randomUUID().toString());
+        workflow.setWorkflowId(UUID.randomUUID().toString());
         return workflowRepository.save(workflow);
     }
 
@@ -74,11 +74,11 @@ public class WorkflowService {
         checkIsolatedPoints(directedAcyclicGraph);
         // 更新task
         Task task = taskRepository.findOne(new TaskKey(workflow.getTaskId(), workflow.getTaskGroup()));
-        task.setWorkflowId(workflow.getGraphId());
+        task.setWorkflowId(workflow.getWorkflowId());
         taskRepository.save(task);
         // 保存edgs信息
         for (TaskDependency taskDependency : workflowEnableVO.getTaskDependencies()) {
-            WorkflowEdge workflowEdge = new WorkflowEdge(workflow.getGraphId(), taskDependency);
+            WorkflowEdge workflowEdge = new WorkflowEdge(workflow.getWorkflowId(), taskDependency);
             workflowEdgeRepository.save(workflowEdge);
         }
         return "提交成功";

@@ -64,8 +64,7 @@ public class JobController {
 		
 		Job job = jobService.findJob(jobKey);
 		Task task = taskService.getTask(job.getTaskKey());
-		task.setGraphId(job.getWorkflowId());
-		task.setGraph(job.getWorkflowGraph());
+		task.setWorkflowId(job.getWorkflowId());
 		
 		JobRuntimeVO vo = new JobRuntimeVO();
 		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));

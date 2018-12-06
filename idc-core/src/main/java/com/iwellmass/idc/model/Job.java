@@ -108,10 +108,6 @@ public class Job {
 	@Column(name = "workflow_id")
 	private String workflowId;
 	
-	@ApiModelProperty("graph")
-	@Column(name = "workflow_graph")
-	private String workflowGraph;
-
 	@Transient
 	@JsonIgnore
 	public JobKey getJobKey() {

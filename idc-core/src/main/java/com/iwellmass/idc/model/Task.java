@@ -59,18 +59,14 @@ public class Task {
 	@Column(name = "workflow_id")
 	private String workflowId;
 	
+	@ApiModelProperty("工作流图")
+	@Column(name = "graph")
+	private String graph;
+	
 	@ApiModelProperty("参数")
 	@Column(name = "parameter")
 	private String parameter;
 	
-	@Transient
-	@ApiModelProperty("编辑ID")
-	private String graphId;
-	
-	@Transient
-	@ApiModelProperty("编辑图")
-	private String graph;
-
 	
 	@Transient
 	@JsonIgnore
