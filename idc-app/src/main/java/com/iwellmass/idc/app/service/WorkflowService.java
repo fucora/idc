@@ -66,7 +66,7 @@ public class WorkflowService {
         if (workflowEnableVO.getTaskDependencies() == null || workflowEnableVO.getTaskDependencies().size() == 0) {
             throw new Exception("未传入需要执行的工作流");
         }
-        Workflow workflow = workflowRepository.findByGraphId(workflowEnableVO.getGraphId())
+        Workflow workflow = workflowRepository.findByWorkflowId(workflowEnableVO.getGraphId())
                 .orElseThrow(() -> new Exception("未查找到指定工作流"));
         // 校验dependency是否成环
         DirectedAcyclicGraph<TaskKey, TaskEdge> directedAcyclicGraph = checkAcyclicGraph(workflowEnableVO.getTaskDependencies());

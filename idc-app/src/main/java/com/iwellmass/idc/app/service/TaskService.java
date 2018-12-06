@@ -57,14 +57,14 @@ public class TaskService {
 		
 		Page<Task> ret = taskRepository.findAll(spec, pageable);
 		
-		ret.getContent().forEach(task -> {
+		/*ret.getContent().forEach(task -> {
 			
 			Workflow wf = workflowRepo.findOne(task.getTaskKey());
 			if (wf != null) {
 				task.setWorkflowId(wf.getWorkflowId());
 				task.setGraph(wf.getGraph());
 			}
-		});
+		});*/
 
 		PageData<Task> task = new PageData<>((int)ret.getTotalElements(), ret.getContent());
 		return task;
