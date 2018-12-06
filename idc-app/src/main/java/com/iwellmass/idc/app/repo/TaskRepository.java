@@ -14,8 +14,5 @@ import com.iwellmass.idc.model.TaskType;
 @Repository
 public interface TaskRepository extends CrudRepository<Task, TaskKey>, JpaSpecificationExecutor<Task> {
 
-	Optional<Task> findByTaskId(String taskId);
-
 	List<Task> findByTaskType(TaskType taskType);
-
 }

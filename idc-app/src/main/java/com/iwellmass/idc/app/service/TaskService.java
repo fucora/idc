@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -16,10 +17,13 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.app.repo.WorkflowRepository;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.Workflow;
+import org.springframework.util.Assert;
 
 @Service
 public class TaskService {
@@ -29,7 +33,7 @@ public class TaskService {
 
 	@Inject
 	TaskMapper taskMapper;
-	
+
 	public void saveTask(Task task) {
 		Task oldTask = taskRepository.findOne(task.getTaskKey());
 		oldTask.setTaskName(task.getTaskName());
@@ -53,8 +57,23 @@ public class TaskService {
 		Specification<Task> spec = taskQuery == null ? null : SpecificationBuilder.toSpecification(taskQuery);
 		
 		Page<Task> ret = taskRepository.findAll(spec, pageable);
-		
+
 		PageData<Task> task = new PageData<>((int)ret.getTotalElements(), ret.getContent());
 		return task;
 	}
+
+	public Task modifyGraph(Task task) throws Exception {
+        Assert.notNull(task.getTaskId(),"未传入taskId");
+        Assert.notNull(task.getTaskGroup(),"未传入taskGroup");
+        // 检查是否存在该task
+        Task oldTask = taskRepository.findOne(task.getTaskKey());
+        if (oldTask == null) {
+            throw new Exception("未查找到该taskkey对应的task信息");
+        }
+        // 刷新workflowId
+        oldTask.setWorkflowId(UUID.randomUUID().toString());
+        // 更新工作流的画图数据
+        oldTask.setGraph(task.getGraph());
+        return taskRepository.save(oldTask);
+    }
 }

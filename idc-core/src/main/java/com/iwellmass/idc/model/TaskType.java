@@ -11,5 +11,5 @@ public enum TaskType {
 	WORKFLOW,
 	
 	@ApiModelProperty("工作流子任务")
-	SUB_TASK;
+	SUB_TASK,
 }
