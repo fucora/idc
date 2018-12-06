@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.repo.JobBarrierRepo;
+import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +30,6 @@ import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.model.ScheduleStatus;
-import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -49,6 +45,9 @@ public class JobService {
 	
 	@Inject
 	private IDCPlugin idcPlugin;
+
+	@Inject
+	private JobBarrierRepo jobBarrierRepo;
 	
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
@@ -107,6 +106,19 @@ public class JobService {
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
 		PageInfo<JobRuntimeListVO> pageInfo = PageHelper.startPage(pager.getPage()+1,pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
+		List<JobRuntimeListVO> jobRuntimeListVOS = pageInfo.getList();
+		jobRuntimeListVOS.forEach(bean->{
+			JobKey jobKey = new JobKey(bean.getJobId(),bean.getJobGroup());
+			List<JobBarrier> jobBarriers = jobBarrierRepo.findByJobIdAndJobGroup(jobKey.getJobId(),jobKey.getJobGroup());
+			Integer sumTask = 0;
+			Integer finishedTask = 0;
+			if (jobBarriers.size()>0){
+				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals(BarrierState.INVALID)).count());
+				sumTask = jobBarriers.size();
+			}
+			bean.setSumTask(sumTask);
+			bean.setFinishedTask(finishedTask);
+		});
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 

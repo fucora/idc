@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.JobBarrier;
 
+import java.util.List;
+
 @Repository
 public interface JobBarrierRepo extends CrudRepository<JobBarrier, Integer>{
 
@@ -17,5 +19,7 @@ public interface JobBarrierRepo extends CrudRepository<JobBarrier, Integer>{
 	@Modifying
 	@Query("DELETE FROM JobBarrier B WHERE B.jobId = ?1 AND B.jobGroup = ?2")
 	void clearJobBarrier(String taskId, String taskGroup);
+
+	public List<JobBarrier> findByJobIdAndJobGroup(String jobId,String jobGroup);
 
 }
