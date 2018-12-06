@@ -66,8 +66,7 @@ public class Task {
 	@ApiModelProperty("参数")
 	@Column(name = "parameter")
 	private String parameter;
-	
-	
+
 	@Transient
 	@JsonIgnore
 	public TaskKey getTaskKey() {

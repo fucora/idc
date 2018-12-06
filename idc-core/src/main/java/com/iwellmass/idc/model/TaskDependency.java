@@ -23,4 +23,14 @@ public class TaskDependency {
     private String taskId;
 
     private String taskGroup;
+
+    public void setSrcTaskKey(TaskKey srcTaskKey){
+        this.srcTaskId = srcTaskKey.getTaskId();
+        this.srcTaskGroup = srcTaskKey.getTaskGroup();
+    }
+
+    public void setTargetTaskKey(TaskKey targetTaskKey){
+        this.taskId = targetTaskKey.getTaskId();
+        this.taskGroup = targetTaskKey.getTaskGroup();
+    }
 }
