@@ -5,6 +5,9 @@ import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_RUNTIME;
 import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
@@ -109,8 +112,21 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		Objects.requireNonNull(getDependencyService(), "DependencyService cannot be null");
 
 		this.scheduler = scheduler;
-		// new status service
-		this.statusService = new StdStatusService();
+		
+		this. statusService = (IDCStatusService) Proxy.newProxyInstance(IDCPlugin.class.getClassLoader(), new Class[] {IDCStatusService.class}, new InvocationHandler() {
+			private StdStatusService ss = new StdStatusService();
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+				try {
+					LOGGER.info("Get Event {}", args);
+					return method.invoke(ss, args);
+				} catch(Throwable e) {
+					LOGGER.error("通知失败," + e.getMessage(), e);
+				}
+				return null;
+			}
+		});
+		
 		// set up context
 		IDC_PLUGIN.applyPut(scheduler.getContext(), this);
 		// add listeners
@@ -360,7 +376,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	private class StdStatusService implements IDCStatusService {
 		@Override
 		public void fireStartEvent(StartEvent event) {
-			LOGGER.info("Get event {}", event);
 			logger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
 			try {
 				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
@@ -375,7 +390,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 
 		public void fireProgressEvent(ProgressEvent event) {
-			LOGGER.info("Get event {}", event);
 			logger.log(event.getInstanceId(), event.getMessage());
 			try {
 				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
@@ -390,8 +404,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		@Override
 		public void fireCompleteEvent(CompleteEvent event) {
-			LOGGER.info("Get event {}", event);
-
 			JobInstance ins = null;
 			try {
 				ins = idcJobStore.completeIDCJobInstance(event);
@@ -432,37 +444,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	// ~~ Scheduler Listener ~~
 	private class IDCSchedulerListener extends SchedulerListenerSupport {
-
-		/* 保存任务到数据库 */
-		public void jobScheduled(Trigger trigger) {}
-
-		/* 撤销调度 */
-		public void jobUnscheduled(TriggerKey triggerKey) {
-//			LOGGER.info("调度任务 {} 已撤销", triggerKey);
-		}
-
-		/* 调度冻结 */
-		public void triggerPaused(TriggerKey triggerKey) {
-//			LOGGER.info("调度任务 {} 已冻结", triggerKey);
-			throw new UnsupportedOperationException("Not supported yet.");
-		}
-		
-		/* 调度恢复 */
-		public void triggerResumed(TriggerKey triggerKey) {
-//			LOGGER.info("调度任务 {} 已恢复", triggerKey);
-			throw new UnsupportedOperationException("Not supported yet.");
-		}
-		
-		/* 调度完结 */
-		public void triggerFinalized(Trigger trigger) {
-//			JobKey JobKey = parseJobKey(trigger);
-//			LOGGER.info("调度任务 {} 已完结", JobKey);
-		}
-		
-		@Override
-		public void schedulerError(String msg, SchedulerException cause) {
-			LOGGER.error("IDCScheduler ERROR: " + msg, cause);
-		}
 	}
 
 	// ~~ Trigger trace ~~

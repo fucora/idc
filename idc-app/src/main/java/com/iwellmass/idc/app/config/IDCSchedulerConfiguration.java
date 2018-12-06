@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 import com.iwellmass.idc.DependencyService;
+import com.iwellmass.idc.IDCLogger;
 import com.iwellmass.idc.IDCPluginService;
 import com.iwellmass.idc.app.scheduler.IDCPluginImpl;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
@@ -31,24 +32,24 @@ public class IDCSchedulerConfiguration implements ApplicationListener<ContextRef
 	@Value(value="${idc.scheduler.start-auto:true}")
 	private Boolean startAuto;
 	
-	@Inject 
-	private IDCDriverDelegate idcDriverDelegate;
-	
 	@Inject
 	private JobFactory jobFactory;
 	
 	@Bean
-	public IDCPlugin idcPlugin(IDCPluginService pluginService, DependencyService dependencyService) {
-		return new IDCPluginImpl(pluginService, dependencyService);
+	public IDCPlugin idcPlugin(IDCPluginService pluginService, DependencyService dependencyService, IDCLogger idcLogger) {
+		IDCPluginImpl plugin = new IDCPluginImpl(pluginService, dependencyService);
+		plugin.setLogger(idcLogger);
+		return plugin;
 	}
 	
 	@Bean
-	public Scheduler scheduler(DataSource dataSource, IDCPluginService pluginService, DependencyService dependencyService) throws SchedulerException {
+	public Scheduler scheduler(IDCDriverDelegate idcDriverDelegate, IDCLogger idcLogger,
+			DataSource dataSource, IDCPluginService pluginService, DependencyService dependencyService) throws SchedulerException {
 		// 创建 scheduler
 		IDCSchedulerFactory factory = new IDCSchedulerFactory();
 		factory.setDataSource(dataSource);
 		factory.setDriverDelegate(idcDriverDelegate);
-		factory.setPlugin(idcPlugin(pluginService, dependencyService));
+		factory.setPlugin(idcPlugin(pluginService, dependencyService, idcLogger));
 
 		// 设置 scheduler 信息
 		scheduler = factory.getScheduler();
