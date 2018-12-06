@@ -3,7 +3,6 @@ package com.iwellmass.idc;
 import java.util.List;
 
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
