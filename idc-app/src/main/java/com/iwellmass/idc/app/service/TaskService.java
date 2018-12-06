@@ -1,11 +1,13 @@
 package com.iwellmass.idc.app.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -34,9 +36,8 @@ public class TaskService {
 	private WorkflowRepository workflowRepo;
 	
 	public void saveTask(Task task) {
-		if (task.getTaskId() == null) {
-			task.setTaskId(System.currentTimeMillis() + "");
-		}
+		
+		task.setUpdatetime(LocalDateTime.now());
 		taskRepository.save(task);
 	}
 	
@@ -50,7 +51,7 @@ public class TaskService {
 
 	public PageData<Task> queryTask(TaskQueryVO taskQuery, Pager pager) {
 		
-		PageRequest pageable = new PageRequest(pager.getPage(), pager.getLimit());
+		PageRequest pageable = new PageRequest(pager.getPage(), pager.getLimit(), Direction.DESC, "updatetime");
 		
 		Specification<Task> spec = taskQuery == null ? null : SpecificationBuilder.toSpecification(taskQuery);
 		

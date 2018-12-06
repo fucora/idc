@@ -1,8 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_RUNTIME;
-import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -27,13 +24,13 @@ import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobEnv;
+import com.iwellmass.idc.model.SubEnv;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
@@ -48,7 +45,6 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		this.dependencyService = workflowService;
 	}
 	
-	/* 生成 JobInstanceId */
 	protected String getFiredTriggerRecordId() {
 		throw new UnsupportedOperationException("Please using JobInstance.getInstanceId().");
 	}
@@ -113,13 +109,87 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     /////////////////////////////////////// BEGIN check
 					// check barrier
 					////////////////
-                    Task task = JSON.parseObject(TASK_JSON.applyGet(job.getJobDataMap()), Task.class);
-                    JobEnv jobEnv = initJobEnv(task, nextTrigger);
-					JobInstance ins = createJobInstance(task, jobEnv);
-					// 计算依赖
-					List<JobBarrier> barriers = task.getTaskType() == TaskType.SUB_TASK ? computeSubBarriers(conn, ins, jobEnv.getWorkflowId()) : computeBarriers(conn, ins);
-					// clear first
-					idcDriverDelegate.clearJobBarrier(conn, ins.getJobKey());
+                    IDCTriggerInstruction ti = IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(nextTrigger.getJobDataMap());
+                    
+                    JobInstance ins = null;
+                    List<JobBarrier> barriers = null;
+                    if (ti == IDCTriggerInstruction.MAIN) {
+                    	
+                    	TaskKey idcTaskKey = new TaskKey(job.getKey().getName(), job.getKey().getGroup());
+                    	JobKey idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
+
+                    	Task idcTask = idcDriverDelegate.selectTask(idcTaskKey);
+                    	Job idcJob = idcDriverDelegate.selectJob(idcJobKey);
+                    	
+                    	ins = new JobInstance();
+                		// ~~ 基础信息 ~~
+                		ins.setTaskKey(idcTask.getTaskKey());
+                		ins.setContentType(idcTask.getContentType());
+                		
+                		// ~~ 调度信息 ~~
+                		ins.setJobKey(idcJob.getJobKey());
+                		ins.setJobName(idcJob.getJobName());
+                		ins.setDispatchType(idcJob.getDispatchType());
+                		ins.setTaskType(idcJob.getTaskType());
+                		ins.setAssignee(idcJob.getAssignee());
+                		ins.setScheduleType(idcJob.getScheduleType());
+                		ins.setParameter(idcJob.getParameter());
+                		ins.setWorkflowId(idcJob.getWorkflowId());
+                		
+                		// ~~ 运行时信息 ~~
+                		// 批次
+                		ins.setShouldFireTime(Optional.ofNullable(nextTrigger.getNextFireTime()).map(Date::getTime).orElse(-1L));
+                		// prev 批次
+                		ins.setPrevFireTime(Optional.ofNullable(nextTrigger.getPreviousFireTime()).map(Date::getTime).orElse(-1L));
+                		// 业务日期
+                		ins.setLoadDate(ins.getScheduleType().format(IDCUtils.toLocalDateTime(ins.getShouldFireTime())));
+                		
+                		// ~~ 其他 ~~
+                		ins.setStartTime(LocalDateTime.now());
+                		ins.setEndTime(null);
+                		ins.setStatus(JobInstanceStatus.NEW);
+                    	
+                    	barriers = computeJobBarriers(conn, ins);
+                    } else if (ti == IDCTriggerInstruction.SUB) {
+                    	
+                    	SubEnv jobEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), SubEnv.class);
+                    	
+                    	TaskKey idcTaskKey = new TaskKey(job.getKey().getName(), job.getKey().getGroup());
+                    	JobKey idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
+                    	
+                    	Task idcTask = idcDriverDelegate.selectTask(idcTaskKey);
+                    	JobInstance mainJobIns = idcDriverDelegate.selectJobInstance(conn, jobEnv.getMainInstanceId());
+                    	Job mainIdcJob = idcDriverDelegate.selectJob(mainJobIns.getJobKey());
+                    	
+                    	ins = new JobInstance();
+                		// ~~ 基础信息 ~~
+                    	ins.setJobKey(idcJobKey);
+                		ins.setTaskKey(idcTask.getTaskKey());
+                		ins.setContentType(idcTask.getContentType());
+                		ins.setTaskType(TaskType.SUB_TASK);
+                		
+                		// ~~ seam as main job ~~
+                		ins.setDispatchType(mainJobIns.getDispatchType());
+                		// 责任人
+                		ins.setAssignee(mainJobIns.getAssignee());
+                		// 调度类型
+                		ins.setScheduleType(mainJobIns.getScheduleType());
+                		// parameter
+                		ins.setParameter(mainJobIns.getParameter());
+                		// 批次
+                		ins.setShouldFireTime(mainJobIns.getShouldFireTime());
+                		// prev 批次
+                		ins.setPrevFireTime(mainJobIns.getPrevFireTime());
+                		// 业务日期
+                		ins.setLoadDate(mainJobIns.getLoadDate());
+                		
+                		// ~~ 其他 ~~
+                		ins.setStartTime(LocalDateTime.now());
+                		ins.setEndTime(null);
+                		ins.setStatus(JobInstanceStatus.NEW);
+                		
+                		barriers = computeWorkflowBarriers(conn, mainIdcJob.getWorkflowId(), ins);
+                    }
 					// double check
 					if (!barriers.isEmpty()) {
 						idcDriverDelegate.batchInsertJobBarrier(conn, barriers);
@@ -168,74 +238,14 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         return acquiredTriggers;
 	}
 	
-	private JobEnv initJobEnv(Task task, OperableTrigger trigger) {
-		JobEnv env = Optional.ofNullable(JOB_RUNTIME.applyGet(trigger.getJobDataMap()))
-			.map(str -> JSON.parseObject(str, JobEnv.class))
-			.orElseGet(JobEnv::new);
-		env.setJobKey(new JobKey(trigger.getKey().getName(), trigger.getKey().getGroup()));
-		env.setTaskKey(new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup()));
-
-		// 构建默认值
-		if (env.getShouldFireTime() == null) {
-			env.setShouldFireTime(Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L));
-		}
-		if (env.getPrevFireTime() == null) {
-			env.setPrevFireTime(Optional.ofNullable(trigger.getPreviousFireTime()).map(Date::getTime).orElse(-1L));
-		}
-		if (env.getTaskType() == null) {
-			env.setTaskType(task.getTaskType());
-		}
-		return env;
-	}
-	
-	
-	private JobInstance createJobInstance(Task task, JobEnv jobEnv) {
-		JobInstance jobInstance = new JobInstance();
-		
-		// ~~ 基本信息 ~~
-		jobInstance.setTaskKey(task.getTaskKey());
-		jobInstance.setContentType(task.getContentType());
-		jobInstance.setDispatchType(task.getDispatchType());
-		
-		// ~~ 调度信息 ~~
-		jobInstance.setTaskType(jobEnv.getTaskType());
-		if (jobEnv.getTaskType() == TaskType.SUB_TASK) {
-			jobInstance.setMainInstanceId(jobEnv.getMainInstanceId());
-		}
-		
-		// id
-		jobInstance.setInstanceId(jobEnv.getInstanceId());
-		// 所属计划
-		jobInstance.setJobKey(jobEnv.getJobKey());
-		// 责任人
-		jobInstance.setAssignee(jobEnv.getAssignee());
-		// 调度类型
-		jobInstance.setScheduleType(jobEnv.getScheduleType());
-		// 批次
-		jobInstance.setShouldFireTime(jobEnv.getShouldFireTime());
-		// prev 批次
-		jobInstance.setPrevFireTime(jobEnv.getPrevFireTime());
-		// 业务日期
-		ScheduleType st = jobInstance.getScheduleType();
-		// 批次
-		jobInstance.setLoadDate(st.format(IDCUtils.toLocalDateTime(jobEnv.getShouldFireTime())));
-		// 其他
-		jobInstance.setStartTime(LocalDateTime.now());
-		jobInstance.setEndTime(null);
-		jobInstance.setStatus(JobInstanceStatus.NEW);
-		// parameter
-		jobInstance.setParameter(jobEnv.getParameter());
-		return jobInstance;
-	}
-	
-	private List<JobBarrier> computeSubBarriers(Connection conn, JobInstance jr, String workflowId) throws SQLException {
+	private List<JobBarrier> computeWorkflowBarriers(Connection conn, String workflowId, JobInstance ins) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		List<TaskKey> depTasks = dependencyService.getPredecessors(workflowId, jr.getTaskKey());
+		List<TaskKey> depTasks = dependencyService.getPredecessors(workflowId, ins.getTaskKey());
 		if (!Utils.isNullOrEmpty(depTasks)) {
 			for (TaskKey tk : depTasks) {
-				JobKey barrierKey = IDCUtils.getSubJobKey(jr.getJobKey(), tk);
-				JobBarrier b = buildBarrier(conn, jr.getJobKey(), barrierKey, jr.getShouldFireTime());
+				JobKey barrierKey = IDCUtils.getSubJobKey(ins.getJobKey(), tk);
+				JobBarrier b = buildBarrier(conn, ins.getJobKey(), barrierKey, ins.getShouldFireTime());
 				if (b != null) {
 					barriers.add(b);
 				}
@@ -243,7 +253,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		}
 		return barriers;
 	}
-	private List<JobBarrier> computeBarriers(Connection conn, JobInstance jr) throws SQLException {
+	
+	private List<JobBarrier> computeJobBarriers(Connection conn, JobInstance jr) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
 		// 同周期任务是否完成
@@ -330,7 +341,10 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	
 	protected JobInstance completeIDCJobInstance(Connection conn, CompleteEvent event) throws JobPersistenceException {
 		try {
-			JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
+			JobInstance ins = idcDriverDelegate.updateJobInstance(conn, event.getInstanceId(), (e -> {
+				e.setStatus(event.getFinalStatus());
+				e.setEndTime(event.getEndTime());
+			}));
 			if (ins == null) {
 				getLog().warn("任务 {} 不存在", event.getInstanceId());
 				return null;
@@ -367,7 +381,19 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		} catch (JobPersistenceException e) {
 			getLog().warn("清空 Barrier 信息失败: " + e.getMessage());
 		}
-		
 	}
 	
+	@Override
+	public List<JobInstance> retrieveIDCSubJobInstance(Integer mainInstanceId) throws JobPersistenceException {
+		return executeWithoutLock(new TransactionCallback<List<JobInstance>>() {
+			@Override
+			public List<JobInstance> execute(Connection conn) throws JobPersistenceException {
+				try {
+					return idcDriverDelegate.selectSubJobInstance(conn, mainInstanceId);
+				} catch (SQLException e) {
+					throw new JobPersistenceException(e.getMessage(), e);
+				}
+			}
+		});
+	}
 }

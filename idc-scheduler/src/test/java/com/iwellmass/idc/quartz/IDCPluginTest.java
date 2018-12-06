@@ -41,24 +41,20 @@ public class IDCPluginTest {
 		Task task = new Task();
 		task.setTaskKey(new TaskKey(lqd_01, group));
 		task.setTaskName("工作流的任务");
-		task.setDispatchType(DispatchType.AUTO);
 		task.setTaskType(TaskType.WORKFLOW);
 		task.setContentType("simple-test");
 		task.setWorkflowId("1");
-		task.setDispatchType(DispatchType.AUTO);
 		
 		// 子任务
 		Task sub1 = new Task();
 		sub1.setTaskKey(new TaskKey("sub1", group));
 		sub1.setTaskName("sub1");
-		sub1.setDispatchType(DispatchType.AUTO);
 		sub1.setTaskType(TaskType.NODE_TASK);
 		sub1.setContentType("simple-test");
 		
 		Task sub2 = new Task();
 		sub2.setTaskKey(new TaskKey("sub2", group));
 		sub2.setTaskName("sub2");
-		sub2.setDispatchType(DispatchType.AUTO);
 		sub2.setTaskType(TaskType.NODE_TASK);
 		sub2.setContentType("simple-test");
 		
@@ -79,6 +75,7 @@ public class IDCPluginTest {
 		
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.MONTHLY);
+		sp.setDispatchType(DispatchType.AUTO);
 		sp.setStartTime(_1_1);
 		sp.setEndTime(_9_1);
 		sp.setDays(Arrays.asList(-1));

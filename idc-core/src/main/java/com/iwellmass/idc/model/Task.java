@@ -1,5 +1,7 @@
 package com.iwellmass.idc.model;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -35,6 +37,10 @@ public class Task {
 	@ApiModelProperty("任务名称")
 	@Column(name = "task_name")
 	private String taskName;
+	
+	@ApiModelProperty("任务名称")
+	@Column(name = "updatetime")
+	private LocalDateTime updatetime;
 
 	@ApiModelProperty("任务描述")
 	@Column(name = "description")
@@ -48,11 +54,6 @@ public class Task {
 	@ApiModelProperty("业务类型，业务方自定义")
 	@Column(name = "content_type")
 	private String contentType;
-	
-	@ApiModelProperty("执行方式")
-	@Column(name = "dispatch_type")
-	@Enumerated(EnumType.STRING)
-	private DispatchType dispatchType;
 	
 	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")

@@ -14,6 +14,8 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
 
 public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants {
 
@@ -137,5 +139,23 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	}
 
 	private static final Map<JobKey, Job> jobMap = new HashMap<>();
+
+	@Override
+	public Job selectJob(JobKey jobKey) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Task selectTask(TaskKey taskKey) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInsId) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

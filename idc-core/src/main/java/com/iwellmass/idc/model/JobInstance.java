@@ -62,6 +62,10 @@ public class JobInstance {
 	@Column(name = "assignee")
 	private String assignee;
 	
+	@ApiModelProperty("所属工作流")
+	@Column(name = "workflow_id")
+	private String workflowId;
+	
 	// ~~ 运行相关 ~~
 	@ApiModelProperty("本次调度日期")
 	@Column(name = "should_fire_time")

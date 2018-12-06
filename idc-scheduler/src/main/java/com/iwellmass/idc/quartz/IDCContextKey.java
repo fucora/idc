@@ -25,6 +25,7 @@ public class IDCContextKey<T> {
 	public static final IDCContextKey<String> TASK_JSON = defOpt("idc.task.json", String.class, null);
 	
 	// ~~ JOB ~~
+	public static final IDCContextKey<IDCTriggerInstruction> JOB_TRIGGER_INSTRUCTION = defOpt("idc.job.triggerInstruction", IDCTriggerInstruction.class, IDCTriggerInstruction.MAIN);
 	public static final IDCContextKey<String> JOB_RUNTIME = defOpt("idc.job.jobRuntime", String.class, null);
 	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
 	/** 参数解析 */
