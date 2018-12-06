@@ -16,12 +16,10 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.repo.WorkflowRepository;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.model.Workflow;
 
 @Service
 public class TaskService {
@@ -32,12 +30,11 @@ public class TaskService {
 	@Inject
 	TaskMapper taskMapper;
 	
-	@Inject
-	private WorkflowRepository workflowRepo;
-	
 	public void saveTask(Task task) {
-		
-		task.setUpdatetime(LocalDateTime.now());
+		Task oldTask = taskRepository.findOne(task.getTaskKey());
+		oldTask.setTaskName(task.getTaskName());
+		oldTask.setDescription(task.getDescription());
+		oldTask.setUpdatetime(LocalDateTime.now());
 		taskRepository.save(task);
 	}
 	
@@ -57,15 +54,6 @@ public class TaskService {
 		
 		Page<Task> ret = taskRepository.findAll(spec, pageable);
 		
-		/*ret.getContent().forEach(task -> {
-			
-			Workflow wf = workflowRepo.findOne(task.getTaskKey());
-			if (wf != null) {
-				task.setWorkflowId(wf.getWorkflowId());
-				task.setGraph(wf.getGraph());
-			}
-		});*/
-
 		PageData<Task> task = new PageData<>((int)ret.getTotalElements(), ret.getContent());
 		return task;
 	}
