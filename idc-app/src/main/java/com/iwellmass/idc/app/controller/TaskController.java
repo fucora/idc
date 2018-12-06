@@ -28,6 +28,13 @@ public class TaskController {
 	@Inject
     private TaskService taskService;
 	
+	@ApiOperation("保存任务")
+	@GetMapping
+	public ServiceResult<Task> getTask(TaskKey taskKey){
+		Task task = taskService.getTask(taskKey);
+		return ServiceResult.success(task);
+	}
+	
     @ApiOperation("保存任务")
     @PostMapping
     public ServiceResult<TaskKey> add(@RequestBody Task task){
