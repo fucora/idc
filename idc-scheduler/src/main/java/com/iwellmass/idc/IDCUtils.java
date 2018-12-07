@@ -3,19 +3,89 @@ package com.iwellmass.idc;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
+import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.WorkflowEdge;
 import com.iwellmass.idc.quartz.IDCContextKey;
 
 public class IDCUtils {
+	
+	public static final List<WorkflowEdge> parseWorkflowEdge(String graph) {
+        // 格式化graph
+		DirectedAcyclicGraph<TaskKey, WorkflowEdge> workflowGraph = parseGraph(graph);
+
+		// required
+		Arrays.asList(WorkflowEdge.START, WorkflowEdge.END).forEach( rtk -> workflowGraph.containsVertex(rtk));
+		
+        // 校验graph是否正确,检查孤立点
+        workflowGraph.vertexSet().forEach(tk -> {
+        	// 开始节点
+        	if (WorkflowEdge.START.equals(tk)) {
+        		if (workflowGraph.inDegreeOf(tk) == 0) {
+        			throw new AppException("开始节点不能作为下游节点");
+        		}
+        	}
+        	// 结束节点
+        	if (WorkflowEdge.END.equals(tk)) {
+        		if (workflowGraph.outDegreeOf(tk) == 0) {
+        			throw new AppException("结束节点不能作为上游节点");
+        		}
+        	}
+        	// 一般节点
+        	if (workflowGraph.inDegreeOf(tk) == 0 && workflowGraph.outDegreeOf(tk) == 0) {
+                throw new AppException("不能存在孤立节点" + tk);
+            }
+        });
+        
+        return new ArrayList<>(workflowGraph.edgeSet());
+        
+	}
+	
+    // 格式化graph
+    public static DirectedAcyclicGraph<TaskKey, WorkflowEdge>  parseGraph(String graph) {
+        JSONObject jsonObject = JSON.parseObject(graph);
+        DirectedAcyclicGraph<TaskKey, WorkflowEdge> directedAcyclicGraph = new DirectedAcyclicGraph<>(WorkflowEdge.class);
+
+        // add vertex
+        for (JSONObject node : jsonObject.getJSONArray("nodes").toJavaList(JSONObject.class)) {
+        	String taskId = Objects.requireNonNull(node.getString("taskId"), "数据格式错误");
+        	String taskGroup = Objects.requireNonNull(node.getString("taskGroup"), "数据格式错误");
+        	TaskKey tk = new TaskKey(taskId, taskGroup);
+        	directedAcyclicGraph.addVertex(tk);
+        }
+        
+        // add edge
+        for (JSONObject graphJsonObject : jsonObject.getJSONArray("edges").toJavaList(JSONObject.class)) {
+        	
+            JSONObject sourceJsonObject = Objects.requireNonNull((JSONObject) graphJsonObject.get("source"), "数据格式错误");
+            JSONObject targetJsonObject = Objects.requireNonNull((JSONObject) graphJsonObject.get("target"), "数据格式错误");
+            
+        	TaskKey srcTaskKey = new TaskKey(sourceJsonObject.getString("taskId"),sourceJsonObject.getString("taskGroup"));
+            TaskKey targetTaskKey = new TaskKey(targetJsonObject.getString("taskId"),targetJsonObject.getString("taskGroup"));
+            
+            WorkflowEdge we = new WorkflowEdge();
+            we.setSrcTaskKey(srcTaskKey);
+            we.setTaskKey(targetTaskKey);
+            directedAcyclicGraph.addEdge(srcTaskKey, targetTaskKey, we);
+        }
+        return directedAcyclicGraph;
+    }
+
 	
 	
 	public static <T> Function<IDCContextKey<String>, T> getObject(Map<String, Object> map, Class<T> type) {

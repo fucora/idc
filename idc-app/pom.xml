@@ -36,13 +36,6 @@
 				<scope>import</scope>
 			</dependency>
 
-			<!-- jgrapht -->
-			<dependency>
-				<groupId>org.jgrapht</groupId>
-				<artifactId>jgrapht-core</artifactId>
-				<version>0.9.2</version>
-			</dependency>
-
 			<dependency>
 				<groupId>com.netflix.feign</groupId>
 				<artifactId>feign-core</artifactId>
@@ -160,11 +153,6 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jgrapht</groupId>
-			<artifactId>jgrapht-core</artifactId>
 		</dependency>
 
 		<!-- test -->

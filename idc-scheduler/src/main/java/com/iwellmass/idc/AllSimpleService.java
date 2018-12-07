@@ -14,13 +14,12 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskEdge;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.WorkflowEdge;
 
 public class AllSimpleService implements DependencyService, IDCPluginService {
 	
-	private final Map<String, Graph<TaskKey, TaskEdge>> workflowMap = new HashMap<>(); 
+	private final Map<String, Graph<TaskKey, WorkflowEdge>> workflowMap = new HashMap<>(); 
 	
 	private final Map<TaskKey, Task> taskMap = new HashMap<>();
 
@@ -30,7 +29,7 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	
 	@Override
 	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
-		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
+		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(workflowId);
 		return Graphs.successorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());
@@ -38,7 +37,7 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 
 	@Override
 	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
-		Graph<TaskKey, TaskEdge> wf = workflowMap.get(workflowId);
+		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(workflowId);
 		return Graphs.predecessorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());
@@ -67,9 +66,9 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	}
 
 	public void addTaskDependency(String workflowId, TaskKey... depChain) {
-		Graph<TaskKey, TaskEdge> graph = workflowMap.get(workflowId);
+		Graph<TaskKey, WorkflowEdge> graph = workflowMap.get(workflowId);
 		if (graph == null) {
-			graph = new DirectedAcyclicGraph<>(TaskEdge.class);
+			graph = new DirectedAcyclicGraph<>(WorkflowEdge.class);
 			graph.addVertex(WorkflowEdge.START);
 			graph.addVertex(WorkflowEdge.END);
 			workflowMap.put(workflowId, graph);

@@ -5,8 +5,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.app.repo.JobBarrierRepo;
-import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +25,22 @@ import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
+import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobRepository;
+import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
+import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobBarrier;
+import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.model.ScheduleStatus;
+import com.iwellmass.idc.model.ScheduleType;
+import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.Workflow;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -39,6 +50,9 @@ public class JobService {
 
 	@Inject
 	private JobRepository jobRepository;
+	
+	@Inject
+	private TaskRepository taskRepository;
 
 	@Inject
 	private JobRuntimeMapper jobRuntimeMapper;
@@ -48,6 +62,9 @@ public class JobService {
 
 	@Inject
 	private JobBarrierRepo jobBarrierRepo;
+	
+	@Inject
+	private WorkflowService workflowService;
 	
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
@@ -124,6 +141,17 @@ public class JobService {
 
 	public void schedule(ScheduleProperties sp) {
 		try {
+			Task task = taskRepository.findOne(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
+			
+			if (task.getTaskType() == TaskType.WORKFLOW) {
+				Workflow workflow = new Workflow();
+				workflow.setWorkflowId(task.getWorkflowId());
+				workflow.setGraph(task.getGraph());
+				workflow.setTaskId(task.getTaskId());
+				workflow.setTaskGroup(task.getTaskGroup());
+				workflowService.saveWorkflow(workflow);
+			}
+			
 			// TODO 检查 task 完整性
 			idcPlugin.schedule(sp);
 		} catch (SchedulerException e) {
