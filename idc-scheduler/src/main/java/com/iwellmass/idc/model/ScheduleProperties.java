@@ -79,7 +79,7 @@ public class ScheduleProperties {
 		case DAILY:
 			return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
 		default:
-			throw new AppException("未指定周期调度类型, 接收的周期调度类型" + Arrays.asList(ScheduleType.values()));
+			throw new AppException("接收的调度类型" + Arrays.asList(ScheduleType.values()));
 		}
 	}
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
@@ -28,6 +29,10 @@ public interface JobInstanceRepository
 	@Modifying
 	@Query("DELETE FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup}")
 	void deleteByJob(@Param("jk") JobKey jobPk);
+	
+	@Transactional
+	@Modifying
+	void deleteByJobIdAndJobGroupAndShouldFireTime(String jobId, String jobGroup, Long shouldFireTime);
 
 	List<JobInstance> findByMainInstanceId(Integer mainInstanceId);
 }

@@ -27,6 +27,19 @@ public class TaskController {
 	
 	@Inject
     private TaskService taskService;
+
+    @ApiOperation("通过taskKey查询指定task")
+    @PostMapping("/item")
+    public ServiceResult<Task> get(@RequestBody TaskKey taskKey){
+        return ServiceResult.success(taskService.getTask(taskKey));
+    }
+	
+	@ApiOperation("保存任务")
+	@GetMapping
+	public ServiceResult<Task> getTask(TaskKey taskKey){
+		Task task = taskService.getTask(taskKey);
+		return ServiceResult.success(task);
+	}
 	
     @ApiOperation("保存任务")
     @PostMapping
@@ -48,5 +61,15 @@ public class TaskController {
     	List<Task> ret = taskService.getTasksByType(TaskType.NODE_TASK);
     	return ServiceResult.success(ret);
     }
-    
+
+    @ApiOperation("更改任务的工作流")
+    @PostMapping("/graph")
+    public ServiceResult<Task> modifyGraph(@RequestBody Task task) {
+        try {
+            return ServiceResult.success(taskService.modifyGraph(task));
+        } catch (Exception e) {
+            return ServiceResult.failure(e.getMessage());
+        }
+    }
+
 }

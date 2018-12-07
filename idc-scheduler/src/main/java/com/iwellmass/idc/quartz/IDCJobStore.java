@@ -1,5 +1,6 @@
 package com.iwellmass.idc.quartz;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.quartz.JobPersistenceException;
@@ -17,5 +18,7 @@ public interface IDCJobStore extends JobStore {
 	void storeIDCJobInstance(Integer instanceId, Consumer<JobInstance> act) throws JobPersistenceException;
 
 	void clearAllBarrier();
+
+	List<JobInstance> retrieveIDCSubJobInstance(Integer mainInstanceId) throws JobPersistenceException;
 	
 }

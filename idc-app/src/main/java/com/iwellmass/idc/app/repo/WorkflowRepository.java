@@ -12,7 +12,7 @@ import com.iwellmass.idc.model.Workflow;
 @Repository
 public interface WorkflowRepository extends CrudRepository<Workflow, TaskKey>, JpaSpecificationExecutor<Workflow> {
 
-	Optional<Workflow> findByGraphId(String workflowId);
+	Optional<Workflow> findByWorkflowId(String workflowId);
 
 	Optional<Workflow> findByTaskIdAndTaskGroup(String taskId, String taskGroup);
 }
