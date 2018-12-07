@@ -44,15 +44,17 @@ public class IDCUtils {
         		}
         	}
         	// 结束节点
-        	if (WorkflowEdge.END.equals(tk)) {
+        	else if (WorkflowEdge.END.equals(tk)) {
         		if (workflowGraph.outDegreeOf(tk) > 0) {
         			throw new AppException("结束节点不能作为上游节点");
         		}
         	}
-        	// 一般节点
-        	if (workflowGraph.inDegreeOf(tk) == 0 && workflowGraph.outDegreeOf(tk) == 0) {
-                throw new AppException("节点" + tk + "依赖配置错误");
-            }
+        	// 其他节点
+        	else {
+        		if(workflowGraph.inDegreeOf(tk) == 0 || workflowGraph.outDegreeOf(tk) == 0) {
+        			throw new AppException("节点" + tk + "依赖配置错误");
+        		}
+        	}
         });
         
         return new ArrayList<>(workflowGraph.edgeSet());
@@ -138,6 +140,19 @@ public class IDCUtils {
 		}
 		long mill = date.getTime();
 		return Instant.ofEpochMilli(mill).atZone(ZoneId.systemDefault()).toLocalDateTime();
+	}
+	
+	public static void main(String[] args) {
+		
+		DirectedAcyclicGraph<TaskKey, WorkflowEdge> dag = new DirectedAcyclicGraph<>(WorkflowEdge.class);
+		
+		dag.addVertex(WorkflowEdge.START);
+		dag.addVertex(new TaskKey("a", "idc"));
+		
+		dag.addEdge(new TaskKey("start", "idc"), new TaskKey("a", "idc"), new WorkflowEdge());
+		System.out.println(dag.inDegreeOf(new TaskKey("a", "idc")));
+		
+		
 	}
 
 }
