@@ -321,7 +321,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
 			.withIdentity(jobKey.getJobId(), jobKey.getJobGroup())
 			.forJob(taskKey.getTaskId(), taskKey.getTaskGroup())
-			.usingJobData(jobData)
 			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
 		
 		if (jobData != null) {
