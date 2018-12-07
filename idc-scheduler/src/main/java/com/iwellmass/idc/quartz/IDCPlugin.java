@@ -157,7 +157,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		Job job = new Job();
 		// 任务信息
 		job.setJobKey(aquireJobKey(task));
-		job.setJobName(task.getTaskName());
 		job.setCreateTime(LocalDateTime.now());
 		job.setUpdateTime(null);
 		job.setTaskKey(task.getTaskKey());
@@ -165,6 +164,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setContentType(task.getContentType());
 		job.setDispatchType(sp.getDispatchType());
 		// 调度信息
+		job.setJobName(sp.getJobName());
 		job.setAssignee(sp.getAssignee());
 		job.setScheduleType(sp.getScheduleType());
 		job.setIsRetry(sp.getIsRetry());
@@ -182,7 +182,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setCronExpr(sp.toCronExpression());
 		}
 		pluginRepository.saveJob(job);
-	
 		
 		// do scheduler
 		if (job.getDispatchType() == DispatchType.AUTO) {

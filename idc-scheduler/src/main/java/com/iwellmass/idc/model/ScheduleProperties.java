@@ -28,6 +28,12 @@ public class ScheduleProperties {
 	@ApiModelProperty("业务域")
 	private String taskGroup;
 
+	@ApiModelProperty("任务名称")
+	private String jobName;
+	
+	@ApiModelProperty("描述")
+	private String description;
+	
 	@ApiModelProperty("负责人")
 	private String assignee;
 	
