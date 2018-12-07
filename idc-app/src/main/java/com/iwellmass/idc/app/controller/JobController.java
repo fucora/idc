@@ -19,6 +19,7 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
+import com.iwellmass.idc.app.vo.JobScheduleVO;
 import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -42,13 +43,20 @@ public class JobController {
 	
 	@ApiOperation("获取调度信息")
 	@GetMapping("/schedule-config")
-	public ServiceResult<ScheduleProperties> getJob(JobKey jobKey) {
+	public ServiceResult<JobScheduleVO> getJob(JobKey jobKey) {
 		Job job = jobService.findJob(jobKey);
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
 		}
 		ScheduleProperties sp = JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class);
-		return ServiceResult.success(sp);
+		JobScheduleVO vo = new JobScheduleVO();
+		vo.setContentType(job.getContentType());
+		vo.setDispatchType(job.getDispatchType());
+		vo.setScheduleConfig(sp);
+		vo.setTaskGroup(job.getTaskGroup());
+		vo.setTaskId(job.getTaskId());
+		vo.setWorkflowId(job.getWorkflowId());
+		return ServiceResult.success(vo);
 	}
 	
 	@ApiOperation("获取调度运行时信息")

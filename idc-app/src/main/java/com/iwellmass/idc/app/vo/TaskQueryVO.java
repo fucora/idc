@@ -15,5 +15,5 @@ public class TaskQueryVO {
     private TaskType taskType;
 
     @Like
-    private String taskName;
+    private String jobName;
 }
