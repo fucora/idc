@@ -55,6 +55,7 @@ public class JobController {
 		vo.setScheduleConfig(sp);
 		vo.setTaskGroup(job.getTaskGroup());
 		vo.setTaskId(job.getTaskId());
+		vo.setTaskType(job.getTaskType());
 		vo.setWorkflowId(job.getWorkflowId());
 		return ServiceResult.success(vo);
 	}
