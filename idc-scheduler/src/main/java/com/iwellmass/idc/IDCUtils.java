@@ -39,13 +39,13 @@ public class IDCUtils {
         workflowGraph.vertexSet().forEach(tk -> {
         	// 开始节点
         	if (WorkflowEdge.START.equals(tk)) {
-        		if (workflowGraph.inDegreeOf(tk) == 0) {
+        		if (workflowGraph.inDegreeOf(tk) > 0) {
         			throw new AppException("开始节点不能作为下游节点");
         		}
         	}
         	// 结束节点
         	if (WorkflowEdge.END.equals(tk)) {
-        		if (workflowGraph.outDegreeOf(tk) == 0) {
+        		if (workflowGraph.outDegreeOf(tk) > 0) {
         			throw new AppException("结束节点不能作为上游节点");
         		}
         	}
