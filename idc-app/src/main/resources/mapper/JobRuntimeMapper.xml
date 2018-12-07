@@ -10,6 +10,8 @@
 		<result property="jobGroup" column="jobGroup"  jdbcType="VARCHAR"/>
 		<result property="shouldFireTime" column="shouldFireTime" jdbcType="BIGINT"/>
 		<result property="nextFireTime" column="nextFireTime"  jdbcType="BIGINT"/>
+		<result property="sumTask" column="sumTask"  jdbcType="INTEGER"/>
+		<result property="finishedTask" column="finishedTask"  jdbcType="INTEGER"/>
 		<result property="scheduleStatus" column="scheduleStatus" javaType="com.iwellmass.idc.model.ScheduleStatus" jdbcType="VARCHAR"
 				typeHandler="com.iwellmass.idc.app.typehandler.ScheduleStatusHandler"/>
 	</resultMap>
@@ -39,7 +41,9 @@
 			j.job_group as jobGroup,
 			COALESCE(t.PREV_FIRE_TIME,-1) AS shouldFireTime,
 			COALESCE(t.NEXT_FIRE_TIME,-1) AS nextFireTime,
-			t.TRIGGER_STATE AS scheduleStatus
+			t.TRIGGER_STATE AS scheduleStatus,
+			(select count(*) from t_idc_barrier b where b.job_id = j.job_id and b.job_group = j.job_group) as sumTask,
+			(select count(*) from t_idc_barrier b where b.job_id = j.job_id and b.job_group = j.job_group and b.state = 0) as finishedTask
 		FROM
 			t_idc_job j
 			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
