@@ -20,4 +20,8 @@ public class TaskKey implements Serializable{
 		this.taskGroup = groupId;
 	}
 	
+	public String toString() {
+		return taskGroup + "." + taskId;
+	}
+	
 }

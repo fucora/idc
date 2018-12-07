@@ -18,6 +18,7 @@ import org.quartz.TriggerKey;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.WorkflowEdge;
@@ -30,7 +31,9 @@ public class IDCUtils {
 		DirectedAcyclicGraph<TaskKey, WorkflowEdge> workflowGraph = parseGraph(graph);
 
 		// required
-		Arrays.asList(WorkflowEdge.START, WorkflowEdge.END).forEach( rtk -> workflowGraph.containsVertex(rtk));
+		Arrays.asList(WorkflowEdge.START, WorkflowEdge.END).forEach( rtk -> {
+			Assert.isTrue(workflowGraph.containsVertex(rtk), "未找到 " + rtk + "节点");
+		});
 		
         // 校验graph是否正确,检查孤立点
         workflowGraph.vertexSet().forEach(tk -> {
@@ -48,7 +51,7 @@ public class IDCUtils {
         	}
         	// 一般节点
         	if (workflowGraph.inDegreeOf(tk) == 0 && workflowGraph.outDegreeOf(tk) == 0) {
-                throw new AppException("不能存在孤立节点" + tk);
+                throw new AppException("节点" + tk + "依赖配置错误");
             }
         });
         
