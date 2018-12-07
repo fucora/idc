@@ -62,6 +62,11 @@ public class JobInstance {
 	@Column(name = "assignee")
 	private String assignee;
 	
+	@ApiModelProperty("执行方式")
+	@Column(name = "dispatch_type")
+	@Enumerated(EnumType.STRING)
+	private DispatchType dispatchType;
+	
 	@ApiModelProperty("所属工作流")
 	@Column(name = "workflow_id")
 	private String workflowId;
@@ -109,11 +114,6 @@ public class JobInstance {
 	@ApiModelProperty("ContentType")
 	@Column(name = "content_type")
 	private String contentType;
-	
-	@ApiModelProperty("执行方式")
-	@Column(name = "dispatch_type")
-	@Enumerated(EnumType.STRING)
-	private DispatchType dispatchType;
 	
 	@Transient
 	public <T> T getParameterObject(Class<T> type) {

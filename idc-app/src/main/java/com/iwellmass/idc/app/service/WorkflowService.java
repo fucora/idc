@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
 import com.iwellmass.idc.app.repo.WorkflowRepository;
-import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.Workflow;
 import com.iwellmass.idc.model.WorkflowEdge;
 
@@ -31,12 +30,7 @@ public class WorkflowService {
         return workflowRepository.save(workflow);
     }
 
-
-    public Workflow item(TaskKey taskKey) throws Exception {
-        if (taskKey == null || taskKey.getTaskGroup() == null || taskKey.getTaskId() == null) {
-            throw new Exception("传入所有参数");
-        }
-        return workflowRepository.findByTaskIdAndTaskGroup(taskKey.getTaskId(), taskKey.getTaskGroup())
-                .orElseThrow(() -> new Exception("未查找到指定workflow!"));
-    }
+	public Workflow getWorkflow(String workflowId) {
+		return workflowRepository.findOne(workflowId);
+	}
 }

@@ -1,8 +1,9 @@
 package com.iwellmass.idc.app.vo;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import com.iwellmass.idc.model.ScheduleStatus;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,10 +40,12 @@ public class JobRuntimeListVO {
 	@ApiModelProperty("调度状态")
 	private ScheduleStatus scheduleStatus;
 
+	@ApiModelProperty("已完成任务数")
+	private List<JobBarrierVO> barriers;
+	
 	@ApiModelProperty("总任务数")
 	private Integer sumTask;
-
+	
 	@ApiModelProperty("已完成任务数")
 	private Integer finishedTask;
-	
 }

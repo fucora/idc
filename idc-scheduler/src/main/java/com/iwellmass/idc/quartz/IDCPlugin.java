@@ -100,7 +100,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	public void initialize(IDCJobStore store) {
 		this.idcJobStore = store;
-		store.clearAllBarrier();
+		// store.clearAllBarrier();
 	}
 	
 	@Override

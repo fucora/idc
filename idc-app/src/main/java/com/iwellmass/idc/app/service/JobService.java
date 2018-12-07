@@ -14,28 +14,21 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
+import com.iwellmass.idc.app.mapper.MapperUtil;
 import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.ExecutionRequest;
 import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
-import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.vo.JobBarrierVO;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
-import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.model.ScheduleStatus;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -60,24 +53,14 @@ public class JobService {
 	@Inject
 	private IDCPlugin idcPlugin;
 
-	@Inject
-	private JobBarrierRepo jobBarrierRepo;
 	
 	@Inject
 	private WorkflowService workflowService;
 	
 	public JobRuntime getJobRuntime(JobKey jobKey) {
-		List<JobBarrierVO> barriers = jobRuntimeMapper.selectJobBarrierVO(jobKey);
-		JobRuntime jr = new JobRuntime();
-		jr.setBarriers(barriers);
-		jr.setStatus(ScheduleStatus.ERROR);
-		return  jr;
+		return  jobRuntimeMapper.selectJobRuntime(jobKey);
 	}
 
-	public void execute(ExecutionRequest request) {
-		
-	}
-	
 	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
 		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
 		Page<Job> job = jobRepository.findAll(spec, new PageRequest(pager.getPage(), pager.getLimit()));
@@ -122,21 +105,7 @@ public class JobService {
 	}
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		PageInfo<JobRuntimeListVO> pageInfo = PageHelper.startPage(pager.getPage()+1,pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
-//		List<JobRuntimeListVO> jobRuntimeListVOS = pageInfo.getList();
-//		jobRuntimeListVOS.forEach(bean->{
-//			JobKey jobKey = new JobKey(bean.getJobId(),bean.getJobGroup());
-//			List<JobBarrier> jobBarriers = jobBarrierRepo.findByJobIdAndJobGroup(jobKey.getJobId(),jobKey.getJobGroup());
-//			Integer sumTask = 0;
-//			Integer finishedTask = 0;
-//			if (jobBarriers.size()>0){
-//				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals(BarrierState.INVALID)).count());
-//				sumTask = jobBarriers.size();
-//			}
-//			bean.setSumTask(sumTask);
-//			bean.setFinishedTask(finishedTask);
-//		});
-		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
+		return MapperUtil.doQuery(pager, ()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
 	}
 
 	public void schedule(ScheduleProperties sp) {

@@ -10,10 +10,9 @@
 		<result property="jobGroup" column="jobGroup"  jdbcType="VARCHAR"/>
 		<result property="shouldFireTime" column="shouldFireTime" jdbcType="BIGINT"/>
 		<result property="nextFireTime" column="nextFireTime"  jdbcType="BIGINT"/>
-		<result property="sumTask" column="sumTask"  jdbcType="INTEGER"/>
-		<result property="finishedTask" column="finishedTask"  jdbcType="INTEGER"/>
 		<result property="scheduleStatus" column="scheduleStatus" javaType="com.iwellmass.idc.model.ScheduleStatus" jdbcType="VARCHAR"
 				typeHandler="com.iwellmass.idc.app.typehandler.ScheduleStatusHandler"/>
+		<collection property="barriers" select="selectJobBarrierVO" fetchType="eager" column="jobId=jobId,jobGroup=jobGroup}" />
 	</resultMap>
 
 	<select id="selectJobBarrierVO"  resultType="com.iwellmass.idc.app.vo.JobBarrierVO" >
@@ -25,10 +24,11 @@
 			i.`status` as barrier_status
 		FROM
 			t_idc_barrier b
-			LEFT JOIN t_idc_job_instance i ON b.barrier_id = i.job_id  AND b.barrier_group = i.job_group 
+			LEFT JOIN t_idc_job_instance i ON b.barrier_id = i.job_id  AND b.barrier_group = i.job_group AND b.barrier_should_fire_time = i.should_fire_time
 		WHERE
-			b.job_id = #{jobKey.jobId}
-			AND b.job_group = #{jobKey.jobGroup}
+			b.job_id = #{jobId}
+			AND b.job_group = #{jobGroup}
+			AND state = 1
 	</select>
 	
 	
@@ -41,9 +41,7 @@
 			j.job_group as jobGroup,
 			COALESCE(t.PREV_FIRE_TIME,-1) AS shouldFireTime,
 			COALESCE(t.NEXT_FIRE_TIME,-1) AS nextFireTime,
-			t.TRIGGER_STATE AS scheduleStatus,
-			(select count(*) from t_idc_barrier b where b.job_id = j.job_id and b.job_group = j.job_group) as sumTask,
-			(select count(*) from t_idc_barrier b where b.job_id = j.job_id and b.job_group = j.job_group and b.state = 0) as finishedTask
+			t.TRIGGER_STATE AS scheduleStatus
 		FROM
 			t_idc_job j
 			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
@@ -63,5 +61,9 @@
 					AND j.assignee = #{q.assignee}
 				</if>
 			</if>
+	</select>
+	
+	<select id="selectJobRuntime" resultType="com.iwellmass.idc.app.vo.JobRuntime">
+		select * from t_idc_job where job_id = #{jobId} and job_group=#{jobGroup}
 	</select>
 </mapper>

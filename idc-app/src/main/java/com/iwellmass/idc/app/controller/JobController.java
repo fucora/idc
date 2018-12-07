@@ -16,16 +16,13 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.model.JobRuntime;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
-import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
-import com.iwellmass.idc.app.vo.JobRuntimeVO;
+import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.model.Task;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -36,9 +33,6 @@ public class JobController {
 	@Inject
 	private JobService jobService;
 	
-	@Inject
-	private TaskService taskService;
-	
 	@ApiOperation("查询调度列表")
 	@PostMapping("/query")
 	public ServiceResult<PageData<JobRuntimeListVO>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
@@ -47,33 +41,23 @@ public class JobController {
 	}
 	
 	@ApiOperation("获取调度信息")
-	@GetMapping
-	public ServiceResult<Job> getJob(JobKey jobKey) {
+	@GetMapping("/schedule-config")
+	public ServiceResult<ScheduleProperties> getJob(JobKey jobKey) {
 		Job job = jobService.findJob(jobKey);
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
 		}
-		return ServiceResult.success(job);
+		ScheduleProperties sp = JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class);
+		return ServiceResult.success(sp);
 	}
 	
 	@ApiOperation("获取调度运行时信息")
 	@GetMapping("/runtime")
-	public ServiceResult<JobRuntimeVO> getJobRuntime(JobKey jobKey) {
-
-		JobRuntime jr = jobService.getJobRuntime(jobKey);
+	public ServiceResult<JobRuntime> getJobRuntime(JobKey jobKey) {
 		
-		Job job = jobService.findJob(jobKey);
-		Task task = taskService.getTask(job.getTaskKey());
-		task.setWorkflowId(job.getWorkflowId());
+		JobRuntime ret = jobService.getJobRuntime(jobKey);
 		
-		JobRuntimeVO vo = new JobRuntimeVO();
-		vo.setScheduleConfig(JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class));
-		vo.setTask(task);
-		vo.setJobRuntime(jr);
-		
-		jr.setInstanceId(1);
-		
-		return ServiceResult.success(vo);
+		return ServiceResult.success(ret);
 	}
 	
 	@ApiOperation("查询负责人信息")
