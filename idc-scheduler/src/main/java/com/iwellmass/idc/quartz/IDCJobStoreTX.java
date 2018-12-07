@@ -342,11 +342,14 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	protected JobInstance completeIDCJobInstance(Connection conn, CompleteEvent event) throws JobPersistenceException {
 		try {
 			JobInstance ins = idcDriverDelegate.updateJobInstance(conn, event.getInstanceId(), (e -> {
-				e.setStatus(event.getFinalStatus());
-				e.setEndTime(event.getEndTime());
+				if (e.getStatus().isComplete()) {
+					getLog().warn("任务 {} 不存在", event.getInstanceId());
+				} else {
+					e.setStatus(event.getFinalStatus());
+					e.setEndTime(event.getEndTime());
+				}
 			}));
 			if (ins == null) {
-				getLog().warn("任务 {} 不存在", event.getInstanceId());
 				return null;
 			}
 			

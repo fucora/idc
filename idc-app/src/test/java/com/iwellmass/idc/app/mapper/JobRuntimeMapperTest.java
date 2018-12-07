@@ -1,6 +1,5 @@
 package com.iwellmass.idc.app.mapper;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -11,10 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.iwellmass.idc.app.IDCApplication;
-import com.iwellmass.idc.app.vo.JobBarrierVO;
+import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
-import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.TaskType;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = IDCApplication.class)
@@ -29,7 +27,10 @@ public class JobRuntimeMapperTest {
 	@Test
 	public void test() {
 		
-		List<JobRuntimeListVO> lst = jrm.selectJobRuntimeList(null);
+		JobQuery jq = new JobQuery();
+		jq.setTaskType(TaskType.WORKFLOW);
+		
+		List<JobRuntimeListVO> lst = jrm.selectJobRuntimeList(jq);
 
 		
 		lst.stream().filter(vo -> vo.getJobId().equals("w1") && vo.getJobGroup().equals("idc-demo")).forEach(v -> {
