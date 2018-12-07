@@ -106,19 +106,19 @@ public class JobService {
 
 	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
 		PageInfo<JobRuntimeListVO> pageInfo = PageHelper.startPage(pager.getPage()+1,pager.getLimit()).doSelectPageInfo(()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
-		List<JobRuntimeListVO> jobRuntimeListVOS = pageInfo.getList();
-		jobRuntimeListVOS.forEach(bean->{
-			JobKey jobKey = new JobKey(bean.getJobId(),bean.getJobGroup());
-			List<JobBarrier> jobBarriers = jobBarrierRepo.findByJobIdAndJobGroup(jobKey.getJobId(),jobKey.getJobGroup());
-			Integer sumTask = 0;
-			Integer finishedTask = 0;
-			if (jobBarriers.size()>0){
-				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals(BarrierState.INVALID)).count());
-				sumTask = jobBarriers.size();
-			}
-			bean.setSumTask(sumTask);
-			bean.setFinishedTask(finishedTask);
-		});
+//		List<JobRuntimeListVO> jobRuntimeListVOS = pageInfo.getList();
+//		jobRuntimeListVOS.forEach(bean->{
+//			JobKey jobKey = new JobKey(bean.getJobId(),bean.getJobGroup());
+//			List<JobBarrier> jobBarriers = jobBarrierRepo.findByJobIdAndJobGroup(jobKey.getJobId(),jobKey.getJobGroup());
+//			Integer sumTask = 0;
+//			Integer finishedTask = 0;
+//			if (jobBarriers.size()>0){
+//				finishedTask = (int)(jobBarriers.stream().filter(item->item.getState().equals(BarrierState.INVALID)).count());
+//				sumTask = jobBarriers.size();
+//			}
+//			bean.setSumTask(sumTask);
+//			bean.setFinishedTask(finishedTask);
+//		});
 		return new PageData<JobRuntimeListVO>((int)pageInfo.getTotal(), pageInfo.getList());
 	}
 
