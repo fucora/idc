@@ -150,14 +150,25 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	 * 刷新任务
 	 */
 	public void refresh(Task task) throws SchedulerException {
-		JobDetail jobDetail = JobBuilder
-			.newJob(getJobClass(task))
-			//.usingJobData(jobData)
-			.withIdentity(task.getTaskId(), task.getTaskGroup())
-			.requestRecovery()
-			.storeDurably()
-			.build();
-		scheduler.addJob(jobDetail, true);
+		if (task.getTaskType() == TaskType.WORKFLOW) {
+			JobDetail jobDetail = JobBuilder
+					.newJob(IDCWorkflowJob.class)
+					//.usingJobData(jobData)
+					.withIdentity(task.getTaskId(), task.getTaskGroup())
+					.requestRecovery()
+					.storeDurably()
+					.build();
+			scheduler.addJob(jobDetail, true);
+		} else {
+			JobDetail jobDetail = JobBuilder
+					.newJob(getJobClass(task))
+					//.usingJobData(jobData)
+					.withIdentity(task.getTaskId(), task.getTaskGroup())
+					.requestRecovery()
+					.storeDurably()
+					.build();
+			scheduler.addJob(jobDetail, true);
+		}
 	}
 	
 	/** 新增调度计划*/

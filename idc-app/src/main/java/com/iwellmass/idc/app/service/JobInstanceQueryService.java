@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.util.Assert;
@@ -19,6 +21,7 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.TaskType;
 
 @Service
 public class JobInstanceQueryService {
@@ -28,8 +31,12 @@ public class JobInstanceQueryService {
 
 	public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
 		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
-		Page<JobInstance> result = queryObject == null ? repository.findAll(pgr)
-				: repository.findAll(queryObject.toSpecification(), pgr);
+		
+		Specification<JobInstance> specs = Specifications.<JobInstance>where((a,b,c) -> {
+			return c.notEqual(a.get("taskType"), TaskType.SUB_TASK);
+		}).and(queryObject.<JobInstance>toSpecification());
+		
+		Page<JobInstance> result = repository.findAll(specs, pgr);
 		return new PageData<>(result.getNumberOfElements(), result.getContent());
 	}
 

@@ -164,10 +164,10 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     	ins = new JobInstance();
                 		// ~~ 基础信息 ~~
                     	ins.setJobKey(idcJobKey);
+                    	ins.setJobName(idcTask.getTaskName());
                 		ins.setTaskKey(idcTask.getTaskKey());
                 		ins.setContentType(idcTask.getContentType());
                 		ins.setTaskType(TaskType.SUB_TASK);
-                		
                 		// ~~ seam as main job ~~
                 		ins.setDispatchType(mainJobIns.getDispatchType());
                 		// 责任人
