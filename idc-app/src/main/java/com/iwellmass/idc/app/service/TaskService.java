@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.iwellmass.common.criteria.SpecificationBuilder;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.IDCUtils;
@@ -24,6 +26,7 @@ import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
 public class TaskService {
@@ -34,18 +37,27 @@ public class TaskService {
     @Inject
     TaskMapper taskMapper;
 
+    @Inject
+    private IDCPlugin idcPlugin;
+    
     @Transactional
     public void saveTask(Task task) {
-        Task oldTask = taskRepository.findOne(task.getTaskKey());
-        if (oldTask != null) {
-        	oldTask.setTaskName(task.getTaskName());
-        	oldTask.setDescription(task.getDescription());
-        	oldTask.setUpdatetime(LocalDateTime.now());
-        	taskRepository.save(oldTask);
-        } else {
-        	task.setUpdatetime(LocalDateTime.now());
-        	taskRepository.save(task);
-        }
+    	try {
+	        Task oldTask = taskRepository.findOne(task.getTaskKey());
+	        if (oldTask != null) {
+	        	oldTask.setTaskName(task.getTaskName());
+	        	oldTask.setDescription(task.getDescription());
+	        	oldTask.setUpdatetime(LocalDateTime.now());
+	        	taskRepository.save(oldTask);
+				idcPlugin.refresh(oldTask);
+	        } else {
+	        	task.setUpdatetime(LocalDateTime.now());
+	        	taskRepository.save(task);
+	        	idcPlugin.refresh(task);
+	        }
+    	} catch (SchedulerException e) {
+    		throw new AppException(e.getMessage(), e);
+    	}
     }
 
     public Task getTask(TaskKey taskKey) {

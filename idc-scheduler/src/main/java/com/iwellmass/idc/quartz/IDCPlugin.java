@@ -3,7 +3,6 @@ package com.iwellmass.idc.quartz;
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
 import static com.iwellmass.idc.quartz.IDCContextKey.JOB_RUNTIME;
-import static com.iwellmass.idc.quartz.IDCContextKey.TASK_JSON;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -147,6 +146,20 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("停止 IDCPlugin");
 	}
 	
+	/** 
+	 * 刷新任务
+	 */
+	public void refresh(Task task) throws SchedulerException {
+		JobDetail jobDetail = JobBuilder
+			.newJob(getJobClass(task))
+			//.usingJobData(jobData)
+			.withIdentity(task.getTaskId(), task.getTaskGroup())
+			.requestRecovery()
+			.storeDurably()
+			.build();
+		scheduler.addJob(jobDetail, true);
+	}
+	
 	/** 新增调度计划*/
 	public void schedule(ScheduleProperties sp) throws SchedulerException {
 		Task task = pluginRepository.findTask(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
@@ -163,6 +176,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setTaskType(task.getTaskType());
 		job.setContentType(task.getContentType());
 		job.setDispatchType(sp.getDispatchType());
+		job.setWorkflowId(task.getWorkflowId());
 		// 调度信息
 		job.setJobName(sp.getJobName());
 		job.setAssignee(sp.getAssignee());
@@ -181,13 +195,14 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		if (job.getScheduleType() != ScheduleType.CUSTOMER) {
 			job.setCronExpr(sp.toCronExpression());
 		}
+		
 		pluginRepository.saveJob(job);
 		
 		// do scheduler
 		if (job.getDispatchType() == DispatchType.AUTO) {
-			scheduler.scheduleJob(buildJobDetail(task), buildAutoTrigger(job));
+			scheduler.scheduleJob(buildAutoTrigger(job));
 		} else {
-			scheduler.scheduleJob(buildJobDetail(task), buildSimpleTrigger(job.getJobKey(), job.getTaskKey(), null));
+			scheduler.scheduleJob(buildSimpleTrigger(job.getJobKey(), job.getTaskKey(), null));
 		}
 	}
 	
@@ -199,12 +214,21 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	 * 重新调度
 	 */
 	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
+		
+		
 		Job job = pluginRepository.findJob(jobKey);
 		if (job == null) {
 			throw new SchedulerException("调度计划 " + jobKey + " 不存在");
 		}
+		Task task = pluginRepository.findTask(job.getTaskKey());
+		
+		if (task == null) {
+			throw new SchedulerException("任务 " + jobKey + " 不存在");
+		}
+		
 		// 调度信息
 		if (sp != null) {
+			job.setJobName(sp.getJobName());
 			job.setAssignee(sp.getAssignee());
 			job.setScheduleType(sp.getScheduleType());
 			job.setIsRetry(sp.getIsRetry());
@@ -219,24 +243,22 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setCronExpr(sp.toCronExpression());
 			// ~~ 前端用 ~~
 			job.setScheduleConfig(JSON.toJSONString(sp));
-			pluginRepository.saveJob(job);
 		}
-		
+		job.setWorkflowId(task.getWorkflowId());
+		pluginRepository.saveJob(job);
 		// do schedule
 		Date ret = null;
 		if (job.getDispatchType() == DispatchType.AUTO) {
 			Trigger trigger = buildAutoTrigger(job);
 			ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
 			if (ret == null) {
-				Task task = pluginRepository.findTask(job.getTaskKey());
-				scheduler.scheduleJob(buildJobDetail(task), trigger);
+				scheduler.scheduleJob(trigger);
 			}
 		} else {
 			Trigger trigger = buildSimpleTrigger(job.getJobKey(), job.getTaskKey(), null);
 			ret = scheduler.rescheduleJob(trigger.getKey(), trigger);
 			if (ret == null) {
-				Task task = pluginRepository.findTask(job.getTaskKey());
-				scheduler.scheduleJob(buildJobDetail(task), trigger);
+				scheduler.scheduleJob(trigger);
 			}
 		}
 		return ret;
@@ -276,9 +298,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		// mark
 		subEnv.setMainInstanceId(mainJobIns.getInstanceId());
 		
-		// build Task
-		JobDetail jobDetail = buildJobDetail(subTask);
-		
 		// build Simple
 		JobDataMap jobData = new JobDataMap();
 		JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(subEnv));
@@ -290,7 +309,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		// just schedule
 		try {
-			scheduler.scheduleJob(jobDetail, trigger);
+			scheduler.scheduleJob(trigger);
 		} catch (SchedulerException e) {
 			throw new JobExecutionException(e.getMessage(), e);
 		}
@@ -326,29 +345,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			builder.usingJobData(jobData);
 		}
 		return builder.build();
-	}
-	
-	private JobDetail buildJobDetail(Task task) {
-		JobDataMap jobData = new JobDataMap();
-		TASK_JSON.applyPut(jobData, JSON.toJSONString(task));
-		
-		JobDetail jobDetail = null;
-		if (task.getTaskType() == TaskType.WORKFLOW) {
-			 jobDetail = JobBuilder.newJob(IDCWorkflowJob.class)
-				 .withIdentity(task.getTaskId(), task.getTaskGroup())
-				 .usingJobData(jobData)
-				 .storeDurably()
-				 .requestRecovery()
-				 .build();
-		} else {
-			jobDetail = JobBuilder
-				.newJob(getJobClass(task))
-				.usingJobData(jobData)
-				.withIdentity(task.getTaskId(), task.getTaskGroup())
-				.requestRecovery()
-				.build();
-		}
-		return jobDetail;
 	}
 	
 	public void unschedule(JobKey jobKey) throws SchedulerException {

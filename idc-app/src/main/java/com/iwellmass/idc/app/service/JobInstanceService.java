@@ -54,34 +54,18 @@ public class JobInstanceService {
 	@Inject
 	private ExecutionLogRepository logRepository;
 
-//	@Inject
+	@Inject
 	private Scheduler scheduler;
 
 	public void redo(RedoRequest request) {
 		
 		int instanceId = request.getInstanceId();
+		
 		JobInstance instance = jobInstanceRepository.findOne(instanceId);
 		
 		Assert.isTrue(instance != null, "找不到此实例");
 		
-		try {
-			TriggerKey triggerKey = new TriggerKey("REDO_" + instanceId, instance.getJobGroup());
-			
-			Assert.isTrue(instance.getStatus().isComplete() || request.isForce(), "实例正在运行，无法重跑");
-			
-			Trigger trigger = TriggerBuilder.newTrigger()
-				.withIdentity(triggerKey)
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule())
-				.forJob(instance.getTaskId(), instance.getTaskGroup()) // 哪个业务
-				.startNow().build();
-			
-			JobDataMap jdm = trigger.getJobDataMap();
-			JOB_REOD.applyPut(jdm, true);
-			
-			scheduler.scheduleJob(trigger);
-		} catch (SchedulerException e) {
-			throw new AppException("重跑失败: " + e.getMessage(), e);
-		}
+		
 	}
 
 	
