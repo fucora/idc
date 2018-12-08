@@ -14,6 +14,6 @@ public class TaskQueryVO {
 	@In
     private TaskType taskType;
 
-    @Like
-    private String jobName;
+    @Like(builder = TempDefinedBuilder.class)
+    private String taskName;
 }
