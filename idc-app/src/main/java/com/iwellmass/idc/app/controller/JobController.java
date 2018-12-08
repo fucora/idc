@@ -20,6 +20,7 @@ import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobScheduleVO;
+import com.iwellmass.idc.app.vo.RescheduleVO;
 import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
@@ -86,8 +87,8 @@ public class JobController {
 	
 	@ApiOperation("重新调度任务")
 	@PostMapping(path = "/reschedule")
-	public ServiceResult<String> reschedule(@RequestBody JobKey jobKey, @RequestBody ScheduleProperties scheduleConfig) {
-		jobService.reschedule(jobKey, scheduleConfig);
+	public ServiceResult<String> reschedule(@RequestBody RescheduleVO rv) {
+		jobService.reschedule(rv, rv.getScheduleConfig());
 		return ServiceResult.success("提交成功");
 	}
 	

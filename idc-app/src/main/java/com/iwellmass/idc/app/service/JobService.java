@@ -128,9 +128,26 @@ public class JobService {
 		}
 	}
 
-	public void reschedule(JobKey jobKey, ScheduleProperties scheduleConfig) {
+	public void reschedule(JobKey jobKey, ScheduleProperties sp) {
 		try {
-			idcPlugin.reschedule(jobKey, scheduleConfig);
+			Job job = jobRepository.findOne(jobKey);
+			
+			Task task = taskRepository.findOne(job.getTaskKey());
+			
+			sp.setTaskId(job.getTaskId());
+			sp.setTaskGroup(job.getTaskGroup());
+			sp.setDispatchType(job.getDispatchType());
+			
+			if (task.getTaskType() == TaskType.WORKFLOW) {
+				Workflow workflow = new Workflow();
+				workflow.setWorkflowId(task.getWorkflowId());
+				workflow.setGraph(task.getGraph());
+				workflow.setTaskId(task.getTaskId());
+				workflow.setTaskGroup(task.getTaskGroup());
+				workflowService.saveWorkflow(workflow);
+			}
+			
+			idcPlugin.reschedule(jobKey, sp);
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
 		}

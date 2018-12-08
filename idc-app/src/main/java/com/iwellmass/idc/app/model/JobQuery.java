@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.model;
 
 import com.iwellmass.common.criteria.Equal;
-import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.TaskType;
@@ -15,7 +14,6 @@ import lombok.Setter;
 public class JobQuery implements SpecificationBuilder {
 
 	@ApiModelProperty("计划名称")
-	@Like
 	private String jobName;
 
 	@ApiModelProperty("节点类型")

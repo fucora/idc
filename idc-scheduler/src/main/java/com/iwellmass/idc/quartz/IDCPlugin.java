@@ -282,6 +282,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		// build Simple
 		JobDataMap jobData = new JobDataMap();
 		JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(subEnv));
+		IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.SUB);
 
 		//子任务Key
 		JobKey subJobKey = aquireSubJobKey(mainJob.getJobKey(), subTask.getTaskKey());

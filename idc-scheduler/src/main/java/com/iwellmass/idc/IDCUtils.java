@@ -29,7 +29,7 @@ public class IDCUtils {
 	public static final List<WorkflowEdge> parseWorkflowEdge(String graph) {
         // 格式化graph
 		DirectedAcyclicGraph<TaskKey, WorkflowEdge> workflowGraph = parseGraph(graph);
-
+		
 		// required
 		Arrays.asList(WorkflowEdge.START, WorkflowEdge.END).forEach( rtk -> {
 			Assert.isTrue(workflowGraph.containsVertex(rtk), "未找到 " + rtk + "节点");

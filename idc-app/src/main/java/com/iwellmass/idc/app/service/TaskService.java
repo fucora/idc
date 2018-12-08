@@ -43,6 +43,7 @@ public class TaskService {
         	oldTask.setUpdatetime(LocalDateTime.now());
         	taskRepository.save(oldTask);
         } else {
+        	task.setUpdatetime(LocalDateTime.now());
         	taskRepository.save(task);
         }
     }

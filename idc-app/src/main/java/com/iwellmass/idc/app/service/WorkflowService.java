@@ -26,8 +26,15 @@ public class WorkflowService {
     @Transactional
     public Workflow saveWorkflow(Workflow workflow) {
     	List<WorkflowEdge> edges = IDCUtils.parseWorkflowEdge(workflow.getGraph());
+    	
+    	edges.forEach(we -> {
+    		we.setWorkflowId(workflow.getWorkflowId());
+    	});
+    	
+    	workflowEdgeRepository.deleteByWorkflowId(workflow.getWorkflowId());
     	workflowEdgeRepository.save(edges);
-        return workflowRepository.save(workflow);
+    	workflowRepository.save(workflow);
+    	return workflow;
     }
 
 	public Workflow getWorkflow(String workflowId) {

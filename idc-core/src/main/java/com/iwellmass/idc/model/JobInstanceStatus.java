@@ -22,7 +22,10 @@ public enum JobInstanceStatus {
 	FAILED,
 	
 	// 取消
-	CANCLED;
+	CANCLED,
+	
+	// 跳过
+	SKIPPED;
 	
 	
 	public boolean isComplete() {
