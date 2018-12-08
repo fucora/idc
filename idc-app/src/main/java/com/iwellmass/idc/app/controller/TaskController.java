@@ -34,7 +34,7 @@ public class TaskController {
         return ServiceResult.success(taskService.getTask(taskKey));
     }
 	
-	@ApiOperation("保存任务")
+	@ApiOperation("查询任务")
 	@GetMapping
 	public ServiceResult<Task> getTask(TaskKey taskKey){
 		Task task = taskService.getTask(taskKey);
