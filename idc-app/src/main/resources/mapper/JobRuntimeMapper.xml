@@ -49,7 +49,7 @@
 		WHERE 1=1
 		    <if test="q!=null">
 				<if test="q.jobName!='' and q.jobName!=null">
-					AND j.job_name LIKE CONCAT(CONCAT('%', #{q.jobName}), '%')
+					AND (j.job_name LIKE CONCAT(CONCAT('%', #{q.jobName}), '%') OR j.job_id = #{q.jobName})
 				</if>
 				<if test="q.taskType!=null">
 					AND j.task_type = #{q.taskType}
