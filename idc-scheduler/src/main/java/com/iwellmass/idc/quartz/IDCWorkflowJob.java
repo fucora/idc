@@ -8,6 +8,7 @@ import java.util.List;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
 
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.TaskKey;
@@ -24,11 +25,18 @@ public class IDCWorkflowJob implements org.quartz.Job {
 		// 任务实例
 		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		
-		List<TaskKey> success = plugin.scheduleSucessor(WorkflowEdge.START, jobInstance);
-		
-		if (success.isEmpty()) {
-			throw new JobExecutionException("未找到子任务");
+		try {
+			List<TaskKey> success = plugin.getDependencyService().getSuccessors(jobInstance.getWorkflowId(), WorkflowEdge.START);
+			if (success.isEmpty()) {
+				throw new JobExecutionException("未找到子任务");
+			}
+			for (TaskKey tk : success) {
+				plugin.scheduleSubTask(tk, jobInstance);
+			}
+			// 加入 guard
+			plugin.scheduleWorkflowGuardJob(jobInstance);
+		} catch (SchedulerException e) {
+			throw new JobExecutionException(e.getMessage(), e);
 		}
-		
 	}
 }

@@ -21,4 +21,8 @@ public interface IDCJobStore extends JobStore {
 
 	List<JobInstance> retrieveIDCSubJobInstance(Integer mainInstanceId) throws JobPersistenceException;
 	
+	
+	
+	
+	
 }

@@ -1,20 +1,13 @@
 package com.iwellmass.idc.app.service;
 
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_REOD;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -55,6 +48,8 @@ public class JobInstanceService {
 	private ExecutionLogRepository logRepository;
 
 	@Inject
+	private IDCPlugin idcPlugin;
+	
 	private Scheduler scheduler;
 
 	public void redo(RedoRequest request) {
@@ -65,7 +60,11 @@ public class JobInstanceService {
 		
 		Assert.isTrue(instance != null, "找不到此实例");
 		
-		
+		try {
+			idcPlugin.redo(request.getInstanceId());
+		} catch (SchedulerException e) {
+			throw new AppException("执行失败: " + e.getMessage());
+		}
 	}
 
 	
@@ -75,17 +74,12 @@ public class JobInstanceService {
 		
 		Assert.isTrue(instance != null, "找不到此实例");
 		
-		try {
-			IDCPlugin plugin = IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
-			CompleteEvent event = CompleteEvent
-				.successEvent("强制结束")
-				.setInstanceId(instanceId)
-				.setEndTime(LocalDateTime.now());
-			plugin.getStatusService().fireCompleteEvent(event);
-			scheduler.resetTriggerFromErrorState(IDCUtils.toTriggerKey(instance.getJobKey()));
-		} catch (SchedulerException e) {
-			throw new AppException("强制结束任务时出错: " + e.getMessage());
-		}
+		CompleteEvent event = CompleteEvent
+			.successEvent("强制结束")
+			.setInstanceId(instanceId)
+			.setFinalStatus(JobInstanceStatus.SKIPPED)
+			.setEndTime(LocalDateTime.now());
+		idcPlugin.getStatusService().fireCompleteEvent(event);
 	}
 	
 	public void cancle(CancleRequest req) {

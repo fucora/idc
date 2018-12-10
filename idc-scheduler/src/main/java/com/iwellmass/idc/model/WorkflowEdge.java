@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,11 +59,13 @@ public class WorkflowEdge implements Serializable{
 	}
 	
 	@Transient
+	@JsonIgnore
 	public TaskKey getSrcTaskKey() {
 		return new TaskKey(srcTaskId, srcTaskGroup);
 	}
 	
 	@Transient
+	@JsonIgnore
 	public TaskKey getTaskKey() {
 		return new TaskKey(taskId, taskGroup);
 	}

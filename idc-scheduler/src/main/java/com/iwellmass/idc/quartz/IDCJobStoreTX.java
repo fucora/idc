@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,13 +26,15 @@ import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.model.BarrierState;
+import com.iwellmass.idc.model.GuardEnv;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.SubEnv;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.RedoEnv;
+import com.iwellmass.idc.model.SubEnv;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
@@ -110,13 +114,14 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					// check barrier
 					////////////////
                     IDCTriggerInstruction ti = IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(nextTrigger.getJobDataMap());
-                    
+                    JobKey idcJobKey = null;
                     JobInstance ins = null;
                     List<JobBarrier> barriers = null;
+                    String fid = null;
                     if (ti == IDCTriggerInstruction.MAIN) {
                     	
                     	TaskKey idcTaskKey = new TaskKey(job.getKey().getName(), job.getKey().getGroup());
-                    	JobKey idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
+                    	idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
 
                     	Task idcTask = idcDriverDelegate.selectTask(idcTaskKey);
                     	Job idcJob = idcDriverDelegate.selectJob(idcJobKey);
@@ -155,7 +160,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     	SubEnv jobEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), SubEnv.class);
                     	
                     	TaskKey idcTaskKey = new TaskKey(job.getKey().getName(), job.getKey().getGroup());
-                    	JobKey idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
+                    	idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
                     	
                     	Task idcTask = idcDriverDelegate.selectTask(idcTaskKey);
                     	JobInstance mainJobIns = idcDriverDelegate.selectJobInstance(conn, jobEnv.getMainInstanceId());
@@ -184,12 +189,37 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                 		ins.setLoadDate(mainJobIns.getLoadDate());
                 		
                 		// ~~ 其他 ~~
+                		ins.setMainInstanceId(jobEnv.getMainInstanceId());
                 		ins.setStartTime(LocalDateTime.now());
                 		ins.setEndTime(null);
                 		ins.setStatus(JobInstanceStatus.NEW);
                 		
                 		barriers = computeWorkflowBarriers(conn, mainIdcJob.getWorkflowId(), ins);
+                    } else if (ti == IDCTriggerInstruction.REDO){
+                    	RedoEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), RedoEnv.class);
+                    	ins = idcDriverDelegate.updateJobInstance(conn, redoEnv.getInstanceId(), (i)->{
+                    		i.setStatus(JobInstanceStatus.NONE);
+                    		i.setEndTime(null);
+                    	});
+                    	
+                    	idcJobKey = ins.getJobKey();
+                    	fid = redoEnv.getInstanceId().toString();
+                    } else if (ti == IDCTriggerInstruction.GUARD) {
+                    	GuardEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), GuardEnv.class);
+                    	idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
+                    	barriers = new LinkedList<>();
+                    	for (JobKey bk : redoEnv.getBarrierKeys()) {
+                    		JobBarrier barrier = buildBarrier(conn, idcJobKey, bk, redoEnv.getShouldFireTime());
+                    		if (barrier != null) {
+                    			barriers.add(barrier);
+                    		}
+                    	}
+                    	fid = System.currentTimeMillis() + "";
+                    } else {
+                    	throw new UnsupportedOperationException("not supported yet.");
                     }
+                    // clear first
+                    idcDriverDelegate.clearJobBarrier(conn, idcJobKey);
 					// double check
 					if (!barriers.isEmpty()) {
 						idcDriverDelegate.batchInsertJobBarrier(conn, barriers);
@@ -205,10 +235,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                         continue; // next trigger
                     }
                     
-        			////////////////////////////////////////
-        			// save JobInstance
-                    Integer fid = idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId();
-    				//////////////////////////////////////// END save
+                    if (fid == null) {
+                    	fid = idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId().toString();
+                    }
                     
                     nextTrigger.setFireInstanceId(fid.toString());
                     
@@ -244,7 +273,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		List<TaskKey> depTasks = dependencyService.getPredecessors(workflowId, ins.getTaskKey());
 		if (!Utils.isNullOrEmpty(depTasks)) {
 			for (TaskKey tk : depTasks) {
-				JobKey barrierKey = IDCUtils.getSubJobKey(ins.getJobKey(), tk);
+				JobKey barrierKey = IDCUtils.getSubJobKey(ins.getMainInstanceId(), ins.getJobGroup(), tk);
 				JobBarrier b = buildBarrier(conn, ins.getJobKey(), barrierKey, ins.getShouldFireTime());
 				if (b != null) {
 					barriers.add(b);
@@ -280,7 +309,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	private JobBarrier buildBarrier(Connection conn, JobKey jobKey, JobKey barrierKey, Long barrierShouldFireTime) throws SQLException {
 		if (barrierShouldFireTime != null && barrierShouldFireTime != -1) {
 			JobInstance ins = idcDriverDelegate.selectJobInstance(conn, barrierKey, barrierShouldFireTime);
-			if (ins == null || ins.getStatus() != JobInstanceStatus.FINISHED) {
+			
+			Set<JobInstanceStatus> finished = new HashSet<>(Arrays.asList(JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED));
+			if (ins == null || !finished.contains(ins.getStatus())) {
 				JobBarrier b = new JobBarrier();
 				b.setJobKey(jobKey);
 				b.setBarrierKey(barrierKey);
@@ -342,12 +373,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	protected JobInstance completeIDCJobInstance(Connection conn, CompleteEvent event) throws JobPersistenceException {
 		try {
 			JobInstance ins = idcDriverDelegate.updateJobInstance(conn, event.getInstanceId(), (e -> {
-				if (e.getStatus().isComplete()) {
-					getLog().warn("任务 {} 不存在", event.getInstanceId());
-				} else {
-					e.setStatus(event.getFinalStatus());
-					e.setEndTime(event.getEndTime());
-				}
+				e.setStatus(event.getFinalStatus());
+				e.setEndTime(event.getEndTime());
 			}));
 			if (ins == null) {
 				return null;
@@ -355,7 +382,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			
 			JobKey jobKey = ins.getJobKey();
 			// 删除 barrier
-			if (event.getFinalStatus() == JobInstanceStatus.FINISHED) {
+			if (buildBarrier(conn, jobKey, jobKey, ins.getShouldFireTime()) == null) {
 				idcDriverDelegate.markBarrierInvalid(conn, jobKey.getJobId(), jobKey.getJobGroup(), ins.getShouldFireTime());
 			}
 			signalSchedulingChangeOnTxCompletion(0L);
