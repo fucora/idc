@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.repo;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +12,7 @@ import com.iwellmass.idc.model.WorkflowEdge;
 @Repository
 public interface WorkflowEdgeRepository extends CrudRepository<WorkflowEdge, Integer> {
 
-    Optional<WorkflowEdge> findByWorkflowId(Integer workflowId);
+    List<WorkflowEdge> findByWorkflowId(String workflowId);
     
 	@Query(value = "select W from WorkflowEdge W where W.workflowId = ?1 and W.taskId = ?2 and W.taskGroup = ?3")
 	List<WorkflowEdge> findPredecessors(String workflowId, String taskId, String taskGroup);

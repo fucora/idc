@@ -1,5 +1,7 @@
 package com.iwellmass.idc.app.controller;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.idc.app.service.WorkflowService;
 import com.iwellmass.idc.model.Workflow;
+import com.iwellmass.idc.model.WorkflowEdge;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -25,5 +28,12 @@ public class WorkflowController {
     public ServiceResult<Workflow> get(@RequestParam("id") String id){
     	Workflow wf = workflowService.getWorkflow(id);
         return ServiceResult.success(wf);
+    }
+    
+    @GetMapping("/edges")
+    @ApiOperation("查询指定工作流")
+    public ServiceResult<List<WorkflowEdge>> getEdges(@RequestParam("id") String id){
+    	List<WorkflowEdge> wf = workflowService.getWorkflowEdges(id);
+    	return ServiceResult.success(wf);
     }
 }

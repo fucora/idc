@@ -25,7 +25,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "t_idc_job_instance")
-public class JobInstance {
+public class JobInstance implements JobEnv{
 
 	@ApiModelProperty("执行ID")
 	@Id

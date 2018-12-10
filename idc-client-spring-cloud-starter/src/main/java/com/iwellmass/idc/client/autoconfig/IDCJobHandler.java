@@ -20,7 +20,7 @@ import com.iwellmass.idc.executor.IDCJob;
 import com.iwellmass.idc.executor.IDCJobExecutionContext;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import com.iwellmass.idc.executor.IDCStatusService;
-import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobEnv;
 
 /**
  * 调度器 Rest 接口
@@ -48,24 +48,24 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	@ResponseBody
 	@PostMapping(path = "/execution")
-	public ServiceResult<String> doExecute(@RequestBody JobInstance jobInstance) {
+	public ServiceResult<String> doExecute(@RequestBody JobEnv jobEnv) {
 		// safe execute
-		execute(jobInstance);
-		LOGGER.info("任务 {} [groupId={}, taskId={}] accepted, timestamp: {}", jobInstance.getInstanceId(),
-				jobInstance.getTaskId(), jobInstance.getTaskGroup(), System.currentTimeMillis());
+		execute(jobEnv);
+		LOGGER.info("任务 {} [taskId={}] accepted, timestamp: {}", jobEnv.getInstanceId(),
+				jobEnv.getTaskId(), System.currentTimeMillis());
 		return ServiceResult.success("任务已提交");
 	}
 	
-	public void execute(JobInstance instance) {
+	public void execute(JobEnv instance) {
 		
 		ExecutionContextImpl context = new ExecutionContextImpl();
-		context.instance = instance;
+		context.jobEnv = instance;
 		
 		CompletableFuture.runAsync(() -> job.execute(context), executor)
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
 				CompleteEvent event = CompleteEvent.failureEvent("任务 {} 执行异常: {}", instance.getInstanceId(), cause.getMessage())
-						.setInstanceId(context.getInstance().getInstanceId())
+						.setInstanceId(context.getJobEnv().getInstanceId())
 						.setEndTime(LocalDateTime.now());
 				context.complete(event);
 			}
@@ -77,12 +77,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	private class ExecutionContextImpl implements IDCJobExecutionContext {
 
-		private JobInstance instance;
+		private JobEnv jobEnv;
 		private int state = RUNNING; // TODO use CAS
 		
 		@Override
-		public JobInstance getInstance() {
-			return instance;
+		public JobEnv getJobEnv() {
+			return jobEnv;
 		}
 
 		@Override
@@ -94,7 +94,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 				return;
 			}
 			
-			event.setInstanceId(instance.getInstanceId());
+			event.setInstanceId(jobEnv.getInstanceId());
 			
 			LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
 			

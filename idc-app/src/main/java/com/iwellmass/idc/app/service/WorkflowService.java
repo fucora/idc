@@ -40,4 +40,8 @@ public class WorkflowService {
 	public Workflow getWorkflow(String workflowId) {
 		return workflowRepository.findOne(workflowId);
 	}
+
+	public List<WorkflowEdge> getWorkflowEdges(String id) {
+		return workflowEdgeRepository.findByWorkflowId(id);
+	}
 }

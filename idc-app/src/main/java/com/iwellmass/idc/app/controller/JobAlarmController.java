@@ -28,7 +28,6 @@ public class JobAlarmController {
 	@ApiOperation("查询告警信息")
 	@PostMapping("/query")
 	public ServiceResult<PageData<List<JobAlarm>>> query(@RequestBody(required = false) JobAlarmQuery alarm, Pager pager) {
-		PageData<List<JobAlarm>> jobAlarm = jobAlarmService.findJobAlarmByCondition(alarm, pager);
-		return ServiceResult.success(jobAlarm);
+		return ServiceResult.failure("not supported yet.");
 	}
 }
