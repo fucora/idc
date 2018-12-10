@@ -52,6 +52,9 @@ public class TaskService {
 				idcPlugin.refresh(oldTask);
 	        } else {
 	        	task.setUpdatetime(LocalDateTime.now());
+	        	if(task.getWorkflowId() == null) {
+	        		task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
+	        	}
 	        	taskRepository.save(task);
 	        	idcPlugin.refresh(task);
 	        }
