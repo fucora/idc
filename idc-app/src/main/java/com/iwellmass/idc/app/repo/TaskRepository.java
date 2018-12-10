@@ -17,6 +17,6 @@ public interface TaskRepository extends CrudRepository<Task, TaskKey>, JpaSpecif
 
 	List<Task> findByTaskType(TaskType taskType);
 
-	@Query(value = "select count(*) from t_idc_task where task_group = 'cx-test'",nativeQuery = true)
+	@Query(value = "select count(*) from t_idc_task where task_group = 'data-factory'",nativeQuery = true)
 	Integer countAll();
 }
