@@ -16,7 +16,7 @@ public class IdOrNameCriteria implements PredicateBuilder<CustomCriteria> {
 	public <T> Predicate build(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb,
 			CriteriaInfo<CustomCriteria> context, ArgValueSupplier argValueSupplier) {
 		String v = argValueSupplier.getAndCast(context.getArgName(), String.class);
-		Predicate p1 = cb.like(root.get("jobName"), v.replace("_", "\\_"), '\\');
+		Predicate p1 = cb.like(root.get("jobName"), "%" + v.replace("_", "\\_") + "%", '\\');
 		Predicate p2 = cb.equal(root.get("jobId"), v);
 		return cb.or(p1, p2);
 	}

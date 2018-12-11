@@ -48,7 +48,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	@ResponseBody
 	@PostMapping(path = "/execution")
-	public ServiceResult<String> doExecute(@RequestBody JobEnv jobEnv) {
+	public ServiceResult<String> doExecute(@RequestBody JobEnvImpl jobEnv) {
 		// safe execute
 		execute(jobEnv);
 		LOGGER.info("任务 {} [taskId={}] accepted, timestamp: {}", jobEnv.getInstanceId(),
