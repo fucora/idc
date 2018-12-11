@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -116,7 +117,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     IDCTriggerInstruction ti = IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(nextTrigger.getJobDataMap());
                     JobKey idcJobKey = null;
                     JobInstance ins = null;
-                    List<JobBarrier> barriers = null;
+                    List<JobBarrier> barriers = Collections.emptyList();
                     String fid = null;
                     if (ti == IDCTriggerInstruction.MAIN) {
                     	
@@ -199,9 +200,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     	RedoEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), RedoEnv.class);
                     	ins = idcDriverDelegate.updateJobInstance(conn, redoEnv.getInstanceId(), (i)->{
                     		i.setStatus(JobInstanceStatus.NONE);
+                    		i.setStartTime(LocalDateTime.now());
                     		i.setEndTime(null);
                     	});
-                    	
                     	idcJobKey = ins.getJobKey();
                     	fid = redoEnv.getInstanceId().toString();
                     } else if (ti == IDCTriggerInstruction.GUARD) {

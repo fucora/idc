@@ -26,6 +26,8 @@ import com.iwellmass.idc.quartz.IDCContextKey;
 
 public class IDCUtils {
 	
+	public static final String REDO_GROUP = "idc";
+	
 	public static final List<WorkflowEdge> parseWorkflowEdge(String graph) {
         // 格式化graph
 		DirectedAcyclicGraph<TaskKey, WorkflowEdge> workflowGraph = parseGraph(graph);
@@ -154,6 +156,10 @@ public class IDCUtils {
 		System.out.println(dag.inDegreeOf(new TaskKey("a", "idc")));
 		
 		
+	}
+
+	public static JobKey getRedoJobKey(Integer instanceId) {
+		return new JobKey("redo_" + instanceId, REDO_GROUP);
 	}
 
 }

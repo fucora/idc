@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -68,7 +69,8 @@ public class TaskService {
     }
 
     public List<Task> getTasksByType(TaskType taskType) {
-        return taskRepository.findByTaskType(taskType);
+    	Sort sort = new Sort(Direction.DESC, "updatetime");
+        return taskRepository.findByTaskType(taskType, sort);
     }
 
     public PageData<Task> queryTask(TaskQueryVO taskQuery, Pager pager) {

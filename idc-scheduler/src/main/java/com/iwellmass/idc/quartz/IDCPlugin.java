@@ -389,7 +389,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(redoEnv));
 			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.REDO);
 			
-			Trigger redoTrigger = buildSimpleTrigger(ins.getJobKey(), ins.getTaskKey(), jobData);
+			JobKey jobKey = IDCUtils.getRedoJobKey(ins.getInstanceId());
+			
+			Trigger redoTrigger = buildSimpleTrigger(jobKey, ins.getTaskKey(), jobData);
 			scheduler.scheduleJob(redoTrigger);
 		} catch (JobPersistenceException e) {
 			throw new SchedulerException(e.getMessage(), e);
