@@ -23,9 +23,8 @@ public class IDCWorkflowGuardJob implements org.quartz.Job {
 		
 		GuardEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(context.getTrigger().getJobDataMap()), GuardEnv.class);
 		
-		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent()
+		plugin.getStatusService().fireCompleteEvent(CompleteEvent.successEvent(redoEnv.getInstanceId())
 			.setMessage("所有子任务执行完毕")
-			.setEndTime(LocalDateTime.now()).setFinalStatus(JobInstanceStatus.FINISHED)
-			.setInstanceId(redoEnv.getInstanceId()));
+			.setEndTime(LocalDateTime.now()).setFinalStatus(JobInstanceStatus.FINISHED));
 	}
 }

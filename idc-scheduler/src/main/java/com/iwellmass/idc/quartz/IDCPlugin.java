@@ -546,12 +546,10 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			if (jobException != null) {
 				// 通知任务已经完成
 				if (instance.getTaskType() == TaskType.WORKFLOW) {
-					statusService.fireCompleteEvent(CompleteEvent.failureEvent()
-						.setInstanceId(instance.getInstanceId())
+					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getInstanceId())
 						.setMessage("执行失败: {}", jobException.getMessage()));
 				} else {
-					statusService.fireCompleteEvent(CompleteEvent.failureEvent()
-						.setInstanceId(instance.getInstanceId())
+					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getInstanceId())
 						.setMessage("派发任务失败: {}", jobException.getMessage()));
 				}
 			} else {

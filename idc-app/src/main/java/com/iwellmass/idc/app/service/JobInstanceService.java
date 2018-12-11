@@ -6,10 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +18,6 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.CancleRequest;
 import com.iwellmass.idc.app.model.JobInstanceQuery;
@@ -33,14 +29,11 @@ import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.quartz.IDCContextKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
 public class JobInstanceService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobInstanceService.class);
-	
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
 	
@@ -50,8 +43,6 @@ public class JobInstanceService {
 	@Inject
 	private IDCPlugin idcPlugin;
 	
-	private Scheduler scheduler;
-
 	public void redo(RedoRequest request) {
 		
 		int instanceId = request.getInstanceId();
@@ -75,32 +66,22 @@ public class JobInstanceService {
 		Assert.isTrue(instance != null, "找不到此实例");
 		
 		CompleteEvent event = CompleteEvent
-			.successEvent("强制结束")
-			.setInstanceId(instanceId)
+			.successEvent(instanceId)
+			.setMessage("强制结束")
 			.setFinalStatus(JobInstanceStatus.SKIPPED)
 			.setEndTime(LocalDateTime.now());
 		idcPlugin.getStatusService().fireCompleteEvent(event);
 	}
 	
 	public void cancle(CancleRequest req) {
-		int instanceId = req.getInstanceId();
-		JobInstance instance = jobInstanceRepository.findOne(instanceId);
-		Assert.isTrue(instance != null, "不存在此实例 %s", instanceId);
-		
-		try {
-			IDCPlugin plugin = IDCContextKey.IDC_PLUGIN.applyGet(scheduler.getContext());
-			// plugin.cancleJob(instance.getJobId(), instance.getJobGroup());
-			
-		} catch (SchedulerException e) {
-			LOGGER.error(e.getMessage(), e);
-			logRepository.log(instanceId, "无法取消任务: {}", e.getMessage());
-			if (req.isForce()) {
-				instance.setStatus(JobInstanceStatus.CANCLED);
-				logRepository.log(instanceId, "强制取消任务", e.getMessage());
-			} else {
-				throw new AppException("无法取消任务: " + e.getMessage(), e);
-			}
-		}
+		JobInstance instance = jobInstanceRepository.findOne(req.getInstanceId());
+		Assert.isTrue(instance != null, "找不到此实例");
+		CompleteEvent event = CompleteEvent
+				.successEvent(req.getInstanceId())
+				.setMessage("取消任务")
+				.setFinalStatus(JobInstanceStatus.CANCLED)
+				.setEndTime(LocalDateTime.now());
+		idcPlugin.getStatusService().fireCompleteEvent(event);
 	}
 	
 	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
@@ -109,9 +90,6 @@ public class JobInstanceService {
 		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}
 	
-	
-
-
 	@Inject
 	private JobInstanceRepository repository;
 

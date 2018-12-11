@@ -20,7 +20,10 @@ import com.iwellmass.idc.executor.IDCJob;
 import com.iwellmass.idc.executor.IDCJobExecutionContext;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import com.iwellmass.idc.executor.IDCStatusService;
+import com.iwellmass.idc.executor.ProgressEvent;
+import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.JobEnv;
+import com.iwellmass.idc.model.JobInstanceStatus;
 
 /**
  * 调度器 Rest 接口
@@ -64,9 +67,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		CompletableFuture.runAsync(() -> job.execute(context), executor)
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
-				CompleteEvent event = CompleteEvent.failureEvent("任务 {} 执行异常: {}", instance.getInstanceId(), cause.getMessage())
-						.setInstanceId(context.getJobEnv().getInstanceId())
-						.setEndTime(LocalDateTime.now());
+				CompleteEvent event = CompleteEvent.failureEvent(context.jobEnv.getInstanceId())
+					.setMessage("任务 {} 执行异常: {}", instance.getInstanceId(), cause.getMessage())
+					.setEndTime(LocalDateTime.now());
 				context.complete(event);
 			}
 			if (!context.isComplete()) {
@@ -93,8 +96,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
 				LOGGER.warn("job {} already complete {}", event.getInstanceId());
 				return;
 			}
+			if (event.getInstanceId() == null) {
+			}
 			
-			event.setInstanceId(jobEnv.getInstanceId());
 			
 			LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
 			
@@ -105,6 +109,24 @@ public class IDCJobHandler implements IDCJobExecutorService {
 				state = NOTIFY_ERROR;
 				LOGGER.error("发送事件失败, EVENT: {}", event, e);
 			}
+		}
+		
+		
+		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
+			if (status == JobInstanceStatus.FINISHED) {
+				return CompleteEvent.successEvent(jobEnv.getInstanceId());
+			} else if (status == JobInstanceStatus.FAILED) {
+				return CompleteEvent.failureEvent(jobEnv.getInstanceId());
+			} else {
+				return CompleteEvent.failureEvent(jobEnv.getInstanceId()).setFinalStatus(status);
+			}
+		}
+		
+		public ProgressEvent newProgressEvent() {
+			return ProgressEvent.newEvent(jobEnv.getInstanceId());
+		}
+		public StartEvent newStartEvent() {
+			return StartEvent.newEvent(jobEnv.getInstanceId());
 		}
 		
 		public boolean isComplete() {

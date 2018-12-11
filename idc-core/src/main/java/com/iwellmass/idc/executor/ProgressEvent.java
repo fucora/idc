@@ -15,6 +15,8 @@ public class ProgressEvent implements IDCJobEvent {
 	private JobInstanceStatus status;
 	private LocalDateTime time;
 
+	private ProgressEvent() {}
+	
 	public Integer getInstanceId() {
 		return instanceId;
 	}

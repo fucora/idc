@@ -44,11 +44,6 @@ public class CompleteEvent implements IDCJobEvent {
 		return instanceId;
 	}
 
-	public CompleteEvent setInstanceId(Integer instanceId) {
-		this.instanceId = instanceId;
-		return this;
-	}
-
 	public String getMessage() {
 		return message;
 	}
@@ -62,7 +57,7 @@ public class CompleteEvent implements IDCJobEvent {
 		return setMessage(arrayFormat(message, args).getMessage());
 	}
 
-	public static CompleteEvent successEvent() {
+	public static CompleteEvent successEvent(int instanceId) {
 		CompleteEvent event = new CompleteEvent();
 		event.finalStatus = JobInstanceStatus.FINISHED;
 		event.endTime = LocalDateTime.now();
@@ -70,20 +65,12 @@ public class CompleteEvent implements IDCJobEvent {
 		return event;
 	}
 
-	public static CompleteEvent failureEvent() {
+	public static CompleteEvent failureEvent(int instanceId) {
 		CompleteEvent event = new CompleteEvent();
 		event.finalStatus = JobInstanceStatus.FAILED;
 		event.endTime = LocalDateTime.now();
 		event.setMessage("执行失败");
 		return event;
-	}
-
-	public static CompleteEvent successEvent(String message, Object... args) {
-		return successEvent().setMessage(arrayFormat(message, args).getMessage());
-	}
-
-	public static CompleteEvent failureEvent(String message, Object... args) {
-		return failureEvent().setMessage(arrayFormat(message, args).getMessage());
 	}
 
 	@Override

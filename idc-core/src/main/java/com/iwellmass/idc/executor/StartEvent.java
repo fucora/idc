@@ -14,10 +14,8 @@ public class StartEvent implements IDCJobEvent {
 	private Integer instanceId;
 	private String message;
 	
-	public StartEvent() {
-		this.startTime = LocalDateTime.now();
-	}
-
+	private StartEvent() {}
+	
 	public LocalDateTime getStartTime() {
 		return startTime;
 	}
