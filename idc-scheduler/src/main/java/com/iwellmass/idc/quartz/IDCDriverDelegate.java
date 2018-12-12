@@ -28,6 +28,7 @@ public interface IDCDriverDelegate {
 	JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException;
 	JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException;
 	List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInsId) throws SQLException;
+	void cleanupJobInstance(Connection conn, JobKey jobKey);
 
 	// ~~ barrier 相关 ~~
 	void clearAllBarrier(Connection conn) throws SQLException;

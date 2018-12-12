@@ -59,6 +59,7 @@ public class CompleteEvent implements IDCJobEvent {
 
 	public static CompleteEvent successEvent(int instanceId) {
 		CompleteEvent event = new CompleteEvent();
+		event.instanceId = instanceId;
 		event.finalStatus = JobInstanceStatus.FINISHED;
 		event.endTime = LocalDateTime.now();
 		event.setMessage("执行成功");
@@ -67,6 +68,7 @@ public class CompleteEvent implements IDCJobEvent {
 
 	public static CompleteEvent failureEvent(int instanceId) {
 		CompleteEvent event = new CompleteEvent();
+		event.instanceId = instanceId;
 		event.finalStatus = JobInstanceStatus.FAILED;
 		event.endTime = LocalDateTime.now();
 		event.setMessage("执行失败");

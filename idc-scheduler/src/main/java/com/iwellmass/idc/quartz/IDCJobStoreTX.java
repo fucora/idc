@@ -195,7 +195,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                 		ins.setEndTime(null);
                 		ins.setStatus(JobInstanceStatus.NEW);
                 		
-                		barriers = computeWorkflowBarriers(conn, mainIdcJob.getWorkflowId(), ins);
+                		barriers = computeWorkflowBarriers(conn, mainIdcJob, ins);
                     } else if (ti == IDCTriggerInstruction.REDO){
                     	RedoEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), RedoEnv.class);
                     	ins = idcDriverDelegate.updateJobInstance(conn, redoEnv.getInstanceId(), (i)->{
@@ -268,13 +268,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         return acquiredTriggers;
 	}
 	
-	private List<JobBarrier> computeWorkflowBarriers(Connection conn, String workflowId, JobInstance ins) throws SQLException {
+	private List<JobBarrier> computeWorkflowBarriers(Connection conn, Job mainJob, JobInstance ins) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		List<TaskKey> depTasks = dependencyService.getPredecessors(workflowId, ins.getTaskKey());
+		List<TaskKey> depTasks = dependencyService.getPredecessors(mainJob.getWorkflowId(), ins.getTaskKey());
 		if (!Utils.isNullOrEmpty(depTasks)) {
-			for (TaskKey tk : depTasks) {
-				JobKey barrierKey = IDCUtils.getSubJobKey(ins.getMainInstanceId(), ins.getJobGroup(), tk);
+			for (TaskKey deptk : depTasks) {
+				JobKey barrierKey = IDCUtils.getSubJobKey(mainJob.getJobKey(), deptk);
 				JobBarrier b = buildBarrier(conn, ins.getJobKey(), barrierKey, ins.getShouldFireTime());
 				if (b != null) {
 					barriers.add(b);
@@ -427,4 +427,21 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			}
 		});
 	}
+
+	@Override
+	public void cleanupIDCJob(JobKey jobKey) throws JobPersistenceException {
+		executeWithoutLock(new TransactionCallback<Void>() {
+			@Override
+			public Void execute(Connection conn) throws JobPersistenceException {
+				try {
+					idcDriverDelegate.cleanupJobInstance(conn, jobKey);
+					idcDriverDelegate.clearJobBarrier(conn, jobKey);
+				} catch (SQLException e) {
+					throw new JobPersistenceException(e.getMessage(), e);
+				}
+				return null;
+			}
+		});
+	}
+
 }

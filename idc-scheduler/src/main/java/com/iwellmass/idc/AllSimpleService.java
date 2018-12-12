@@ -86,6 +86,7 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	public List<JobDependency> getJobDependencies(JobKey jobKey) {
 		return Collections.emptyList();
 	}
+	
 
 	
 }

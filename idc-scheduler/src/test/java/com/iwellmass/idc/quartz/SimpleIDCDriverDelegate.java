@@ -157,5 +157,11 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void cleanupJobInstance(Connection conn, JobKey jobKey) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

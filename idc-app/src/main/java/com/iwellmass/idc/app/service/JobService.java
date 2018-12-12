@@ -134,9 +134,12 @@ public class JobService {
 			
 			Task task = taskRepository.findOne(job.getTaskKey());
 			
-			sp.setTaskId(job.getTaskId());
-			sp.setTaskGroup(job.getTaskGroup());
-			sp.setDispatchType(job.getDispatchType());
+			if (sp != null) {
+				sp.setTaskId(job.getTaskId());
+				sp.setTaskGroup(job.getTaskGroup());
+				sp.setDispatchType(job.getDispatchType());
+			}
+			
 			
 			if (task.getTaskType() == TaskType.WORKFLOW) {
 				Workflow workflow = new Workflow();

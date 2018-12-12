@@ -61,11 +61,11 @@ public class ScheduleProperties {
 	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDate endTime;
 	
-	@ApiModelProperty("运行参数")
-	private String parameter;
-	
 	@ApiModelProperty("执行方式")
 	private DispatchType dispatchType;
+	
+	@ApiModelProperty("运行参数")
+	private String parameter;
 
 	public String toCronExpression() {
 		switch (scheduleType) {

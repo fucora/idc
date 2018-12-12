@@ -110,9 +110,10 @@ public class IDCUtils {
 		return new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup());
 	}
 	
-	public static JobKey getSubJobKey(Integer instanceId, String group, TaskKey subTaskKey) {
-		String subJobId = instanceId + "_sub_" + subTaskKey;
-		return new JobKey(subJobId, group);
+	public static JobKey getSubJobKey(JobKey mainJobKey, TaskKey subTaskKey) {
+		String subJobId = "sub_" + subTaskKey;
+		String subJobGroup = mainJobKey.toString();
+		return new JobKey(subJobId, subJobGroup);
 	}
 	
 	public static final LocalDateTime toLocalDateTime(Long mill) {

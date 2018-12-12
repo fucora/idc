@@ -70,7 +70,7 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 
 	@Transactional
 	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
-		// todo
+		barrierRepo.clearJobBarrier(jobKey.getJobId(), jobKey.getJobGroup());
 	}
 
 	@Transactional
@@ -97,5 +97,10 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Override
 	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInstanceId) throws SQLException {
 		return instanceRepo.findByMainInstanceId(mainInstanceId);
+	}
+
+	@Transactional
+	public void cleanupJobInstance(Connection conn, JobKey jobKey) {
+		instanceRepo.deleteByJob(jobKey);
 	}
 }

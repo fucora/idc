@@ -96,9 +96,6 @@ public class IDCJobHandler implements IDCJobExecutorService {
 				LOGGER.warn("job {} already complete {}", event.getInstanceId());
 				return;
 			}
-			if (event.getInstanceId() == null) {
-			}
-			
 			
 			LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
 			

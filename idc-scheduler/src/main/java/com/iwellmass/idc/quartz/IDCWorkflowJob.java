@@ -33,8 +33,6 @@ public class IDCWorkflowJob implements org.quartz.Job {
 			for (TaskKey tk : success) {
 				plugin.scheduleSubTask(tk, jobInstance);
 			}
-			// 加入 guard
-			plugin.scheduleWorkflowGuardJob(jobInstance);
 		} catch (SchedulerException e) {
 			throw new JobExecutionException(e.getMessage(), e);
 		}
