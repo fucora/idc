@@ -461,8 +461,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 						try {
 							JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
 							List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getWorkflowId(), ins.getTaskKey());
-							for (TaskKey tk : subTaskKeys)
+							for (TaskKey tk : subTaskKeys) {
 								scheduleSubTask(tk, mainIns);
+							}
 						} catch (SchedulerException e) {
 							throw new AppException(e.getMessage(), e);
 						}

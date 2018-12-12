@@ -39,6 +39,7 @@ import com.iwellmass.idc.model.SubEnv;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.WorkflowEdge;
 
 public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	
@@ -274,6 +275,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		List<TaskKey> depTasks = dependencyService.getPredecessors(mainJob.getWorkflowId(), ins.getTaskKey());
 		if (!Utils.isNullOrEmpty(depTasks)) {
 			for (TaskKey deptk : depTasks) {
+				if (deptk.equals(WorkflowEdge.START)) {
+					continue;
+				}
 				JobKey barrierKey = IDCUtils.getSubJobKey(mainJob.getJobKey(), deptk);
 				JobBarrier b = buildBarrier(conn, ins.getJobKey(), barrierKey, ins.getShouldFireTime());
 				if (b != null) {
