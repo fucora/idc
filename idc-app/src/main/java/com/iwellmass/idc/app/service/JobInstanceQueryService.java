@@ -37,7 +37,7 @@ public class JobInstanceQueryService {
 		}).and(queryObject.<JobInstance>toSpecification());
 		
 		Page<JobInstance> result = repository.findAll(specs, pgr);
-		return new PageData<>(result.getNumberOfElements(), result.getContent());
+		return new PageData<>((int)result.getTotalElements(), result.getContent());
 	}
 
 	public JobInstance getJobInstance(Integer id) {
