@@ -30,7 +30,7 @@ public class JobInstanceQueryService {
 	private JobInstanceRepository repository;
 
 	public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
-		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
+		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "shouldFireTime"));
 		
 		Specification<JobInstance> specs = Specifications.<JobInstance>where((a,b,c) -> {
 			return c.notEqual(a.get("taskType"), TaskType.SUB_TASK);
