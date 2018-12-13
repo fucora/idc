@@ -1,9 +1,13 @@
 package com.iwellmass.idc.app.controller;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.service.InitService;
+import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskType;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
@@ -17,6 +21,10 @@ public class InitController {
 
     @Inject
     private InitService initService;
+    @Inject
+    private TaskRepository taskRepository;
+    @Inject
+    private TaskService taskService;
 
     @PostMapping()
     @ApiOperation("先使用工具,将df中的task任务信息导入到idctask中,再执行该接口." +
@@ -24,6 +32,5 @@ public class InitController {
     public ServiceResult derivative(@RequestBody List<Task> tasks) {
         return initService.init(tasks);
     }
-
 
 }
