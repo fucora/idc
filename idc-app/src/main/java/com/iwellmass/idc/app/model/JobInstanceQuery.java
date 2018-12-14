@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.model;
 
 import com.iwellmass.common.criteria.Between;
-import com.iwellmass.common.criteria.BetweenPair;
 import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.SpecificationBuilder;
@@ -28,7 +27,7 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	
 	@ApiModelProperty("执行批次")
 	@Between(value = "shouldFireTime")
-	private BetweenPair<Long> shouldFireTime;
+	private YMDHMSBetweenPair shouldFireTime;
 
 	@ApiModelProperty("开始时间")
 	@Between(value = "startTime")
