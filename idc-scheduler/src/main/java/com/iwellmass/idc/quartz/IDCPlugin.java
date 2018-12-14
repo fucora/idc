@@ -10,6 +10,7 @@ import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -167,7 +168,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 					.newJob(IDCWorkflowJob.class)
 					//.usingJobData(jobData)
 					.withIdentity(task.getTaskId(), task.getTaskGroup())
-					.requestRecovery()
 					.storeDurably()
 					.build();
 			scheduler.addJob(jobDetail, true);
@@ -176,7 +176,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 					.newJob(getJobClass(task))
 					//.usingJobData(jobData)
 					.withIdentity(task.getTaskId(), task.getTaskGroup())
-					.requestRecovery()
 					.storeDurably()
 					.build();
 			scheduler.addJob(jobDetail, true);
@@ -457,13 +456,21 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 					logger.log(event.getInstanceId(), event.getMessage()).log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
 					
 					if (ins.getTaskType() == TaskType.SUB_TASK) {
-						logger.log(ins.getMainInstanceId(), event.getMessage()).log(event.getInstanceId(), "子任务 {} 执行结束, 执行结果: {}", event.getFinalStatus());
+						logger.log(event.getInstanceId(), "[{}] 执行结束, 执行结果: {}", ins.getMainInstanceId(), event.getFinalStatus());
 						try {
 							JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
-							List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getWorkflowId(), ins.getTaskKey());
-							for (TaskKey tk : subTaskKeys) {
-								scheduleSubTask(tk, mainIns);
+							
+							List<JobInstanceStatus> expectStatus = Arrays.asList(JobInstanceStatus.SKIPPED, JobInstanceStatus.FINISHED);
+							if(!expectStatus.contains(ins.getStatus())) {
+								fireCompleteEvent(CompleteEvent.failureEvent(mainIns.getInstanceId())
+									.setMessage("执行失败"));
+							} else {
+								List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getWorkflowId(), ins.getTaskKey());
+								for (TaskKey tk : subTaskKeys) {
+									scheduleSubTask(tk, mainIns);
+								}
 							}
+							
 						} catch (SchedulerException e) {
 							throw new AppException(e.getMessage(), e);
 						}
@@ -552,9 +559,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			
 			JobInstance instance = CONTEXT_INSTANCE.applyGet(context);
 			if (jobException != null) {
+				
 				// 主任务
 				statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getInstanceId())
 						.setMessage("执行失败: {}", jobException.getMessage()));
+				
 				// 体现在主任务日志中
 				if (instance.getTaskType() == TaskType.SUB_TASK) {
 					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getMainInstanceId())
