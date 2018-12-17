@@ -53,7 +53,9 @@ public class TaskService {
 				idcPlugin.refresh(oldTask);
 	        } else {
 	        	if (task.getTaskType() == TaskType.WORKFLOW) {
-	        		task.setTaskId(UUID.randomUUID().toString());
+	        	    if (task.getTaskId() == null) {
+                        task.setTaskId(UUID.randomUUID().toString());
+                    }
 	        		task.setTaskGroup("idc");
 	        		task.setContentType("workflow");
 	        	}
