@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.app.controller.InitController;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.model.Task;
@@ -12,22 +13,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InitService {
 
     @Inject
-    private TaskRepository repository;
+    private TaskService taskService;
 
     public ServiceResult init(List<Task> tasks) {
-        repository.save((Iterable<Task>) () -> tasks.iterator());
-        if (tasks.size() == repository.countAll()) {
-            // success
+        // 过滤掉 contentType 是NONE的情况
+        try {
+            tasks.stream().filter(c -> !c.getContentType().equals("NONE")).collect(Collectors.toList()).forEach(taskService::saveTask);
             return ServiceResult.success("添加成功");
-        } else {
-            //fail
-            repository.delete(() -> tasks.iterator());
+        } catch (AppException e) {
             return ServiceResult.failure("添加失败");
         }
+
     }
+
 }

@@ -4,11 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
@@ -41,10 +37,17 @@ public class TaskController {
 		return ServiceResult.success(task);
 	}
 	
-    @ApiOperation("保存任务")
+    @ApiOperation("保存任务,任务id相同时更新任务信息")
     @PostMapping
     public ServiceResult<TaskKey> add(@RequestBody Task task){
     	taskService.saveTask(task);
+        return ServiceResult.success(task.getTaskKey());
+    }
+
+    @ApiOperation("保存任务,任务id相同时,报异常")
+    @PutMapping
+    public ServiceResult<TaskKey> add2(@RequestBody Task task) {
+        taskService.saveTask2(task);
         return ServiceResult.success(task.getTaskKey());
     }
 	
