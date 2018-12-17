@@ -73,6 +73,7 @@ public class TaskService {
 
     @Transactional
     public void saveTask2(Task task) {
+        task.setTaskGroup("idc");
         Task oldTask = taskRepository.findOne(task.getTaskKey());
         if (oldTask != null) {
             throw new AppException("该id已存在,请更换");
