@@ -71,6 +71,31 @@ public class TaskService {
     	}
     }
 
+    @Transactional
+    public void saveTask2(Task task) {
+        Task oldTask = taskRepository.findOne(task.getTaskKey());
+        if (oldTask != null) {
+            throw new AppException("该id已存在,请更换");
+        }
+        if (task.getTaskType() == TaskType.WORKFLOW) {
+            if (task.getTaskId() == null) {
+                task.setTaskId(UUID.randomUUID().toString());
+            }
+            task.setTaskGroup("idc");
+            task.setContentType("workflow");
+        }
+        task.setUpdatetime(LocalDateTime.now());
+        if(task.getWorkflowId() == null) {
+            task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
+        }
+        taskRepository.save(task);
+        try {
+            idcPlugin.refresh(task);
+        } catch (SchedulerException e) {
+            throw new AppException(e.getMessage(), e);
+        }
+    }
+
     public Task getTask(TaskKey taskKey) {
         return taskRepository.findOne(taskKey);
     }
