@@ -6,6 +6,7 @@ import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.app.vo.IdOrNameCriteria;
 import com.iwellmass.idc.app.vo.YMDHMSBetweenPair;
+import com.iwellmass.idc.model.DispatchType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -24,6 +25,9 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	@ApiModelProperty("任务名")
 	@CustomCriteria(builder = IdOrNameCriteria.class)
 	private String jobName;
+	
+	@Equal
+	private DispatchType dispatchType;
 	
 	@ApiModelProperty("执行批次")
 	@Between(value = "shouldFireTime")
