@@ -3,8 +3,10 @@ package com.iwellmass.idc.app.model;
 import com.iwellmass.common.criteria.Between;
 import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
+import com.iwellmass.common.criteria.LocalDateLongConverter;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.idc.app.vo.IdOrNameCriteria;
+import com.iwellmass.idc.app.vo.YMDBetweenPair;
 import com.iwellmass.idc.app.vo.YMDHMSBetweenPair;
 import com.iwellmass.idc.model.DispatchType;
 
@@ -30,8 +32,8 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	private DispatchType dispatchType;
 	
 	@ApiModelProperty("执行批次")
-	@Between(value = "shouldFireTime")
-	private YMDHMSBetweenPair shouldFireTime;
+	@Between(value = "shouldFireTime", converter = LocalDateLongConverter.class)
+	private YMDBetweenPair shouldFireTime;
 
 	@ApiModelProperty("开始时间")
 	@Between(value = "startTime")
