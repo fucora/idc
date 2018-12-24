@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.idc.app.rpc.DFClient;
+import com.iwellmass.idc.app.vo.DFTaskLog;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,95 +37,107 @@ import com.iwellmass.idc.quartz.IDCPlugin;
 @Service
 public class JobInstanceService {
 
-	@Inject
-	private JobInstanceRepository jobInstanceRepository;
-	
-	@Inject
-	private ExecutionLogRepository logRepository;
+    @Inject
+    private JobInstanceRepository jobInstanceRepository;
 
-	@Inject
-	private IDCPlugin idcPlugin;
-	
-	public void redo(RedoRequest request) {
-		
-		int instanceId = request.getInstanceId();
-		
-		JobInstance instance = jobInstanceRepository.findOne(instanceId);
-		
-		Assert.isTrue(instance != null, "找不到此实例");
-		
-		try {
-			idcPlugin.redo(request.getInstanceId());
-		} catch (SchedulerException e) {
-			throw new AppException("执行失败: " + e.getMessage());
-		}
-	}
+    @Inject
+    private ExecutionLogRepository logRepository;
 
-	
-	public void forceComplete(int instanceId) {
-		
-		JobInstance instance = jobInstanceRepository.findOne(instanceId);
-		
-		Assert.isTrue(instance != null, "找不到此实例");
-		
-		CompleteEvent event = CompleteEvent
-			.successEvent(instanceId)
-			.setMessage("强制结束")
-			.setFinalStatus(JobInstanceStatus.SKIPPED)
-			.setEndTime(LocalDateTime.now());
-		idcPlugin.getStatusService().fireCompleteEvent(event);
-	}
-	
-	public void cancle(CancleRequest req) {
-		JobInstance instance = jobInstanceRepository.findOne(req.getInstanceId());
-		Assert.isTrue(instance != null, "找不到此实例");
-		CompleteEvent event = CompleteEvent
-				.successEvent(req.getInstanceId())
-				.setMessage("取消任务")
-				.setFinalStatus(JobInstanceStatus.CANCLED)
-				.setEndTime(LocalDateTime.now());
-		idcPlugin.getStatusService().fireCompleteEvent(event);
-	}
-	
-	public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
-		Pageable page = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.ASC, "id"));
-		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
-		return new PageData<>((int) data.getTotalElements(), data.getContent());
-	}
-	
-	@Inject
-	private JobInstanceRepository repository;
+    @Inject
+    private IDCPlugin idcPlugin;
 
-	public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
-		Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
-		Page<JobInstance> result = queryObject == null ? repository.findAll(pgr)
-				: repository.findAll(queryObject.toSpecification(), pgr);
-		return new PageData<>(result.getNumberOfElements(), result.getContent());
-	}
+    @Inject
+    private DFClient dfClient;
 
-	
-	public JobInstance getJobInstance(JobKey jobKey, long shouldFireTime) {
-		return repository.findOne(jobKey.getJobId(), jobKey.getJobGroup(), shouldFireTime);
-	}
-	
-	public JobInstance getJobInstance(Integer id) {
-		JobInstance instance = repository.findOne(id);
-		Assert.isTrue(instance != null, "任务实例 %s 不存在", id);
-		return instance;
-	}
+    public void redo(RedoRequest request) {
 
-	public List<JobInstance> getWorkflowSubInstance(Integer id) {
-		throw new UnsupportedOperationException("not supported yet.");
-	}
+        int instanceId = request.getInstanceId();
 
-	public List<Assignee> getAllAssignee() {
-		return repository.findAllAssignee().stream().map(id -> {
-			Assignee assignee = new Assignee();
-			assignee.setAssignee(id);
-			return assignee;
-		}).collect(Collectors.toList());
-		
-	}
+        JobInstance instance = jobInstanceRepository.findOne(instanceId);
+
+        Assert.isTrue(instance != null, "找不到此实例");
+
+        try {
+            idcPlugin.redo(request.getInstanceId());
+        } catch (SchedulerException e) {
+            throw new AppException("执行失败: " + e.getMessage());
+        }
+    }
+
+
+    public void forceComplete(int instanceId) {
+
+        JobInstance instance = jobInstanceRepository.findOne(instanceId);
+
+        Assert.isTrue(instance != null, "找不到此实例");
+
+        CompleteEvent event = CompleteEvent
+                .successEvent(instanceId)
+                .setMessage("强制结束")
+                .setFinalStatus(JobInstanceStatus.SKIPPED)
+                .setEndTime(LocalDateTime.now());
+        idcPlugin.getStatusService().fireCompleteEvent(event);
+    }
+
+    public void cancle(CancleRequest req) {
+        JobInstance instance = jobInstanceRepository.findOne(req.getInstanceId());
+        Assert.isTrue(instance != null, "找不到此实例");
+        CompleteEvent event = CompleteEvent
+                .successEvent(req.getInstanceId())
+                .setMessage("取消任务")
+                .setFinalStatus(JobInstanceStatus.CANCLED)
+                .setEndTime(LocalDateTime.now());
+        idcPlugin.getStatusService().fireCompleteEvent(event);
+    }
+
+    public PageData<ExecutionLog> getJobInstanceLog(Integer id, Pager pager) {
+        Pageable page = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.ASC, "id"));
+        Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+        return new PageData<>((int) data.getTotalElements(), data.getContent());
+    }
+
+    @Inject
+    private JobInstanceRepository repository;
+
+    public PageData<JobInstance> findJobInstance(JobInstanceQuery queryObject, Pager pager) {
+        Pageable pgr = new PageRequest(pager.getPage(), pager.getLimit(), new Sort(Direction.DESC, "startTime"));
+        Page<JobInstance> result = queryObject == null ? repository.findAll(pgr)
+                : repository.findAll(queryObject.toSpecification(), pgr);
+        return new PageData<>(result.getNumberOfElements(), result.getContent());
+    }
+
+
+    public JobInstance getJobInstance(JobKey jobKey, long shouldFireTime) {
+        return repository.findOne(jobKey.getJobId(), jobKey.getJobGroup(), shouldFireTime);
+    }
+
+    public JobInstance getJobInstance(Integer id) {
+        JobInstance instance = repository.findOne(id);
+        Assert.isTrue(instance != null, "任务实例 %s 不存在", id);
+        return instance;
+    }
+
+    public List<JobInstance> getWorkflowSubInstance(Integer id) {
+        throw new UnsupportedOperationException("not supported yet.");
+    }
+
+    public List<Assignee> getAllAssignee() {
+        return repository.findAllAssignee().stream().map(id -> {
+            Assignee assignee = new Assignee();
+            assignee.setAssignee(id);
+            return assignee;
+        }).collect(Collectors.toList());
+
+    }
+
+    public ServiceResult<PageData<DFTaskLog>> getRuntimeLog(Integer instanceId, Pager pager) {
+        try {
+            PageData<DFTaskLog> dfTaskLogPageData = dfClient.getLogs(instanceId,pager);
+            return ServiceResult.success(dfTaskLogPageData);
+        } catch (Exception e) {
+            throw new AppException("RPC调用失败");
+        }
+    }
 
 
 }
