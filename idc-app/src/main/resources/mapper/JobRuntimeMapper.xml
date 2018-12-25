@@ -60,6 +60,9 @@
 				<if test="q.assignee!='' and q.assignee!=null">
 					AND j.assignee = #{q.assignee}
 				</if>
+				<if test="q.dispatchType!='' and q.dispatchType!=null">
+					and j.dispatchType = #{q.dispatchType}
+				</if>
 			</if>
 	</select>
 	
