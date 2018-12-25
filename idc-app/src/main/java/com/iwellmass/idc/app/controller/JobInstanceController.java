@@ -4,8 +4,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.app.vo.DFTaskLog;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,15 +89,5 @@ public class JobInstanceController {
 		PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
 		return ServiceResult.success(data);
 	}
-
-    @ApiOperation("任务运行日志")
-    @GetMapping("/{instanceId}/runtime-log")
-    public ServiceResult<PageData<DFTaskLog>> getRuntimeLog(@PathVariable(name = "instanceId") Integer instanceId, Pager pager) {
-        try {
-            return ServiceResult.success(jobInstanceService.getRuntimeLog(instanceId,pager));
-        } catch (AppException e) {
-            return ServiceResult.failure(e.getMessage());
-        }
-    }
 
 }
