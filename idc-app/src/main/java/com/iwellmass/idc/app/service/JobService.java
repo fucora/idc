@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.IDCLogger;
+import com.iwellmass.idc.executor.ProgressEvent;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,8 @@ public class JobService {
 	@Inject
 	private IDCPlugin idcPlugin;
 
+    @Inject
+    private IDCLogger idcLogger;
 	
 	@Inject
 	private WorkflowService workflowService;
@@ -180,4 +184,9 @@ public class JobService {
 			throw new AppException(e.getMessage(), e);
 		}
 	}
+
+
+    public void saveRuntimeLog(ProgressEvent progressEvent) {
+        idcLogger.log(progressEvent.getInstanceId(),progressEvent.getMessage());
+    }
 }
