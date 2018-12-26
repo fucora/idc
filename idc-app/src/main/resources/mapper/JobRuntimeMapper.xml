@@ -33,38 +33,38 @@
 	
 	
 	<select id="selectJobRuntimeList" parameterType="com.iwellmass.idc.app.model.JobQuery" resultMap="jobRuntimeListVO">
-		SELECT
-			j.job_id as jobId,
-			j.content_type as contentType,
-			j.job_name as jobName,
-			j.assignee as assignee,
-			j.job_group as jobGroup,
-			COALESCE(t.PREV_FIRE_TIME,-1) AS shouldFireTime,
-			COALESCE(t.NEXT_FIRE_TIME,-1) AS nextFireTime,
-			t.TRIGGER_STATE AS scheduleStatus
-		FROM
-			t_idc_job j
-			LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME 
-			AND j.job_group = t.TRIGGER_GROUP
-		WHERE 1=1
-		    <if test="q!=null">
-				<if test="q.jobName!='' and q.jobName!=null">
-					AND (j.job_name LIKE CONCAT(CONCAT('%', #{q.jobName}), '%') OR j.job_id = #{q.jobName})
-				</if>
-				<if test="q.taskType!=null">
-					AND j.task_type = #{q.taskType}
-				</if>
-				<if test="q.contentType!='' and q.contentType!=null">
-					AND j.content_type = #{q.contentType}
-				</if>
-				<if test="q.assignee!='' and q.assignee!=null">
-					AND j.assignee = #{q.assignee}
-				</if>
-				<if test="q.dispatchType!='' and q.dispatchType!=null">
-					and j.dispatchType = #{q.dispatchType}
-				</if>
-			</if>
-	</select>
+	SELECT
+	j.job_id as jobId,
+	j.content_type as contentType,
+	j.job_name as jobName,
+	j.assignee as assignee,
+	j.job_group as jobGroup,
+	COALESCE(t.PREV_FIRE_TIME,-1) AS shouldFireTime,
+	COALESCE(t.NEXT_FIRE_TIME,-1) AS nextFireTime,
+	t.TRIGGER_STATE AS scheduleStatus
+	FROM
+	t_idc_job j
+	LEFT JOIN QRTZ_TRIGGERS t ON j.job_id = t.TRIGGER_NAME
+	AND j.job_group = t.TRIGGER_GROUP
+	WHERE 1=1
+	<if test="q!=null">
+		<if test="q.jobName!='' and q.jobName!=null">
+			AND (j.job_name LIKE CONCAT(CONCAT('%', #{q.jobName}), '%') OR j.job_id = #{q.jobName})
+		</if>
+		<if test="q.taskType!=null">
+			AND j.task_type = #{q.taskType}
+		</if>
+		<if test="q.contentType!='' and q.contentType!=null">
+			AND j.content_type = #{q.contentType}
+		</if>
+		<if test="q.assignee!='' and q.assignee!=null">
+			AND j.assignee = #{q.assignee}
+		</if>
+		<if test="q.dispatchType!=null">
+			and j.dispatchType = #{q.dispatchType}
+		</if>
+	</if>
+</select>
 	
 	<select id="selectJobRuntime" resultType="com.iwellmass.idc.app.vo.JobRuntime">
 		select * from t_idc_job where job_id = #{jobId} and job_group=#{jobGroup}
