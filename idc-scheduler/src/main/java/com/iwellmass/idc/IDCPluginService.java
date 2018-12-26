@@ -2,10 +2,7 @@ package com.iwellmass.idc;
 
 import java.util.List;
 
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.*;
 
 public interface IDCPluginService {
 	
@@ -18,5 +15,7 @@ public interface IDCPluginService {
 	public void saveJob(Job job);
 	
 	public Job findJob(JobKey jobKey);
+
+	JobInstance findByInstanceId(Integer instanceId);
 
 }

@@ -6,16 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.iwellmass.idc.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedAcyclicGraph;
-
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.model.WorkflowEdge;
 
 public class AllSimpleService implements DependencyService, IDCPluginService {
 	
@@ -50,7 +44,7 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 		return jobMap.get(jobKey);
 	}
 
-	@Override
+    @Override
 	public void saveJob(Job job) {
 		jobMap.put(job.getJobKey(), job);
 	}
@@ -86,7 +80,10 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	public List<JobDependency> getJobDependencies(JobKey jobKey) {
 		return Collections.emptyList();
 	}
-	
 
+    @Override
+    public JobInstance findByInstanceId(Integer instanceId) {
+        return null;
+    }
 	
 }

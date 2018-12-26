@@ -68,12 +68,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
 				CompleteEvent event = CompleteEvent.failureEvent(context.jobEnv.getInstanceId())
-					.setMessage("任务 {} 执行异常: {}", instance.getInstanceId(), cause.getMessage())
+					.setMessage("任务 {} 执行异常: {}", instance.getJobName(), cause.getMessage())
 					.setEndTime(LocalDateTime.now());
 				context.complete(event);
 			}
 			if (!context.isComplete()) {
-				LOGGER.warn("任务 {} 已结束但未通知调度中心, 请确认异步通知可用", instance.getInstanceId());
+				LOGGER.warn("任务 {} 已结束但未通知调度中心, 请确认异步通知可用", instance.getJobName());
 			}
 		});
 	}
