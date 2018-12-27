@@ -61,7 +61,7 @@
 			AND j.assignee = #{q.assignee}
 		</if>
 		<if test="q.dispatchType!=null">
-			and j.dispatchType = #{q.dispatchType}
+			and j.dispatch_type = #{q.dispatchType}
 		</if>
 	</if>
 </select>
