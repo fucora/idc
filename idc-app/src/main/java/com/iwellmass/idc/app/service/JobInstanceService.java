@@ -6,9 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.common.ServiceResult;
-import com.iwellmass.idc.app.rpc.DFClient;
-import com.iwellmass.idc.app.vo.DFTaskLog;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,9 +42,6 @@ public class JobInstanceService {
 
     @Inject
     private IDCPlugin idcPlugin;
-
-    @Inject
-    private DFClient dfClient;
 
     public void redo(RedoRequest request) {
 
@@ -129,15 +123,5 @@ public class JobInstanceService {
         }).collect(Collectors.toList());
 
     }
-
-    public ServiceResult<PageData<DFTaskLog>> getRuntimeLog(Integer instanceId, Pager pager) {
-        try {
-            PageData<DFTaskLog> dfTaskLogPageData = dfClient.getLogs(instanceId,pager);
-            return ServiceResult.success(dfTaskLogPageData);
-        } catch (Exception e) {
-            throw new AppException("RPC调用失败");
-        }
-    }
-
 
 }
