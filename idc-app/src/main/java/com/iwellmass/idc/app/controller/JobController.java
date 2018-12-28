@@ -119,7 +119,7 @@ public class JobController {
 
 	@ApiOperation("data-factoryRPC调用该接口保存日志")
 	@PutMapping(path = "/progress")
-	public void saveRuntimeUrlLog(ProgressEvent progressEvent) {
+	public void saveRuntimeUrlLog(@RequestBody ProgressEvent progressEvent) {
         jobService.saveRuntimeLog(progressEvent);
 	}
 }
