@@ -7,12 +7,14 @@ import com.iwellmass.idc.model.TaskType;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class TaskQueryVO {
 
 	@In
-    private TaskType taskType;
+    private List<TaskType> taskType;
 
     @Like(builder = TempDefinedBuilder.class)
     private String taskName;
