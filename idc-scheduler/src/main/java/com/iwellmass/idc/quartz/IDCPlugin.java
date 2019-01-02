@@ -503,7 +503,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				}
 				
 				logger.clearLog(ins.getInstanceId())
-				.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 任务类型 {}",pluginRepository.findTask(ins.getTaskKey()).getTaskName(), ins.getDispatchType(), ins.getTaskType())
+				.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 任务类型 {}",pluginRepository.findTask(ins.getTaskKey()).getTaskName() + ",实例id:" + ins.getInstanceId(), ins.getDispatchType(), ins.getTaskType())
 				.log(ins.getInstanceId(), "周期类型 {}, 业务日期 {}, 批次 {}", ins.getScheduleType(), ins.getLoadDate(), IDCConstants.FULL_DF.format(new Date(ins.getShouldFireTime())))
 				.log(ins.getInstanceId(), "运行参数: {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter());
 				
@@ -546,7 +546,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			if (instance.getTaskType() == TaskType.SUB_TASK) {
 				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getMainInstanceId())
 						.setStatus(JobInstanceStatus.RUNNING)
-						.setMessage("[{}] 执行任务...", pluginRepository.findTask(instance.getTaskKey()).getTaskName()));
+						.setMessage("[{}] 执行任务...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
 			}
 			
 		}
@@ -568,19 +568,19 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				// 体现在主任务日志中
 				if (instance.getTaskType() == TaskType.SUB_TASK) {
 					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getMainInstanceId())
-						.setMessage("[{}] 执行失败: {}", pluginRepository.findTask(instance.getTaskKey()).getTaskName(), jobException.getMessage()));
+						.setMessage("[{}] 执行失败: {}", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId(), jobException.getMessage()));
 				}
 			} else {
 				// 本任务日志
 				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getInstanceId())
 						.setStatus(JobInstanceStatus.ACCEPTED)	
-						.setMessage("等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName()));
+						.setMessage("等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
 				
 				
 				if (instance.getTaskType() == TaskType.SUB_TASK) {
 					statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getMainInstanceId())
 							.setStatus(JobInstanceStatus.RUNNING)	
-							.setMessage("[{}] 等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName()));
+							.setMessage("[{}] 等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
 				}
 			}
 		}

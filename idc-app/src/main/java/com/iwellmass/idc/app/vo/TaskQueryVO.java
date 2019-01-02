@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.In;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.idc.model.TaskType;
@@ -13,8 +14,8 @@ import java.util.List;
 @Setter
 public class TaskQueryVO {
 
-	@In
-    private List<TaskType> taskType;
+	@Equal
+    private TaskType taskType;
 
     @Like(builder = TempDefinedBuilder.class)
     private String taskName;

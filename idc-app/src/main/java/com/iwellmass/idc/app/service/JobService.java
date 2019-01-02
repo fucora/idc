@@ -186,6 +186,6 @@ public class JobService {
     public void saveRuntimeLog(ProgressEvent progressEvent) {
 		JobInstance instance = jobInstanceRepository.findOne(progressEvent.getInstanceId());
 		idcLogger.log(instance.getInstanceId(),progressEvent.getMessage());
-        idcLogger.log(instance.getMainInstanceId(),"[" + taskRepository.findOne(instance.getTaskKey()).getTaskName() + "]" + progressEvent.getMessage());
+        idcLogger.log(instance.getMainInstanceId(),"[" + taskRepository.findOne(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId() + "]" + progressEvent.getMessage());
     }
 }
