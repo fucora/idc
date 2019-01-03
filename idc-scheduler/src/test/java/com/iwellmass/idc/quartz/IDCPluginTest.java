@@ -71,8 +71,8 @@ public class IDCPluginTest {
 		
 		Scheduler scheduler = factory.getScheduler();
 		scheduler.clear();
+
 		scheduler.start();
-		
 		ScheduleProperties sp = new ScheduleProperties();
 		sp.setScheduleType(ScheduleType.MONTHLY);
 		sp.setDispatchType(DispatchType.AUTO);
@@ -100,9 +100,9 @@ public class IDCPluginTest {
 	private DataSource dataSource() {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 		dataSource.setDriverClass(com.mysql.jdbc.Driver.class);
-		dataSource.setUrl("jdbc:mysql://austin.realhyx.com:3306/test?characterEncoding=utf8&useSSL=false");
+		dataSource.setUrl("jdbc:mysql://localhost:3306/loc_idc?characterEncoding=utf8");
 		dataSource.setUsername("root");
-		dataSource.setPassword("000000oO)");
+		dataSource.setPassword("cx19970522");
 		return dataSource;
 	}
 }
