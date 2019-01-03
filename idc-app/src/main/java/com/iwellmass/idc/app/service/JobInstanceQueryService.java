@@ -56,6 +56,5 @@ public class JobInstanceQueryService {
 			assignee.setAssignee(id);
 			return assignee;
 		}).collect(Collectors.toList());
-		
 	}
 }
