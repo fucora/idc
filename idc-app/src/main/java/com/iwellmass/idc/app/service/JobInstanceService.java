@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,10 +26,6 @@ import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.app.repo.ExecutionLogRepository;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.executor.CompleteEvent;
-import com.iwellmass.idc.model.ExecutionLog;
-import com.iwellmass.idc.model.JobInstance;
-import com.iwellmass.idc.model.JobInstanceStatus;
-import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service

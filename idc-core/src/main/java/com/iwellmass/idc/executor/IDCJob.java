@@ -10,5 +10,4 @@ public interface IDCJob {
 	
 	// ~~ 业务逻辑 ~~
 	void execute(IDCJobExecutionContext context);
-	
 }

@@ -4,12 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
@@ -83,10 +78,11 @@ public class JobInstanceController {
         return ServiceResult.success("success");
     }
 
-    @ApiOperation("任务调度日志(分页)")
+    @ApiOperation("任务日志(分页)")
     @PostMapping("/{id}/log")
     public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") Integer id, Pager pager) {
         PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
         return ServiceResult.success(data);
     }
+
 }

@@ -10,9 +10,7 @@ import com.iwellmass.idc.app.vo.YMDBetweenPair;
 import com.iwellmass.idc.app.vo.YMDHMSBetweenPair;
 import com.iwellmass.idc.model.DispatchType;
 
-import com.iwellmass.idc.model.DispatchType;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,7 +39,4 @@ public class JobInstanceQuery implements SpecificationBuilder {
 	@Between(value = "startTime")
 	private YMDHMSBetweenPair startTime;
 
-	@ApiModelProperty("派发类型")
-	@Equal
-	private DispatchType dispatchType;
 }

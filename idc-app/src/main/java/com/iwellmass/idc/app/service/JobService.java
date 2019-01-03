@@ -5,6 +5,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.IDCLogger;
+import com.iwellmass.idc.app.repo.JobInstanceRepository;
+import com.iwellmass.idc.executor.ProgressEvent;
+import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +30,6 @@ import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntime;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleProperties;
-import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.model.TaskType;
-import com.iwellmass.idc.model.Workflow;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -53,9 +49,14 @@ public class JobService {
 	@Inject
 	private IDCPlugin idcPlugin;
 
+    @Inject
+    private IDCLogger idcLogger;
 	
 	@Inject
 	private WorkflowService workflowService;
+
+	@Inject
+	private JobInstanceRepository jobInstanceRepository;
 	
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		return  jobRuntimeMapper.selectJobRuntime(jobKey);
@@ -180,4 +181,11 @@ public class JobService {
 			throw new AppException(e.getMessage(), e);
 		}
 	}
+
+
+    public void saveRuntimeLog(ProgressEvent progressEvent) {
+		JobInstance instance = jobInstanceRepository.findOne(progressEvent.getInstanceId());
+		idcLogger.log(instance.getInstanceId(),progressEvent.getMessage());
+        idcLogger.log(instance.getMainInstanceId(),"[" + taskRepository.findOne(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId() + "]" + progressEvent.getMessage());
+    }
 }

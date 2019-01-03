@@ -4,11 +4,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.iwellmass.idc.executor.ProgressEvent;
+import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.ServiceResult;
@@ -118,5 +115,11 @@ public class JobController {
 	public ServiceResult<String> rescheduleFast(@RequestBody JobKey jobKey) {
 		jobService.reschedule(jobKey,null);
 		return ServiceResult.success("提交成功");
+	}
+
+	@ApiOperation("data-factoryRPC调用该接口保存日志")
+	@PutMapping(path = "/progress")
+	public void saveRuntimeUrlLog(@RequestBody ProgressEvent progressEvent) {
+        jobService.saveRuntimeLog(progressEvent);
 	}
 }
