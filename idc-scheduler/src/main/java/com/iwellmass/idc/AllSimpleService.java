@@ -22,16 +22,16 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	}
 	
 	@Override
-	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
-		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(workflowId);
+	public List<TaskKey> getSuccessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(parentTaskKey);
 		return Graphs.successorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
-		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(workflowId);
+	public List<TaskKey> getPredecessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		Graph<TaskKey, WorkflowEdge> wf = workflowMap.get(parentTaskKey);
 		return Graphs.predecessorListOf(wf, taskKey).stream().filter(t -> {
 			return !t.equals(WorkflowEdge.START) && !t.equals(WorkflowEdge.END);
 		}).collect(Collectors.toList());

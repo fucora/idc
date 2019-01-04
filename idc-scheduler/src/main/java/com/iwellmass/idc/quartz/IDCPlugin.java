@@ -304,7 +304,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		if (subTaskKey.equals(WorkflowEdge.END)) {
 			// 添加一个 guard trigger
-			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getWorkflowId(), WorkflowEdge.END)
+			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getTaskKey(), WorkflowEdge.END)
 				.stream().map(tk -> {
 					return IDCUtils.getSubJobKey(mainJobIns.getJobKey(), tk);
 				}).collect(Collectors.toList());
@@ -465,7 +465,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 								fireCompleteEvent(CompleteEvent.failureEvent(mainIns.getInstanceId())
 									.setMessage("执行失败"));
 							} else {
-								List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getWorkflowId(), ins.getTaskKey());
+								List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getTaskKey(), ins.getTaskKey());
 								for (TaskKey tk : subTaskKeys) {
 									scheduleSubTask(tk, mainIns);
 								}

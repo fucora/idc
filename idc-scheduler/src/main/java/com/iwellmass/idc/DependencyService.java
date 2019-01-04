@@ -8,9 +8,9 @@ import com.iwellmass.idc.model.TaskKey;
 
 public interface DependencyService {
 	
-	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey);
+	public List<TaskKey> getSuccessors(TaskKey parentTaskKey, TaskKey taskKey);
 	
-	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey);
+	public List<TaskKey> getPredecessors(TaskKey parentTaskKey, TaskKey taskKey);
 
 	public List<JobDependency> getJobDependencies(JobKey jobKey);
 

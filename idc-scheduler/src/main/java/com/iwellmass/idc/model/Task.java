@@ -54,7 +54,7 @@ public class Task {
 	@ApiModelProperty("业务类型，业务方自定义")
 	@Column(name = "content_type")
 	private String contentType;
-	
+
 	@ApiModelProperty("工作流ID")
 	@Column(name = "workflow_id")
 	private String workflowId;

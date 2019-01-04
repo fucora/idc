@@ -25,15 +25,15 @@ public class DependencyServiceImpl implements DependencyService {
     private JobDependencyRepository jobDependencyRepo;
 
 	@Override
-	public List<TaskKey> getSuccessors(String workflowId, TaskKey taskKey) {
-		return workflowRepo.findSuccessors(workflowId, taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
+	public List<TaskKey> getSuccessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		return workflowRepo.findSuccessors(parentTaskKey.getTaskId(),parentTaskKey.getTaskGroup(), taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
 			.map(WorkflowEdge::getTaskKey)
 			.collect(Collectors.toList());
 	}
 
 	@Override
-	public List<TaskKey> getPredecessors(String workflowId, TaskKey taskKey) {
-		return workflowRepo.findPredecessors(workflowId, taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
+	public List<TaskKey> getPredecessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		return workflowRepo.findPredecessors(parentTaskKey.getTaskId(),parentTaskKey.getTaskGroup(), taskKey.getTaskId(), taskKey.getTaskGroup()).stream()
 			.map(WorkflowEdge::getSrcTaskKey)
 			.collect(Collectors.toList());
 	}

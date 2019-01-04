@@ -272,7 +272,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	private List<JobBarrier> computeWorkflowBarriers(Connection conn, Job mainJob, JobInstance ins) throws SQLException {
 		List<JobBarrier> barriers = new ArrayList<>();
 		// 流程子任务，检查上游任务是否都已完成
-		List<TaskKey> depTasks = dependencyService.getPredecessors(mainJob.getWorkflowId(), ins.getTaskKey());
+		List<TaskKey> depTasks = dependencyService.getPredecessors(mainJob.getTaskKey(), ins.getTaskKey());
 		if (!Utils.isNullOrEmpty(depTasks)) {
 			for (TaskKey deptk : depTasks) {
 				if (deptk.equals(WorkflowEdge.START)) {

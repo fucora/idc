@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.model.TaskKey;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,8 +33,8 @@ public class WorkflowController {
     
     @GetMapping("/edges")
     @ApiOperation("查询指定工作流")
-    public ServiceResult<List<WorkflowEdge>> getEdges(@RequestParam("id") String id){
-    	List<WorkflowEdge> wf = workflowService.getWorkflowEdges(id);
+    public ServiceResult<List<WorkflowEdge>> getEdges(TaskKey taskKey){
+    	List<WorkflowEdge> wf = workflowService.getWorkflowEdges(taskKey);
     	return ServiceResult.success(wf);
     }
 }

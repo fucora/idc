@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.model.TaskKey;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +29,10 @@ public class WorkflowService {
     	List<WorkflowEdge> edges = IDCUtils.parseWorkflowEdge(workflow.getGraph());
     	
     	edges.forEach(we -> {
-    		we.setWorkflowId(workflow.getWorkflowId());
+    		we.setParentTaskKey(new TaskKey(workflow.getTaskId(),workflow.getTaskGroup()));
     	});
     	
-    	workflowEdgeRepository.deleteByWorkflowId(workflow.getWorkflowId());
+    	workflowEdgeRepository.deleteByParentTaskIdAndParentTaskGroup(workflow.getTaskId(),workflow.getTaskGroup());
     	workflowEdgeRepository.save(edges);
     	workflowRepository.save(workflow);
     	return workflow;
@@ -41,7 +42,7 @@ public class WorkflowService {
 		return workflowRepository.findOne(workflowId);
 	}
 
-	public List<WorkflowEdge> getWorkflowEdges(String id) {
-		return workflowEdgeRepository.findByWorkflowId(id);
+	public List<WorkflowEdge> getWorkflowEdges(TaskKey tk) {
+		return workflowEdgeRepository.findByParentTaskIdAndParentTaskGroup(tk.getTaskId(),tk.getTaskGroup());
 	}
 }
