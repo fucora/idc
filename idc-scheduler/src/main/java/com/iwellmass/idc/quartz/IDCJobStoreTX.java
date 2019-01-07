@@ -22,6 +22,8 @@ import org.quartz.spi.OperableTrigger;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.param.ExecParam;
+import com.iwellmass.common.param.ParamParser;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCUtils;
@@ -68,6 +70,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         int currentLoopCount = 0;
         do {
             currentLoopCount ++;
+            
+            // 并发控制
+            List<JobInstance> runningJobs = idcDriverDelegate.selectRuningJobs();
+            if (runningJobs.size() > 5) { // hard-value
+            	continue;
+            }
+            
             try {
                 List<TriggerKey> keys = getDelegate().selectTriggerToAcquire(conn, noLaterThan + timeWindow, getMisfireTime(), maxCount);
                 
@@ -140,7 +149,6 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                 		ins.setTaskType(idcJob.getTaskType());
                 		ins.setAssignee(idcJob.getAssignee());
                 		ins.setScheduleType(idcJob.getScheduleType());
-                		ins.setParameter(idcJob.getParameter());
                 		ins.setWorkflowId(idcJob.getWorkflowId());
                 		
                 		// ~~ 运行时信息 ~~
@@ -155,6 +163,17 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                 		ins.setStartTime(LocalDateTime.now());
                 		ins.setEndTime(null);
                 		ins.setStatus(JobInstanceStatus.NEW);
+                		
+                		
+                		// 计算参数
+                		List<ExecParam> params = JSON.parseArray(idcJob.getParameter(), ExecParam.class);
+                		if (!Utils.isNullOrEmpty(params)) {
+                			IDCDefaultParam dp = new IDCDefaultParam();
+                			dp.setShouldFireTime(IDCUtils.toLocalDateTime(ins.getShouldFireTime()));
+                			ParamParser parser = new ParamParser(Collections.singletonMap("idc", dp));
+                			parser.parse(params);
+                			ins.setParameter(JSON.toJSONString(params));
+                		}
                     	
                     	barriers = computeJobBarriers(conn, ins);
                     } else if (ti == IDCTriggerInstruction.SUB) {

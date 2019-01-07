@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.scheduler;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,6 +18,7 @@ import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -102,5 +104,10 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Transactional
 	public void cleanupJobInstance(Connection conn, JobKey jobKey) {
 		instanceRepo.deleteByJob(jobKey);
+	}
+
+	@Override
+	public List<JobInstance> selectRuningJobs() {
+		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED));
 	}
 }

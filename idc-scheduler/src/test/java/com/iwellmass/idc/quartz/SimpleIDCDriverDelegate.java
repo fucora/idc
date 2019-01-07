@@ -163,5 +163,11 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public List<JobInstance> selectRuningJobs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

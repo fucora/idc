@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
 
 @Repository
@@ -35,4 +36,6 @@ public interface JobInstanceRepository
 	void deleteByJobIdAndJobGroupAndShouldFireTime(String jobId, String jobGroup, Long shouldFireTime);
 
 	List<JobInstance> findByMainInstanceId(Integer mainInstanceId);
+
+	List<JobInstance> findByStatusNotIn(List<JobInstanceStatus> asList);
 }
