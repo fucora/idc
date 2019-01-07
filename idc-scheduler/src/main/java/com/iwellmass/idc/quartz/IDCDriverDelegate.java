@@ -36,4 +36,5 @@ public interface IDCDriverDelegate {
 	void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException;
 	// 使 barrier 失效
 	void markBarrierInvalid(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime) throws SQLException;
+	List<JobInstance> selectRuningJobs();
 }

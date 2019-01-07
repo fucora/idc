@@ -70,6 +70,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         int currentLoopCount = 0;
         do {
             currentLoopCount ++;
+            
+            // 并发控制
+            List<JobInstance> runningJobs = idcDriverDelegate.selectRuningJobs();
+            if (runningJobs.size() > 5) { // hard-value
+            	continue;
+            }
+            
             try {
                 List<TriggerKey> keys = getDelegate().selectTriggerToAcquire(conn, noLaterThan + timeWindow, getMisfireTime(), maxCount);
                 
