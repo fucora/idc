@@ -3,10 +3,10 @@ package com.iwellmass.idc.app.repo;
 import java.util.List;
 
 import com.iwellmass.idc.model.TaskKey;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.WorkflowEdge;
@@ -25,4 +25,7 @@ public interface WorkflowEdgeRepository extends CrudRepository<WorkflowEdge, Int
 
     @Modifying
 	void deleteByParentTaskIdAndParentTaskGroup(String parentTaskId, String parentTaskGroup);
+
+    @Query(value = "SELECT t.* FROM Task t WHERE t = :#{#ptk.jobId} AND jobGroup = :#{#ptk.jobGroup}",nativeQuery = true)
+    List<TaskKey> findByParentTaskKey(@Param("ptk") TaskKey taskKey);
 }

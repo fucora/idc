@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.Task;
@@ -19,4 +20,8 @@ public interface TaskRepository extends CrudRepository<Task, TaskKey>, JpaSpecif
 
 	@Query(value = "select count(*) from t_idc_task where task_group = 'data-factory'",nativeQuery = true)
 	Integer countAll();
+
+	@Query(value = "select e.src_task_ic,e.src_task_group from t_idc_workflow_edge e " +
+			"where e.parent_task_id = :#{#taskKey.getTaskId()} and e.parent_task_group = :#{#taskKey.getTaskGroup()}",nativeQuery = true)
+	List<Object[]> findSrcTaskKeyByParentTaskKey(@Param("ptk") TaskKey taskKey);
 }

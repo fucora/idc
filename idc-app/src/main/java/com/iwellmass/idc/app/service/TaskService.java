@@ -1,11 +1,12 @@
 package com.iwellmass.idc.app.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.util.Util;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -118,13 +119,13 @@ public class TaskService {
         return task;
     }
 
-    public Task modifyGraph(Task task) throws Exception {
+    public Task modifyGraph(Task task) {
         Assert.notNull(task.getTaskId(), "未传入taskId");
         Assert.notNull(task.getTaskGroup(), "未传入taskGroup");
         // 检查是否存在该task
         Task oldTask = taskRepository.findOne(task.getTaskKey());
         if (oldTask == null) {
-            throw new Exception("未查找到该taskKey对应的task信息");
+            throw new AppException("未查找到该taskKey对应的task信息");
         }
         IDCUtils.parseWorkflowEdge(task.getGraph());
         // 更新刷新时间
@@ -134,6 +135,33 @@ public class TaskService {
         // 更新工作流的画图数据
         oldTask.setGraph(task.getGraph());
         return taskRepository.save(oldTask);
+    }
+
+    /**
+     * 查找Node_task 下的parameter
+     * @param taskKey
+     * @return
+     */
+    public String getParam(TaskKey taskKey) {
+        Task task = taskRepository.findOne(taskKey);
+        if (task == null) {
+            throw new AppException("未找到指定task任务");
+        }
+        return task.getParameter();
+    }
+
+    /**
+     * 查询Workflow 下的子任务下的全部parameter
+     */
+    public List<String> getParams(TaskKey taskKey) {
+        // 查询满足要求的Task
+        List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
+        List<TaskKey> taskKeysRepeat = Util.castEntity(parentTaskKeyObjects,TaskKey.class);
+        Map<TaskKey,String> taskKeysMap = new HashMap<>();
+        taskKeysRepeat.forEach(tk -> taskKeysMap.put(tk,tk.getTaskId() + "." + tk.getTaskGroup()));
+        List<String> taskKeysParams = new ArrayList<>();
+        taskKeysMap.forEach((tk,s) -> taskKeysParams.add(taskRepository.findOne(tk).getParameter()));
+        return taskKeysParams;
     }
 
 }
