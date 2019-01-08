@@ -42,9 +42,4 @@ public class DependencyServiceImpl implements DependencyService {
 	public List<JobDependency> getJobDependencies(JobKey jobKey) {
 		return jobDependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
 	}
-
-	@Override
-	public List<TaskKey> getSuccessors(TaskKey workflowTaskKey, TaskKey subTaskKey) {
-		throw new UnsupportedOperationException("not supported yet.");
-	}
 }
