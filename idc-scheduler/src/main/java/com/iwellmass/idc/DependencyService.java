@@ -14,6 +14,4 @@ public interface DependencyService {
 
 	public List<JobDependency> getJobDependencies(JobKey jobKey);
 
-	public List<TaskKey> getSuccessors(TaskKey workflowTaskKey, TaskKey subTaskKey);
-
 }

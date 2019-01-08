@@ -313,7 +313,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		if (WorkflowEdge.CTRL_JOIN_GROUP.equals(subTaskKey.getTaskGroup())) {
 			
-			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getWorkflowId(), subTaskKey)
+			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getTaskKey(), subTaskKey)
 					.stream().map(tk -> {
 						return IDCUtils.getSubJobKey(mainJobIns.getJobKey(), tk);
 					}).collect(Collectors.toList());
