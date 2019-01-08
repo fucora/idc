@@ -21,7 +21,7 @@ public interface TaskRepository extends CrudRepository<Task, TaskKey>, JpaSpecif
 	@Query(value = "select count(*) from t_idc_task where task_group = 'data-factory'",nativeQuery = true)
 	Integer countAll();
 
-	@Query(value = "select e.src_task_ic,e.src_task_group from t_idc_workflow_edge e " +
-			"where e.parent_task_id = :#{#taskKey.getTaskId()} and e.parent_task_group = :#{#taskKey.getTaskGroup()}",nativeQuery = true)
+	@Query(value = "select e.src_task_id,e.src_task_group from t_idc_workflow_edge e " +
+			"where e.parent_task_id = :#{#ptk.getTaskId()} and e.parent_task_group = :#{#ptk.getTaskGroup()}",nativeQuery = true)
 	List<Object[]> findSrcTaskKeyByParentTaskKey(@Param("ptk") TaskKey taskKey);
 }

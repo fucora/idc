@@ -153,14 +153,21 @@ public class TaskService {
     /**
      * 查询Workflow 下的子任务下的全部parameter
      */
-    public List<String> getParams(TaskKey taskKey) {
+    public List<Map<TaskKey,String>> getParams(TaskKey taskKey) {
         // 查询满足要求的Task
         List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
         List<TaskKey> taskKeysRepeat = Util.castEntity(parentTaskKeyObjects,TaskKey.class);
         Map<TaskKey,String> taskKeysMap = new HashMap<>();
         taskKeysRepeat.forEach(tk -> taskKeysMap.put(tk,tk.getTaskId() + "." + tk.getTaskGroup()));
-        List<String> taskKeysParams = new ArrayList<>();
-        taskKeysMap.forEach((tk,s) -> taskKeysParams.add(taskRepository.findOne(tk).getParameter()));
+        List<Map<TaskKey,String>> taskKeysParams = new ArrayList<>();
+        taskKeysMap.forEach((tk,s) -> {
+            Task task = taskRepository.findOne(tk);
+            if (task != null && task.getParameter() != null) {
+                Map<TaskKey,String> map = new HashMap<>();
+                map.put(tk,task.getParameter());
+                taskKeysParams.add(map);
+            }
+          });
         return taskKeysParams;
     }
 

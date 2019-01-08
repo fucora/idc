@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -88,7 +89,7 @@ public class TaskController {
 
     @ApiOperation("查询指定workflow的paramters")
     @PostMapping("/params")
-    public ServiceResult<List<String>> getParams(@RequestBody TaskKey taskKey) {
+    public ServiceResult<List<Map<TaskKey,String>>> getParams(@RequestBody TaskKey taskKey) {
         try {
             return ServiceResult.success(taskService.getParams(taskKey));
         } catch (AppException e) {
