@@ -63,6 +63,7 @@ import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.JoinEnv;
 import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.RedoEnv;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -122,6 +123,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		scheduler.addJob(JobBuilder.newJob(IDCWorkflowGuardJob.class)
 			.withIdentity(WorkflowEdge.END.getTaskId(), WorkflowEdge.END.getTaskGroup()).requestRecovery()
 			.storeDurably().build(), true);
+		scheduler.addJob(JobBuilder.newJob(IDCWorkflowJoinJob.class)
+				.withIdentity(WorkflowEdge.CTRL_JOIN.getTaskId(), WorkflowEdge.CTRL_JOIN.getTaskGroup())
+				.storeDurably().build(), true);
 		
 		this.scheduler = scheduler;
 		this. statusService = (IDCStatusService) Proxy.newProxyInstance(IDCPlugin.class.getClassLoader(), new Class[] {IDCStatusService.class}, new InvocationHandler() {
@@ -297,12 +301,36 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		return ret;
 	}
 	
+	void scheduleSubTask(TaskKey subTaskKey, Integer mainInstanceId) throws SchedulerException {
+		JobInstance mainJobIns = pluginRepository.findByInstanceId(mainInstanceId);
+		scheduleSubTask(subTaskKey, mainJobIns);
+	}
+	
 	void scheduleSubTask(TaskKey subTaskKey, JobInstance mainJobIns) throws SchedulerException {
 
 		JobKey subJobKey = IDCUtils.getSubJobKey(mainJobIns.getJobKey(), subTaskKey);
 		Trigger trigger = null;
 		
-		if (subTaskKey.equals(WorkflowEdge.END)) {
+		if (WorkflowEdge.CTRL_JOIN_GROUP.equals(subTaskKey.getTaskGroup())) {
+			
+			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getWorkflowId(), subTaskKey)
+					.stream().map(tk -> {
+						return IDCUtils.getSubJobKey(mainJobIns.getJobKey(), tk);
+					}).collect(Collectors.toList());
+			
+			JoinEnv joinEnv = new JoinEnv();
+			joinEnv.setInstanceId(mainJobIns.getInstanceId());
+			joinEnv.setShouldFireTime(mainJobIns.getShouldFireTime());
+			joinEnv.setBarrierKeys(barrierKeys);
+			joinEnv.setJoinKey(subTaskKey);
+			joinEnv.setMainTaskKey(mainJobIns.getTaskKey());
+
+			JobDataMap jobData = new JobDataMap();
+			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.GUARD);
+			IDCContextKey.JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(joinEnv));
+			trigger = buildSimpleTrigger(subJobKey, WorkflowEdge.CTRL_JOIN, jobData);
+			
+		} else if (subTaskKey.equals(WorkflowEdge.END)) {
 			// 添加一个 guard trigger
 			List<JobKey> barrierKeys = dependencyService.getPredecessors(mainJobIns.getTaskKey(), WorkflowEdge.END)
 				.stream().map(tk -> {

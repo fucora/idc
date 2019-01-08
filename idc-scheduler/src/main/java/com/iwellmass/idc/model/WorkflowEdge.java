@@ -26,11 +26,15 @@ public class WorkflowEdge implements Serializable{
 	public static final TaskKey START = new TaskKey("start", "idc");
 	
 	public static final TaskKey END = new TaskKey("end", "idc");
+	
+	public static final TaskKey CTRL_JOIN = new TaskKey("join", "idc");
+
+	public static final String CTRL_JOIN_GROUP = "ctrlJoin";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
-	
+
 	@Column(name = "src_task_id")
 	private String srcTaskId;
 	
@@ -48,7 +52,7 @@ public class WorkflowEdge implements Serializable{
 
 	@Column(name = "parent_task_group")
 	private String parentTaskGroup;
-	
+
 	public void setSrcTaskKey(TaskKey tk) {
 		this.srcTaskId = tk.getTaskId();
 		this.srcTaskGroup = tk.getTaskGroup();
@@ -63,7 +67,7 @@ public class WorkflowEdge implements Serializable{
         this.parentTaskId = tk.getTaskId();
         this.parentTaskGroup = tk.getTaskGroup();
     }
-	
+
 	@Transient
 	@JsonIgnore
 	public TaskKey getSrcTaskKey() {
@@ -81,6 +85,6 @@ public class WorkflowEdge implements Serializable{
     public TaskKey getParentTaskKey() {
         return new TaskKey(parentTaskId, parentTaskGroup);
     }
-	
+
 	
 }

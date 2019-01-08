@@ -226,11 +226,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     	idcJobKey = ins.getJobKey();
                     	fid = redoEnv.getInstanceId().toString();
                     } else if (ti == IDCTriggerInstruction.GUARD) {
-                    	GuardEnv redoEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), GuardEnv.class);
+                    	GuardEnv guardEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(nextTrigger.getJobDataMap()), GuardEnv.class);
                     	idcJobKey = new JobKey(nextTrigger.getKey().getName(), nextTrigger.getKey().getGroup());
                     	barriers = new LinkedList<>();
-                    	for (JobKey bk : redoEnv.getBarrierKeys()) {
-                    		JobBarrier barrier = buildBarrier(conn, idcJobKey, bk, redoEnv.getShouldFireTime());
+                    	for (JobKey bk : guardEnv.getBarrierKeys()) {
+                    		JobBarrier barrier = buildBarrier(conn, idcJobKey, bk, guardEnv.getShouldFireTime());
                     		if (barrier != null) {
                     			barriers.add(barrier);
                     		}
