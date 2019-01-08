@@ -18,4 +18,8 @@ public interface IDCPluginService {
 
 	JobInstance findByInstanceId(Integer instanceId);
 
+	void saveJobDependencies(List<JobDependency> jobDependencies);
+
+	void clearJobDependencies(JobKey jobKey);
+
 }

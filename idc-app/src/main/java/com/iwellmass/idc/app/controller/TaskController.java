@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.idc.app.model.SimpleTaskVO;
 import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
@@ -79,7 +80,7 @@ public class TaskController {
 
     @ApiOperation("查询指定任务的参数")
     @GetMapping("/params")
-    public ServiceResult<List<Task>> getParams(TaskKey taskKey) {
+    public ServiceResult<List<SimpleTaskVO>> getParams(TaskKey taskKey) {
         try {
             return ServiceResult.success(taskService.getParams(taskKey));
         } catch (AppException e) {

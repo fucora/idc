@@ -24,6 +24,7 @@ public interface WorkflowEdgeRepository extends CrudRepository<WorkflowEdge, Int
     List<WorkflowEdge> findSuccessors(String parentTaskId,String parentTaskGroup, String taskId, String taskGroup);
 
     @Modifying
+    @Query("delete from WorkflowEdge w where w.parentTaskId = ?1 and w.parentTaskGroup = ?2")
 	void deleteByParentTaskIdAndParentTaskGroup(String parentTaskId, String parentTaskGroup);
 
     @Query(value = "SELECT t.* FROM Task t WHERE t = :#{#ptk.jobId} AND jobGroup = :#{#ptk.jobGroup}",nativeQuery = true)

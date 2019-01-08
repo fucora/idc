@@ -12,6 +12,7 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -66,6 +67,9 @@ public class ScheduleProperties {
 	
 	@ApiModelProperty("运行参数")
 	private String parameter;
+
+	@ApiModelProperty("job依赖关系")
+    private List<JobDependency> jobDependencies;
 
 	public String toCronExpression() {
 		switch (scheduleType) {

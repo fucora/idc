@@ -216,6 +216,10 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setEndTime(sp.getEndTime().atTime(LocalTime.MAX));
 		}
 		job.setParameter(sp.getParameter());
+		// 保存job 的依赖关系
+        if (sp.getJobDependencies() != null) {
+            pluginRepository.saveJobDependencies(sp.getJobDependencies());
+        }
 		// ~~ 前端用 ~~
 		job.setScheduleConfig(JSON.toJSONString(sp));
 		if (job.getScheduleType() != ScheduleType.CUSTOMER) {
@@ -279,10 +283,14 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			// ~~ 前端用 ~~
 			job.setScheduleConfig(JSON.toJSONString(sp));
 		}
+		// 清空之前的job依赖关系
+        pluginRepository.clearJobDependencies(jobKey);
+        // 保存 JobDependencies
+        if (sp.getJobDependencies() != null) {
+            pluginRepository.saveJobDependencies(sp.getJobDependencies());
+        }
 		job.setWorkflowId(task.getWorkflowId());
 		pluginRepository.saveJob(job);
-		
-		
 		// do schedule
 		Date ret = null;
 		if (job.getDispatchType() == DispatchType.AUTO) {

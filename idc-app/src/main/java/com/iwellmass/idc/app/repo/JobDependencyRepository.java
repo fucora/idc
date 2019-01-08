@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.iwellmass.idc.model.JobDependency;
@@ -26,8 +27,7 @@ public interface JobDependencyRepository extends CrudRepository<JobDependency, I
 	void cleanJobDependencies(String jobId, String jobGroup);
 
 	@Modifying
-	@Query("DELETE FROM JobDependency WHERE (srcJobId = :#{#jk.jobId} AND srcJobGroup = :#{#jk.jobGroup}) "
-			+ "OR (jobId = :#{#jk.jobId} AND jk = :#{#jk.jobGroup})")
-	void deleteByJob(JobKey jobPk);
+	@Query("DELETE FROM JobDependency WHERE (srcJobId = :#{#jk.jobId} AND srcJobGroup = :#{#jk.jobGroup})")
+	void deleteByJob(@Param("jk") JobKey jobPk);
 	
 }

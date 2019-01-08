@@ -85,5 +85,15 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
     public JobInstance findByInstanceId(Integer instanceId) {
         return null;
     }
-	
+
+	@Override
+	public void saveJobDependencies(List<JobDependency> jobDependencies) {
+		// 保存Job依赖关系
+	}
+
+	@Override
+	public void clearJobDependencies(JobKey jobKey) {
+		// 清除指定job的依赖关系
+	}
+
 }

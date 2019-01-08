@@ -1,19 +1,18 @@
 package com.iwellmass.idc.app.scheduler;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.app.repo.JobInstanceRepository;
+import com.iwellmass.idc.DependencyService;
+import com.iwellmass.idc.app.repo.*;
 import com.iwellmass.idc.model.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.IDCPluginService;
-import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.PluginVersionRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Component
@@ -30,6 +29,9 @@ public class IDCPluginServiceImpl implements IDCPluginService {
 
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
+
+	@Inject
+	private JobDependencyRepository jobDependencyRepository;
 
 	public PluginVersion initPlugin() {
 		if (pluginVersionRepository.exists(IDCPlugin.VERSION)) {
@@ -79,5 +81,15 @@ public class IDCPluginServiceImpl implements IDCPluginService {
 	@Override
 	public JobInstance findByInstanceId(Integer instanceId) {
 		return jobInstanceRepository.findOne(instanceId);
+	}
+
+	@Override
+	public void saveJobDependencies(List<JobDependency> jobDependencies) {
+		jobDependencyRepository.save((Iterable<JobDependency>) () -> jobDependencies.iterator());
+	}
+
+	@Override
+	public void clearJobDependencies(JobKey jobKey) {
+		jobDependencyRepository.deleteByJob(jobKey);
 	}
 }

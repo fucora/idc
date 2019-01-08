@@ -24,7 +24,12 @@ public class InitService {
     public ServiceResult init(List<Task> tasks) {
         // 过滤掉 contentType 是NONE的情况
         try {
-            tasks.stream().filter(c -> !c.getContentType().equals("NONE")).collect(Collectors.toList()).forEach(taskService::saveTask);
+            tasks.stream().filter(c -> !c.getContentType().equals("NONE")).collect(Collectors.toList()).forEach((task) -> {
+                if (task.getParameter().equalsIgnoreCase("null")) {
+                    task.setParameter(null);
+                }
+                taskService.saveTask(task);
+            });
             return ServiceResult.success("添加成功");
         } catch (AppException e) {
             return ServiceResult.failure("添加失败");

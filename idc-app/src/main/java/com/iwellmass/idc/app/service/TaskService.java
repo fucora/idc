@@ -6,6 +6,8 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.model.SimpleTaskVO;
+import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
 import com.iwellmass.idc.app.util.Util;
 import com.iwellmass.idc.model.WorkflowEdge;
 import org.quartz.SchedulerException;
@@ -42,6 +44,10 @@ public class TaskService {
 
     @Inject
     private IDCPlugin idcPlugin;
+
+    @Inject
+    private WorkflowEdgeRepository workflowEdgeRepository;
+
 
     @Transactional
     public void saveTask(Task task) {
@@ -120,6 +126,7 @@ public class TaskService {
         return task;
     }
 
+    @Transactional
     public Task modifyGraph(Task task) {
         Assert.notNull(task.getTaskId(), "未传入taskId");
         Assert.notNull(task.getTaskGroup(), "未传入taskGroup");
@@ -128,7 +135,14 @@ public class TaskService {
         if (oldTask == null) {
             throw new AppException("未查找到该taskKey对应的task信息");
         }
-        IDCUtils.parseWorkflowEdge(task.getGraph());
+        List<WorkflowEdge> edges = IDCUtils.parseWorkflowEdge(task.getGraph());
+        for (WorkflowEdge we : edges) {
+            we.setParentTaskKey(task.getTaskKey()); // 刷新 parentTaskKey
+        }
+        // 删除edge关系
+        workflowEdgeRepository.deleteByParentTaskIdAndParentTaskGroup(task.getTaskId(),task.getTaskGroup());
+        // 更新 edge 关系
+        workflowEdgeRepository.save(edges);
         // 更新刷新时间
         oldTask.setUpdatetime(LocalDateTime.now());
         // 刷新workflowId
@@ -155,13 +169,13 @@ public class TaskService {
     /**
      * 查询Workflow 下的子任务下的全部parameter
      */
-    public List<Task> getParams(TaskKey taskKey) {
+    public List<SimpleTaskVO> getParams(TaskKey taskKey) {
         // 查询满足要求的Task
         Task task = taskRepository.findOne(taskKey);
         if (task == null) {
             throw new AppException("未查找到指定task:" + taskKey);
         }
-        List<Task> tasks = new ArrayList<>();
+        List<SimpleTaskVO> tasks = new ArrayList<>();
         if (task.getTaskType().equals(TaskType.WORKFLOW)) {
             //  工作流任务
             List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
@@ -173,11 +187,13 @@ public class TaskService {
                 if (taskTemp == null && !tk.equals(WorkflowEdge.END) && !tk.equals(WorkflowEdge.START)) {
                     throw new AppException("未查找到该子任务:" + tk);
                 }
-                tasks.add(taskTemp);
+                if (!tk.equals(WorkflowEdge.END) && !tk.equals(WorkflowEdge.START)) {
+                    tasks.add(new SimpleTaskVO(taskTemp));
+                }
             });
         } else {
             // NODE_TASK
-            tasks.add(task);
+            tasks.add(new SimpleTaskVO(task));
         }
         return tasks;
     }
