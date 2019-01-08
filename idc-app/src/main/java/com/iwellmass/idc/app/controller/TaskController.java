@@ -77,19 +77,9 @@ public class TaskController {
         }
     }
 
-    @ApiOperation("查询指定Node_task的parameter")
-    @PostMapping("/param")
-    public ServiceResult<String> getParam(@RequestBody TaskKey taskKey) {
-        try {
-            return ServiceResult.success(taskService.getParam(taskKey));
-        } catch (AppException e) {
-            return ServiceResult.failure(e.getMessage());
-        }
-    }
-
-    @ApiOperation("查询指定workflow的paramters")
-    @PostMapping("/params")
-    public ServiceResult<List<Map<TaskKey,String>>> getParams(@RequestBody TaskKey taskKey) {
+    @ApiOperation("查询指定任务的参数")
+    @GetMapping("/params")
+    public ServiceResult<List<Task>> getParams(TaskKey taskKey) {
         try {
             return ServiceResult.success(taskService.getParams(taskKey));
         } catch (AppException e) {

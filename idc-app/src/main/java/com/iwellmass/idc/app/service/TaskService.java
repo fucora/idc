@@ -7,6 +7,7 @@ import java.util.function.Function;
 import javax.inject.Inject;
 
 import com.iwellmass.idc.app.util.Util;
+import com.iwellmass.idc.model.WorkflowEdge;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,35 +42,35 @@ public class TaskService {
 
     @Inject
     private IDCPlugin idcPlugin;
-    
+
     @Transactional
     public void saveTask(Task task) {
-    	try {
-	        Task oldTask = taskRepository.findOne(task.getTaskKey());
-	        if (oldTask != null) {
-	        	oldTask.setTaskName(task.getTaskName());
-	        	oldTask.setDescription(task.getDescription());
-	        	oldTask.setUpdatetime(LocalDateTime.now());
-	        	taskRepository.save(oldTask);
-				idcPlugin.refresh(oldTask);
-	        } else {
-	        	if (task.getTaskType() == TaskType.WORKFLOW) {
-	        	    if (task.getTaskId() == null) {
+        try {
+            Task oldTask = taskRepository.findOne(task.getTaskKey());
+            if (oldTask != null) {
+                oldTask.setTaskName(task.getTaskName());
+                oldTask.setDescription(task.getDescription());
+                oldTask.setUpdatetime(LocalDateTime.now());
+                taskRepository.save(oldTask);
+                idcPlugin.refresh(oldTask);
+            } else {
+                if (task.getTaskType() == TaskType.WORKFLOW) {
+                    if (task.getTaskId() == null) {
                         task.setTaskId(UUID.randomUUID().toString());
                     }
-	        		task.setTaskGroup("idc");
-	        		task.setContentType("workflow");
-	        	}
-	        	task.setUpdatetime(LocalDateTime.now());
-	        	if(task.getWorkflowId() == null) {
-	        		task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
-	        	}
-	        	taskRepository.save(task);
-	        	idcPlugin.refresh(task);
-	        }
-    	} catch (SchedulerException e) {
-    		throw new AppException(e.getMessage(), e);
-    	}
+                    task.setTaskGroup("idc");
+                    task.setContentType("workflow");
+                }
+                task.setUpdatetime(LocalDateTime.now());
+                if (task.getWorkflowId() == null) {
+                    task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
+                }
+                taskRepository.save(task);
+                idcPlugin.refresh(task);
+            }
+        } catch (SchedulerException e) {
+            throw new AppException(e.getMessage(), e);
+        }
     }
 
     @Transactional
@@ -87,7 +88,7 @@ public class TaskService {
             task.setContentType("workflow");
         }
         task.setUpdatetime(LocalDateTime.now());
-        if(task.getWorkflowId() == null) {
+        if (task.getWorkflowId() == null) {
             task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
         }
         taskRepository.save(task);
@@ -103,7 +104,7 @@ public class TaskService {
     }
 
     public List<Task> getTasksByType(TaskType taskType) {
-    	Sort sort = new Sort(Direction.DESC, "updatetime");
+        Sort sort = new Sort(Direction.DESC, "updatetime");
         return taskRepository.findByTaskType(taskType, sort);
     }
 
@@ -139,6 +140,7 @@ public class TaskService {
 
     /**
      * 查找Node_task 下的parameter
+     *
      * @param taskKey
      * @return
      */
@@ -153,22 +155,31 @@ public class TaskService {
     /**
      * 查询Workflow 下的子任务下的全部parameter
      */
-    public List<Map<TaskKey,String>> getParams(TaskKey taskKey) {
+    public List<Task> getParams(TaskKey taskKey) {
         // 查询满足要求的Task
-        List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
-        List<TaskKey> taskKeysRepeat = Util.castEntity(parentTaskKeyObjects,TaskKey.class);
-        Map<TaskKey,String> taskKeysMap = new HashMap<>();
-        taskKeysRepeat.forEach(tk -> taskKeysMap.put(tk,tk.getTaskId() + "." + tk.getTaskGroup()));
-        List<Map<TaskKey,String>> taskKeysParams = new ArrayList<>();
-        taskKeysMap.forEach((tk,s) -> {
-            Task task = taskRepository.findOne(tk);
-            if (task != null && task.getParameter() != null) {
-                Map<TaskKey,String> map = new HashMap<>();
-                map.put(tk,task.getParameter());
-                taskKeysParams.add(map);
-            }
-          });
-        return taskKeysParams;
+        Task task = taskRepository.findOne(taskKey);
+        if (task == null) {
+            throw new AppException("未查找到指定task:" + taskKey);
+        }
+        List<Task> tasks = new ArrayList<>();
+        if (task.getTaskType().equals(TaskType.WORKFLOW)) {
+            //  工作流任务
+            List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
+            List<TaskKey> taskKeysRepeat = Util.castEntity(parentTaskKeyObjects, TaskKey.class);
+            Map<TaskKey, String> taskKeysMap = new HashMap<>();
+            taskKeysRepeat.forEach(tk -> taskKeysMap.put(tk, tk.getTaskId() + "." + tk.getTaskGroup()));
+            taskKeysMap.forEach((tk, s) -> {
+                Task taskTemp = taskRepository.findOne(tk);
+                if (taskTemp == null && !tk.equals(WorkflowEdge.END) && !tk.equals(WorkflowEdge.START)) {
+                    throw new AppException("未查找到该子任务:" + tk);
+                }
+                tasks.add(taskTemp);
+            });
+        } else {
+            // NODE_TASK
+            tasks.add(task);
+        }
+        return tasks;
     }
 
 }
