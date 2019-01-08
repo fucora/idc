@@ -85,5 +85,11 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
     public JobInstance findByInstanceId(Integer instanceId) {
         return null;
     }
+
+	@Override
+	public List<TaskKey> getSuccessors(TaskKey workflowTaskKey, TaskKey subTaskKey) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

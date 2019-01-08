@@ -27,7 +27,10 @@ public class WorkflowEdge implements Serializable{
 	
 	public static final TaskKey END = new TaskKey("end", "idc");
 	
-
+	public static final TaskKey CTRL_JOIN = new TaskKey("join", "idc");
+	
+	public static final String CTRL_JOIN_GROUP = "ctrlJoin";
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
