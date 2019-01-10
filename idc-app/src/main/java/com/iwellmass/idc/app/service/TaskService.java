@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -17,22 +16,22 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.model.SimpleTaskVO;
 import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
 import com.iwellmass.idc.app.util.Util;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.Workflow;
 import com.iwellmass.idc.model.WorkflowEdge;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
@@ -49,58 +48,58 @@ public class TaskService {
     private IDCPlugin idcPlugin;
 
     @Inject
-    private WorkflowEdgeRepository workflowEdgeRepository;
+    private WorkflowService workflowService;
 
 
     @Transactional
-    public void saveTask(Task task) {
+    public void add(Task task) {
         try {
-            Task oldTask = taskRepository.findOne(task.getTaskKey());
-            if (oldTask != null) {
-                oldTask.setTaskName(task.getTaskName());
-                oldTask.setDescription(task.getDescription());
-                oldTask.setUpdatetime(LocalDateTime.now());
-                taskRepository.save(oldTask);
-                idcPlugin.refresh(oldTask);
-            } else {
-                if (task.getTaskType() == TaskType.WORKFLOW) {
-                    if (task.getTaskId() == null) {
-                        task.setTaskId(UUID.randomUUID().toString());
-                    }
-                    task.setTaskGroup("idc");
-                    task.setContentType("workflow");
-                }
-                task.setUpdatetime(LocalDateTime.now());
-                if (task.getWorkflowId() == null) {
-                    task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
-                }
-                taskRepository.save(task);
-                idcPlugin.refresh(task);
+        	// 设置默认值
+            if (task.getTaskType() == TaskType.WORKFLOW) {
+                task.setTaskGroup("idc");
+                task.setContentType("workflow");
+                task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
             }
+        	
+            Task check = taskRepository.findOne(task.getTaskKey());
+            
+            Assert.isTrue(check == null, "任务 %s 已存在", task.getTaskKey());
+          
+            // 排序字段
+            task.setUpdatetime(LocalDateTime.now());
+            
+            taskRepository.save(task);
+            idcPlugin.refresh(task);
         } catch (SchedulerException e) {
             throw new AppException(e.getMessage(), e);
         }
     }
 
     @Transactional
-    public void saveTask2(Task task) {
+    public void update(Task task) {
         task.setTaskGroup("idc");
         Task oldTask = taskRepository.findOne(task.getTaskKey());
-        if (oldTask != null) {
-            throw new AppException("该id已存在,请更换");
-        }
-        if (task.getTaskType() == TaskType.WORKFLOW) {
-            if (task.getTaskId() == null) {
-                task.setTaskId(UUID.randomUUID().toString());
+        
+        if (oldTask == null) {
+        	oldTask = task;
+        } else {
+        	oldTask.setContentType(task.getContentType());
+        	oldTask.setTaskName(task.getTaskName());
+        	oldTask.setDescription(task.getDescription());
+            // 子任务重新注册时我们需要刷新他的参数
+            if (task.getTaskType() == TaskType.NODE_TASK) {
+            	oldTask.setParameter(task.getParameter());
             }
-            task.setTaskGroup("idc");
-            task.setContentType("workflow");
         }
-        task.setUpdatetime(LocalDateTime.now());
-        if (task.getWorkflowId() == null) {
-            task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
+        
+        // 兼容 bad parameter
+        if ("null".equalsIgnoreCase(oldTask.getParameter())) {
+        	oldTask.setParameter(null);
         }
-        taskRepository.save(task);
+        
+        oldTask.setUpdatetime(LocalDateTime.now());
+        
+        taskRepository.save(oldTask);
         try {
             idcPlugin.refresh(task);
         } catch (SchedulerException e) {
@@ -131,27 +130,35 @@ public class TaskService {
 
     @Transactional
     public Task modifyGraph(Task task) {
-        Assert.notNull(task.getTaskId(), "未传入taskId");
-        Assert.notNull(task.getTaskGroup(), "未传入taskGroup");
+        Assert.isTrue(null != task.getTaskId(), "未传入taskId");
+        Assert.isTrue(null != task.getTaskGroup(), "未传入taskGroup");
+        
         // 检查是否存在该task
         Task oldTask = taskRepository.findOne(task.getTaskKey());
         if (oldTask == null) {
             throw new AppException("未查找到该taskKey对应的task信息");
         }
+        
         List<WorkflowEdge> edges = IDCUtils.parseWorkflowEdge(task.getGraph());
         for (WorkflowEdge we : edges) {
             we.setParentTaskKey(task.getTaskKey()); // 刷新 parentTaskKey
         }
-        // 删除edge关系
-        workflowEdgeRepository.deleteByParentTaskIdAndParentTaskGroup(task.getTaskId(),task.getTaskGroup());
-        // 更新 edge 关系
-        workflowEdgeRepository.save(edges);
+        
         // 更新刷新时间
         oldTask.setUpdatetime(LocalDateTime.now());
-        // 刷新workflowId
-        oldTask.setWorkflowId(UUID.randomUUID().toString());
         // 更新工作流的画图数据
         oldTask.setGraph(task.getGraph());
+        
+        // 刷新 version
+        Workflow workflow = new Workflow();
+        workflow.setTaskId(task.getTaskId());
+        workflow.setTaskGroup(task.getTaskGroup());
+        workflow.setGraph(task.getGraph());
+        // 工作流是否已改变
+        workflowService.saveWorkflow(workflow);
+        
+        oldTask.setWorkflowId(workflow.getWorkflowId());
+        
         return taskRepository.save(oldTask);
     }
 

@@ -62,10 +62,6 @@ public class Job {
 	@Column(name = "end_time")
 	private LocalDateTime endTime;
 	
-	@ApiModelProperty("参数")
-	@Column(name = "parameter", length = 4000)
-	private String parameter;
-	
 	@ApiModelProperty("创建日期")
 	@Column(name = "createtime")
 	private LocalDateTime createTime;
@@ -103,6 +99,10 @@ public class Job {
 	@Column(name = "dispatch_type")
 	@Enumerated(EnumType.STRING)
 	private DispatchType dispatchType;
+	
+	@ApiModelProperty("参数")
+	@Column(name = "parameter", length = 4000)
+	private String parameter;
 	
 	@ApiModelProperty("workflow_id")
 	@Column(name = "workflow_id")

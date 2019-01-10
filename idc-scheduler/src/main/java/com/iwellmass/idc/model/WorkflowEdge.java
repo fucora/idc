@@ -19,18 +19,18 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "t_idc_workflow_edge")
-public class WorkflowEdge implements Serializable{
+public class WorkflowEdge implements Serializable, Comparable<WorkflowEdge>{
 	
 	private static final long serialVersionUID = 866853625098155270L;
 	
 	public static final TaskKey START = new TaskKey("start", "idc");
 	
 	public static final TaskKey END = new TaskKey("end", "idc");
-	
+
+	public static final String CTRL_JOIN_GROUP = "idc-ctrl";
+
 	public static final TaskKey CTRL_JOIN = new TaskKey("join", "idc");
-
-	public static final String CTRL_JOIN_GROUP = "ctrlJoin";
-
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
@@ -85,6 +85,21 @@ public class WorkflowEdge implements Serializable{
     public TaskKey getParentTaskKey() {
         return new TaskKey(parentTaskId, parentTaskGroup);
     }
+
+	@Override
+	public int compareTo(WorkflowEdge o) {
+		int i = srcTaskGroup.compareTo(o.srcTaskId);
+		if (i == 0) {
+			i = srcTaskId.compareTo(o.srcTaskId);
+			if (i == 0) {
+				i = taskGroup.compareTo(o.taskGroup);
+				if (i == 0) {
+					i = taskId.compareTo(o.taskId);
+				}
+			}
+		}
+		return i;
+	}
 
 	
 }

@@ -123,9 +123,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		scheduler.addJob(JobBuilder.newJob(IDCWorkflowGuardJob.class)
 			.withIdentity(WorkflowEdge.END.getTaskId(), WorkflowEdge.END.getTaskGroup()).requestRecovery()
 			.storeDurably().build(), true);
-		scheduler.addJob(JobBuilder.newJob(IDCWorkflowJoinJob.class)
-				.withIdentity(WorkflowEdge.CTRL_JOIN.getTaskId(), WorkflowEdge.CTRL_JOIN.getTaskGroup())
-				.storeDurably().build(), true);
 		
 		this.scheduler = scheduler;
 		this. statusService = (IDCStatusService) Proxy.newProxyInstance(IDCPlugin.class.getClassLoader(), new Class[] {IDCStatusService.class}, new InvocationHandler() {
@@ -315,6 +312,17 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	void scheduleSubTask(TaskKey subTaskKey, JobInstance mainJobIns) throws SchedulerException {
+		
+		String wfId = mainJobIns.getWorkflowId();
+		Task mainTask = pluginRepository.findTask(mainJobIns.getTaskKey());
+		
+		// 如果快照已经改变
+		if (!wfId.equals(mainTask.getWorkflowId())) {
+			statusService.fireCompleteEvent(CompleteEvent.failureEvent(mainJobIns.getInstanceId())
+				.setMessage("工作流程已经改变，结束此任务"));
+			return;
+		}
+		
 
 		JobKey subJobKey = IDCUtils.getSubJobKey(mainJobIns.getJobKey(), subTaskKey);
 		Trigger trigger = null;

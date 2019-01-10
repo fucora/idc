@@ -19,6 +19,7 @@ import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
@@ -28,6 +29,7 @@ import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.repo.JobRepository;
 import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.app.repo.WorkflowRepository;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.quartz.IDCPlugin;
@@ -53,7 +55,7 @@ public class JobService {
     private IDCLogger idcLogger;
 	
 	@Inject
-	private WorkflowService workflowService;
+	private WorkflowRepository workflowRepository;
 
 	@Inject
 	private JobInstanceRepository jobInstanceRepository;
@@ -114,15 +116,10 @@ public class JobService {
 			Task task = taskRepository.findOne(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
 			
 			if (task.getTaskType() == TaskType.WORKFLOW) {
-				Workflow workflow = new Workflow();
-				workflow.setWorkflowId(task.getWorkflowId());
-				workflow.setGraph(task.getGraph());
-				workflow.setTaskId(task.getTaskId());
-				workflow.setTaskGroup(task.getTaskGroup());
-				workflowService.saveWorkflow(workflow);
+				Workflow workflow = workflowRepository.findOne(task.getWorkflowId());
+				Assert.isTrue(workflow != null, "未配置工作流");
 			}
 			
-			// TODO 检查 task 完整性
 			idcPlugin.schedule(sp);
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
@@ -141,14 +138,9 @@ public class JobService {
 				sp.setDispatchType(job.getDispatchType());
 			}
 			
-			
 			if (task.getTaskType() == TaskType.WORKFLOW) {
-				Workflow workflow = new Workflow();
-				workflow.setWorkflowId(task.getWorkflowId());
-				workflow.setGraph(task.getGraph());
-				workflow.setTaskId(task.getTaskId());
-				workflow.setTaskGroup(task.getTaskGroup());
-				workflowService.saveWorkflow(workflow);
+				Workflow workflow = workflowRepository.findOne(task.getWorkflowId());
+				Assert.isTrue(workflow != null, "未配置工作流");
 			}
 			
 			idcPlugin.reschedule(jobKey, sp);

@@ -47,14 +47,14 @@ public class TaskController {
     @ApiOperation("新增任务")
     @PostMapping
     public ServiceResult<TaskKey> add(@RequestBody Task task) {
-        taskService.saveTask(task);
+        taskService.add(task);
         return ServiceResult.success(task.getTaskKey());
     }
 
     @ApiOperation("更新任务")
     @PutMapping
-    public ServiceResult<TaskKey> add2(@RequestBody Task task) {
-        taskService.saveTask2(task);
+    public ServiceResult<TaskKey> update(@RequestBody Task task) {
+        taskService.update(task);
         return ServiceResult.success(task.getTaskKey());
     }
 

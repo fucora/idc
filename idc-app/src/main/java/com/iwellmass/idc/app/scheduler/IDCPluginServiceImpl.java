@@ -1,18 +1,26 @@
 package com.iwellmass.idc.app.scheduler;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.DependencyService;
-import com.iwellmass.idc.app.repo.*;
-import com.iwellmass.idc.model.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.IDCPluginService;
+import com.iwellmass.idc.app.repo.JobDependencyRepository;
+import com.iwellmass.idc.app.repo.JobInstanceRepository;
+import com.iwellmass.idc.app.repo.JobRepository;
+import com.iwellmass.idc.app.repo.PluginVersionRepository;
+import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobDependency;
+import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.PluginVersion;
+import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Component
