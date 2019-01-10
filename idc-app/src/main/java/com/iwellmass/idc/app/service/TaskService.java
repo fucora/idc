@@ -1,15 +1,14 @@
 package com.iwellmass.idc.app.service;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.app.model.SimpleTaskVO;
-import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
-import com.iwellmass.idc.app.util.Util;
-import com.iwellmass.idc.model.WorkflowEdge;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,11 +25,15 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.mapper.TaskMapper;
+import com.iwellmass.idc.app.model.SimpleTaskVO;
 import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
+import com.iwellmass.idc.app.util.Util;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
+import com.iwellmass.idc.model.WorkflowEdge;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service

@@ -1,17 +1,21 @@
 package com.iwellmass.idc.app.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
-import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.app.model.SimpleTaskVO;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.model.SimpleTaskVO;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
@@ -40,14 +44,14 @@ public class TaskController {
         return ServiceResult.success(task);
     }
 
-    @ApiOperation("保存任务,任务id相同时更新任务信息")
+    @ApiOperation("新增任务")
     @PostMapping
     public ServiceResult<TaskKey> add(@RequestBody Task task) {
         taskService.saveTask(task);
         return ServiceResult.success(task.getTaskKey());
     }
 
-    @ApiOperation("保存任务,任务id相同时,报异常")
+    @ApiOperation("更新任务")
     @PutMapping
     public ServiceResult<TaskKey> add2(@RequestBody Task task) {
         taskService.saveTask2(task);
