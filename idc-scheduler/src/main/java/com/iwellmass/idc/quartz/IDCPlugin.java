@@ -284,7 +284,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setScheduleConfig(JSON.toJSONString(sp));
 		}
 		// 清空之前的job依赖关系
-        pluginRepository.clearJobDependencies(jobKey);
+		// pluginRepository.clearJobDependencies(jobKey);
         // 保存 JobDependencies
         if (sp.getJobDependencies() != null) {
             pluginRepository.saveJobDependencies(sp.getJobDependencies());
