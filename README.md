@@ -8,11 +8,24 @@
 
 # 系统参数
 
+支持使用 #*expr*、@*expr* 表达式计算参数值，其中 #*expr* 表示参数引用，@*expr* 表示静态引用
+```
+// 拼接字符串
+ str = #strParam + 'some'
+
+// 截取前 3 个字符
+str = #strParam.subString(0, 3)
+
+// 取参数 p1,p2 中较大值
+@Math@max(#p1, #p2)
+```
+
+系统参数表：
 |变量|变量名|参数类型|描述|
 |--|--|--|--|
 |idc.shouldFireTime|调度日期|[LocalDateTime](#localdatetime)|无
 
-# 表达式语法
+# 支持的方法调用
 
 ## LocalDateTime
 
@@ -23,8 +36,10 @@ plusDays(int d)|LocalDateTime|前或后 d 天|*#ldt.plusDays(-2)* 前两天当�
 plusWeeks(int d)|LocalDateTime|上或下 d 周|*#ldt.plusWeeks(-1)* 上周当前时间
 withDayOfMonth(int d)|LocalDateTime|指定日期为 d|*#ldt.withDayOfMonth(1)* 本月 1 号
 format(String fmt)| String | 格式化|*#ldt.format('yyyyMMdd')* 格式化为yyyyMMdd
+with(TemporalAdjuster adjuster)|LocalDateTime|通过指令调节日期|*#ldt.with([@TemporalAdjusters@lastDayOfMonth()](#@TemporalAdjusters))*本月最后一天
 
-```js
+
+```
 // loadDate 为调度日期的前 20 天，格式化为  yyyyMMdd
 #idc.shouldFireTime.plusDays(-20).format('yyyyMMdd')
 
@@ -32,3 +47,12 @@ format(String fmt)| String | 格式化|*#ldt.format('yyyyMMdd')* 格式化为yyy
 #idc.shouldFireTime.withDayOfMonth(1).plusDays(-1).format('yyyy-MM-dd')
 ```
 
+# 支持的静态引用
+
+## @TemporalAdjusters
+表达式|返回值|描述|示例
+--|--|--|--|--
+@firstDayOfMonth()|TemporalAdjuster|本月第一天|*@TemporalAdjusters@firstDayOfMonth()*
+@lastDayOfMonth()|TemporalAdjuster|本月最后一天|*@TemporalAdjusters@lastDayOfMonth()*
+@firstDayOfYear()|TemporalAdjuster|本年第一天|*@TemporalAdjusters@firstDayOfYear()*
+@lastDayOfYear()|TemporalAdjuster|本年最后一天|*@TemporalAdjusters@lastDayOfYear()*
