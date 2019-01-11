@@ -1,10 +1,9 @@
 package com.iwellmass.idc.app.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -19,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
@@ -26,7 +26,6 @@ import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.mapper.TaskMapper;
 import com.iwellmass.idc.app.model.SimpleTaskVO;
 import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.util.Util;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -90,11 +89,6 @@ public class TaskService {
             if (task.getTaskType() == TaskType.NODE_TASK) {
             	oldTask.setParameter(task.getParameter());
             }
-        }
-        
-        // 兼容 bad parameter
-        if ("null".equalsIgnoreCase(oldTask.getParameter())) {
-        	oldTask.setParameter(null);
         }
         
         oldTask.setUpdatetime(LocalDateTime.now());
@@ -168,7 +162,7 @@ public class TaskService {
      * @param taskKey
      * @return
      */
-    public String getParam(TaskKey taskKey) {
+    public List<ExecParam> getParam(TaskKey taskKey) {
         Task task = taskRepository.findOne(taskKey);
         if (task == null) {
             throw new AppException("未找到指定task任务");
@@ -177,7 +171,7 @@ public class TaskService {
     }
 
     /**
-     * 查询Workflow 下的子任务下的全部parameter
+     * 查询 Task 声明的所有参数信息
      */
     public List<SimpleTaskVO> getParams(TaskKey taskKey) {
         // 查询满足要求的Task
@@ -185,27 +179,13 @@ public class TaskService {
         if (task == null) {
             throw new AppException("未查找到指定task:" + taskKey);
         }
-        List<SimpleTaskVO> tasks = new ArrayList<>();
         if (task.getTaskType().equals(TaskType.WORKFLOW)) {
             //  工作流任务
-            List<Object[]> parentTaskKeyObjects = taskRepository.findSrcTaskKeyByParentTaskKey(taskKey);
-            List<TaskKey> taskKeysRepeat = Util.castEntity(parentTaskKeyObjects, TaskKey.class);
-            Map<TaskKey, String> taskKeysMap = new HashMap<>();
-            taskKeysRepeat.forEach(tk -> taskKeysMap.put(tk, tk.getTaskId() + "." + tk.getTaskGroup()));
-            taskKeysMap.forEach((tk, s) -> {
-                Task taskTemp = taskRepository.findOne(tk);
-                if (taskTemp == null && !tk.equals(WorkflowEdge.END) && !tk.equals(WorkflowEdge.START)) {
-                    throw new AppException("未查找到该子任务:" + tk);
-                }
-                if (!tk.equals(WorkflowEdge.END) && !tk.equals(WorkflowEdge.START)) {
-                    tasks.add(new SimpleTaskVO(taskTemp));
-                }
-            });
+            return taskRepository.findAllSubTask(taskKey.getTaskId(), taskKey.getTaskGroup()).stream().map(SimpleTaskVO::new).collect(Collectors.toList());
         } else {
             // NODE_TASK
-            tasks.add(new SimpleTaskVO(task));
+            return Collections.singletonList(new SimpleTaskVO(task));
         }
-        return tasks;
     }
 
 }

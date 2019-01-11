@@ -8,6 +8,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleType;
@@ -51,7 +52,7 @@ public class JobRuntime extends Job {
 	private LocalDateTime endTime;
 	
 	@ApiModelProperty("参数")
-	private String parameter;
+	private List<ExecParam> parameter;
 	
 	@ApiModelProperty("创建时间")
 	private LocalDateTime createTime;

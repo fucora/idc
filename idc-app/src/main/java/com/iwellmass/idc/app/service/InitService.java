@@ -21,9 +21,6 @@ public class InitService {
         // 过滤掉 contentType 是NONE的情况
         try {
             tasks.stream().filter(c -> !c.getContentType().equals("NONE")).collect(Collectors.toList()).forEach((task) -> {
-                if (task.getParameter().equalsIgnoreCase("null")) {
-                    task.setParameter(null);
-                }
                 taskService.update(task);
             });
             return ServiceResult.success("添加成功");

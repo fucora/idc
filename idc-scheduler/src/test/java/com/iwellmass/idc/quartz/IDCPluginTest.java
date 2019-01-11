@@ -83,7 +83,7 @@ public class IDCPluginTest {
 		sp.setBlockOnError(false);
 		sp.setDuetime(LocalTime.MIN);
 		sp.setIsRetry(false);
-		sp.setParameter("[{\"name\":\"loadDate\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"201611\"},{\"name\":\"arg1\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"123\"}]");
+//		sp.setParameter("[{\"name\":\"loadDate\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"201611\"},{\"name\":\"arg1\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"123\"}]");
 		
 		System.out.println(JSON.toJSONString(sp));
 		

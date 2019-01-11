@@ -24,7 +24,7 @@ plusWeeks(int d)|LocalDateTime|上或下 d 周|*#ldt.plusWeeks(-1)* 上周当前
 withDayOfMonth(int d)|LocalDateTime|指定日期为 d|*#ldt.withDayOfMonth(1)* 本月 1 号
 format(String fmt)| String | 格式化|*#ldt.format('yyyyMMdd')* 格式化为yyyyMMdd
 
-```java
+```js
 // loadDate 为调度日期的前 20 天，格式化为  yyyyMMdd
 #idc.shouldFireTime.plusDays(-20).format('yyyyMMdd')
 

@@ -166,13 +166,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                 		
                 		
                 		// 计算参数
-                		List<ExecParam> params = JSON.parseArray(idcJob.getParameter(), ExecParam.class);
+                		List<ExecParam> params = idcJob.getParameter();
                 		if (!Utils.isNullOrEmpty(params)) {
                 			IDCDefaultParam dp = new IDCDefaultParam();
                 			dp.setShouldFireTime(IDCUtils.toLocalDateTime(ins.getShouldFireTime()));
                 			ParamParser parser = new ParamParser(Collections.singletonMap("idc", dp));
                 			parser.parse(params);
-                			ins.setParameter(JSON.toJSONString(params));
+                			ins.setParameter(params);
                 		}
                     	
                     	barriers = computeJobBarriers(conn, ins);

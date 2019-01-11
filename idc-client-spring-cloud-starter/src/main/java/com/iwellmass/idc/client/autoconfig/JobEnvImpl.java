@@ -1,5 +1,8 @@
 package com.iwellmass.idc.client.autoconfig;
 
+import java.util.List;
+
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.JobEnv;
 import com.iwellmass.idc.model.ScheduleType;
@@ -18,7 +21,7 @@ public class JobEnvImpl implements JobEnv {
 
 	private ScheduleType scheduleType;
 
-	private String parameter;
+	private List<ExecParam> parameter;
 
 	private DispatchType dispatchType;
 
@@ -76,11 +79,11 @@ public class JobEnvImpl implements JobEnv {
 		this.scheduleType = scheduleType;
 	}
 
-	public String getParameter() {
+	public List<ExecParam> getParameter() {
 		return parameter;
 	}
 
-	public void setParameter(String parameter) {
+	public void setParameter(List<ExecParam> parameter) {
 		this.parameter = parameter;
 	}
 

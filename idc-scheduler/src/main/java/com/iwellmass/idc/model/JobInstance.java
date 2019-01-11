@@ -1,8 +1,10 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,9 +14,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iwellmass.common.param.ExecParam;
+import com.iwellmass.idc.jpa.ExecParamConverter;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -25,7 +28,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "t_idc_job_instance")
-public class JobInstance implements JobEnv{
+public class JobInstance implements JobEnv {
 
 	@ApiModelProperty("执行ID")
 	@Id
@@ -57,7 +60,8 @@ public class JobInstance implements JobEnv{
 
 	@ApiModelProperty("参数设置")
 	@Column(name = "parameter")
-	private String parameter;
+	@Convert(converter = ExecParamConverter.class)
+	private List<ExecParam> parameter;
 	
 	@ApiModelProperty("责任人")
 	@Column(name = "assignee")
@@ -118,14 +122,6 @@ public class JobInstance implements JobEnv{
 	@Column(name = "content_type")
 	private String contentType;
 	
-	@Transient
-	public <T> T getParameterObject(Class<T> type) {
-		if (this.parameter == null || this.parameter.isEmpty()) {
-			return null;
-		}
-		return JSON.parseObject(this.getParameter(), type);
-	}
-
 	@Transient
 	public DispatchType getDispatchType() {
 		return dispatchType;

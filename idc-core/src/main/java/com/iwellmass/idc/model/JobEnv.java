@@ -1,6 +1,8 @@
 package com.iwellmass.idc.model;
 
-import com.alibaba.fastjson.JSON;
+import java.util.List;
+
+import com.iwellmass.common.param.ExecParam;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -25,7 +27,7 @@ public interface JobEnv {
 	public ScheduleType getScheduleType();
 
 	@ApiModelProperty("参数设置")
-	public String getParameter();
+	public List<ExecParam> getParameter();
 
 	@ApiModelProperty("执行方式")
 	public DispatchType getDispatchType();
@@ -39,11 +41,5 @@ public interface JobEnv {
 	@ApiModelProperty("Task ID")
 	public String getTaskId();
 
-	public default <T> T getParameterObject(Class<T> type) {
-		if (this.getParameter() == null || this.getParameter().isEmpty()) {
-			return null;
-		}
-		return JSON.parseObject(this.getParameter(), type);
-	}
 
 }

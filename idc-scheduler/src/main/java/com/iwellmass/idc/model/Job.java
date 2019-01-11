@@ -1,8 +1,10 @@
 package com.iwellmass.idc.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,6 +14,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iwellmass.common.param.ExecParam;
+import com.iwellmass.idc.jpa.ExecParamConverter;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -102,7 +106,8 @@ public class Job {
 	
 	@ApiModelProperty("参数")
 	@Column(name = "parameter", length = 4000)
-	private String parameter;
+	@Convert(converter = ExecParamConverter.class)
+	private List<ExecParam> parameter;
 	
 	@ApiModelProperty("workflow_id")
 	@Column(name = "workflow_id")

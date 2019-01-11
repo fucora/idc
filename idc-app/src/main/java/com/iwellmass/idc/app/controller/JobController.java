@@ -4,10 +4,15 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.executor.ProgressEvent;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
@@ -15,10 +20,11 @@ import com.iwellmass.idc.app.model.Assignee;
 import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobScheduleVO;
 import com.iwellmass.idc.app.vo.RescheduleVO;
-import com.iwellmass.idc.app.vo.JobRuntime;
+import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.ScheduleProperties;
@@ -46,7 +52,17 @@ public class JobController {
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
 		}
-		ScheduleProperties sp = JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class);
+		
+		// 兼容 2.1.0 及以前版本...，下个版本删除
+		ScheduleProperties sp = null;
+		try {
+			sp = JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class);
+		} catch (Exception e) {
+			JSONObject jo = JSON.parseObject(job.getScheduleConfig());
+			jo.put("parameter", JSON.parseArray(jo.getString("parameter")));
+			sp = JSON.parseObject(jo.toJSONString(), ScheduleProperties.class);
+		}
+		
 		JobScheduleVO vo = new JobScheduleVO();
 		vo.setContentType(job.getContentType());
 		vo.setDispatchType(job.getDispatchType());
