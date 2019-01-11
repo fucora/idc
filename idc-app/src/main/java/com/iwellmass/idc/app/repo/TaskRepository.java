@@ -21,6 +21,6 @@ public interface TaskRepository extends CrudRepository<Task, TaskKey>, JpaSpecif
 	Integer countAll();
 
 	@Query(value = "SELECT T FROM WorkflowEdge W INNER JOIN Task T ON W.srcTaskId = T.taskId AND W.srcTaskGroup = T.taskGroup "
-			+ "where W.parentTaskId = ?1 AND W.parentTaskGroup = ?2 AND T.parameter IS NOT NULL GROUP BY T.taskId AND T.taskGroup")
+			+ "where W.parentTaskId = ?1 AND W.parentTaskGroup = ?2 AND T.parameter IS NOT NULL GROUP BY T.taskId, T.taskGroup")
 	List<Task> findAllSubTask(String taskId, String taskGroup);
 }
