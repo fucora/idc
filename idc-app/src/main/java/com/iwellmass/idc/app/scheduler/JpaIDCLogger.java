@@ -34,6 +34,9 @@ public class JpaIDCLogger implements IDCLogger {
 	@Override
 	public IDCLogger log(Integer instanceId, String message, Object... args) {
 		try {
+			if (message.contains("执行失败")) {
+				new RuntimeException().printStackTrace();
+			}
 			logRepo.log(instanceId, message, args);
 		} catch (Throwable e) {
 			LOGGER.info("INS[" + instanceId + "] >> " + message, args);

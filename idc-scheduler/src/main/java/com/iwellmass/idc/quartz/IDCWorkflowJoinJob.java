@@ -10,7 +10,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 
 import com.alibaba.fastjson.JSON;
-import com.iwellmass.idc.model.JoinEnv;
 import com.iwellmass.idc.model.TaskKey;
 
 @DisallowConcurrentExecution
@@ -22,7 +21,7 @@ public class IDCWorkflowJoinJob implements org.quartz.Job {
 		IDCPlugin plugin = IDC_PLUGIN.applyGet(context.getScheduler());
 		
 		// joinEnv
-		JoinEnv joinEnv = JSON.parseObject(IDCContextKey.JOB_RUNTIME.applyGet(context.getTrigger().getJobDataMap()), JoinEnv.class);
+		JoinEnv joinEnv = JSON.parseObject(IDCContextKey.JOB_ENV.applyGet(context.getTrigger().getJobDataMap()), JoinEnv.class);
 		
 		try {
 			List<TaskKey> successor = plugin.getDependencyService().getSuccessors(joinEnv.getMainTaskKey(), joinEnv.getJoinKey());

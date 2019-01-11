@@ -1,6 +1,5 @@
 package com.iwellmass.idc.quartz;
 
-import com.iwellmass.idc.AllSimpleService;
 import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCPluginService;
 import com.iwellmass.idc.model.Task;

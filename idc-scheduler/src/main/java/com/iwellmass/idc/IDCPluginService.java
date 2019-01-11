@@ -12,9 +12,9 @@ public interface IDCPluginService {
 	
 	List<Task> findTasks(List<TaskKey> taskKey);
 
-	public void saveJob(Job job);
+	void saveJob(Job job);
 	
-	public Job findJob(JobKey jobKey);
+	Job findJob(JobKey jobKey);
 
 	JobInstance findByInstanceId(Integer instanceId);
 

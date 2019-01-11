@@ -6,11 +6,13 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
 @Table(name = "t_idc_workflow")
+@Getter
+@Setter
 public class Workflow {
 
 	@Id

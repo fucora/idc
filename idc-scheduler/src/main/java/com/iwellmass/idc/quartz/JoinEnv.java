@@ -1,4 +1,6 @@
-package com.iwellmass.idc.model;
+package com.iwellmass.idc.quartz;
+
+import com.iwellmass.idc.model.TaskKey;
 
 import lombok.Getter;
 import lombok.Setter;

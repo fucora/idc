@@ -2,7 +2,8 @@ package com.iwellmass.idc.quartz;
 
 import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 import static com.iwellmass.idc.quartz.IDCContextKey.IDC_PLUGIN;
-import static com.iwellmass.idc.quartz.IDCContextKey.JOB_RUNTIME;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_ENV;
+import static com.iwellmass.idc.quartz.IDCContextKey.JOB_TRIGGER_INSTRUCTION;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -10,7 +11,6 @@ import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +32,6 @@ import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
-import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
@@ -45,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.DependencyService;
@@ -54,21 +52,18 @@ import com.iwellmass.idc.IDCPluginService;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.SimpleIDCLogger;
 import com.iwellmass.idc.executor.CompleteEvent;
+import com.iwellmass.idc.executor.IDCJobEvent;
 import com.iwellmass.idc.executor.IDCStatusService;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.GuardEnv;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.JoinEnv;
 import com.iwellmass.idc.model.PluginVersion;
-import com.iwellmass.idc.model.RedoEnv;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
-import com.iwellmass.idc.model.SubEnv;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.TaskType;
@@ -90,7 +85,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	private IDCStatusService statusService;
 	
 	@Getter
-	private IDCPluginService pluginRepository;
+	private IDCPluginService pluginService;
 	
 	@Getter
 	private DependencyService dependencyService;
@@ -99,16 +94,14 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	@Getter
 	private IDCLogger logger = new SimpleIDCLogger();
 	
-	
 	public IDCPlugin(IDCPluginService pluginRepository, DependencyService dependencyService) {
-		this.pluginRepository = pluginRepository;
+		this.pluginService = pluginRepository;
 		this.dependencyService = dependencyService;
 	}
 	
-	
 	public void initialize(IDCJobStore store) {
 		this.idcJobStore = store;
-		// store.clearAllBarrier();
+		store.clearAllBarrier();
 	}
 	
 	@Override
@@ -116,7 +109,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		LOGGER.info("加载 IDCPlugin...");
 		
 		Objects.requireNonNull(idcJobStore, "IDCJobStore cannot be null");
-		Objects.requireNonNull(pluginRepository, "IDCSchedulerService cannot be null");
+		Objects.requireNonNull(pluginService, "IDCSchedulerService cannot be null");
 		Objects.requireNonNull(getDependencyService(), "DependencyService cannot be null");
 		
 		// ~~ 系统任务 ~~
@@ -185,7 +178,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	
 	/** 新增调度计划*/
 	public void schedule(ScheduleProperties sp) throws SchedulerException {
-		Task task = pluginRepository.findTask(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
+		Task task = pluginService.findTask(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
 		if (task == null) {
 			throw new SchedulerException("任务不存在");
 		}
@@ -215,7 +208,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		job.setParameter(sp.getParameter());
 		// 保存job 的依赖关系
         if (sp.getJobDependencies() != null) {
-            pluginRepository.saveJobDependencies(sp.getJobDependencies());
+            pluginService.saveJobDependencies(sp.getJobDependencies());
         }
 		// ~~ 前端用 ~~
 		job.setScheduleConfig(JSON.toJSONString(sp));
@@ -223,7 +216,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			job.setCronExpr(sp.toCronExpression());
 		}
 		
-		pluginRepository.saveJob(job);
+		pluginService.saveJob(job);
 		
 		// do scheduler
 		if (job.getDispatchType() == DispatchType.AUTO) {
@@ -241,11 +234,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	 * 重新调度
 	 */
 	public Date reschedule(JobKey jobKey, ScheduleProperties sp) throws SchedulerException {
-		Job job = pluginRepository.findJob(jobKey);
+		Job job = pluginService.findJob(jobKey);
 		if (job == null) {
 			throw new SchedulerException("调度计划 " + jobKey + " 不存在");
 		}
-		Task task = pluginRepository.findTask(job.getTaskKey());
+		Task task = pluginService.findTask(job.getTaskKey());
 		
 		if (task == null) {
 			throw new SchedulerException("任务 " + jobKey + " 不存在");
@@ -284,10 +277,10 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		// pluginRepository.clearJobDependencies(jobKey);
         // 保存 JobDependencies
         if (sp.getJobDependencies() != null) {
-            pluginRepository.saveJobDependencies(sp.getJobDependencies());
+            pluginService.saveJobDependencies(sp.getJobDependencies());
         }
 		job.setWorkflowId(task.getWorkflowId());
-		pluginRepository.saveJob(job);
+		pluginService.saveJob(job);
 		// do schedule
 		Date ret = null;
 		if (job.getDispatchType() == DispatchType.AUTO) {
@@ -307,14 +300,14 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	void scheduleSubTask(TaskKey subTaskKey, Integer mainInstanceId) throws SchedulerException {
-		JobInstance mainJobIns = pluginRepository.findByInstanceId(mainInstanceId);
+		JobInstance mainJobIns = pluginService.findByInstanceId(mainInstanceId);
 		scheduleSubTask(subTaskKey, mainJobIns);
 	}
 	
 	void scheduleSubTask(TaskKey subTaskKey, JobInstance mainJobIns) throws SchedulerException {
 		
 		String wfId = mainJobIns.getWorkflowId();
-		Task mainTask = pluginRepository.findTask(mainJobIns.getTaskKey());
+		Task mainTask = pluginService.findTask(mainJobIns.getTaskKey());
 		
 		// 如果快照已经改变
 		if (!wfId.equals(mainTask.getWorkflowId())) {
@@ -323,7 +316,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			return;
 		}
 		
-
 		JobKey subJobKey = IDCUtils.getSubJobKey(mainJobIns.getJobKey(), subTaskKey);
 		Trigger trigger = null;
 		
@@ -342,8 +334,8 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			joinEnv.setMainTaskKey(mainJobIns.getTaskKey());
 
 			JobDataMap jobData = new JobDataMap();
-			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.GUARD);
-			IDCContextKey.JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(joinEnv));
+			JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.GUARD);
+			JOB_ENV.applyPut(jobData, JSON.toJSONString(joinEnv));
 			trigger = buildSimpleTrigger(subJobKey, WorkflowEdge.CTRL_JOIN, jobData);
 			
 		} else if (subTaskKey.equals(WorkflowEdge.END)) {
@@ -359,11 +351,11 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			guardEnv.setBarrierKeys(barrierKeys);
 
 			JobDataMap jobData = new JobDataMap();
-			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.GUARD);
-			IDCContextKey.JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(guardEnv));
+			JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.GUARD);
+			JOB_ENV.applyPut(jobData, JSON.toJSONString(guardEnv));
 			trigger = buildSimpleTrigger(subJobKey, WorkflowEdge.END, jobData);
 		} else {
-			Task subTask = pluginRepository.findTask(subTaskKey);
+			Task subTask = pluginService.findTask(subTaskKey);
 			if (subTask == null) {
 				throw new JobExecutionException("子任务不存在");
 			}
@@ -374,8 +366,8 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			
 			// build Simple
 			JobDataMap jobData = new JobDataMap();
-			JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(subEnv));
-			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.SUB);
+			JOB_ENV.applyPut(jobData, JSON.toJSONString(subEnv));
+			JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.SUB);
 			
 			//子任务Key
 			trigger = buildSimpleTrigger(subJobKey, subTaskKey, jobData);
@@ -388,7 +380,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 	}
 	
-
 	private Trigger buildAutoTrigger(Job job) {
 		// 构建 TriggerBuilder
 		TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
@@ -417,12 +408,9 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	}
 	
 	public void unschedule(JobKey jobKey) throws SchedulerException {
-		Job job = pluginRepository.findJob(jobKey);
-		
+		Job job = pluginService.findJob(jobKey);
 		Assert.isTrue(job != null, "调度计划 " + jobKey + "不存在");
-		
 		scheduler.unscheduleJob(IDCUtils.toTriggerKey(jobKey));
-		
 	}
 	
 	public void pause(JobKey jobKey) throws SchedulerException {
@@ -442,8 +430,8 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			redoEnv.setInstanceId(ins.getInstanceId());
 			
 			JobDataMap jobData = new JobDataMap();
-			JOB_RUNTIME.applyPut(jobData, JSON.toJSONString(redoEnv));
-			IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.REDO);
+			JOB_ENV.applyPut(jobData, JSON.toJSONString(redoEnv));
+			JOB_TRIGGER_INSTRUCTION.applyPut(jobData, IDCTriggerInstruction.REDO);
 			
 			JobKey jobKey = IDCUtils.getRedoJobKey(ins.getInstanceId());
 			
@@ -453,7 +441,6 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			throw new SchedulerException(e.getMessage(), e);
 		}
 	}
-
 	
 	protected abstract Class<? extends org.quartz.Job> getJobClass(Task task);
 	
@@ -462,104 +449,128 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		
 		@Override
 		public void fireStartEvent(StartEvent event) {
-			logger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
-			try {
-				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
-					jobInstance.setStartTime(event.getStartTime());
-					jobInstance.setStatus(JobInstanceStatus.RUNNING);
-				});
-			} catch (Exception e) {
-				String error = "更新任务状态出错" + e.getMessage();
-				logger.log(event.getInstanceId(), error);
-				throw new AppException(error, e);
-			}
+			sendEvent(event);
 		}
 
 		public void fireProgressEvent(ProgressEvent event) {
-			logger.log(event.getInstanceId(), event.getMessage());
-			try {
-				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
-					jobInstance.setStatus(JobInstanceStatus.RUNNING);
-				});
-			} catch (Exception e) {
-				String error = "更新任务状态出错" + e.getMessage();
-				logger.log(event.getInstanceId(), error);
-				throw new AppException(error, e);
-			}
+			sendEvent(event);
 		}
 		
 		@Override
 		public void fireCompleteEvent(CompleteEvent event) {
-			JobInstance ins = null;
-			try {
-				ins = idcJobStore.completeIDCJobInstance(event);
-				if (ins == null) {
-					return;
-				} else {
-					// log this
-					logger.log(event.getInstanceId(), event.getMessage()).log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
-					
-					if (ins.getTaskType() == TaskType.SUB_TASK) {
-						logger.log(event.getInstanceId(), "[{}] 执行结束, 执行结果: {}", pluginRepository.findTask(pluginRepository.findByInstanceId(ins.getMainInstanceId()).getTaskKey()).getTaskName(), event.getFinalStatus());
-						try {
-							JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
-							
-							List<JobInstanceStatus> expectStatus = Arrays.asList(JobInstanceStatus.SKIPPED, JobInstanceStatus.FINISHED);
-							if(!expectStatus.contains(ins.getStatus())) {
-								fireCompleteEvent(CompleteEvent.failureEvent(mainIns.getInstanceId())
-									.setMessage("执行失败"));
-							} else {
-								List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getTaskKey(), ins.getTaskKey());
-								for (TaskKey tk : subTaskKeys) {
-									scheduleSubTask(tk, mainIns);
-								}
-							}
-							
-						} catch (SchedulerException e) {
-							throw new AppException(e.getMessage(), e);
-						}
-					}
-				}
-			} catch (Exception e) {
-				LOGGER.error("更新任务状态出错: " + e.getMessage());
-			}
+			sendEvent(event);
+		}
+		
+		private void sendEvent(IDCJobEvent event) {
+			// progress
+//			logger.log(event.getInstanceId(), event.getMessage());
+//			sendEvent(event);
+//			try {
+//				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
+//					jobInstance.setStatus(JobInstanceStatus.RUNNING);
+//				});
+//			} catch (Exception e) {
+//				String error = "更新任务状态出错" + e.getMessage();
+//				logger.log(event.getInstanceId(), error);
+//				throw new AppException(error, e);
+//			}
+			
+//			// 体现在主任务日志中
+////		if (instance.getTaskType() == TaskType.SUB_TASK) {
+////			if (jobException != null) {
+////				// 体现在主任务日志中
+////				if (instance.getTaskType() == TaskType.SUB_TASK) {
+////					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getMainInstanceId())
+////						.setMessage("[{}] 派发失败: {}", task.getTaskName(), jobException.getMessage()));
+////				}
+////			} else {
+////				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getMainInstanceId())
+////						.setStatus(JobInstanceStatus.RUNNING)	
+////						.setMessage("[{}] 派发成功, 等待执行结果...", task.getTaskName()));
+////			}
+////		}
+			
+			
+			
+			
+			// complete
+
+//			try {
+//				// 更新 JobInstance 状态
+//				JobInstance ins = idcJobStore.completeIDCJobInstance(event);
+//				
+//				if (ins != null) {
+//					logger.log(event.getInstanceId(), event.getMessage());
+//					
+//				}
+//				
+//				//.log(event.getInstanceId(), "任务结束, 执行结果: {}", event.getFinalStatus());
+//			} catch (Exception e) {
+//				LOGGER.error("更新任务状态出错: " + e.getMessage());
+//			}
+//
+//			// 记录到主任务
+//			if (ins.getTaskType() == TaskType.SUB_TASK) {
+//				try {
+//					logger.log(ins.getMainInstanceId(), "[{}] 执行结束, 执行结果: {}", ins.getJobName(), event.getFinalStatus());
+//					
+//					// 期望的完成状态
+//					List<JobInstanceStatus> expectStatus = Arrays.asList(JobInstanceStatus.SKIPPED, JobInstanceStatus.FINISHED);
+//					if(expectStatus.contains(ins.getStatus())) {
+//						JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
+//						List<TaskKey> subTaskKeys = dependencyService.getSuccessors(mainIns.getTaskKey(), ins.getTaskKey());
+//						for (TaskKey tk : subTaskKeys) {
+//							scheduleSubTask(tk, mainIns);
+//						}
+//					}
+//				} catch (SchedulerException e) {
+//					LOGGER.error("驱动工作流任务出错: " + e.getMessage());
+//				}
+//			}
+			
+			
+			
+			// start event
+//			logger.log(event.getInstanceId(), Optional.ofNullable(event.getMessage()).orElse("开始执行"));
+//			try {
+//				idcJobStore.storeIDCJobInstance(event.getInstanceId(), (jobInstance)->{
+//					jobInstance.setStartTime(event.getStartTime());
+//					jobInstance.setStatus(JobInstanceStatus.RUNNING);
+//				});
+//			} catch (Exception e) {
+//				String error = "更新任务状态出错" + e.getMessage();
+//				logger.log(event.getInstanceId(), error);
+//				throw new AppException(error, e);
+//			}
 		}
 	}
 	
 	// ~~ Scheduler Listener ~~
 	private class IDCSchedulerListener extends SchedulerListenerSupport {
+		@Override
+		public void schedulerError(String msg, SchedulerException cause) {
+			// TODO 添加到报警信息中
+		}
 	}
 
 	// ~~ Trigger trace ~~
 	private class IDCTriggerListener extends TriggerListenerSupport {
 	
 		@Override
-		public void triggerFired(Trigger trigger, JobExecutionContext context) {
-			
-			if (IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(trigger.getJobDataMap()) == IDCTriggerInstruction.GUARD) {
-				return;
-			}
-			
+		public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
+			String fid = context.getFireInstanceId();
 			try {
-				JobInstance ins = idcJobStore.retrieveIDCJobInstance(Integer.parseInt(context.getFireInstanceId()));
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("触发任务 {}, TaskType: {}, DispatchType {}", ins.getJobKey(), ins.getTaskType(), ins.getDispatchType());
+				int instanceId = Integer.parseInt(fid);
+				IDCTriggerInstruction instruction = getTriggerInstruction(context);
+				// 如果 IDCJob 被触发，这存在状态为 NEW 的 instance，如果不存在则否决执行
+				if (instruction.isIDCJobTriggered()) {
+					JobInstance instance = pluginService.findByInstanceId(instanceId);
+					return instance == null || instance.getStatus() != JobInstanceStatus.NEW;
 				}
-				
-				logger.clearLog(ins.getInstanceId())
-				.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 任务类型 {}",pluginRepository.findTask(ins.getTaskKey()).getTaskName() + ",实例id:" + ins.getInstanceId(), ins.getDispatchType(), ins.getTaskType())
-				.log(ins.getInstanceId(), "周期类型 {}, 业务日期 {}, 批次 {}", ins.getScheduleType(), ins.getLoadDate(), IDCConstants.FULL_DF.format(new Date(ins.getShouldFireTime())))
-				.log(ins.getInstanceId(), "运行参数: {}", Utils.isNullOrEmpty(ins.getParameter()) ? "--" : ins.getParameter());
-				
-				IDCContextKey.CONTEXT_INSTANCE.applyPut(context, ins);
-			} catch (JobPersistenceException e) {
-				throw new RuntimeException(e.getMessage(), e);
+			} catch (Exception e) {
+				// 其他任务不处理
 			}
-		}
-		
-		@Override
-		public void triggerComplete(Trigger trigger, JobExecutionContext context, CompletedExecutionInstruction triggerInstructionCode) {
-			super.triggerComplete(trigger, context, triggerInstructionCode);
+			return false;
 		}
 		
 		@Override
@@ -568,70 +579,66 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 		}
 	}
 
-
 	// ~~ Job trace ~~
 	private class IDCJobListener extends JobListenerSupport {
 		
 		@Override
 		public void jobToBeExecuted(JobExecutionContext context) {
-			
-			if (IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(context.getTrigger().getJobDataMap()) == IDCTriggerInstruction.GUARD) {
-				return;
+			IDCTriggerInstruction instruction = getTriggerInstruction(context);
+			if (instruction.isIDCJobTriggered()) {
+				JobInstance ins = getJobInstance(context);
+				logger.clearLog(ins.getInstanceId())
+					.log(ins.getInstanceId(), "执行任务 {}, taskId: {}, taskGroup: {}", ins.getJobName(), ins.getTaskId(), ins.getTaskGroup())
+					.log(ins.getInstanceId(), "创建任务实例 {}, 执行方式 {}, 周期类型 {}", ins.getInstanceId(), ins.getDispatchType(), ins.getScheduleType())
+					.log(ins.getInstanceId(), "执行批次 {}, 业务日期 {}, ", IDCConstants.FULL_DF.format(new Date(ins.getShouldFireTime())), ins.getLoadDate());
+				if (ins.getTaskType() != TaskType.WORKFLOW) {
+					statusService.fireProgressEvent(ProgressEvent.newEvent(ins.getInstanceId())
+						.setStatus(JobInstanceStatus.NEW).setMessage("派发任务..."));
+				}
 			}
-			
-			JobInstance instance = CONTEXT_INSTANCE.applyGet(context);
-			// 任务
-			statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getInstanceId())
-					.setStatus(JobInstanceStatus.NEW)
-					.setMessage("执行任务，业务日期 {}", instance.getLoadDate()));
-
-
-			// 体现在主任务日志中
-			if (instance.getTaskType() == TaskType.SUB_TASK) {
-				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getMainInstanceId())
-						.setStatus(JobInstanceStatus.RUNNING)
-						.setMessage("[{}] 执行任务...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
-			}
-			
 		}
 		
 		@Override
 		public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 			
-			if (IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(context.getTrigger().getJobDataMap()) == IDCTriggerInstruction.GUARD) {
-				return;
-			}
+			IDCTriggerInstruction instruction = getTriggerInstruction(context);
 			
-			JobInstance instance = CONTEXT_INSTANCE.applyGet(context);
-			if (jobException != null) {
-				
-				// 主任务
-				statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getInstanceId())
-						.setMessage("执行失败: {}", jobException.getMessage()));
-				
-				// 体现在主任务日志中
-				if (instance.getTaskType() == TaskType.SUB_TASK) {
-					statusService.fireCompleteEvent(CompleteEvent.failureEvent(instance.getMainInstanceId())
-						.setMessage("[{}] 执行失败: {}", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId(), jobException.getMessage()));
-				}
-			} else {
-				// 本任务日志
-				statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getInstanceId())
-						.setStatus(JobInstanceStatus.ACCEPTED)	
-						.setMessage("等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
-				
-				
-				if (instance.getTaskType() == TaskType.SUB_TASK) {
-					statusService.fireProgressEvent(ProgressEvent.newEvent(instance.getMainInstanceId())
-							.setStatus(JobInstanceStatus.RUNNING)	
-							.setMessage("[{}] 等待执行结果...", pluginRepository.findTask(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId()));
+			// IDCJob running, update JobInstance
+			if (instruction.isIDCJobTriggered()) {
+				JobInstance instance = getJobInstance(context);
+				if (jobException != null) {
+					CompleteEvent event = CompleteEvent.failureEvent(instance.getInstanceId());
+					if (instance.getTaskType() == TaskType.WORKFLOW) {
+						event.setMessage("任务异常: {}", jobException.getMessage());
+					} else {
+						event.setMessage("派发失败: {}", jobException.getMessage());
+					}
+					statusService.fireCompleteEvent(event);
+				} else {
+					ProgressEvent event = ProgressEvent.newEvent(instance.getInstanceId());
+					if (instance.getTaskType() == TaskType.WORKFLOW) {
+						event.setStatus(JobInstanceStatus.RUNNING);
+						event.setMessage("派发子任务...");
+					} else {
+						event.setStatus(JobInstanceStatus.ACCEPTED);
+						event.setMessage("派发成功, 等待执行结果...");
+					}
+					statusService.fireProgressEvent(event);
 				}
 			}
 		}
+		
 		@Override
 		public String getName() {
 			return IDCJobListener.class.getSimpleName();
 		}
 	}
 	
+	private JobInstance getJobInstance(JobExecutionContext context) {
+		return CONTEXT_INSTANCE.applyGet(context);
+	}
+	
+	private IDCTriggerInstruction getTriggerInstruction(JobExecutionContext context) {
+		return JOB_TRIGGER_INSTRUCTION.applyGet(context.getTrigger().getJobDataMap());
+	}
 }

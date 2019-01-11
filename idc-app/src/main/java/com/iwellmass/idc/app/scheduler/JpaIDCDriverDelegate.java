@@ -108,6 +108,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 
 	@Override
 	public List<JobInstance> selectRuningJobs() {
-		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED));
+		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
 	}
 }

@@ -1,4 +1,4 @@
-package com.iwellmass.idc.model;
+package com.iwellmass.idc.quartz;
 
 import lombok.Getter;
 import lombok.Setter;

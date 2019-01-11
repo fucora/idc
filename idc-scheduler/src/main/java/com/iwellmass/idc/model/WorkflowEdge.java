@@ -15,10 +15,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
-@Getter
 @Entity
 @Table(name = "t_idc_workflow_edge")
+@Setter
+@Getter
 public class WorkflowEdge implements Serializable, Comparable<WorkflowEdge>{
 	
 	private static final long serialVersionUID = 866853625098155270L;

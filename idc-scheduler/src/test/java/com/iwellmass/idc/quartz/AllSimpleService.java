@@ -1,4 +1,4 @@
-package com.iwellmass.idc;
+package com.iwellmass.idc.quartz;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.iwellmass.idc.DependencyService;
+import com.iwellmass.idc.IDCPluginService;
 import com.iwellmass.idc.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;

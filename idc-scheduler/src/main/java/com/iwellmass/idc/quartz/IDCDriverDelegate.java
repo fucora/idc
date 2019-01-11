@@ -18,11 +18,6 @@ public interface IDCDriverDelegate {
 	Task selectTask(TaskKey taskKey);
 	
 	// ~~ 实例相关 ~~
-	default void batchInsertJobInstance(Connection conn, List<JobInstance> newIns) throws SQLException {
-		for (JobInstance ji : newIns) {
-			insertJobInstance(conn, ji);
-		}
-	}
 	JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException;
 	JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func) throws SQLException;
 	JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException;

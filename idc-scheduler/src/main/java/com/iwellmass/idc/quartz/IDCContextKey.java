@@ -10,6 +10,7 @@ import org.quartz.SchedulerContext;
 import org.quartz.SchedulerException;
 
 import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.Task;
 
 public class IDCContextKey<T> {
 
@@ -21,19 +22,14 @@ public class IDCContextKey<T> {
 	// ~~ scheduler ~~
 	public static final IDCContextKey<IDCPlugin> IDC_PLUGIN = defReq("idc.plugin", IDCPlugin.class);
 	
-	// TASK
-	public static final IDCContextKey<String> TASK_JSON = defOpt("idc.task.json", String.class, null);
-	
 	// ~~ JOB ~~
 	public static final IDCContextKey<IDCTriggerInstruction> JOB_TRIGGER_INSTRUCTION = defOpt("idc.job.triggerInstruction", IDCTriggerInstruction.class, IDCTriggerInstruction.MAIN);
-	public static final IDCContextKey<String> JOB_RUNTIME = defOpt("idc.job.jobRuntime", String.class, null);
-	public static final IDCContextKey<Boolean> JOB_REOD = defOpt("idc.job.redo", Boolean.class, false);
-	/** 参数解析 */
-//	public static final IDCContextKey<ParameterParser> JOB_PARAMETER_PARSER = defOpt("idc.job.parameterParser", ParameterParser.class, new ParameterParser());
+	public static final IDCContextKey<String> JOB_ENV = defOpt("idc.job.jobRuntime", String.class, null);
 	
 	// ~~ Context ~~
 	/** 任务实例 */
 	public static final IDCContextKey<JobInstance> CONTEXT_INSTANCE = defReq("idc.context.jobInstance", JobInstance.class);
+	public static final IDCContextKey<Task> CONTEXT_TASK = defReq("idc.context.task", Task.class);
 	
 	private String key;
 	private Class<T> type;

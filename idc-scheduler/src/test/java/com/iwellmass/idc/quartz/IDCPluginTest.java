@@ -11,7 +11,6 @@ import org.quartz.Scheduler;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.alibaba.fastjson.JSON;
-import com.iwellmass.idc.AllSimpleService;
 import com.iwellmass.idc.model.DispatchType;
 import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.ScheduleType;
