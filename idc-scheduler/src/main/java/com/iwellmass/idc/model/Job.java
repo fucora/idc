@@ -13,6 +13,7 @@ import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.jpa.ExecParamConverter;
@@ -60,10 +61,12 @@ public class Job {
 	
 	@ApiModelProperty("创建日期")
 	@Column(name = "start_time")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime startTime;
 	
 	@ApiModelProperty("更新时间")
 	@Column(name = "end_time")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime endTime;
 	
 	@ApiModelProperty("创建日期")
@@ -77,6 +80,11 @@ public class Job {
 	@ApiModelProperty("cron 表达式")
 	@Column(name = "cron_expr")
 	private String cronExpr;
+	
+	@ApiModelProperty("参数")
+	@Column(name = "parameter", length = 4000)
+	@Convert(converter = ExecParamConverter.class)
+	private List<ExecParam> parameter;
 	
 	@Column(name = "schedule_config")
 	private String scheduleConfig;
@@ -103,11 +111,6 @@ public class Job {
 	@Column(name = "dispatch_type")
 	@Enumerated(EnumType.STRING)
 	private DispatchType dispatchType;
-	
-	@ApiModelProperty("参数")
-	@Column(name = "parameter", length = 4000)
-	@Convert(converter = ExecParamConverter.class)
-	private List<ExecParam> parameter;
 	
 	@ApiModelProperty("workflow_id")
 	@Column(name = "workflow_id")

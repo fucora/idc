@@ -12,7 +12,9 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.DirectSchedulerFactory;
 import org.quartz.impl.jdbcjobstore.InvalidConfigurationException;
+import org.quartz.simpl.PropertySettingJobFactory;
 import org.quartz.simpl.SimpleThreadPool;
+import org.quartz.spi.JobFactory;
 import org.quartz.spi.SchedulerPlugin;
 import org.quartz.spi.ThreadPool;
 import org.quartz.utils.ConnectionProvider;
@@ -46,6 +48,9 @@ public final class IDCSchedulerFactory {
 	@Setter
 	private IDCDriverDelegate driverDelegate;
 	
+	@Setter
+	private JobFactory jobFactory = new PropertySettingJobFactory();
+	
 	public Scheduler getScheduler() throws SchedulerException {
 		if (!inited) {
 			LOGGER.info("创建 {}...", SCHED_NAME);
@@ -71,7 +76,9 @@ public final class IDCSchedulerFactory {
 				throw new SchedulerException("创建调度器失败: " + e.getMessage(), e);
 			}
 		}
-		return DirectSchedulerFactory.getInstance().getScheduler(SCHED_NAME);
+		Scheduler scheduler = DirectSchedulerFactory.getInstance().getScheduler(SCHED_NAME);
+		scheduler.setJobFactory(jobFactory);
+		return scheduler;
 	}
 
 	private void createScheduler(ThreadPool threadPool) throws SchedulerException {
@@ -82,7 +89,7 @@ public final class IDCSchedulerFactory {
 		DBConnectionManager.getInstance().addConnectionProvider(dsName, new SimpleConnectionProvider());
 
 		// JobStroe
-		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, plugin.getDependencyService());
+		IDCJobStoreTX jobStore = new IDCJobStoreTX(driverDelegate, plugin.getPluginService());
 		jobStore.setInstanceId(SCHED_ID);
 		jobStore.setInstanceName(SCHED_NAME);
 		jobStore.setDataSource(dsName);

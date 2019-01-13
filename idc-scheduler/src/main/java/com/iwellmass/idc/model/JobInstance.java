@@ -94,6 +94,11 @@ public class JobInstance implements JobEnv {
 	@Column(name = "end_time")
 	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
 	private LocalDateTime endTime;
+	
+	@ApiModelProperty("最近更新时间")
+	@Column(name = "update_time")
+	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+	private LocalDateTime updateTime;
 
 	@ApiModelProperty("任务实例状态")
 	@Column(name = "status")

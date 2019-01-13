@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.JobInstanceQuery;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
+import com.iwellmass.idc.app.vo.Assignee;
+import com.iwellmass.idc.app.vo.JobInstanceQuery;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.TaskType;
 

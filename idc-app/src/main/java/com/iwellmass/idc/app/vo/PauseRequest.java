@@ -1,4 +1,4 @@
-package com.iwellmass.idc.app.model;
+package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.idc.model.JobKey;
 

@@ -24,8 +24,8 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.mapper.TaskMapper;
-import com.iwellmass.idc.app.model.SimpleTaskVO;
 import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.app.vo.SimpleTaskVO;
 import com.iwellmass.idc.app.vo.TaskQueryVO;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -187,5 +187,13 @@ public class TaskService {
             return Collections.singletonList(new SimpleTaskVO(task));
         }
     }
+
+	public void validate(TaskKey taskKey) {
+		Task task = taskRepository.findOne(taskKey);
+		if (task.getTaskType() == TaskType.WORKFLOW) {
+			Workflow workflow = workflowService.findOne(task.getWorkflowId());
+			Assert.isTrue(workflow != null, "未配置工作流");
+		}
+	}
 
 }

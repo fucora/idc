@@ -1,8 +1,6 @@
 package com.iwellmass.idc.quartz;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Arrays;
 
 import javax.sql.DataSource;
 
@@ -12,7 +10,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.ScheduleProperties;
+import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
@@ -33,7 +31,7 @@ public class IDCPluginTest {
 		
 		
 		AllSimpleService allService = new AllSimpleService();
-		IDCPlugin plugin = new SimpleIDCPlugin(allService, allService);
+		IDCPlugin plugin = new SimpleIDCPlugin(allService);
 		
 		
 		// 主任务
@@ -57,9 +55,9 @@ public class IDCPluginTest {
 		sub2.setTaskType(TaskType.NODE_TASK);
 		sub2.setContentType("simple-test");
 		
-		allService.saveTask(task);
-		allService.saveTask(sub1);
-		allService.saveTask(sub2);
+//		allService.saveTask(task);
+//		allService.saveTask(sub1);
+//		allService.saveTask(sub2);
 		
 		allService.addTaskDependency("1", WorkflowEdge.START, sub1.getTaskKey(), sub2.getTaskKey(), WorkflowEdge.END);
 		
@@ -72,15 +70,13 @@ public class IDCPluginTest {
 		scheduler.clear();
 
 		scheduler.start();
-		ScheduleProperties sp = new ScheduleProperties();
+		Job sp = new Job();
 		sp.setScheduleType(ScheduleType.MONTHLY);
 		sp.setDispatchType(DispatchType.AUTO);
-		sp.setStartTime(_1_1);
-		sp.setEndTime(_9_1);
-		sp.setDays(Arrays.asList(-1));
+//		sp.setStartTime(_1_1.at);
+//		sp.setEndTime(_9_1);
 		sp.setAssignee("lqd");
 		sp.setBlockOnError(false);
-		sp.setDuetime(LocalTime.MIN);
 		sp.setIsRetry(false);
 //		sp.setParameter("[{\"name\":\"loadDate\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"201611\"},{\"name\":\"arg1\",\"paramType\":\"VARCHAR\",\"defaultExpr\":\"123\"}]");
 		

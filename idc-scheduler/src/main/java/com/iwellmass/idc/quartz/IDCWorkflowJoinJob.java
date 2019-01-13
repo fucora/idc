@@ -24,7 +24,7 @@ public class IDCWorkflowJoinJob implements org.quartz.Job {
 		JoinEnv joinEnv = JSON.parseObject(IDCContextKey.JOB_ENV.applyGet(context.getTrigger().getJobDataMap()), JoinEnv.class);
 		
 		try {
-			List<TaskKey> successor = plugin.getDependencyService().getSuccessors(joinEnv.getMainTaskKey(), joinEnv.getJoinKey());
+			List<TaskKey> successor = plugin.getPluginService().getSuccessors(joinEnv.getMainTaskKey(), joinEnv.getJoinKey());
 			if (successor.isEmpty()) {
 				throw new JobExecutionException("未找到后续任务");
 			}

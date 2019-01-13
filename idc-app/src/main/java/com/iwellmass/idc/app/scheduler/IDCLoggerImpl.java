@@ -4,16 +4,14 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.IDCLogger;
 import com.iwellmass.idc.app.repo.ExecutionLogRepository;
 
-@Component
-public class JpaIDCLogger implements IDCLogger {
+public class IDCLoggerImpl implements IDCLogger {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JpaIDCLogger.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(IDCLoggerImpl.class);
 	
 	@Inject
 	private ExecutionLogRepository logRepo;
@@ -27,7 +25,6 @@ public class JpaIDCLogger implements IDCLogger {
 			LOGGER.error("clear failured.");
 		}
 		return this;
-		
 	}
 
 	@Transactional

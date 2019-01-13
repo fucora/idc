@@ -8,9 +8,7 @@ import org.quartz.SchedulerException;
 import org.quartz.simpl.PropertySettingJobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.stereotype.Component;
 
-@Component
 public class JobFactoryImpl extends PropertySettingJobFactory {
 	
 	@Inject

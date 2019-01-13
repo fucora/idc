@@ -1,13 +1,10 @@
-package com.iwellmass.idc.app.model;
+package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.common.criteria.Between;
 import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.LocalDateLongConverter;
 import com.iwellmass.common.criteria.SpecificationBuilder;
-import com.iwellmass.idc.app.vo.IdOrNameCriteria;
-import com.iwellmass.idc.app.vo.YMDBetweenPair;
-import com.iwellmass.idc.app.vo.YMDHMSBetweenPair;
 import com.iwellmass.idc.model.DispatchType;
 
 import io.swagger.annotations.ApiModelProperty;

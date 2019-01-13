@@ -26,7 +26,7 @@ public class IDCWorkflowJob implements org.quartz.Job {
 		JobInstance jobInstance = CONTEXT_INSTANCE.applyGet(context);
 		
 		try {
-			List<TaskKey> success = plugin.getDependencyService().getSuccessors(jobInstance.getTaskKey(), WorkflowEdge.START);
+			List<TaskKey> success = plugin.getPluginService().getSuccessors(jobInstance.getTaskKey(), WorkflowEdge.START);
 			if (success.isEmpty()) {
 				throw new JobExecutionException("未找到子任务");
 			}

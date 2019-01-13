@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.idc.model.DispatchType;
-import com.iwellmass.idc.model.ScheduleProperties;
 import com.iwellmass.idc.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;

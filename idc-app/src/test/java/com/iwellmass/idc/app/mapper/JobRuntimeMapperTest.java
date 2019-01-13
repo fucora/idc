@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.iwellmass.idc.app.IDCApplication;
-import com.iwellmass.idc.app.model.JobQuery;
+import com.iwellmass.idc.app.vo.JobQuery;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.model.TaskType;
 

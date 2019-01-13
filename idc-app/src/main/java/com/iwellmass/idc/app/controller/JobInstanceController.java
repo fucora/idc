@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.*;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.CancleRequest;
-import com.iwellmass.idc.app.model.JobInstanceQuery;
-import com.iwellmass.idc.app.model.RedoRequest;
 import com.iwellmass.idc.app.service.JobInstanceQueryService;
 import com.iwellmass.idc.app.service.JobInstanceService;
+import com.iwellmass.idc.app.vo.Assignee;
+import com.iwellmass.idc.app.vo.CancleRequest;
+import com.iwellmass.idc.app.vo.JobInstanceQuery;
+import com.iwellmass.idc.app.vo.RedoRequest;
 import com.iwellmass.idc.model.ExecutionLog;
 import com.iwellmass.idc.model.JobInstance;
 

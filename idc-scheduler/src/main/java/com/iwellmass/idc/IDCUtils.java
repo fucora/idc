@@ -7,12 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.jgrapht.graph.DirectedAcyclicGraph;
-import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
 import com.alibaba.fastjson.JSON;
@@ -22,7 +19,6 @@ import com.iwellmass.common.util.Assert;
 import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.model.WorkflowEdge;
-import com.iwellmass.idc.quartz.IDCContextKey;
 
 public class IDCUtils {
 	
@@ -92,28 +88,9 @@ public class IDCUtils {
         }
         return directedAcyclicGraph;
     }
-
-	
-	
-	public static <T> Function<IDCContextKey<String>, T> getObject(Map<String, Object> map, Class<T> type) {
-		return ( key ) -> {
-			String str =  key.applyGet(map);
-			return JSON.parseObject(str, type);
-		};
-	}
 	
 	public static TriggerKey toTriggerKey(JobKey jobKey) {
 		return new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup());
-	}
-	
-	public static TaskKey toTaskKey(Trigger trigger) {
-		return new TaskKey(trigger.getJobKey().getName(), trigger.getJobKey().getGroup());
-	}
-	
-	public static JobKey getSubJobKey(JobKey mainJobKey, TaskKey subTaskKey) {
-		String subJobId = "sub_" + subTaskKey;
-		String subJobGroup = mainJobKey.toString();
-		return new JobKey(subJobId, subJobGroup);
 	}
 	
 	public static final LocalDateTime toLocalDateTime(Long mill) {
@@ -163,4 +140,13 @@ public class IDCUtils {
 		return new JobKey("redo_" + instanceId, REDO_GROUP);
 	}
 
+	public static JobKey getSubJobKey(JobKey jobKey, TaskKey subTaskKey) {
+		String subJobId = "sub_" + subTaskKey;
+		String subJobGroup = IDCUtils.subJobGroup(jobKey);
+		return new JobKey(subJobId, subJobGroup);
+	}
+	
+	public static String subJobGroup(JobKey mainJobKey) {
+		return mainJobKey.toString();
+	}
 }

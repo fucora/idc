@@ -4,48 +4,27 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
-import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
 
-@Component
-public class JpaIDCDriverDelegate implements IDCDriverDelegate {
+public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	
-	@Inject
-	private JobRepository jobRepo;
-	
-	@Inject
-	private TaskRepository taskRepo;
-
 	@Inject
 	private JobInstanceRepository instanceRepo;
 	
 	@Inject
 	private JobBarrierRepo barrierRepo;
 	
-	@Transactional
-	public JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func)
-			throws SQLException {
-		JobInstance ins = instanceRepo.findOne(instanceId);
-		func.accept(ins);
-		return instanceRepo.save(ins);
-	}
 
 	@Transactional
 	public JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException {
@@ -69,7 +48,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 		barrierRepo.save(barriers);
 	}
 
-
 	@Transactional
 	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
 		barrierRepo.clearJobBarrier(jobKey.getJobId(), jobKey.getJobGroup());
@@ -86,15 +64,6 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);
 	}
 
-	@Transactional
-	public Job selectJob(JobKey jobKey) {
-		return jobRepo.findOne(jobKey);
-	}
-
-	@Transactional
-	public Task selectTask(TaskKey taskKey) {
-		return taskRepo.findOne(taskKey);
-	}
 
 	@Override
 	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInstanceId) throws SQLException {
@@ -109,5 +78,15 @@ public class JpaIDCDriverDelegate implements IDCDriverDelegate {
 	@Override
 	public List<JobInstance> selectRuningJobs() {
 		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
+	}
+
+	@Override
+	public void deleteJobInstance(Connection conn, JobKey jobKey) {
+		instanceRepo.deleteByJob(jobKey);
+	}
+
+	@Override
+	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
+		return instanceRepo.save(ins);
 	}
 }

@@ -6,28 +6,24 @@ import javax.inject.Inject;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.idc.app.vo.Assignee;
+import com.iwellmass.idc.app.vo.JobQuery;
 import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobScheduleVO;
+import com.iwellmass.idc.app.vo.PauseRequest;
 import com.iwellmass.idc.app.vo.RescheduleVO;
-import com.iwellmass.idc.executor.ProgressEvent;
+import com.iwellmass.idc.app.vo.ScheduleProperties;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.ScheduleProperties;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -48,25 +44,15 @@ public class JobController {
 	@ApiOperation("获取调度信息")
 	@GetMapping("/schedule-config")
 	public ServiceResult<JobScheduleVO> getJob(JobKey jobKey) {
-		Job job = jobService.findJob(jobKey);
+		Job job = jobService.getJob(jobKey);
 		if (job == null) {
 			return ServiceResult.failure("任务不存在");
-		}
-		
-		// 兼容 2.1.0 及以前版本...，下个版本删除
-		ScheduleProperties sp = null;
-		try {
-			sp = JSON.parseObject(job.getScheduleConfig(), ScheduleProperties.class);
-		} catch (Exception e) {
-			JSONObject jo = JSON.parseObject(job.getScheduleConfig());
-			jo.put("parameter", JSON.parseArray(jo.getString("parameter")));
-			sp = JSON.parseObject(jo.toJSONString(), ScheduleProperties.class);
 		}
 		
 		JobScheduleVO vo = new JobScheduleVO();
 		vo.setContentType(job.getContentType());
 		vo.setDispatchType(job.getDispatchType());
-		vo.setScheduleConfig(sp);
+		vo.setScheduleConfig(new ScheduleProperties(job));
 		vo.setTaskGroup(job.getTaskGroup());
 		vo.setTaskId(job.getTaskId());
 		vo.setTaskType(job.getTaskType());
@@ -90,7 +76,6 @@ public class JobController {
 		return ServiceResult.success(data);
 	}
 	
-	// ~~~~~~~~~~~~~ 调度器接口 should be called by rpc  ~~~~~~~~~~~~~
 	@ApiOperation("调度任务")
 	@PostMapping(path = "/schedule")
 	public ServiceResult<String> schedule(@RequestBody ScheduleProperties sp) {
@@ -133,9 +118,4 @@ public class JobController {
 		return ServiceResult.success("提交成功");
 	}
 
-	@ApiOperation("data-factoryRPC调用该接口保存日志")
-	@PutMapping(path = "/progress")
-	public void saveRuntimeUrlLog(@RequestBody ProgressEvent progressEvent) {
-        jobService.saveRuntimeLog(progressEvent);
-	}
 }

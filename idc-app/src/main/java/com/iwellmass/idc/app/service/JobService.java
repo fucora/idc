@@ -5,33 +5,25 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.IDCLogger;
-import com.iwellmass.idc.app.repo.JobInstanceRepository;
-import com.iwellmass.idc.executor.ProgressEvent;
-import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Service;
 
 import com.iwellmass.common.exception.AppException;
-import com.iwellmass.common.util.Assert;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.mapper.JobRuntimeMapper;
 import com.iwellmass.idc.app.mapper.MapperUtil;
-import com.iwellmass.idc.app.model.Assignee;
-import com.iwellmass.idc.app.model.JobQuery;
-import com.iwellmass.idc.app.model.PauseRequest;
 import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.TaskRepository;
-import com.iwellmass.idc.app.repo.WorkflowRepository;
-import com.iwellmass.idc.app.vo.JobRuntimeListVO;
+import com.iwellmass.idc.app.vo.Assignee;
+import com.iwellmass.idc.app.vo.JobQuery;
 import com.iwellmass.idc.app.vo.JobRuntime;
+import com.iwellmass.idc.app.vo.JobRuntimeListVO;
+import com.iwellmass.idc.app.vo.PauseRequest;
+import com.iwellmass.idc.app.vo.ScheduleProperties;
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -43,52 +35,30 @@ public class JobService {
 	private JobRepository jobRepository;
 	
 	@Inject
-	private TaskRepository taskRepository;
+	private TaskService taskService;
 
 	@Inject
 	private JobRuntimeMapper jobRuntimeMapper;
 	
 	@Inject
 	private IDCPlugin idcPlugin;
-
-    @Inject
-    private IDCLogger idcLogger;
 	
-	@Inject
-	private WorkflowRepository workflowRepository;
+	// 获取计划
+	public Job getJob(JobKey jobKey) {
+		return jobRepository.findOne(jobKey);
+	}
 
-	@Inject
-	private JobInstanceRepository jobInstanceRepository;
-	
+	// 调度运行时信息
 	public JobRuntime getJobRuntime(JobKey jobKey) {
 		return  jobRuntimeMapper.selectJobRuntime(jobKey);
 	}
-
-	public PageData<Job> findJob(JobQuery jobQuery, Pager pager) {
-		Specification<Job> spec = jobQuery == null ? null : jobQuery.toSpecification();
-		Page<Job> job = jobRepository.findAll(spec, new PageRequest(pager.getPage(), pager.getLimit()));
-		return new PageData<Job>((int)job.getTotalElements(), job.getContent());
-	}
 	
-	// available 
-	public List<Job> findAvailableDependency(ScheduleType scheduleType) {
-		Specification<Job> spec = (root, cq, cb) -> {
-			return cb.and(
-					cb.equal(root.get("scheduleType"), scheduleType),
-					root.get("taskType").in(TaskType.WORKFLOW, TaskType.NODE_TASK)
-			);
-		};
-		return jobRepository.findAll(spec);
+	// 动态查询调度计划列表
+	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
+		return MapperUtil.doQuery(pager, ()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
 	}
 
-	public List<Job> getWorkflowJob() {
-		return jobRepository.findByTaskType(TaskType.WORKFLOW);
-	}
-
-	public List<Job> getWorkflowJob(JobKey jobKey) {
-		return jobRepository.findSubJobs(jobKey.getJobId(), jobKey.getJobGroup());
-	}
-
+	// 所有责任人
 	public List<Assignee> getAllAssignee() {
 		return jobRepository.findAllAssignee().stream().map(id -> {
 			Assignee asg = new Assignee();
@@ -97,30 +67,12 @@ public class JobService {
 		}).collect(Collectors.toList());
 	}
 
-	public static <T> Specifications<T> empty() {
-		return Specifications.where((root, query, cb) -> {
-			return cb.equal(cb.literal(1), 1);
-		});
-	}
-
-	public Job findJob(JobKey jobKey) {
-		return jobRepository.findOne(jobKey);
-	}
-
-	public PageData<JobRuntimeListVO> getJobRuntime(JobQuery jobQuery, Pager pager) {
-		return MapperUtil.doQuery(pager, ()->jobRuntimeMapper.selectJobRuntimeList(jobQuery));
-	}
-
+	
+	// ~~ 调度相关 ~~
 	public void schedule(ScheduleProperties sp) {
 		try {
-			Task task = taskRepository.findOne(new TaskKey(sp.getTaskId(), sp.getTaskGroup()));
-			
-			if (task.getTaskType() == TaskType.WORKFLOW) {
-				Workflow workflow = workflowRepository.findOne(task.getWorkflowId());
-				Assert.isTrue(workflow != null, "未配置工作流");
-			}
-			
-			idcPlugin.schedule(sp);
+			taskService.validate(sp.getTaskKey());
+			idcPlugin.schedule(sp.toJob());
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
 		}
@@ -128,22 +80,9 @@ public class JobService {
 
 	public void reschedule(JobKey jobKey, ScheduleProperties sp) {
 		try {
-			Job job = jobRepository.findOne(jobKey);
-			
-			Task task = taskRepository.findOne(job.getTaskKey());
-			
-			if (sp != null) {
-				sp.setTaskId(job.getTaskId());
-				sp.setTaskGroup(job.getTaskGroup());
-				sp.setDispatchType(job.getDispatchType());
-			}
-			
-			if (task.getTaskType() == TaskType.WORKFLOW) {
-				Workflow workflow = workflowRepository.findOne(task.getWorkflowId());
-				Assert.isTrue(workflow != null, "未配置工作流");
-			}
-			
-			idcPlugin.reschedule(jobKey, sp);
+			Job job = sp.toJob();
+			taskService.validate(sp.getTaskKey());
+			idcPlugin.reschedule(jobKey, job);
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
 		}
@@ -155,7 +94,6 @@ public class JobService {
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);
 		}
-		
 	}
 
 	public void pause(PauseRequest request) {
@@ -173,11 +111,4 @@ public class JobService {
 			throw new AppException(e.getMessage(), e);
 		}
 	}
-
-
-    public void saveRuntimeLog(ProgressEvent progressEvent) {
-		JobInstance instance = jobInstanceRepository.findOne(progressEvent.getInstanceId());
-		idcLogger.log(instance.getInstanceId(),progressEvent.getMessage());
-        idcLogger.log(instance.getMainInstanceId(),"[" + taskRepository.findOne(instance.getTaskKey()).getTaskName() + ",实例id:" + instance.getInstanceId() + "]" + progressEvent.getMessage());
-    }
 }

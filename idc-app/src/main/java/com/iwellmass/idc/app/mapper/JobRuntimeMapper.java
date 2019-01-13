@@ -5,8 +5,8 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.iwellmass.idc.app.model.JobQuery;
 import com.iwellmass.idc.app.vo.JobBarrierVO;
+import com.iwellmass.idc.app.vo.JobQuery;
 import com.iwellmass.idc.app.vo.JobRuntimeListVO;
 import com.iwellmass.idc.app.vo.JobRuntime;
 import com.iwellmass.idc.model.JobKey;

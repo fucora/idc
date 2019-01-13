@@ -1,64 +1,105 @@
 package com.iwellmass.idc.app.scheduler;
 
+import java.beans.PropertyDescriptor;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.iwellmass.idc.IDCPluginService;
+import com.iwellmass.idc.app.repo.IDCConfigRepository;
 import com.iwellmass.idc.app.repo.JobDependencyRepository;
-import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.app.repo.JobRepository;
-import com.iwellmass.idc.app.repo.PluginVersionRepository;
 import com.iwellmass.idc.app.repo.TaskRepository;
+import com.iwellmass.idc.app.repo.WorkflowEdgeRepository;
+import com.iwellmass.idc.model.IDCProp;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobDependency;
-import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.PluginVersion;
 import com.iwellmass.idc.model.Task;
 import com.iwellmass.idc.model.TaskKey;
-import com.iwellmass.idc.quartz.IDCPlugin;
+import com.iwellmass.idc.model.WorkflowEdge;
+import com.iwellmass.idc.quartz.IDCPluginConfig;
+import com.iwellmass.idc.quartz.IDCPluginService;
 
-@Component
 public class IDCPluginServiceImpl implements IDCPluginService {
 
-	@Inject
-	private PluginVersionRepository pluginVersionRepository;
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger(IDCPluginServiceImpl.class);
+
 	@Inject
 	private TaskRepository taskRepository;
-	
+
 	@Inject
 	private JobRepository jobRepository;
 
 	@Inject
-	private JobInstanceRepository jobInstanceRepository;
+	private WorkflowEdgeRepository workflowRepo;
 
 	@Inject
-	private JobDependencyRepository jobDependencyRepository;
+	private JobDependencyRepository jobDependencyRepo;
 
-	public PluginVersion initPlugin() {
-		if (pluginVersionRepository.exists(IDCPlugin.VERSION)) {
-			return pluginVersionRepository.findOne(IDCPlugin.VERSION);
+	@Inject
+	private IDCConfigRepository configRepository;
+
+	private final IDCPluginConfig config = new IDCPluginConfig();
+
+	@Override
+	public IDCPluginConfig getConfig() {
+		if (config.getConfigVersion() == null || configRepository.checkDirty(config.getConfigVersion())) {
+			configRepository.findAll().forEach(prop -> {
+				if (prop.getName() == "version") {
+					config.setConfigVersion(prop.getUpdatetime());
+				}
+				setIDCProp(config, prop);
+			});
+		}
+		return config;
+	}
+
+	private static void setIDCProp(IDCPluginConfig config, IDCProp prop) {
+
+		String name = camelCaseName(prop.getName());
+
+		PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(IDCPluginConfig.class, name);
+
+		if (pd == null && prop.getValue() != null) {
+			LOGGER.warn("'{}' setter not found.", prop.getName());
 		} else {
 			try {
-				PluginVersion version = new PluginVersion().asNew();
-				version.setVersion(IDCPlugin.VERSION);
-				pluginVersionRepository.save(version);
-				return version;
-			} catch (RuntimeException e) {
-				try {
-					PluginVersion version = pluginVersionRepository.findOne(IDCPlugin.VERSION);
-					return version;
-				} catch (RuntimeException e2) {
-					throw e2;
+				Class<?> type = pd.getPropertyType();
+
+				Object v = prop.getValue();
+				if (type != String.class) {
+					MethodHandle mh = MethodHandles.lookup().findStatic(type, "valueOf",
+							MethodType.methodType(type, String.class));
+					v = mh.invoke(prop.getValue());
 				}
+				pd.getWriteMethod().invoke(config, v);
+			} catch (Throwable e) {
+				LOGGER.error("cannot set '{}' for {}", prop.getValue(), name);
 			}
 		}
+
+	}
+
+	private static String camelCaseName(String name) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < name.length(); i++) {
+			if (name.charAt(i) == '.') {
+				i++;
+				builder.append(Character.toUpperCase(name.charAt(i)));
+			} else {
+				builder.append(name.charAt(i));
+			}
+		}
+		return builder.toString();
 	}
 
 	@Transactional
@@ -67,13 +108,8 @@ public class IDCPluginServiceImpl implements IDCPluginService {
 	}
 
 	@Transactional
-	public Task findTask(TaskKey taskKey) {
+	public Task getTask(TaskKey taskKey) {
 		return taskRepository.findOne(taskKey);
-	}
-
-	@Transactional
-	public List<Task> findTasks(List<TaskKey> taskKey) {
-		return taskKey.stream().map(this::findTask).collect(Collectors.toList());
 	}
 
 	@Transactional
@@ -82,22 +118,30 @@ public class IDCPluginServiceImpl implements IDCPluginService {
 	}
 
 	@Transactional
-	public Job findJob(JobKey jobKey) {
+	public Job getJob(JobKey jobKey) {
 		return jobRepository.findOne(jobKey);
 	}
 
 	@Override
-	public JobInstance findByInstanceId(Integer instanceId) {
-		return jobInstanceRepository.findOne(instanceId);
+	public List<TaskKey> getSuccessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		return workflowRepo.findSuccessors(parentTaskKey.getTaskId(), parentTaskKey.getTaskGroup(), taskKey.getTaskId(),
+				taskKey.getTaskGroup()).stream().map(WorkflowEdge::getTaskKey).collect(Collectors.toList());
 	}
 
 	@Override
-	public void saveJobDependencies(List<JobDependency> jobDependencies) {
-		jobDependencyRepository.save((Iterable<JobDependency>) () -> jobDependencies.iterator());
+	public List<TaskKey> getPredecessors(TaskKey parentTaskKey, TaskKey taskKey) {
+		return workflowRepo.findPredecessors(parentTaskKey.getTaskId(), parentTaskKey.getTaskGroup(),
+				taskKey.getTaskId(), taskKey.getTaskGroup()).stream().map(WorkflowEdge::getSrcTaskKey)
+				.collect(Collectors.toList());
 	}
 
 	@Override
-	public void clearJobDependencies(JobKey jobKey) {
-		jobDependencyRepository.deleteByJob(jobKey);
+	public List<JobDependency> getJobDependencies(JobKey jobKey) {
+		return jobDependencyRepo.findDependencies(jobKey.getJobId(), jobKey.getJobGroup());
+	}
+
+	@Override
+	public List<WorkflowEdge> getTaskDependencies(TaskKey taskKey) {
+		return workflowRepo.findByParentTaskIdAndParentTaskGroup(taskKey.getTaskId(), taskKey.getTaskGroup());
 	}
 }

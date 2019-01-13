@@ -1,7 +1,7 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
-import com.iwellmass.common.criteria.Like;
 import com.iwellmass.idc.model.TaskType;
 
 import lombok.Getter;
@@ -14,6 +14,6 @@ public class TaskQueryVO {
 	@Equal
     private TaskType taskType;
 
-    @Like(builder = TempDefinedBuilder.class)
+    @CustomCriteria(builder = TaskNameLikeOrIdEqualCriteria.class)
     private String taskName;
 }

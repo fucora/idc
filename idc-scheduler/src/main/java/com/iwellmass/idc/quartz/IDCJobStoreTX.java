@@ -10,14 +10,17 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.quartz.JobDetail;
 import org.quartz.JobPersistenceException;
+import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.JobStoreTX;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.OperableTrigger;
 
 import com.alibaba.fastjson.JSON;
@@ -25,9 +28,9 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.param.ParamParser;
 import com.iwellmass.common.util.Utils;
-import com.iwellmass.idc.DependencyService;
 import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.executor.CompleteEvent;
+import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.model.BarrierState;
 import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
@@ -43,12 +46,28 @@ import com.iwellmass.idc.model.WorkflowEdge;
 public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	
 	private final IDCDriverDelegate idcDriverDelegate;
-	private final DependencyService dependencyService;
 	
-	IDCJobStoreTX(IDCDriverDelegate idcDelegate, DependencyService workflowService) {
+	private final IDCPluginService pluginService;
+	
+	IDCJobStoreTX(IDCDriverDelegate idcDelegate, IDCPluginService pluginService) {
 		this.idcDriverDelegate = idcDelegate;
-		this.dependencyService = workflowService;
+		this.pluginService = pluginService;
 	}
+	
+	@Override
+	public void schedulerStarted() throws SchedulerException {
+		super.schedulerStarted();
+		IDCPluginConfig config = pluginService.getConfig();
+		if (config.isBarrierClearOnStartup()) {
+			try {
+				idcDriverDelegate.clearAllBarrier(getConnection());
+			} catch (SQLException e) {
+				getLog().warn("clear barrier error: " + e.getMessage());
+				// ignore 
+			}
+		}
+	}
+	
 	
 	/* WAITING --> ACQUIRED */
 	protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
@@ -61,12 +80,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         Set<org.quartz.JobKey> acquiredJobKeysForNoConcurrentExec = new HashSet<org.quartz.JobKey>();
         final int MAX_DO_LOOP_RETRY = 3;
         int currentLoopCount = 0;
+        IDCPluginConfig config = pluginService.getConfig();
         do {
             currentLoopCount ++;
             
-            // 并发控制
+            // 并发控制 TODO 考虑这里是否合适
             List<JobInstance> runningJobs = idcDriverDelegate.selectRuningJobs();
-            if (runningJobs.size() > 5) { // hard-value
+            if (runningJobs.size() > config.getSchedulerParallelMax()) {
             	continue;
             }
             
@@ -166,21 +186,19 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         return acquiredTriggers;
 	}
 	
-	private JobBarrier buildBarrier(Connection conn, JobKey jobKey, JobKey barrierKey, Long barrierShouldFireTime) throws SQLException {
-		if (barrierShouldFireTime != null && barrierShouldFireTime != -1) {
-			JobInstance ins = idcDriverDelegate.selectJobInstance(conn, barrierKey, barrierShouldFireTime);
-			
-			Set<JobInstanceStatus> finished = new HashSet<>(Arrays.asList(JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED));
-			if (ins == null || !finished.contains(ins.getStatus())) {
-				JobBarrier b = new JobBarrier();
-				b.setJobKey(jobKey);
-				b.setBarrierKey(barrierKey);
-				b.setBarrierShouldFireTime(barrierShouldFireTime);
-				b.setState(BarrierState.VALID);
-				return b;
-			}
-		}
-		return null;
+	
+	private boolean shouldBarrier(JobInstance barrierIns) {
+		Set<JobInstanceStatus> finished = new HashSet<>(Arrays.asList(JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED));
+		return barrierIns == null || !finished.contains(barrierIns.getStatus());
+	}
+	/* ins 不再阻塞下游则返回 null，否则返回构建的 barrier 对象*/
+	private JobBarrier buildBarrier(Connection conn, JobKey jobKey, JobInstance barrierIns) throws SQLException {
+		JobBarrier b = new JobBarrier();
+		b.setJobKey(jobKey);
+		b.setBarrierKey(barrierIns.getJobKey());
+		b.setBarrierShouldFireTime(barrierIns.getShouldFireTime());
+		b.setState(BarrierState.VALID);
+		return b;
 	}
 
 	@Override
@@ -202,116 +220,95 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	}
 	
 	@Override
-	public void storeIDCJobInstance(Integer instanceId, Consumer<JobInstance> func)  {
-		try {
-			executeInLock(LOCK_STATE_ACCESS, new TransactionCallback<Void>() {
-				@Override
-				public Void execute(Connection conn) throws JobPersistenceException {
-					try {
-						idcDriverDelegate.updateJobInstance(conn, instanceId, func);
-					} catch (SQLException e) {
-						throw new JobPersistenceException(e.getMessage(), e);
-					}
-					return null;
-				}
-			});
-		} catch (JobPersistenceException e) {
-			throw new AppException(e.getMessage(), e);
-		}
-	}
-
-	@Override
-	public JobInstance completeIDCJobInstance(CompleteEvent event) throws JobPersistenceException {
+	public JobInstance jobInstanceProgressing(ProgressEvent event) throws JobPersistenceException {
 		return (JobInstance) executeInLock(LOCK_TRIGGER_ACCESS, new TransactionCallback<JobInstance>() {
 			@Override
 			public JobInstance execute(Connection conn) throws JobPersistenceException {
-				return completeIDCJobInstance(conn, event);
-			}
-		});
-	}
-	
-	protected JobInstance completeIDCJobInstance(Connection conn, CompleteEvent event) throws JobPersistenceException {
-		try {
-			JobInstance ins = idcDriverDelegate.updateJobInstance(conn, event.getInstanceId(), (e -> {
-				e.setStatus(event.getFinalStatus());
-				e.setEndTime(event.getEndTime());
-			}));
-			if (ins == null) {
-				return null;
-			}
-			
-			if (ins.getMainInstanceId() != null) {
-				List<JobInstance> subIns = idcDriverDelegate.selectSubJobInstance(conn, ins.getMainInstanceId());
-				long runningCnt = subIns.stream()
-					.filter(s -> !s.getStatus().isComplete())
-					.count();
-				if (runningCnt == 0) {
-					for (JobInstance s : subIns) {
-						if (s.getStatus() == JobInstanceStatus.FAILED || s.getStatus() == JobInstanceStatus.CANCLED) {
-							idcDriverDelegate.updateJobInstance(conn, ins.getMainInstanceId(), mins -> {
-								if (!mins.getStatus().isComplete()) {
-									mins.setStatus(JobInstanceStatus.FAILED);
-								}
-							});
+				try {
+					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
+					if (ins != null) {
+						// TODO should be CUSTOME Status
+						ins.setStatus(event.getStatus());
+						ins.setUpdateTime(event.getTime());
+						if (ins.getTaskType() == TaskType.SUB_TASK) {
+							JobInstance mainIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
+							if (!mainIns.getStatus().isComplete()) {
+								mainIns.setUpdateTime(ins.getUpdateTime());
+							}
 						}
 					}
-				}
-			}
-			
-			JobKey jobKey = ins.getJobKey();
-			// 删除 barrier
-			if (buildBarrier(conn, jobKey, jobKey, ins.getShouldFireTime()) == null) {
-				idcDriverDelegate.markBarrierInvalid(conn, jobKey.getJobId(), jobKey.getJobGroup(), ins.getShouldFireTime());
-			}
-			signalSchedulingChangeOnTxCompletion(0L);
-			return ins;
-		} catch (SQLException e) {
-			throw new JobPersistenceException(e.getMessage(), e);
-		}
-	}
-	
-	@Override
-	public void clearAllBarrier() {
-		getLog().info("清空所有 Barrier 信息");
-		try {
-			executeInLock(null, new TransactionCallback<Void>() {
-
-				@Override
-				public Void execute(Connection conn) throws JobPersistenceException {
-					try {
-						idcDriverDelegate.clearAllBarrier(conn);
-					} catch (SQLException e) {
-						getLog().warn("清空 Barrier 信息失败: " + e.getMessage());
-					}
-					return null;
-				}
-			});
-		} catch (JobPersistenceException e) {
-			getLog().warn("清空 Barrier 信息失败: " + e.getMessage());
-		}
-	}
-	
-	@Override
-	public List<JobInstance> retrieveIDCSubJobInstance(Integer mainInstanceId) throws JobPersistenceException {
-		return executeWithoutLock(new TransactionCallback<List<JobInstance>>() {
-			@Override
-			public List<JobInstance> execute(Connection conn) throws JobPersistenceException {
-				try {
-					return idcDriverDelegate.selectSubJobInstance(conn, mainInstanceId);
+					return ins;
 				} catch (SQLException e) {
 					throw new JobPersistenceException(e.getMessage(), e);
 				}
 			}
 		});
 	}
+	
+	@Override
+	public JobInstance jobInstanceCompleted(CompleteEvent event) throws JobPersistenceException {
+		return (JobInstance) executeInLock(LOCK_TRIGGER_ACCESS, new TransactionCallback<JobInstance>() {
+			@Override
+			public JobInstance execute(Connection conn) throws JobPersistenceException {
+				try {
+					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
+					if (ins != null) {
+						ins.setEndTime(event.getEndTime());
+						ins.setStatus(event.getFinalStatus());
+						idcDriverDelegate.updateJobInstance(conn, ins);
+						
+						// 删除 barrier
+						if (!shouldBarrier(ins)) {
+							idcDriverDelegate.markBarrierInvalid(conn, ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
+							signalSchedulingChangeOnTxCompletion(0L);
+						}
+						
 
+						if(ins.getTaskType() == TaskType.SUB_TASK) {
+							JobInstance mainJobIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
+							if (!mainJobIns.getStatus().isComplete()) {
+								 Map<TaskKey, JobInstance> subTaskStatus = idcDriverDelegate.selectSubJobInstance(conn, mainJobIns.getInstanceId())
+										.stream().collect(Collectors.toMap(JobInstance::getTaskKey, j -> j));
+								List<WorkflowEdge> edges = pluginService.getTaskDependencies(mainJobIns.getTaskKey());
+								for (WorkflowEdge edge : edges) {
+									// TODO
+									
+								}
+							}
+						}
+						
+						
+					}
+					return ins;
+				} catch (SQLException e) {
+					throw new JobPersistenceException(e.getMessage(), e);
+				}
+			}
+		});
+	}
+	
 	@Override
 	public void cleanupIDCJob(JobKey jobKey) throws JobPersistenceException {
-		executeWithoutLock(new TransactionCallback<Void>() {
+		executeInLock(LOCK_TRIGGER_ACCESS, new TransactionCallback<Void>() {
 			@Override
 			public Void execute(Connection conn) throws JobPersistenceException {
 				try {
-					idcDriverDelegate.cleanupJobInstance(conn, jobKey);
+					Job job = pluginService.getJob(jobKey);
+					if (job == null) {
+						return null;
+					}
+					// delete triggers
+					removeTrigger(conn, new TriggerKey(jobKey.getJobId(), jobKey.getJobGroup()));
+					if (job.getTaskType() == TaskType.WORKFLOW) {
+						String group = IDCUtils.subJobGroup(jobKey);
+						Set<TriggerKey> subTriggers = getDelegate().selectTriggersInGroup(conn, GroupMatcher.triggerGroupEquals(group));
+						for (TriggerKey subTrigger : subTriggers) {
+							removeTrigger(subTrigger);
+						}
+					}
+					// delete all instance
+					idcDriverDelegate.deleteJobInstance(conn, jobKey);
+					// delete all barriers
 					idcDriverDelegate.clearJobBarrier(conn, jobKey);
 				} catch (SQLException e) {
 					throw new JobPersistenceException(e.getMessage(), e);
@@ -320,7 +317,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			}
 		});
 	}
-
+	
 	private IDCTriggerHandler newTriggerHandler(OperableTrigger nextTrigger) {
 		IDCTriggerInstruction instruction = IDCContextKey.JOB_TRIGGER_INSTRUCTION.applyGet(nextTrigger.getJobDataMap());
 		switch (instruction) {
@@ -405,28 +402,29 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		@Override
 		void valid(Connection conn) throws SQLException {
 		}
-
+		
+		JobInstance prevIns = null;
 		
 		@Override
 		protected List<JobBarrier> computeBarriers(Connection conn) throws SQLException {
 			
 			shouldFireTime = Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L);
 			prevFireTime = Optional.ofNullable(trigger.getPreviousFireTime()).map(Date::getTime).orElse(-1L);
+			prevIns = prevFireTime == -1 ? null : idcDriverDelegate.selectJobInstance(conn, jobKey, prevFireTime);
 			
 			List<JobBarrier> barriers = new ArrayList<>();
 			// 流程子任务，检查上游任务是否都已完成
 			// 同周期任务是否完成
-			JobBarrier b = buildBarrier(conn, jobKey, jobKey, prevFireTime);
-			if (b != null) {
-				barriers.add(b);
+			if (shouldBarrier(prevIns)) {
+				barriers.add(buildBarrier(conn, jobKey, prevIns));
 			}
-			// TODO 任务间依赖，这里应该计算数据的依赖，即 loadDate 的依赖
-			List<JobDependency> jobDependencies = dependencyService.getJobDependencies(jobKey);
+			List<JobDependency> jobDependencies = pluginService.getJobDependencies(jobKey);
 			if (!Utils.isNullOrEmpty(jobDependencies)) {
 				for (JobDependency dep : jobDependencies) {
-					JobBarrier a = buildBarrier(conn, jobKey, dep.getDependencyJobKey(), shouldFireTime);
-					if (a != null) {
-						barriers.add(a);
+					// TODO 任务间依赖，这里应该计算数据的依赖，即 loadDate 的依赖
+					JobInstance depJobIns = idcDriverDelegate.selectJobInstance(conn, dep.getDependencyJobKey(), shouldFireTime);
+					if (shouldBarrier(depJobIns)) {
+						barriers.add(buildBarrier(conn, jobKey, depJobIns));
 					}
 				}
 			}
@@ -436,7 +434,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		@Override
 		protected String storeJobInstance(Connection conn) throws SQLException {
 			
-			Job job = idcDriverDelegate.selectJob(jobKey);
+			Job job = pluginService.getJob(jobKey);
 			
 			JobInstance ins = new JobInstance();
 			// ~~ 基础信息 ~~
@@ -507,16 +505,16 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 				shouldFireTime = Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L);
 				List<JobBarrier> barriers = new ArrayList<>();
 				// 流程子任务，检查上游任务是否都已完成
-				List<TaskKey> depTasks = dependencyService.getPredecessors(mainJobIns.getTaskKey(), getIDCTaskKey());
+				List<TaskKey> depTasks = pluginService.getPredecessors(mainJobIns.getTaskKey(), getIDCTaskKey());
 				if (!Utils.isNullOrEmpty(depTasks)) {
 					for (TaskKey deptk : depTasks) {
 						if (deptk.equals(WorkflowEdge.START)) {
 							continue;
 						}
 						JobKey barrierKey = IDCUtils.getSubJobKey(mainJobIns.getJobKey(), deptk);
-						JobBarrier b = buildBarrier(conn, jobKey, barrierKey, shouldFireTime);
-						if (b != null) {
-							barriers.add(b);
+						JobInstance barrierIns = idcDriverDelegate.selectJobInstance(conn, barrierKey, shouldFireTime);
+						if (shouldBarrier(barrierIns)) {
+							barriers.add(buildBarrier(conn, jobKey, barrierIns));
 						}
 					}
 				}
@@ -529,7 +527,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		protected String storeJobInstance(Connection conn) throws SQLException {
 			if (valid) {
 
-				Task task = idcDriverDelegate.selectTask(taskKey);
+				Task task = pluginService.getTask(taskKey);
 				
 				JobInstance ins = new JobInstance();
 				// ~~ 基础信息 ~~
@@ -588,11 +586,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 
 		@Override
 		String storeJobInstance(Connection conn) throws SQLException {
-			idcDriverDelegate.updateJobInstance(conn, env.getInstanceId(), (i) -> {
-				i.setStatus(JobInstanceStatus.NEW);
-				i.setStartTime(LocalDateTime.now());
-				i.setEndTime(null);
-			});
+			JobInstance i = idcDriverDelegate.selectJobInstance(conn, env.getInstanceId());
+			i.setStatus(JobInstanceStatus.NEW);
+			i.setStartTime(LocalDateTime.now());
+			i.setEndTime(null);
+			idcDriverDelegate.updateJobInstance(conn, i);
 			return env.getInstanceId() + "";
 		}
 	}
@@ -614,9 +612,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		protected List<JobBarrier> computeBarriers(Connection conn) throws SQLException {
 			List<JobBarrier> barriers = new LinkedList<>();
 			for (JobKey bk : env.getBarrierKeys()) {
-				JobBarrier barrier = buildBarrier(conn, jobKey, bk, env.getShouldFireTime());
-				if (barrier != null) {
-					barriers.add(barrier);
+				JobInstance barrierIns = idcDriverDelegate.selectJobInstance(conn, bk, env.getShouldFireTime());
+				if (shouldBarrier(barrierIns)) {
+					barriers.add(buildBarrier(conn, jobKey, barrierIns));
 				}
 			}
 			return barriers;

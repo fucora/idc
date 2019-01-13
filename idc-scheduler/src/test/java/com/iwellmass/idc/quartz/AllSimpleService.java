@@ -6,20 +6,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.iwellmass.idc.DependencyService;
-import com.iwellmass.idc.IDCPluginService;
-import com.iwellmass.idc.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 
-public class AllSimpleService implements DependencyService, IDCPluginService {
+import com.iwellmass.idc.model.Job;
+import com.iwellmass.idc.model.JobDependency;
+import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.Task;
+import com.iwellmass.idc.model.TaskKey;
+import com.iwellmass.idc.model.WorkflowEdge;
+
+public class AllSimpleService implements IDCPluginService {
 	
 	private final Map<String, Graph<TaskKey, WorkflowEdge>> workflowMap = new HashMap<>(); 
 	
 	private final Map<TaskKey, Task> taskMap = new HashMap<>();
 
-	public Task findTask(TaskKey taskKey) {
+	public Task getTask(TaskKey taskKey) {
 		return taskMap.get(taskKey);
 	}
 	
@@ -42,7 +46,7 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 	private static final Map<JobKey, Job> jobMap = new HashMap<>();
 	
 	@Override
-	public Job findJob(JobKey jobKey) {
+	public Job getJob(JobKey jobKey) {
 		return jobMap.get(jobKey);
 	}
 
@@ -51,16 +55,6 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 		jobMap.put(job.getJobKey(), job);
 	}
 	
-	@Override
-	public void saveTask(Task task) {
-		taskMap.put(task.getTaskKey(), task);
-	}
-	
-	@Override
-	public List<Task> findTasks(List<TaskKey> taskKey) {
-		return taskKey.stream().map(taskMap::get).collect(Collectors.toList());
-	}
-
 	public void addTaskDependency(String workflowId, TaskKey... depChain) {
 		Graph<TaskKey, WorkflowEdge> graph = workflowMap.get(workflowId);
 		if (graph == null) {
@@ -83,19 +77,15 @@ public class AllSimpleService implements DependencyService, IDCPluginService {
 		return Collections.emptyList();
 	}
 
-    @Override
-    public JobInstance findByInstanceId(Integer instanceId) {
-        return null;
-    }
-
 	@Override
-	public void saveJobDependencies(List<JobDependency> jobDependencies) {
-		// 保存Job依赖关系
+	public IDCPluginConfig getConfig() {
+		return null;
 	}
 
 	@Override
-	public void clearJobDependencies(JobKey jobKey) {
-		// 清除指定job的依赖关系
+	public List<WorkflowEdge> getTaskDependencies(TaskKey taskKey) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

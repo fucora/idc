@@ -32,7 +32,7 @@
 	</select>
 	
 	
-	<select id="selectJobRuntimeList" parameterType="com.iwellmass.idc.app.model.JobQuery" resultMap="jobRuntimeListVO">
+	<select id="selectJobRuntimeList" parameterType="com.iwellmass.idc.app.vo.JobQuery" resultMap="jobRuntimeListVO">
 		SELECT
 			j.job_id as jobId,
 			j.content_type as contentType,

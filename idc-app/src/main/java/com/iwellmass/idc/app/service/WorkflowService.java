@@ -60,4 +60,8 @@ public class WorkflowService {
 	public List<WorkflowEdge> getWorkflowEdges(TaskKey tk) {
 		return workflowEdgeRepository.findByParentTaskIdAndParentTaskGroup(tk.getTaskId(),tk.getTaskGroup());
 	}
+
+	public Workflow findOne(String workflowId) {
+		return workflowRepository.findOne(workflowId);
+	}
 }

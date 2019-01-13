@@ -7,15 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.iwellmass.idc.model.BarrierState;
-import com.iwellmass.idc.model.Job;
 import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobKey;
-import com.iwellmass.idc.model.Task;
-import com.iwellmass.idc.model.TaskKey;
 
 public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants {
 
@@ -32,12 +28,6 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
     		+ COL_IDC_JOB_GROUP + " = ?";
     public static final String IDC_CLEAR_ALL_JOB_BARRIER = "DELETE FROM " + TABLE_BARRIER;
 	
-	@Override
-	public JobInstance updateJobInstance(Connection conn, Integer instanceId, Consumer<JobInstance> func) throws SQLException {
-		JobInstance ins = selectJobInstance(conn, instanceId);
-		func.accept(ins);
-		return ins;
-	}
 
 	@Override
 	public JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException {
@@ -138,19 +128,6 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 		}
 	}
 
-	private static final Map<JobKey, Job> jobMap = new HashMap<>();
-
-	@Override
-	public Job selectJob(JobKey jobKey) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Task selectTask(TaskKey taskKey) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInsId) throws SQLException {
@@ -166,6 +143,18 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 
 	@Override
 	public List<JobInstance> selectRuningJobs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteJobInstance(Connection conn, JobKey jobKey) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}
