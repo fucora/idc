@@ -77,7 +77,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 
 
 	@Override
-	public void markBarrierInvalid(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
+	public void deleteBarrier(Connection conn, String jobId, String jobGroup, Long shouldFireTime) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_UPDATE_JOB_BARRIER);
@@ -96,7 +96,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	}
 
 	@Override
-	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
+	public void deleteJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_CLEAR_JOB_BARRIER);
@@ -114,7 +114,7 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	}
 
 	@Override
-	public void clearAllBarrier(Connection conn) throws SQLException {
+	public void deleteAllBarrier(Connection conn) throws SQLException {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(IDC_CLEAR_ALL_JOB_BARRIER);
@@ -135,11 +135,6 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 		return null;
 	}
 
-	@Override
-	public void cleanupJobInstance(Connection conn, JobKey jobKey) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public List<JobInstance> selectRuningJobs() {
@@ -157,6 +152,18 @@ public class SimpleIDCDriverDelegate implements IDCDriverDelegate, IDCConstants 
 	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void deleteSubJobInstance(Connection conn, Integer instanceId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deleteSubJobBarrier(Connection conn, JobKey jobKey) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

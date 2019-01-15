@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import com.iwellmass.idc.IDCUtils;
 import com.iwellmass.idc.app.repo.JobBarrierRepo;
 import com.iwellmass.idc.app.repo.JobInstanceRepository;
 import com.iwellmass.idc.model.JobBarrier;
@@ -49,21 +50,26 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	}
 
 	@Transactional
-	public void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
-		barrierRepo.clearJobBarrier(jobKey.getJobId(), jobKey.getJobGroup());
+	public void deleteJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
+		barrierRepo.deleteByJobIdAndJobGroup(jobKey.getJobId(), jobKey.getJobGroup());
+	}
+	
+	@Transactional
+	public void deleteBarrier(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
+			throws SQLException {
+		barrierRepo.deleteByBarrierKey(barrierId, barrierGroup, shouldFireTime);
+	}
+	
+	@Override
+	public void deleteSubJobBarrier(Connection conn, JobKey mainJobKey) {
+		String jobGroup = IDCUtils.subJobGroup(mainJobKey);
+		barrierRepo.deleteByJobGroup(jobGroup);
 	}
 
 	@Transactional
-	public void clearAllBarrier(Connection conn) throws SQLException {
+	public void deleteAllBarrier(Connection conn) throws SQLException {
 		barrierRepo.deleteAll();
 	}
-
-	@Transactional
-	public void markBarrierInvalid(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime)
-			throws SQLException {
-		barrierRepo.deleteBarriers(barrierId, barrierGroup, shouldFireTime);
-	}
-
 
 	@Override
 	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInstanceId) throws SQLException {
@@ -84,9 +90,15 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	public void deleteJobInstance(Connection conn, JobKey jobKey) {
 		instanceRepo.deleteByJob(jobKey);
 	}
+	
+	@Override
+	public void deleteSubJobInstance(Connection conn, Integer instanceId) {
+		instanceRepo.deleteByMainInstanceId(instanceId);
+	}
 
 	@Override
 	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
 		return instanceRepo.save(ins);
 	}
+
 }

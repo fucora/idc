@@ -33,9 +33,14 @@ public interface JobInstanceRepository
 	
 	@Transactional
 	@Modifying
+	void deleteByMainInstanceId(Integer instanceId);
+	
+	@Transactional
+	@Modifying
 	void deleteByJobIdAndJobGroupAndShouldFireTime(String jobId, String jobGroup, Long shouldFireTime);
 
 	List<JobInstance> findByMainInstanceId(Integer mainInstanceId);
 
 	List<JobInstance> findByStatusNotIn(List<JobInstanceStatus> asList);
+
 }

@@ -18,17 +18,27 @@ public enum JobInstanceStatus {
 	//成功
 	FINISHED,
 	
+	// 跳过
+	SKIPPED,
+	
 	// 失败
 	FAILED,
 	
 	// 取消
-	CANCLED,
-	
-	// 跳过
-	SKIPPED;
+	CANCLED;
 	
 	
 	public boolean isComplete() {
-		return this == FINISHED || this == FAILED || this == JobInstanceStatus.CANCLED || this == SKIPPED;
+		return isSuccess() || isFailure();
+	}
+
+	// 任务已完成
+	public boolean isSuccess() {
+		return this == FINISHED || this == JobInstanceStatus.SKIPPED;
+	}
+	
+	// 任务有错误
+	public boolean isFailure() {
+		return this == FAILED || this == JobInstanceStatus.CANCLED;
 	}
 }

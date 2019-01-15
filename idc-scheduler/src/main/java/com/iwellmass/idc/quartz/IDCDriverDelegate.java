@@ -14,16 +14,18 @@ public interface IDCDriverDelegate {
 	JobInstance insertJobInstance(Connection conn, JobInstance ins) throws SQLException;
 	JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException;
 	void deleteJobInstance(Connection conn, JobKey jobKey);
+	void deleteSubJobInstance(Connection conn, Integer instanceId);
 	JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException;
 	JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException;
 	List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInsId) throws SQLException;
 	List<JobInstance> selectRuningJobs();
-	void cleanupJobInstance(Connection conn, JobKey jobKey);
 
 	// ~~ barrier 相关 ~~
-	void clearAllBarrier(Connection conn) throws SQLException;
-	void clearJobBarrier(Connection conn, JobKey jobKey) throws SQLException;
 	void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException;
+	void deleteAllBarrier(Connection conn) throws SQLException;
+	void deleteJobBarrier(Connection conn, JobKey jobKey) throws SQLException;
+	void deleteSubJobBarrier(Connection conn, JobKey jobKey) throws SQLException;
 	// 使 barrier 失效
-	void markBarrierInvalid(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime) throws SQLException;
+	void deleteBarrier(Connection conn, String barrierId, String barrierGroup, Long shouldFireTime) throws SQLException;
+	
 }

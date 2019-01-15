@@ -4,7 +4,6 @@ import static com.iwellmass.idc.quartz.IDCContextKey.CONTEXT_INSTANCE;
 
 import javax.inject.Inject;
 
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -14,7 +13,6 @@ import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import com.iwellmass.idc.model.JobInstance;
 
-@DisallowConcurrentExecution
 public class IDCDispatcherJob implements org.quartz.Job {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCDispatcherJob.class);

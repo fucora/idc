@@ -10,10 +10,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.quartz.JobDetail;
 import org.quartz.JobPersistenceException;
@@ -60,7 +58,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		IDCPluginConfig config = pluginService.getConfig();
 		if (config.isBarrierClearOnStartup()) {
 			try {
-				idcDriverDelegate.clearAllBarrier(getConnection());
+				idcDriverDelegate.deleteAllBarrier(getConnection());
 			} catch (SQLException e) {
 				getLog().warn("clear barrier error: " + e.getMessage());
 				// ignore 
@@ -77,18 +75,19 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
         }
         
         List<OperableTrigger> acquiredTriggers = new ArrayList<OperableTrigger>();
+        
+        IDCPluginConfig config = pluginService.getConfig();
+        // 并发控制 TODO 考虑这里是否合适
+        List<JobInstance> runningJobs = idcDriverDelegate.selectRuningJobs();
+        if (runningJobs.size() > config.getSchedulerParallelMax()) {
+        	return acquiredTriggers;
+        }
+        
         Set<org.quartz.JobKey> acquiredJobKeysForNoConcurrentExec = new HashSet<org.quartz.JobKey>();
         final int MAX_DO_LOOP_RETRY = 3;
         int currentLoopCount = 0;
-        IDCPluginConfig config = pluginService.getConfig();
         do {
             currentLoopCount ++;
-            
-            // 并发控制 TODO 考虑这里是否合适
-            List<JobInstance> runningJobs = idcDriverDelegate.selectRuningJobs();
-            if (runningJobs.size() > config.getSchedulerParallelMax()) {
-            	continue;
-            }
             
             try {
                 List<TriggerKey> keys = getDelegate().selectTriggerToAcquire(conn, noLaterThan + timeWindow, getMisfireTime(), maxCount);
@@ -98,6 +97,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     return acquiredTriggers;
 
                 long batchEnd = noLaterThan;
+                
+                boolean barrierChanged = false;
 
                 for(TriggerKey triggerKey: keys) {
                     // If our trigger is no longer available, try a new one.
@@ -139,12 +140,17 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					////////////////
                     IDCTriggerHandler handler = newTriggerHandler(nextTrigger);
                     
+                    // first
+                    handler.valid(conn);
+                    
+                    // then
                 	List<JobBarrier> barriers = handler.computeBarriers(conn);
                 	// clear first
-                	idcDriverDelegate.clearJobBarrier(conn, handler.getIDCJobKey());
+                	idcDriverDelegate.deleteJobBarrier(conn, handler.getIDCJobKey());
                 	// double check
                 	if (!barriers.isEmpty()) {
                 		idcDriverDelegate.batchInsertJobBarrier(conn, barriers);
+                		barrierChanged = true;
                 		continue;
                 	}
 					//////////////////////////////////////// END check
@@ -156,6 +162,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                         continue; // next trigger
                     }
 
+                    // then
                     String fid = handler.storeJobInstance(conn);
                     
                     nextTrigger.setFireInstanceId(fid);
@@ -168,10 +175,15 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                     acquiredTriggers.add(nextTrigger);
                 }
 
+                if(barrierChanged) {
+                	signalSchedulingChangeImmediately(0);
+                	break;
+                }
+                
                 // if we didn't end up with any trigger to fire from that first
                 // batch, try again for another batch. We allow with a max retry count.
                 if(acquiredTriggers.size() == 0 && currentLoopCount < MAX_DO_LOOP_RETRY) {
-                    continue;
+            		continue;
                 }
                 
                 // We are done with the while loop.
@@ -192,11 +204,11 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		return barrierIns == null || !finished.contains(barrierIns.getStatus());
 	}
 	/* ins 不再阻塞下游则返回 null，否则返回构建的 barrier 对象*/
-	private JobBarrier buildBarrier(Connection conn, JobKey jobKey, JobInstance barrierIns) throws SQLException {
+	private JobBarrier buildBarrier(Connection conn, JobKey jobKey, JobKey barrierkey, Long shouldFireTime) throws SQLException {
 		JobBarrier b = new JobBarrier();
 		b.setJobKey(jobKey);
-		b.setBarrierKey(barrierIns.getJobKey());
-		b.setBarrierShouldFireTime(barrierIns.getShouldFireTime());
+		b.setBarrierKey(barrierkey);
+		b.setBarrierShouldFireTime(shouldFireTime);
 		b.setState(BarrierState.VALID);
 		return b;
 	}
@@ -226,16 +238,18 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			public JobInstance execute(Connection conn) throws JobPersistenceException {
 				try {
 					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
-					if (ins != null) {
+					if (ins != null && !ins.getStatus().isComplete()) {
 						// TODO should be CUSTOME Status
 						ins.setStatus(event.getStatus());
-						ins.setUpdateTime(event.getTime());
+						ins.setUpdateTime(event.getTime() == null ? LocalDateTime.now() : event.getTime());
 						if (ins.getTaskType() == TaskType.SUB_TASK) {
 							JobInstance mainIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
 							if (!mainIns.getStatus().isComplete()) {
 								mainIns.setUpdateTime(ins.getUpdateTime());
 							}
+							idcDriverDelegate.updateJobInstance(conn, mainIns);
 						}
+						idcDriverDelegate.updateJobInstance(conn, ins);
 					}
 					return ins;
 				} catch (SQLException e) {
@@ -259,25 +273,23 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 						
 						// 删除 barrier
 						if (!shouldBarrier(ins)) {
-							idcDriverDelegate.markBarrierInvalid(conn, ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
+							idcDriverDelegate.deleteBarrier(conn, ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
 							signalSchedulingChangeOnTxCompletion(0L);
 						}
-						
 
 						if(ins.getTaskType() == TaskType.SUB_TASK) {
+							
 							JobInstance mainJobIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
+							
+							// 如果已经完成，忽略
 							if (!mainJobIns.getStatus().isComplete()) {
-								 Map<TaskKey, JobInstance> subTaskStatus = idcDriverDelegate.selectSubJobInstance(conn, mainJobIns.getInstanceId())
-										.stream().collect(Collectors.toMap(JobInstance::getTaskKey, j -> j));
-								List<WorkflowEdge> edges = pluginService.getTaskDependencies(mainJobIns.getTaskKey());
-								for (WorkflowEdge edge : edges) {
-									// TODO
-									
+								if (shouldMarkFailured(conn, ins, mainJobIns)) {
+									mainJobIns.setStatus(JobInstanceStatus.FAILED);
+									mainJobIns.setUpdateTime(LocalDateTime.now());
+									mainJobIns.setEndTime(mainJobIns.getUpdateTime());
 								}
 							}
 						}
-						
-						
 					}
 					return ins;
 				} catch (SQLException e) {
@@ -285,6 +297,17 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 				}
 			}
 		});
+	}
+	
+	protected boolean shouldMarkFailured(Connection conn, JobInstance ins, JobInstance mainJobIns) throws SQLException {
+		
+		List<JobInstance> subJobList = idcDriverDelegate.selectSubJobInstance(conn, mainJobIns.getInstanceId());
+		if (subJobList.stream().anyMatch(s -> !s.getStatus().isComplete())) {
+			return false;
+		}
+		// TODO 需要更严谨的判断
+		
+		return true;
 	}
 	
 	@Override
@@ -309,11 +332,46 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 					// delete all instance
 					idcDriverDelegate.deleteJobInstance(conn, jobKey);
 					// delete all barriers
-					idcDriverDelegate.clearJobBarrier(conn, jobKey);
+					idcDriverDelegate.deleteJobBarrier(conn, jobKey);
 				} catch (SQLException e) {
 					throw new JobPersistenceException(e.getMessage(), e);
 				}
 				return null;
+			}
+		});
+	}
+	
+	@Override
+	public JobInstance cleanupIDCJobInstance(Integer instanceId) throws JobPersistenceException {
+		return (JobInstance) executeInLock(LOCK_TRIGGER_ACCESS, new TransactionCallback<JobInstance>() {
+			@Override
+			public JobInstance execute(Connection conn) throws JobPersistenceException {
+				try {
+					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, instanceId);
+					
+					if (ins != null && ins.getStatus().isComplete()) {
+						ins.setStartTime(null);
+						ins.setEndTime(null);
+						ins.setUpdateTime(LocalDateTime.now());
+						ins.setStatus(JobInstanceStatus.NONE);
+						idcDriverDelegate.updateJobInstance(conn, ins);
+						
+						// delete barriers
+						idcDriverDelegate.deleteJobBarrier(conn, ins.getJobKey());
+						
+						if (ins.getTaskType() == TaskType.WORKFLOW) {
+							idcDriverDelegate.deleteSubJobInstance(conn, ins.getInstanceId());
+							idcDriverDelegate.deleteSubJobBarrier(conn, ins.getJobKey());
+						}
+						
+						
+						return ins;
+					} else {
+						return null;
+					}
+				} catch (SQLException e) {
+					throw new JobPersistenceException(e.getMessage(), e);
+				}
 			}
 		});
 	}
@@ -416,15 +474,16 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			// 流程子任务，检查上游任务是否都已完成
 			// 同周期任务是否完成
 			if (shouldBarrier(prevIns)) {
-				barriers.add(buildBarrier(conn, jobKey, prevIns));
+				barriers.add(buildBarrier(conn, jobKey, jobKey, prevFireTime));
 			}
 			List<JobDependency> jobDependencies = pluginService.getJobDependencies(jobKey);
 			if (!Utils.isNullOrEmpty(jobDependencies)) {
 				for (JobDependency dep : jobDependencies) {
+					JobKey barrierKey = dep.getDependencyJobKey();
 					// TODO 任务间依赖，这里应该计算数据的依赖，即 loadDate 的依赖
-					JobInstance depJobIns = idcDriverDelegate.selectJobInstance(conn, dep.getDependencyJobKey(), shouldFireTime);
+					JobInstance depJobIns = idcDriverDelegate.selectJobInstance(conn, barrierKey, shouldFireTime);
 					if (shouldBarrier(depJobIns)) {
-						barriers.add(buildBarrier(conn, jobKey, depJobIns));
+						barriers.add(buildBarrier(conn, jobKey, barrierKey, shouldFireTime));
 					}
 				}
 			}
@@ -497,12 +556,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			valid = !mainJobIns.getStatus().isComplete();
 		}
 
-		private Long shouldFireTime = -1L;
-
 		@Override
 		protected List<JobBarrier> computeBarriers(Connection conn) throws SQLException {
 			if (valid) {
-				shouldFireTime = Optional.ofNullable(trigger.getNextFireTime()).map(Date::getTime).orElse(-1L);
 				List<JobBarrier> barriers = new ArrayList<>();
 				// 流程子任务，检查上游任务是否都已完成
 				List<TaskKey> depTasks = pluginService.getPredecessors(mainJobIns.getTaskKey(), getIDCTaskKey());
@@ -512,9 +568,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 							continue;
 						}
 						JobKey barrierKey = IDCUtils.getSubJobKey(mainJobIns.getJobKey(), deptk);
-						JobInstance barrierIns = idcDriverDelegate.selectJobInstance(conn, barrierKey, shouldFireTime);
+						JobInstance barrierIns = idcDriverDelegate.selectJobInstance(conn, barrierKey, mainJobIns.getShouldFireTime());
 						if (shouldBarrier(barrierIns)) {
-							barriers.add(buildBarrier(conn, jobKey, barrierIns));
+							barriers.add(buildBarrier(conn, jobKey, barrierKey, mainJobIns.getShouldFireTime()));
 						}
 					}
 				}
@@ -525,42 +581,42 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 
 		@Override
 		protected String storeJobInstance(Connection conn) throws SQLException {
-			if (valid) {
-
-				Task task = pluginService.getTask(taskKey);
-				
-				JobInstance ins = new JobInstance();
-				// ~~ 基础信息 ~~
-				ins.setJobKey(jobKey);
-				ins.setJobName(task.getTaskName());
-				ins.setTaskKey(taskKey);
-				ins.setContentType(task.getContentType());
-				ins.setTaskType(TaskType.SUB_TASK);
-				
-				// ~~ seam as main job ~~
-				ins.setDispatchType(mainJobIns.getDispatchType());
-				// 责任人
-				ins.setAssignee(mainJobIns.getAssignee());
-				// 调度类型
-				ins.setScheduleType(mainJobIns.getScheduleType());
-				// parameter
-				ins.setParameter(mainJobIns.getParameter());
-				// 批次
-				ins.setShouldFireTime(mainJobIns.getShouldFireTime());
-				// prev 批次
-				ins.setPrevFireTime(mainJobIns.getPrevFireTime());
-				// 业务日期
-				ins.setLoadDate(mainJobIns.getLoadDate());
-
-				// ~~ 其他 ~~
-				ins.setMainInstanceId(env.getMainInstanceId());
-				ins.setStartTime(LocalDateTime.now());
-				ins.setEndTime(null);
-				ins.setStatus(JobInstanceStatus.NEW);
-
-				return idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId() + "";
+			Task task = pluginService.getTask(taskKey);
 			
+			JobInstance ins = new JobInstance();
+			// ~~ 基础信息 ~~
+			ins.setJobKey(jobKey);
+			ins.setJobName(task.getTaskName());
+			ins.setTaskKey(taskKey);
+			ins.setContentType(task.getContentType());
+			ins.setTaskType(TaskType.SUB_TASK);
+			
+			// ~~ seam as main job ~~
+			ins.setDispatchType(mainJobIns.getDispatchType());
+			// 责任人
+			ins.setAssignee(mainJobIns.getAssignee());
+			// 调度类型
+			ins.setScheduleType(mainJobIns.getScheduleType());
+			// parameter
+			ins.setParameter(mainJobIns.getParameter());
+			// 批次
+			ins.setShouldFireTime(mainJobIns.getShouldFireTime());
+			// prev 批次
+			ins.setPrevFireTime(mainJobIns.getPrevFireTime());
+			// 业务日期
+			ins.setLoadDate(mainJobIns.getLoadDate());
+			
+			// ~~ 其他 ~~
+			ins.setMainInstanceId(env.getMainInstanceId());
+			ins.setStartTime(LocalDateTime.now());
+			ins.setEndTime(null);
+			
+			if (valid) {
+				ins.setStatus(JobInstanceStatus.NEW);
+				return idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId() + "";
 			} else {
+				ins.setStatus(JobInstanceStatus.CANCLED);
+				idcDriverDelegate.insertJobInstance(conn, ins);
 				return IDCJobStoreTX.this.getFiredTriggerRecordId();
 			}
 		}
@@ -614,7 +670,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			for (JobKey bk : env.getBarrierKeys()) {
 				JobInstance barrierIns = idcDriverDelegate.selectJobInstance(conn, bk, env.getShouldFireTime());
 				if (shouldBarrier(barrierIns)) {
-					barriers.add(buildBarrier(conn, jobKey, barrierIns));
+					barriers.add(buildBarrier(conn, jobKey, bk, env.getShouldFireTime()));
 				}
 			}
 			return barriers;
