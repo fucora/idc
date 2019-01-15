@@ -473,7 +473,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			List<JobBarrier> barriers = new ArrayList<>();
 			// 流程子任务，检查上游任务是否都已完成
 			// 同周期任务是否完成
-			if (shouldBarrier(prevIns)) {
+			if (prevFireTime != -1 && shouldBarrier(prevIns)) {
 				barriers.add(buildBarrier(conn, jobKey, jobKey, prevFireTime));
 			}
 			List<JobDependency> jobDependencies = pluginService.getJobDependencies(jobKey);

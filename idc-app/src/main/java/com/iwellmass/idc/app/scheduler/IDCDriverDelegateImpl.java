@@ -37,6 +37,7 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 		return instanceRepo.findOne(instanceId);
 	}
 
+	@Transactional
 	public JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException {
 		// clean first
 		instanceRepo.deleteByJobIdAndJobGroupAndShouldFireTime(newIns.getJobId(), newIns.getJobGroup(), newIns.getShouldFireTime());
@@ -48,6 +49,23 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	public void batchInsertJobBarrier(Connection conn, List<JobBarrier> barriers) throws SQLException {
 		barrierRepo.save(barriers);
 	}
+
+	@Override
+	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInstanceId) throws SQLException {
+		return instanceRepo.findByMainInstanceId(mainInstanceId);
+	}
+
+	@Override
+	public List<JobInstance> selectRuningJobs() {
+		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
+	}
+
+	@Transactional
+	@Override
+	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
+		return instanceRepo.save(ins);
+	}
+	
 
 	@Transactional
 	public void deleteJobBarrier(Connection conn, JobKey jobKey) throws SQLException {
@@ -61,6 +79,7 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	}
 	
 	@Override
+	@Transactional
 	public void deleteSubJobBarrier(Connection conn, JobKey mainJobKey) {
 		String jobGroup = IDCUtils.subJobGroup(mainJobKey);
 		barrierRepo.deleteByJobGroup(jobGroup);
@@ -71,34 +90,19 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 		barrierRepo.deleteAll();
 	}
 
-	@Override
-	public List<JobInstance> selectSubJobInstance(Connection conn, Integer mainInstanceId) throws SQLException {
-		return instanceRepo.findByMainInstanceId(mainInstanceId);
-	}
-
 	@Transactional
 	public void cleanupJobInstance(Connection conn, JobKey jobKey) {
 		instanceRepo.deleteByJob(jobKey);
 	}
-
-	@Override
-	public List<JobInstance> selectRuningJobs() {
-		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
-	}
-
-	@Override
+	
+	@Transactional
 	public void deleteJobInstance(Connection conn, JobKey jobKey) {
 		instanceRepo.deleteByJob(jobKey);
 	}
 	
-	@Override
+	@Transactional
 	public void deleteSubJobInstance(Connection conn, Integer instanceId) {
 		instanceRepo.deleteByMainInstanceId(instanceId);
-	}
-
-	@Override
-	public JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException {
-		return instanceRepo.save(ins);
 	}
 
 }
