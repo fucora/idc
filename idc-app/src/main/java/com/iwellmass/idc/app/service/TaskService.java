@@ -76,7 +76,6 @@ public class TaskService {
 
     @Transactional
     public void update(Task task) {
-        task.setTaskGroup("idc");
         Task oldTask = taskRepository.findOne(task.getTaskKey());
         
         if (oldTask == null) {
