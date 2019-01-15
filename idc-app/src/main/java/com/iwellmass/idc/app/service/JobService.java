@@ -80,8 +80,10 @@ public class JobService {
 
 	public void reschedule(JobKey jobKey, ScheduleProperties sp) {
 		try {
-			Job job = sp.toJob();
-			taskService.validate(sp.getTaskKey());
+			Job job = null;
+			if(sp != null) {
+				job = sp.toJob();
+			}
 			idcPlugin.reschedule(jobKey, job);
 		} catch (SchedulerException e) {
 			throw new AppException(e.getMessage(), e);

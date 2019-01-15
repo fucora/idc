@@ -138,13 +138,15 @@ public class ScheduleProperties extends CronVO {
 		job.setJobName(this.getJobName());
 		job.setParameter(this.getParameter());
 		job.setScheduleType(this.getScheduleType());
-		job.setTaskGroup(this.getTaskId());
+		job.setTaskGroup(this.getTaskGroup());
 		job.setTaskId(this.getTaskId());
 		// 转换
 		job.setStartTime(Optional.ofNullable(this.getStartTime()).map(t -> t.atTime(LocalTime.MIN)).orElse(null));
 		job.setEndTime(Optional.ofNullable(this.getEndTime()).map(t -> t.atTime(LocalTime.MAX)).orElse(null));
 		
-		CronVO vo = this;
+		CronVO vo = new CronVO();
+		vo.setDays(this.getDays());
+		vo.setDuetime(this.getDuetime());
 		String cvo = JSON.toJSONString(vo);
 		job.setScheduleConfig(cvo);
 		return job;
