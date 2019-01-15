@@ -25,6 +25,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+
 /**
  * 调度配置
  */
@@ -85,7 +88,7 @@ public class ScheduleProperties extends CronVO {
 		this.setJobName(job.getJobName());
 		this.setParameter(job.getParameter());
 		this.setScheduleType(job.getScheduleType());
-		this.setTaskGroup(job.getTaskId());
+		this.setTaskGroup(job.getTaskGroup());
 		this.setTaskId(job.getTaskId());
 		// 转换
 		Optional.ofNullable(job.getStartTime()).map(LocalDateTime::toLocalDate).ifPresent(this::setStartTime);

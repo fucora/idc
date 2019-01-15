@@ -29,6 +29,7 @@ public interface JobInstanceRepository
 
 	@Modifying
 	@Query("DELETE FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup}")
+	@Transactional
 	void deleteByJob(@Param("jk") JobKey jobPk);
 	
 	@Transactional
