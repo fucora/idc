@@ -39,7 +39,7 @@ public class WorkflowService {
     	String autoId = Hashing.md5().hashString(String.join(",", ks), Charsets.UTF_8).toString();
 
     	Workflow check = workflowRepository.findOne(autoId);
-    	if (check == null) {
+    	if (check != null) {
     		workflow.setWorkflowId(autoId);
     		edges.forEach(we -> {
     			we.setParentTaskKey(new TaskKey(workflow.getTaskId(),workflow.getTaskGroup()));
