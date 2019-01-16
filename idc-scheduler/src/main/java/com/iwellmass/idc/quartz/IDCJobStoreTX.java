@@ -162,7 +162,7 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
                         continue; // next trigger
                     }
 
-                    // then
+                    // then get id
                     String fid = handler.storeJobInstance(conn);
                     
                     nextTrigger.setFireInstanceId(fid);
@@ -534,6 +534,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			if (ins.getLoadDate() == null) {
 				ins.setLoadDate(ins.getScheduleType().format(IDCUtils.toLocalDateTime(shouldFireTime)));
 			}
+			// clear first
+			idcDriverDelegate.deleteJobInstance(conn, jobKey, ins.getShouldFireTime());
+			// insert it
 			return idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId() + "";
 		}
 	}
@@ -611,6 +614,8 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			ins.setStartTime(LocalDateTime.now());
 			ins.setEndTime(null);
 			
+			// clear it first
+			idcDriverDelegate.deleteJobInstance(conn, jobKey, ins.getShouldFireTime());
 			if (valid) {
 				ins.setStatus(JobInstanceStatus.NEW);
 				return idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId() + "";

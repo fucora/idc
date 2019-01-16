@@ -1,6 +1,9 @@
 package com.iwellmass.idc.client.autoconfig;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.IDCJob;
 import com.iwellmass.idc.executor.IDCJobExecutionContext;
@@ -52,10 +56,22 @@ public class IDCJobHandler implements IDCJobExecutorService {
 	@ResponseBody
 	@PostMapping(path = "/execution")
 	public ServiceResult<String> doExecute(@RequestBody JobEnvImpl jobEnv) {
+		LOGGER.info("[{}] job '{}' accepted, taskId: {}", jobEnv.getInstanceId(),
+				jobEnv.getJobName(), jobEnv.getTaskId());
+		
+		
+		Map<String, String> ps = null;
+		List<ExecParam> eps = jobEnv.getParameter();
+		if (eps != null && !eps.isEmpty()) {
+			ps = new HashMap<>();
+			for (ExecParam ep : eps) {
+				ps .put(ep.getName(), ep.getValue());
+			}
+		}
+		
+		LOGGER.info("[{}] parameter: {}", jobEnv.getInstanceId(), jobEnv.getJobName(), ps);
 		// safe execute
 		execute(jobEnv);
-		LOGGER.info("任务 {} [taskId={}] accepted, timestamp: {}", jobEnv.getInstanceId(),
-				jobEnv.getTaskId(), System.currentTimeMillis());
 		return ServiceResult.success("任务已提交");
 	}
 	
@@ -68,12 +84,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
 				CompleteEvent event = CompleteEvent.failureEvent(context.jobEnv.getInstanceId())
-					.setMessage("任务 {} 执行异常: {}", instance.getJobName() + ",实例id:" + instance.getInstanceId(), cause.getMessage())
+					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
 					.setEndTime(LocalDateTime.now());
 				context.complete(event);
-			}
-			if (!context.isComplete()) {
-				LOGGER.warn("任务 {} 已结束但未通知调度中心, 请确认异步通知可用", instance.getJobName() + ",实例id:" + instance.getInstanceId());
 			}
 		});
 	}
@@ -93,11 +106,13 @@ public class IDCJobHandler implements IDCJobExecutorService {
 			Objects.requireNonNull(event, "event 不能为空");
 
 			if (state == COMPLETE) {
-				LOGGER.warn("job {} already complete {}", event.getInstanceId());
+				LOGGER.warn("[{}] job already complete {}", event.getInstanceId());
 				return;
 			}
 			
-			LOGGER.info("任务 {} 执行完毕, 执行结果: {}", event.getInstanceId(), event.getFinalStatus());
+			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getInstanceId(), 
+					jobEnv.getJobName(),
+					event.getFinalStatus());
 			
 			try {
 				idcStatusService.fireCompleteEvent(event);
@@ -124,10 +139,6 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		}
 		public StartEvent newStartEvent() {
 			return StartEvent.newEvent(jobEnv.getInstanceId());
-		}
-		
-		public boolean isComplete() {
-			return state == COMPLETE || state == NOTIFY_ERROR;
 		}
 	}
 }

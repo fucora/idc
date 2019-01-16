@@ -14,6 +14,7 @@ public interface IDCDriverDelegate {
 	JobInstance insertJobInstance(Connection conn, JobInstance ins) throws SQLException;
 	JobInstance updateJobInstance(Connection conn, JobInstance ins) throws SQLException;
 	void deleteJobInstance(Connection conn, JobKey jobKey);
+	void deleteJobInstance(Connection conn, JobKey jobKey, long shouldFireTime);
 	void deleteSubJobInstance(Connection conn, Integer instanceId);
 	JobInstance selectJobInstance(Connection conn, Integer instanceId) throws SQLException;
 	JobInstance selectJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) throws SQLException;
