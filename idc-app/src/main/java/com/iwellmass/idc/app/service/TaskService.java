@@ -137,11 +137,6 @@ public class TaskService {
             we.setParentTaskKey(task.getTaskKey()); // 刷新 parentTaskKey
         }
         
-        // 更新刷新时间
-        oldTask.setUpdatetime(LocalDateTime.now());
-        // 更新工作流的画图数据
-        oldTask.setGraph(task.getGraph());
-        
         // 刷新 version
         Workflow workflow = new Workflow();
         workflow.setTaskId(task.getTaskId());
@@ -149,10 +144,13 @@ public class TaskService {
         workflow.setGraph(task.getGraph());
         // 工作流是否已改变
         workflowService.saveWorkflow(workflow);
-        
-        oldTask.setWorkflowId(workflow.getWorkflowId());
-        
-        return taskRepository.save(oldTask);
+
+    	// 更新刷新时间
+    	oldTask.setUpdatetime(LocalDateTime.now());
+    	// 更新工作流的画图数据
+    	oldTask.setGraph(task.getGraph());
+    	oldTask.setWorkflowId(workflow.getWorkflowId());
+    	return taskRepository.save(oldTask);
     }
 
     /**

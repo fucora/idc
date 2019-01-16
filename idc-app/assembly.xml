@@ -6,6 +6,7 @@
     </formats>
     <id>releases</id>
     <includeBaseDirectory>true</includeBaseDirectory>
+    <baseDirectory>${project.name}</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>src/main/resources</directory>
