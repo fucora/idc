@@ -39,8 +39,6 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 
 	@Transactional
 	public JobInstance insertJobInstance(Connection conn, JobInstance newIns) throws SQLException {
-		// clean first
-		instanceRepo.deleteByJobIdAndJobGroupAndShouldFireTime(newIns.getJobId(), newIns.getJobGroup(), newIns.getShouldFireTime());
 		// then save
 		return instanceRepo.save(newIns);
 	}
@@ -103,6 +101,12 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 	@Transactional
 	public void deleteSubJobInstance(Connection conn, Integer instanceId) {
 		instanceRepo.deleteByMainInstanceId(instanceId);
+	}
+	
+	@Transactional
+	@Override
+	public void deleteJobInstance(Connection conn, JobKey jobKey, long shouldFireTime) {
+		instanceRepo.deleteByJobIdAndJobGroupAndShouldFireTime(jobKey.getJobId(), jobKey.getJobGroup(), shouldFireTime);
 	}
 
 }
