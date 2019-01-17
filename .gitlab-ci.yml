@@ -31,4 +31,5 @@ test maven package build:
   tags:
     - test-runner
   only:
+    - tags
     - test
