@@ -21,7 +21,15 @@ test maven package build:
     - mvn clean package -DskipTests -Pprd
     - docker-compose -f docker-compose-test.yml build
     - docker-compose -f docker-compose-test.yml up -d
+  artifacts:
+    name:
+        "artifact-idc-server"
+    paths:
+      - idc-app/target/idc-app*.zip
+    expire_in:
+        15 days
   tags:
     - test-runner
   only:
+    - tags
     - test
