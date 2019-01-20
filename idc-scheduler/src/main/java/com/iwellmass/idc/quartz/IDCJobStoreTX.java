@@ -349,26 +349,30 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 				try {
 					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, instanceId);
 					
-					if (ins != null && ins.getStatus().isComplete()) {
-						ins.setStartTime(null);
-						ins.setEndTime(null);
-						ins.setUpdateTime(LocalDateTime.now());
-						ins.setStatus(JobInstanceStatus.NONE);
-						idcDriverDelegate.updateJobInstance(conn, ins);
-						
-						// delete barriers
-						idcDriverDelegate.deleteJobBarrier(conn, ins.getJobKey());
-						
-						if (ins.getTaskType() == TaskType.WORKFLOW) {
-							idcDriverDelegate.deleteSubJobInstance(conn, ins.getInstanceId());
-							idcDriverDelegate.deleteSubJobBarrier(conn, ins.getJobKey());
-						}
-						
-						
-						return ins;
-					} else {
-						return null;
+					// 重跑所有任务
+					if (ins.getTaskType() == TaskType.WORKFLOW) {
+						idcDriverDelegate.deleteSubJobInstance(conn, ins.getInstanceId());
+						idcDriverDelegate.deleteSubJobBarrier(conn, ins.getJobKey());
+					} 
+					// 重跑子任务
+					else if(ins.getTaskType() == TaskType.SUB_TASK) {
+						JobInstance mainIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
+						mainIns.setStatus(JobInstanceStatus.RUNNING);
+						mainIns.setUpdateTime(ins.getUpdateTime());
+						mainIns.setEndTime(null);
+						idcDriverDelegate.updateJobInstance(conn, mainIns);
 					}
+					
+					
+					// 更新本任务状态
+					ins.setStartTime(null);
+					ins.setEndTime(null);
+					ins.setUpdateTime(LocalDateTime.now());
+					ins.setStatus(JobInstanceStatus.NONE);
+					idcDriverDelegate.updateJobInstance(conn, ins);
+					// delete barriers
+					idcDriverDelegate.deleteJobBarrier(conn, ins.getJobKey());
+					return ins;
 				} catch (SQLException e) {
 					throw new JobPersistenceException(e.getMessage(), e);
 				}
