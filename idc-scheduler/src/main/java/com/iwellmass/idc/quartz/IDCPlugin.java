@@ -320,7 +320,7 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 	public void redo(Integer instanceId) throws SchedulerException {
 		JobInstance ins;
 		try {
-			ins = idcJobStore.cleanupIDCJobInstance(instanceId);
+			ins = idcJobStore.resetFromError(instanceId);
 			
 			if (ins == null) {
 				throw new SchedulerException("无法清理实例或者实例不存在");
@@ -337,6 +337,26 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 			
 			Trigger redoTrigger = buildSimpleTrigger(jobKey, ins.getTaskKey(), jobData);
 			scheduler.scheduleJob(redoTrigger);
+		} catch (JobPersistenceException e) {
+			throw new SchedulerException(e.getMessage(), e);
+		}
+	}
+	
+	public void forceComplete(Integer instanceId) throws SchedulerException {
+		JobInstance ins;
+		try {
+			// clear first
+			ins = idcJobStore.resetFromError(instanceId);
+			
+			if (ins == null) {
+				throw new SchedulerException("无法清理实例或者实例不存在");
+			}
+	        CompleteEvent event = CompleteEvent
+	                .successEvent(instanceId)
+	                .setMessage("强制结束")
+	                .setFinalStatus(JobInstanceStatus.SKIPPED)
+	                .setEndTime(LocalDateTime.now());
+	        idcJobStore.jobInstanceCompleted(event);
 		} catch (JobPersistenceException e) {
 			throw new SchedulerException(e.getMessage(), e);
 		}

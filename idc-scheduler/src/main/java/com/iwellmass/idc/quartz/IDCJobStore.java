@@ -15,7 +15,7 @@ public interface IDCJobStore extends JobStore {
 	 */
 	JobInstance retrieveIDCJobInstance(Integer instanceId) throws JobPersistenceException;
 	
-	JobInstance cleanupIDCJobInstance(Integer instanceId) throws JobPersistenceException;
+	JobInstance resetFromError(Integer instanceId) throws JobPersistenceException;
 	
 	// ~~ update JobInstance ~~
 	JobInstance jobInstanceProgressing(ProgressEvent event) throws JobPersistenceException;

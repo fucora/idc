@@ -269,11 +269,13 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 			@Override
 			public JobInstance execute(Connection conn) throws JobPersistenceException {
 				try {
+					
+					LocalDateTime now = LocalDateTime.now();
 					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
 					if (ins != null) {
 						ins.setStatus(event.getFinalStatus());
 						ins.setEndTime(event.getEndTime());
-						ins.setUpdateTime(LocalDateTime.now());
+						ins.setUpdateTime(now);
 						idcDriverDelegate.updateJobInstance(conn, ins);
 						
 						// 删除 barrier
@@ -291,9 +293,12 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 								JobInstanceStatus updateStatus = computeMainJobInstanceStatus(conn, ins, mainJobIns);
 								if (updateStatus != null) {
 									mainJobIns.setStatus(updateStatus);
-									mainJobIns.setUpdateTime(ins.getUpdateTime());
-									mainJobIns.setEndTime(ins.getUpdateTime());
+									mainJobIns.setUpdateTime(now);
+									if (mainJobIns.getStatus().isComplete()) {
+										mainJobIns.setEndTime(now);
+									}
 								}
+								idcDriverDelegate.updateJobInstance(conn, mainJobIns);
 							}
 						}
 					}
@@ -428,33 +433,37 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 	}
 	
 	@Override
-	public JobInstance cleanupIDCJobInstance(Integer instanceId) throws JobPersistenceException {
+	public JobInstance resetFromError(Integer instanceId) throws JobPersistenceException {
 		return (JobInstance) executeInLock(LOCK_TRIGGER_ACCESS, new TransactionCallback<JobInstance>() {
 			@Override
 			public JobInstance execute(Connection conn) throws JobPersistenceException {
 				try {
 					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, instanceId);
 					
-					// 重跑所有任务
+					LocalDateTime now = LocalDateTime.now();
+					
+					// 主任务，清理资源
 					if (ins.getTaskType() == TaskType.WORKFLOW) {
 						idcDriverDelegate.deleteSubJobInstance(conn, ins.getInstanceId());
 						idcDriverDelegate.deleteSubJobBarrier(conn, ins.getJobKey());
 					} 
-					// 重跑子任务
+					// 子任务，重置
 					else if(ins.getTaskType() == TaskType.SUB_TASK) {
 						JobInstance mainIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
-						mainIns.setStatus(JobInstanceStatus.RUNNING);
-						mainIns.setUpdateTime(ins.getUpdateTime());
-						mainIns.setEndTime(null);
-						idcDriverDelegate.updateJobInstance(conn, mainIns);
+						
+						if (mainIns.getStatus().isComplete()) {
+							mainIns.setStatus(JobInstanceStatus.RUNNING);
+							mainIns.setUpdateTime(now);
+							mainIns.setEndTime(null);
+							idcDriverDelegate.updateJobInstance(conn, mainIns);
+						}
 					}
 					
-					
 					// 更新本任务状态
-					ins.setStartTime(null);
+					ins.setStartTime(now);
 					ins.setEndTime(null);
-					ins.setUpdateTime(LocalDateTime.now());
-					ins.setStatus(JobInstanceStatus.NONE);
+					ins.setUpdateTime(now);
+					ins.setStatus(JobInstanceStatus.NEW);
 					idcDriverDelegate.updateJobInstance(conn, ins);
 					// delete barriers
 					idcDriverDelegate.deleteJobBarrier(conn, ins.getJobKey());

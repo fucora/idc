@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.iwellmass.idc.model.*;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +25,10 @@ import com.iwellmass.idc.app.vo.CancleRequest;
 import com.iwellmass.idc.app.vo.JobInstanceQuery;
 import com.iwellmass.idc.app.vo.RedoRequest;
 import com.iwellmass.idc.executor.CompleteEvent;
+import com.iwellmass.idc.model.ExecutionLog;
+import com.iwellmass.idc.model.JobInstance;
+import com.iwellmass.idc.model.JobInstanceStatus;
+import com.iwellmass.idc.model.JobKey;
 import com.iwellmass.idc.quartz.IDCPlugin;
 
 @Service
@@ -41,13 +44,6 @@ public class JobInstanceService {
     private IDCPlugin idcPlugin;
 
     public void redo(RedoRequest request) {
-
-        int instanceId = request.getInstanceId();
-
-        JobInstance instance = jobInstanceRepository.findOne(instanceId);
-
-        Assert.isTrue(instance != null, "找不到此实例");
-
         try {
             idcPlugin.redo(request.getInstanceId());
         } catch (SchedulerException e) {
@@ -57,17 +53,11 @@ public class JobInstanceService {
 
 
     public void forceComplete(int instanceId) {
-
-        JobInstance instance = jobInstanceRepository.findOne(instanceId);
-
-        Assert.isTrue(instance != null, "找不到此实例");
-
-        CompleteEvent event = CompleteEvent
-                .successEvent(instanceId)
-                .setMessage("强制结束")
-                .setFinalStatus(JobInstanceStatus.SKIPPED)
-                .setEndTime(LocalDateTime.now());
-        idcPlugin.getStatusService().fireCompleteEvent(event);
+        try {
+			idcPlugin.forceComplete(instanceId);
+		} catch (SchedulerException e) {
+			throw new AppException("操作失败: " + e.getMessage());
+		}
     }
 
     public void cancle(CancleRequest req) {
