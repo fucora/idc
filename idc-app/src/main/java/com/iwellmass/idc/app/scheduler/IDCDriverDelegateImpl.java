@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -16,6 +17,7 @@ import com.iwellmass.idc.model.JobBarrier;
 import com.iwellmass.idc.model.JobInstance;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.model.TaskType;
 import com.iwellmass.idc.quartz.IDCDriverDelegate;
 
 public class IDCDriverDelegateImpl implements IDCDriverDelegate {
@@ -55,7 +57,9 @@ public class IDCDriverDelegateImpl implements IDCDriverDelegate {
 
 	@Override
 	public List<JobInstance> selectRuningJobs() {
-		return instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
+		List<JobInstance> ret = instanceRepo.findByStatusNotIn(Arrays.asList(JobInstanceStatus.FAILED, JobInstanceStatus.FINISHED, JobInstanceStatus.SKIPPED, JobInstanceStatus.CANCLED));
+		return ret.stream().filter( i -> !TaskType.WORKFLOW.equals(i.getTaskType()))
+			.collect(Collectors.toList());
 	}
 
 	@Transactional

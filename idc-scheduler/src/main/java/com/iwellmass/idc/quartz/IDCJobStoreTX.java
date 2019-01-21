@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.quartz.JobDetail;
 import org.quartz.JobPersistenceException;
@@ -20,6 +23,7 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.JobStoreTX;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.OperableTrigger;
+import org.slf4j.Logger;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.common.exception.AppException;
@@ -267,8 +271,9 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 				try {
 					JobInstance ins = idcDriverDelegate.selectJobInstance(conn, event.getInstanceId());
 					if (ins != null) {
-						ins.setEndTime(event.getEndTime());
 						ins.setStatus(event.getFinalStatus());
+						ins.setEndTime(event.getEndTime());
+						ins.setUpdateTime(LocalDateTime.now());
 						idcDriverDelegate.updateJobInstance(conn, ins);
 						
 						// 删除 barrier
@@ -276,17 +281,18 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 							idcDriverDelegate.deleteBarrier(conn, ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
 							signalSchedulingChangeOnTxCompletion(0L);
 						}
-
+						
+						// 计算主任务
 						if(ins.getTaskType() == TaskType.SUB_TASK) {
-							
 							JobInstance mainJobIns = idcDriverDelegate.selectJobInstance(conn, ins.getMainInstanceId());
 							
 							// 如果已经完成，忽略
 							if (!mainJobIns.getStatus().isComplete()) {
-								if (shouldMarkFailured(conn, ins, mainJobIns)) {
-									mainJobIns.setStatus(JobInstanceStatus.FAILED);
-									mainJobIns.setUpdateTime(LocalDateTime.now());
-									mainJobIns.setEndTime(mainJobIns.getUpdateTime());
+								JobInstanceStatus updateStatus = computeMainJobInstanceStatus(conn, ins, mainJobIns);
+								if (updateStatus != null) {
+									mainJobIns.setStatus(updateStatus);
+									mainJobIns.setUpdateTime(ins.getUpdateTime());
+									mainJobIns.setEndTime(ins.getUpdateTime());
 								}
 							}
 						}
@@ -299,15 +305,95 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 		});
 	}
 	
-	protected boolean shouldMarkFailured(Connection conn, JobInstance ins, JobInstance mainJobIns) throws SQLException {
+	protected JobInstanceStatus computeMainJobInstanceStatus(Connection conn, JobInstance ins, JobInstance mainJobIns) throws SQLException {
 		
-		List<JobInstance> subJobList = idcDriverDelegate.selectSubJobInstance(conn, mainJobIns.getInstanceId());
-		if (subJobList.stream().anyMatch(s -> !s.getStatus().isComplete())) {
-			return false;
+		Logger LOGGER = getLog();
+		
+		List<JobInstance> subInsList = idcDriverDelegate.selectSubJobInstance(conn, ins.getMainInstanceId());
+		
+		// 如果有 running 状态的 instance 直接返回
+		Map<TaskKey, JobInstance> subInsMap = new HashMap<>();
+		for (JobInstance subIns : subInsList) {
+			if (!subIns.getStatus().isComplete()) {
+				LOGGER.debug("子任务 {} 仍在运行 {}", subIns.getTaskKey(), subIns.getStatus());
+				return JobInstanceStatus.RUNNING;
+			}
+			subInsMap.put(subIns.getTaskKey(), subIns);
 		}
-		// TODO 需要更严谨的判断
+
+		Set<TaskKey> pendingTask = new HashSet<>();
+		Set<TaskKey> failedTask = new HashSet<>();
+		Map<TaskKey, List<JobInstance>> checkListMap = new HashMap<>();
 		
-		return true;
+		List<WorkflowEdge> edges = pluginService.getTaskDependencies(mainJobIns.getTaskKey());
+		
+		if (LOGGER.isDebugEnabled()) {
+			edges.forEach(edge -> {
+				String msg = String.format("%20s -> %s", edge.getSrcTaskKey(), edge.getTaskKey());
+				LOGGER.debug(msg);
+			});
+		}
+		
+		for (WorkflowEdge edge : edges) {
+			TaskKey targetTaskKey = edge.getTaskKey();
+
+			// END TASK 由 barrier 管理
+			if (WorkflowEdge.END.equals(targetTaskKey)) {
+				continue;
+			}
+			
+			// 已经被激活过了
+			JobInstance targetSubIns = subInsMap.get(targetTaskKey);
+			if (targetSubIns != null) {
+				if (targetSubIns.getStatus().isFailure()) {
+					failedTask.add(targetTaskKey);
+				}
+				continue;
+			} else {
+				pendingTask.add(targetTaskKey);
+				LOGGER.debug("子任务 {} 未运行, pendingTask++", targetTaskKey);
+			}
+			
+			List<JobInstance> checkList = checkListMap.get(targetTaskKey);
+			
+			if (checkList == null) {
+				checkListMap.put(targetTaskKey, checkList = new LinkedList<>());
+			}
+			
+			TaskKey srcTaskKey = edge.getSrcTaskKey();
+			
+			checkList.add(subInsMap.get(srcTaskKey));
+			
+			if (WorkflowEdge.START.equals(srcTaskKey)) {
+				LOGGER.debug("idc.start -> {} can active...", targetTaskKey);
+				return JobInstanceStatus.RUNNING;
+			} else {
+				JobInstance srcSubIns = subInsMap.get(srcTaskKey);
+				checkList.add(srcSubIns);
+			}
+		}
+		
+		entryLoop : for (Entry<TaskKey, List<JobInstance>> checkEntry : checkListMap.entrySet()) {
+			List<JobInstance> checkList = checkEntry.getValue();
+			
+			for (JobInstance check : checkList) {
+				if (check == null || check.getStatus().isFailure()) {
+					continue entryLoop;
+				}
+			}
+			LOGGER.debug("task {} all predecessors successed, can active...", checkEntry.getKey());
+			// 有可以被激活的点
+			return JobInstanceStatus.RUNNING;
+		}
+		
+		if (pendingTask.size() > 0 || failedTask.size() > 0) {
+			LOGGER.debug("none subtask can active, {} task still pending, {} task has failed.", 
+					pendingTask, failedTask);
+			return JobInstanceStatus.FAILED;
+		} else {
+			LOGGER.debug("all subtask finished");
+			return JobInstanceStatus.FINISHED;
+		}
 	}
 	
 	@Override

@@ -501,21 +501,31 @@ public abstract class IDCPlugin implements SchedulerPlugin, IDCConstants {
 				// 主任务日志
 				if (ins.getTaskType() == TaskType.SUB_TASK) {
 					logger.log(ins.getMainInstanceId(), "[{}] 执行结束, 执行结果: {}", ins.getJobName(), event.getFinalStatus());
-					// 期望的完成状态
-					if(ins.getStatus().isSuccess()) {
-						JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
-						List<TaskKey> subTaskKeys = pluginService.getSuccessors(mainIns.getTaskKey(), ins.getTaskKey());
-						for (TaskKey tk : subTaskKeys) {
-							try {
-								scheduleSubTask(tk, ins.getMainInstanceId());
-							} catch (SchedulerException e) {
-								logger.log(ins.getMainInstanceId(), "调度子任务 {} 时出错: {}", tk, e.getMessage());
-							}
-						}
+					JobInstance mainIns = idcJobStore.retrieveIDCJobInstance(ins.getMainInstanceId());
+					
+					if (!mainIns.getStatus().isComplete()) {
+						scheduleSucessors(ins, mainIns);
 					}
 				}
 			} catch (JobPersistenceException e) {
 				throw new RuntimeException(e);
+			}
+		}
+		
+		private void scheduleSucessors(JobInstance ins, JobInstance mainIns) {
+			if(!ins.getStatus().isSuccess()) {
+				return;
+			}
+
+			List<TaskKey> subTaskKeys = pluginService.getSuccessors(mainIns.getTaskKey(), ins.getTaskKey());
+			for (TaskKey tk : subTaskKeys) {
+				try {
+					if (!WorkflowEdge.END.equals(tk)) {
+						scheduleSubTask(tk, mainIns);
+					}
+				} catch (SchedulerException e) {
+					logger.log(ins.getMainInstanceId(), "调度子任务 {} 时出错: {}", tk, e.getMessage());
+				}
 			}
 		}
 	}
