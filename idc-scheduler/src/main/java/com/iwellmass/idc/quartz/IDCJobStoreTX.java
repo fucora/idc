@@ -281,7 +281,6 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 						// 删除 barrier
 						if (!shouldBarrier(ins)) {
 							idcDriverDelegate.deleteBarrier(conn, ins.getJobId(), ins.getJobGroup(), ins.getShouldFireTime());
-							signalSchedulingChangeOnTxCompletion(0L);
 						}
 						
 						// 计算主任务
@@ -295,12 +294,17 @@ public class IDCJobStoreTX extends JobStoreTX implements IDCJobStore {
 									mainJobIns.setStatus(updateStatus);
 									mainJobIns.setUpdateTime(now);
 									if (mainJobIns.getStatus().isComplete()) {
+										if (mainJobIns.getStatus().isSuccess()) {
+											idcDriverDelegate.deleteJobBarrier(conn, mainJobIns.getJobKey());
+										}
 										mainJobIns.setEndTime(now);
 									}
 								}
 								idcDriverDelegate.updateJobInstance(conn, mainJobIns);
 							}
 						}
+						
+						signalSchedulingChangeOnTxCompletion(0L);
 					}
 					return ins;
 				} catch (SQLException e) {
