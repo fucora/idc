@@ -33,5 +33,21 @@ test maven package build:
   tags:
     - test-runner
   only:
-    - tags
     - test
+
+tags maven package build:
+  stage: maven-build
+  script:
+    - echo $CI_PROJECT_DIR
+    - mvn clean package -DskipTests -Pprd
+  artifacts:
+    name:
+        "artifact-idc-server-$CI_PIPELINE_ID"
+    paths:
+      - idc-app/target/idc-app*.zip
+    expire_in:
+        15 days
+  tags:
+    - test-runner
+  only:
+    - tags
