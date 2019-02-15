@@ -62,6 +62,8 @@ public class IDCJobHandlerMapping extends RequestMappingHandlerMapping {
 
 	private RequestMapping newRequesMapping(String[] paths) {
 		RequestMapping annotation = new RequestMapping() {
+			
+			private final String[] EMPTY = new String[0];
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
@@ -80,27 +82,27 @@ public class IDCJobHandlerMapping extends RequestMappingHandlerMapping {
 
 			@Override
 			public String[] path() {
-				return paths;
+				return EMPTY;
 			}
 
 			@Override
 			public String[] params() {
-				return null;
+				return EMPTY;
 			}
 
 			@Override
 			public String name() {
-				return null;
+				return "";
 			}
 
 			@Override
 			public RequestMethod[] method() {
-				return null;
+				return new RequestMethod[0];
 			}
 
 			@Override
 			public String[] headers() {
-				return null;
+				return EMPTY;
 			}
 
 			@Override

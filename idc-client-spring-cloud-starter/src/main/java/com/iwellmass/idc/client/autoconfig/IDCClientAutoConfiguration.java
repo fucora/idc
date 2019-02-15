@@ -1,6 +1,11 @@
 package com.iwellmass.idc.client.autoconfig;
 
-import com.iwellmass.idc.executor.IDCJob;
+import static com.iwellmass.idc.executor.IDCJobExecutorService.toURI;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -14,25 +19,16 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.iwellmass.idc.executor.IDCJobExecutorService.toURI;
+import com.iwellmass.idc.executor.IDCJob;
 
 @Configuration
 @ConditionalOnBean(IDCJob.class)
 @EnableAsync
-@EnableFeignClients
+@EnableFeignClients(basePackages="com.iwellmass.idc.client.autoconfig")
 @EnableEurekaClient
 public class IDCClientAutoConfiguration {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IDCClientAutoConfiguration.class);
-
-	@Inject
-	public RestIDCStatusService idcStatusManagerClient;
-
 
 	@Bean(name = "idc-executor")
 	public AsyncTaskExecutor asyncTaskExecutor() {
