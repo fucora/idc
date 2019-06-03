@@ -10,6 +10,13 @@ dev maven package build:
     - mvn clean package -DskipTests -Pprd
     - docker-compose -f docker-compose-dev.yml build
     - docker-compose -f docker-compose-dev.yml up -d
+  artifacts:
+    name:
+        "artifact-idc-server"
+    paths:
+      - idc-app/target/idc-app*.zip
+    expire_in:
+        15 days
   tags:
     - manager-runner
   only:
