@@ -12,7 +12,7 @@ dev maven package build:
     - docker-compose -f docker-compose-dev.yml up -d
   artifacts:
     name:
-        "artifact-idc-server"
+        "artifact-idc-server-$CI_PIPELINE_ID"
     paths:
       - idc-app/target/idc-app*.zip
     expire_in:
