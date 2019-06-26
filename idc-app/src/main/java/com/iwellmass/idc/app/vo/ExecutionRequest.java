@@ -2,12 +2,15 @@ package com.iwellmass.idc.app.vo;
 
 import java.time.LocalDateTime;
 
-import com.iwellmass.idc.model.JobKey;
+import lombok.Getter;
+import lombok.Setter;
 
-public class ExecutionRequest extends JobKey {
+@Getter
+@Setter
+public class ExecutionRequest  {
 
-	private static final long serialVersionUID = -8693972886473180967L;
-
+	private String jobId;
+	
 	private LocalDateTime shouldFireTime;
 	
 	private String jobParameter;

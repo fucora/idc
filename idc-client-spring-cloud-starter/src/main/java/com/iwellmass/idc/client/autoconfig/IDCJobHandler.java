@@ -115,7 +115,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
 					event.getFinalStatus());
 			
 			try {
-				idcStatusService.fireCompleteEvent(event);
+				idcStatusService.complete(event);
 				state = COMPLETE;
 			} catch (Throwable e) {
 				state = NOTIFY_ERROR;

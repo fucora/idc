@@ -5,7 +5,7 @@
 
 	<groupId>com.iwellmass</groupId>
 	<artifactId>idc-parent</artifactId>
-	<version>2.1.1</version>
+	<version>2.1.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>idc</name>
 
@@ -15,7 +15,8 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- wac-model -->
-		<wac.common.version>2.0-SNAPSHOT</wac.common.version>
+		<dep.version>2.0.0-SNAPSHOT</dep.version>
+		<wac.common.version>2.0.0-SNAPSHOT</wac.common.version>
 		<!-- 3rd -->
 		<org.quartz.version>2.3.0</org.quartz.version>
 		<!-- lombok -->
@@ -23,8 +24,7 @@
 	</properties>
 
 	<modules>
-		<module>idc-core</module>
-		<module>idc-scheduler</module>
+		<module>idc-api</module>
 		<module>idc-client-spring-cloud-starter</module>
 		<module>idc-app</module>
 	</modules>
@@ -38,7 +38,17 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>idc-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<!-- wac-model -->
+			<dependency>
+				<groupId>com.iwellmass</groupId>
+				<artifactId>wac-common</artifactId>
+				<version>${wac.common.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.iwellmass</groupId>
 				<artifactId>wac-auth</artifactId>
@@ -47,7 +57,7 @@
 			<dependency>
 				<groupId>com.iwellmass</groupId>
 				<artifactId>iwellmass-dependencies</artifactId>
-				<version>2.0-SNAPSHOT</version>
+				<version>${dep.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

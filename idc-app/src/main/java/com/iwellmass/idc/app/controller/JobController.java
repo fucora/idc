@@ -1,13 +1,14 @@
 package com.iwellmass.idc.app.controller;
- 
+
 import java.util.List;
 
-import javax.inject.Inject;
+import javax.annotation.Resource;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iwellmass.common.ServiceResult;
@@ -15,15 +16,9 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.vo.Assignee;
-import com.iwellmass.idc.app.vo.JobQuery;
-import com.iwellmass.idc.app.vo.JobRuntime;
-import com.iwellmass.idc.app.vo.JobRuntimeListVO;
-import com.iwellmass.idc.app.vo.JobScheduleVO;
-import com.iwellmass.idc.app.vo.PauseRequest;
-import com.iwellmass.idc.app.vo.RescheduleVO;
-import com.iwellmass.idc.app.vo.ScheduleProperties;
-import com.iwellmass.idc.model.Job;
-import com.iwellmass.idc.model.JobKey;
+import com.iwellmass.idc.app.vo.JobQueryParam;
+import com.iwellmass.idc.app.vo.JobRuntimeVO;
+import com.iwellmass.idc.app.vo.JobVO;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -31,91 +26,70 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/job")
 public class JobController {
 	
-	@Inject
-	private JobService jobService;
+	@Resource
+	JobService jobService;
 	
-	@ApiOperation("查询调度列表")
-	@PostMapping("/query")
-	public ServiceResult<PageData<JobRuntimeListVO>> query(@RequestBody(required = false) JobQuery jobQuery, Pager pager) {
-		PageData<JobRuntimeListVO> data = jobService.getJobRuntime(jobQuery, pager);
-		return ServiceResult.success(data);
-	}
-	
-	@ApiOperation("获取调度信息")
-	@GetMapping("/schedule-config")
-	public ServiceResult<JobScheduleVO> getJob(JobKey jobKey) {
-		Job job = jobService.getJob(jobKey);
-		if (job == null) {
-			return ServiceResult.failure("任务不存在");
-		}
-		
-		JobScheduleVO vo = new JobScheduleVO();
-		vo.setContentType(job.getContentType());
-		vo.setDispatchType(job.getDispatchType());
-		vo.setScheduleConfig(new ScheduleProperties(job));
-		vo.setTaskGroup(job.getTaskGroup());
-		vo.setTaskId(job.getTaskId());
-		vo.setTaskType(job.getTaskType());
-		vo.setWorkflowId(job.getWorkflowId());
-		return ServiceResult.success(vo);
-	}
-	
-	@ApiOperation("获取调度运行时信息")
-	@GetMapping("/runtime")
-	public ServiceResult<JobRuntime> getJobRuntime(JobKey jobKey) {
-		
-		JobRuntime ret = jobService.getJobRuntime(jobKey);
-		
-		return ServiceResult.success(ret);
-	}
-	
-	@ApiOperation("查询负责人信息")
-	@GetMapping("/assignee")
-	public ServiceResult<List<Assignee>> getAssignee() {
-		List<Assignee> data = jobService.getAllAssignee();
-		return ServiceResult.success(data);
-	}
-	
-	@ApiOperation("调度任务")
-	@PostMapping(path = "/schedule")
-	public ServiceResult<String> schedule(@RequestBody ScheduleProperties sp) {
-		jobService.schedule(sp);
-		return ServiceResult.success("提交成功");
-	}
-	
-	@ApiOperation("重新调度任务")
-	@PostMapping(path = "/reschedule")
-	public ServiceResult<String> reschedule(@RequestBody RescheduleVO rv) {
-		jobService.reschedule(rv, rv.getScheduleConfig());
-		return ServiceResult.success("提交成功");
-	}
-	
-	@ApiOperation("取消调度任务")
-	@PostMapping(path = "/unschedule")
-	public ServiceResult<String> unschedule(@RequestBody JobKey jobKey) {
-		jobService.unschedule(jobKey);
-		return ServiceResult.success("提交成功");
-	}
-
-	@PostMapping(value = "/pause")
-	@ApiOperation("冻结调度")
-	public ServiceResult<String> pause(@RequestBody PauseRequest request) {
-		jobService.pause(request);
-		return ServiceResult.success("任务已冻结");
-	}
-
-	@PostMapping(value = "/resume")
-	@ApiOperation("恢复调度")
-	public ServiceResult<String> resume(@RequestBody JobKey jobKey) {
-		jobService.resume(jobKey);
-		return ServiceResult.success("任务已恢复");
-	}
-
-	@ApiOperation("重新调度任务快速模式")
-	@PostMapping(path = "/reschedule-fast")
-	public ServiceResult<String> rescheduleFast(@RequestBody JobKey jobKey) {
-		jobService.reschedule(jobKey,null);
-		return ServiceResult.success("提交成功");
-	}
+    @ApiOperation("获取 JOB 运行状态")
+    @PostMapping("/runtime")
+    public ServiceResult<PageData<JobRuntimeVO>> runtime(
+            @RequestParam(required = false) JobQueryParam qm, Pager pager) {
+        PageData<JobRuntimeVO> taskInstance = jobService.query(qm);
+        return ServiceResult.success(taskInstance);
+    }
+    
+    @ApiOperation("获取 Job 详情")
+    @GetMapping("/{id}")
+    public ServiceResult<JobVO> get(@PathVariable("id") String id) {
+    	JobVO jobVO = new JobVO();
+    	jobService.get(id);
+    	return ServiceResult.success(jobVO);
+    }
+    
+    @ApiOperation("获取所有责任人")
+    @GetMapping("/assignee")
+    public ServiceResult<List<Assignee>> assignee() {
+        return ServiceResult.success(jobService.getAllAssignee());
+    }
+//
+//    @ApiOperation("获取子任务实例")
+//    @GetMapping("/{id}/sub-job-instance")
+//    public ServiceResult<List<JobInstance>> getWorkflowTask(@PathVariable("id") Integer id) {
+//        List<JobInstance> result = queryService.getWorkflowSubInstance(id);
+//        return ServiceResult.success(result);
+//    }
+//
+//    @ApiOperation("重跑任务")
+//    @PostMapping("/{id}/redo")
+//    public ServiceResult<String> restart(@PathVariable(name = "id") Integer id, @RequestBody(required = false) RedoRequest redoRequest) {
+//
+//        if (redoRequest == null) {
+//            redoRequest = new RedoRequest();
+//        }
+//        redoRequest.setInstanceId(id);
+//        jobInstanceService.redo(redoRequest);
+//        return ServiceResult.success("success");
+//    }
+//
+//    @ApiOperation("取消任务")
+//    @PostMapping("/{id}/cancle")
+//    public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id, @RequestBody(required = false) CancleRequest redoRequest) {
+//        redoRequest.setInstanceId(id);
+//        jobInstanceService.cancle(redoRequest);
+//        return ServiceResult.success("success");
+//    }
+//
+//    @ApiOperation("强制结束任务")
+//    @PostMapping("/{id}/force-complete")
+//    public ServiceResult<String> forceComplete(@PathVariable(name = "id") Integer id) {
+//        jobInstanceService.forceComplete(id);
+//        return ServiceResult.success("success");
+//    }
+//
+//    @ApiOperation("任务日志(分页)")
+//    @PostMapping("/{id}/log")
+//    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") Integer id, Pager pager) {
+//        PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
+//        return ServiceResult.success(data);
+//    }
 
 }

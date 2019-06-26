@@ -1,0 +1,114 @@
+package com.iwellmass.idc.app.message;
+
+import java.util.concurrent.RejectedExecutionException;
+
+import javax.annotation.Resource;
+
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.ObjectAlreadyExistsException;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.SchedulerRepository;
+import org.quartz.spi.ClassLoadHelper;
+import org.quartz.spi.SchedulerPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.iwellmass.idc.message.TaskEventService;
+import com.iwellmass.idc.message.TaskMessage;
+import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
+import com.iwellmass.idc.scheduler.repository.JobRepository;
+
+public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
+
+	static final Logger LOGGER = LoggerFactory.getLogger(TaskEventPlugin.class);
+
+	public static final String NAME = TaskEventPlugin.class.getSimpleName();
+
+	// ~~ component ~~
+	public static final String PROCESSOR_JOB_NAME = "processor";
+	public static final String PROCESSOR_JOB_GROUP = "message";
+	public static final String PROP_MESSAGE = "message";
+
+	private Scheduler scheduler;
+
+	@Resource
+	IDCJobStore idcJobStore;
+
+	@Resource
+	JobRepository jobRepository;
+
+	@Override
+	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
+		scheduler.getContext().put(NAME, this);
+		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_STORE, idcJobStore);
+		scheduler.getContext().put(TaskEventProcessor.CXT_TASK_REPOSITORY, jobRepository);
+		this.scheduler = scheduler;
+	}
+
+	@Override
+	public void start() {
+		try {
+			// 初始化 EventProcessor
+			JobDetail taskEventProcess = JobBuilder//@formatter:off
+				.newJob(TaskEventProcessor.class)
+				.withIdentity(PROCESSOR_JOB_NAME, PROCESSOR_JOB_GROUP)
+				.requestRecovery()
+				.storeDurably().build();//@formatter:on
+			scheduler.addJob(taskEventProcess, true);
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		LOGGER.info("Plugin started");
+	}
+
+	@Override
+	public void shutdown() {
+	}
+
+	public void send(TaskMessage message) {
+
+		LOGGER.info("接收事件 {}, message = {}", message.getId(), message);
+
+		// TODO 判断任务堆积
+
+		JobDataMap jobDataMap = new JobDataMap();
+		jobDataMap.put(TaskEventPlugin.PROP_MESSAGE, message);
+
+		Trigger trigger = TriggerBuilder.newTrigger()//@formatter:off
+			.withSchedule(SimpleScheduleBuilder.simpleSchedule())
+			.withIdentity(message.getId())
+			.forJob(TaskEventPlugin.PROCESSOR_JOB_NAME, TaskEventPlugin.PROCESSOR_JOB_GROUP)
+			.usingJobData(jobDataMap)
+			.build();//@formatter:on
+		try {
+			scheduler.scheduleJob(trigger);
+		} catch (ObjectAlreadyExistsException e) {
+			LOGGER.warn("Cannot replay message {} ", message.getId());
+		} catch (SchedulerException e) {
+			throw new RejectedExecutionException(e.getMessage(), e);
+		}
+	}
+
+	public static final TaskEventService eventService(String schdName) {
+		try {
+			Scheduler scheduler = SchedulerRepository.getInstance().lookup(schdName);
+			return (TaskEventService) scheduler.getContext().get(NAME);
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+
+	public static final TaskEventService eventService(Scheduler scheduler) {
+		try {
+			return (TaskEventService) scheduler.getContext().get(NAME);
+		} catch (SchedulerException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+}
