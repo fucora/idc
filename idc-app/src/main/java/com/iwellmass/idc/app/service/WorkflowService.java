@@ -36,7 +36,7 @@ import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 public class WorkflowService {
 
 	@Resource
-	private WorkflowRepository workflowRepository;
+	WorkflowRepository workflowRepository;
 	
 	public PageData<WorkflowVO> query(WorkflowQueryParam qm) {
 		return QueryUtils.doJpaQuery(qm, pageable -> {

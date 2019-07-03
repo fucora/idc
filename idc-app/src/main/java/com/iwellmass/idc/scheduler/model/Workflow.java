@@ -15,10 +15,10 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
-@Table(name = "idc_workflow")
 @Getter
 @Setter
+@Entity
+@Table(name = "idc_workflow")
 public class Workflow {
 
 	/**
@@ -43,15 +43,15 @@ public class Workflow {
 	/**
 	 * 节点
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,  orphanRemoval = true)
-	@JoinColumn(name = "pid")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "pid", updatable = false)
 	private List<NodeTask> taskNodes;
 	
 	/**
 	 * 边关系
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@JoinColumn(name = "pid")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "pid", updatable = false)
 	private List<WorkflowEdge> edges;
 
 	public Set<NodeTask> successors(String node) {
