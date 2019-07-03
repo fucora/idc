@@ -18,7 +18,7 @@ import lombok.Setter;
 public class TaskQueryParam extends Pager {
 
 	@ApiModelProperty("计划名称")
-	@Like(value = "name")
+	@Like(value = "taskName")
 	private String keyword;
 
 	@ApiModelProperty("节点类型")
@@ -31,10 +31,15 @@ public class TaskQueryParam extends Pager {
 
 	@ApiModelProperty("调度类型")
 	@Equal
-	private ScheduleType dispatchType;
+	private ScheduleType scheduleType;
 
 	@ApiModelProperty("负责人")
 	@Equal
 	private String assignee;
 
+	
+	public TaskQueryParam() {
+		setPage(0);
+		setLimit(10);
+	}
 }

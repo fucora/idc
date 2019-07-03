@@ -31,16 +31,22 @@ public class TaskService {
 	
 	public TaskVO getTask(String name) {
 		
-		Task job = taskRepository.findByName(name).orElseThrow(()-> new AppException("任务不存在"));
+		Task job = taskRepository.findById(name).orElseThrow(()-> new AppException("任务不存在"));
 
-		TaskVO jobVO;
+		TaskVO vo;
 		if (job.getScheduleType() == ScheduleType.AUTO) {
-			jobVO = new CronTaskVO();
+			vo = new CronTaskVO();
 		} else {
-			jobVO = new ManualTaskVO();
+			vo = new ManualTaskVO();
 		}
-		BeanUtils.copyProperties(job, jobVO, "workflow");
-		return jobVO;
+		BeanUtils.copyProperties(job, vo, "workflow");
+		if (job.getStarttime() != null) {
+			vo.setStartDate(job.getStarttime().toLocalDate());
+		}
+		if (job.getEndtime() != null) {
+			vo.setEndDate(job.getEndtime().toLocalDate());
+		}
+		return vo;
 	}
 
 	public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {

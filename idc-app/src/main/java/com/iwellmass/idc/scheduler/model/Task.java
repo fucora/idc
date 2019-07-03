@@ -3,6 +3,7 @@ package com.iwellmass.idc.scheduler.model;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -31,8 +32,8 @@ import lombok.Setter;
 @IdClass(TaskID.class)
 @Table(name = "idc_task")
 @SecondaryTable(name = "QRTZ_TRIGGERS", pkJoinColumns = {
-	@PrimaryKeyJoinColumn(name = "TRIGGER_NAME", referencedColumnName = "name"),
-	@PrimaryKeyJoinColumn(name = "TRIGGER_GROUP", referencedColumnName = "group"),
+	@PrimaryKeyJoinColumn(name = "TRIGGER_NAME", referencedColumnName = "task_name"),
+	@PrimaryKeyJoinColumn(name = "TRIGGER_GROUP", referencedColumnName = "task_group"),
 })
 public class Task extends AbstractTask {
 
@@ -43,15 +44,15 @@ public class Task extends AbstractTask {
 	 * 计划名称
 	 */
 	@Id
-	@Column(name = "name")
-	private String name;
+	@Column(name = "task_name")
+	private String taskName;
 	
 	/**
 	 * 计划组
 	 */
 	@Id
-	@Column(name = "group")
-	private String group;
+	@Column(name = "task_group")
+	private String taskGroup = GROUP_PRIMARY;
 
 	/**
 	 * 业务类型
@@ -131,12 +132,10 @@ public class Task extends AbstractTask {
 	private TaskState state;
 	
 	public Task() {
-		this.group = GROUP_PRIMARY;
 	}
 
 	public Task(String name, String taskId, String domain) {
-		this();
-		this.name = name;
+		this.taskName = name;
 		this.taskId = taskId;
 		this.domain = domain;
 		this.setCreatetime(LocalDateTime.now());
@@ -144,7 +143,9 @@ public class Task extends AbstractTask {
 	}
 
 	public TriggerKey getTriggerKey() {
-		return new TriggerKey(name, "idc-workflow");
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(taskGroup);
+		return new TriggerKey(taskName, taskGroup);
 	}
 
 	public void clear() {

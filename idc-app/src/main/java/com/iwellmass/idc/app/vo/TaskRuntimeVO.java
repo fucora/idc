@@ -15,7 +15,7 @@ import lombok.Setter;
 public class TaskRuntimeVO  {
 
 	@ApiModelProperty("计划")
-	private String name;
+	private String taskName;
 	
 	@ApiModelProperty("业务ID")
 	private String taskId;

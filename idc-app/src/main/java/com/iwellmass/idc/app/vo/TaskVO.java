@@ -32,7 +32,7 @@ import lombok.Setter;
 public abstract class TaskVO {
 	
 	@ApiModelProperty("计划名称")
-	String name;
+	String taskName;
 
 	@ApiModelProperty("描述")
 	String description;
@@ -49,12 +49,12 @@ public abstract class TaskVO {
 	@ApiModelProperty("调度方式")
 	ScheduleType scheduleType;
 	
-	@ApiModelProperty("生效日期 yyyy-MM-dd")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@ApiModelProperty("生效日期")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyyMMdd")
 	LocalDate startDate;
 
-	@ApiModelProperty("失效日期, yyyy-MM-dd")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@ApiModelProperty("失效日期")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyyMMdd")
 	LocalDate endDate;
 	
 	@ApiModelProperty("出错时阻塞")

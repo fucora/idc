@@ -14,20 +14,13 @@ import lombok.Setter;
 @MappedSuperclass
 @Getter
 @Setter
-public class AbstractTask {
+public abstract class AbstractTask {
 
 	/**
 	 * 业务ID
 	 */
 	@Column(name = "task_id")
 	String taskId;
-
-	/**
-	 * 业务域
-	 */
-	@Column(name = "domain")
-	String domain;
-	
 	/**
 	 * 任务类型
 	 */
@@ -35,9 +28,16 @@ public class AbstractTask {
 	@Enumerated(EnumType.STRING)
 	private TaskType taskType;
 	
+	/**
+	 * 业务域
+	 */
+	@Column(name = "domain")
+	String domain;
+	
+	@Column(name = "description")
+	String description;
 	
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "task_id", insertable = false, updatable = false)
 	private Workflow workflow;
-
 }

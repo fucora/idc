@@ -8,12 +8,8 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.message.TaskMessage;
 import com.iwellmass.idc.scheduler.model.Job;
-import com.iwellmass.idc.scheduler.model.Task;
-import com.iwellmass.idc.scheduler.model.TaskType;
-import com.iwellmass.idc.scheduler.model.Workflow;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 
@@ -81,19 +77,6 @@ public class TaskEventProcessor implements org.quartz.Job {
 			}
 		} catch (Exception e) {
 			LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
-		}
-		
-		
-		// 工作流任务，检查是否触发下个任务
-		if (job.getTaskType() == TaskType.WORKFLOW) {
-			
-			Workflow workflow = null;
-			
-			StartMessage message = StartMessage.newMessage("gogo");
-			
-			Task nextTask = null;
-			
-			TaskEventPlugin.eventService(context.getScheduler()).send(message);;
 		}
 		
 	}

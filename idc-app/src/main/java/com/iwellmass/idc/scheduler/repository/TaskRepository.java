@@ -14,10 +14,9 @@ import com.iwellmass.idc.scheduler.model.TaskID;
 @Repository
 public interface TaskRepository extends CrudRepository<Task, TaskID>, JpaSpecificationExecutor<Task>{
 	
-//	@Query("SELECT t FROM Task t WHERE name = ?1 AND group = '" + Task.GROUP + "'")
-	default Optional<Task> findByName(String name){
-		return Optional.empty();
-	};
+	@Query("SELECT t FROM Task t WHERE taskName = ?1 AND taskGroup = '" +  Task.GROUP_PRIMARY+ "'")
+	Optional<Task> findById(String name);
+	
 
 	@Query("SELECT DISTINCT assignee FROM Task WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();

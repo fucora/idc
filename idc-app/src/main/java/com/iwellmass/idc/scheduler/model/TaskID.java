@@ -9,14 +9,14 @@ public class TaskID implements Serializable{
 	
 	private static final long serialVersionUID = -7574873242259636335L;
 
-	private String name;
+	private String taskName;
 	
-	private String group;
+	private String taskGroup;
 	
 	public TaskID() {}
 	
 	public TaskID(String name) {
-		this.name = name;
-		this.group = Task.GROUP_PRIMARY;
+		this.taskName = name;
+		this.taskGroup = Task.GROUP_PRIMARY;
 	}
 }

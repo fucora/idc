@@ -18,19 +18,20 @@ import lombok.Setter;
 @Table(name = "idc_workflow_edge")
 public class WorkflowEdge {
 
-	/**
-	 * 自增ID
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private String id;
-
+	
 	/**
 	 * 工作流ID
 	 */
 	@Id
 	@Column
 	private String pid;
+	
+	
+	/**
+	 * 边 ID
+	 */
+	@Id
+	private String id;
 
 	/**
 	 * Source Node

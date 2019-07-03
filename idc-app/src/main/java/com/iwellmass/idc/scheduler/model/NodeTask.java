@@ -15,9 +15,9 @@ import lombok.Setter;
 @IdClass(WfID.class)
 @Table(name = "idc_node_task")
 public class NodeTask extends AbstractTask {
-
-	public static final WfID START = new WfID();
-	public static final WfID END = new WfID();
+	
+	public static final String START = "START";
+	public static final String END = "END";
 
 	/**
 	 * 工作流

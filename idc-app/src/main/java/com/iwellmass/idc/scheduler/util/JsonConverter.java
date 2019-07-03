@@ -3,14 +3,17 @@ package com.iwellmass.idc.scheduler.util;
 import java.io.IOException;
 
 import javax.persistence.AttributeConverter;
-import javax.persistence.PersistenceException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class JsonConverter<T> implements AttributeConverter<T, String> {
 
+	static final Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 	static final ObjectMapper mapper = new ObjectMapper();
 
 	static {
@@ -18,18 +21,10 @@ public abstract class JsonConverter<T> implements AttributeConverter<T, String> 
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
-	private final Class<T> type;
+	private final JavaType type;
 
-	private final TypeReference<T> typeRef;
-
-	public JsonConverter(Class<T> type) {
-		this.type = type;
-		this.typeRef = null;
-	}
-
-	public JsonConverter(TypeReference<T> typeRef) {
-		this.typeRef = typeRef;
-		this.type = null;
+	public JsonConverter(JavaType type) {
+		this.type = mapper.constructType(type);
 	}
 
 	@Override
@@ -40,7 +35,8 @@ public abstract class JsonConverter<T> implements AttributeConverter<T, String> 
 		try {
 			return mapper.writeValueAsString(attribute);
 		} catch (IOException e) {
-			throw new PersistenceException(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
+			return null;
 		}
 	}
 
@@ -50,10 +46,11 @@ public abstract class JsonConverter<T> implements AttributeConverter<T, String> 
 			return null;
 		}
 		try {
-			return type == null ? mapper.readerFor(typeRef).readValue(dbData)
+			return type == null ? mapper.readerFor(type).readValue(dbData)
 					: mapper.readerFor(type).readValue(dbData);
 		} catch (IOException e) {
-			throw new PersistenceException(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
+			return null;
 		}
 	}
 

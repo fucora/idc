@@ -31,8 +31,8 @@ public class Workflow {
 	/**
 	 * 名称
 	 */
-	@Column(name = "name")
-	private String name;
+	@Column(name = "task_name")
+	private String taskName;
 	
 	/**
 	 * 描述
@@ -43,22 +43,18 @@ public class Workflow {
 	/**
 	 * 节点
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,  orphanRemoval = true)
 	@JoinColumn(name = "pid")
-	private Set<NodeTask> taskNodes;
+	private List<NodeTask> taskNodes;
 	
 	/**
 	 * 边关系
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JoinColumn(name = "pid")
 	private List<WorkflowEdge> edges;
 
-	public Set<NodeTask> successors(NodeTask node) {
-		return null;
-	}
-
-	public Set<NodeTask> successors(WfID key) {
+	public Set<NodeTask> successors(String node) {
 		return null;
 	}
 }

@@ -25,9 +25,8 @@ public class CronTaskVO extends TaskVO implements CronTriggerBuilder {
 	private List<Integer> days;
 
 	@ApiModelProperty("具体时间")
-	@JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
+	@JsonFormat(timezone = "GMT+8", pattern = "HHmmss")
 	private LocalTime duetime = LocalTime.MIN;
-
 
 	@Override
 	public Map<String, Object> getProps() {

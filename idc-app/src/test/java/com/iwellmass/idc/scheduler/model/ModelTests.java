@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.iwellmass.idc.scheduler.SchedulerConfig;
+import com.iwellmass.idc.scheduler.repository.JobRepository2;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @RunWith(SpringRunner.class)
@@ -27,12 +28,24 @@ public class ModelTests {
 
 	@Resource
 	TaskRepository taskRepo;
+	
+	@Resource
+	JobRepository2 jobRepo2;
 
 	@Test
 	public void test() {
 		Optional<Task> aa = taskRepo.findById(new TaskID("111"));
 		Task task = aa.get();
 		System.out.println(task);
+	}
+	
+	
+	@Test
+	public void test2() {
+		
+		AbstractJob a = jobRepo2.findById("lqd").get();
+		
+		System.out.println(a);
 	}
 
 }
