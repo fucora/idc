@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Data
-public class NodeTaskID implements Serializable{
+public class WfID implements Serializable{
 
 	private static final long serialVersionUID = 1300186826817591465L;
 

@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.PrimaryKeyJoinColumn;
@@ -72,6 +74,14 @@ public class Task extends AbstractTask {
 	
 	
 	// ~~ others ~~
+	
+	/**
+	 * 调度方式
+	 */
+	@Column(name = "schedule_type")
+	@Enumerated(EnumType.STRING)
+	private ScheduleType scheduleType;
+	
 	/**
 	 * 出错重试
 	 */

@@ -39,11 +39,5 @@ public class AbstractTask {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "task_id", insertable = false, updatable = false)
 	private Workflow workflow;
-	
-	/**
-	 * 调度方式
-	 */
-	@Column(name = "schedule_type")
-	@Enumerated(EnumType.STRING)
-	private ScheduleType scheduleType;
+
 }

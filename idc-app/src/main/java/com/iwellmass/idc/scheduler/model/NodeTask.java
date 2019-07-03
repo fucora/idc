@@ -12,12 +12,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@IdClass(NodeTaskID.class)
+@IdClass(WfID.class)
 @Table(name = "idc_node_task")
 public class NodeTask extends AbstractTask {
 
-	public static final NodeTaskID START = new NodeTaskID();
-	public static final NodeTaskID END = new NodeTaskID();
+	public static final WfID START = new WfID();
+	public static final WfID END = new WfID();
 
 	/**
 	 * 工作流
