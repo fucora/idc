@@ -4,7 +4,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.iwellmass.idc.model.JobEnv;
+import com.iwellmass.idc.JobEnv;
 
 public interface IDCJob {
 

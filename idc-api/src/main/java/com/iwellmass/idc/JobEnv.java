@@ -1,8 +1,9 @@
-package com.iwellmass.idc.model;
+package com.iwellmass.idc;
 
 import java.util.List;
 
 import com.iwellmass.common.param.ExecParam;
+import com.iwellmass.idc.model.CronType;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -37,6 +38,8 @@ public interface JobEnv {
 
 	@ApiModelProperty("Task ID")
 	public String getTaskId();
+	
+	public String getContentType();
 
 
 }

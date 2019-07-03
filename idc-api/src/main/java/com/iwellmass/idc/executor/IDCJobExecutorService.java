@@ -2,7 +2,7 @@ package com.iwellmass.idc.executor;
 
 import org.slf4j.helpers.MessageFormatter;
 
-import com.iwellmass.idc.model.JobEnv;
+import com.iwellmass.idc.JobEnv;
 
 public interface IDCJobExecutorService {
 
