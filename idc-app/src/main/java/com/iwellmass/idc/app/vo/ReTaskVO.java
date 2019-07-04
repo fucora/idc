@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.scheduler.model.ScheduleType;
@@ -21,7 +22,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonTypeInfo(use = Id.NAME, property = "scheduleType")
+@JsonTypeInfo(use = Id.NAME, property = "scheduleType", include = As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
 	@Type (name = "MANUAL", value = ReManualTaskVO.class),
 	@Type (name = "AUTO", value = ReCronTaskVO.class)

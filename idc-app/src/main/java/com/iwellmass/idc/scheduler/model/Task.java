@@ -20,6 +20,7 @@ import org.quartz.TriggerKey;
 
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.scheduler.util.ExecParamConverter;
+import com.iwellmass.idc.scheduler.util.LocalLongConverter;
 import com.iwellmass.idc.scheduler.util.MapConverter;
 import com.iwellmass.idc.scheduler.util.TaskStateConverter;
 
@@ -122,9 +123,11 @@ public class Task extends AbstractTask {
 	private LocalDateTime updatetime;
 
 	@Column(table="QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
+	@Convert(converter = LocalLongConverter.class)
 	private LocalDateTime prevFireTime;
 
 	@Column(table="QRTZ_TRIGGERS", name = "NEXT_FIRE_TIME", insertable = false, updatable = false)
+	@Convert(converter = LocalLongConverter.class)
 	private LocalDateTime nextFireTime;
 
 	@Column(table="QRTZ_TRIGGERS", name = "TRIGGER_STATE", insertable = false, updatable = false)

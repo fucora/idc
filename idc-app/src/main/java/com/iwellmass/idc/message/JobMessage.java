@@ -21,22 +21,22 @@ import lombok.ToString;
 	})
 @Getter
 @Setter
-@ToString(of = { "batchNo", "event", "message" })
-public abstract class TaskMessage implements Serializable {
+@ToString(of = { "jobId", "event", "message" })
+public abstract class JobMessage implements Serializable {
 
 	private static final long serialVersionUID = -1153750416491653924L;
 
 	private final String id;
 
-	private final String batchNo;
+	private final String jobId;
 
 	private final TaskEvent event;
 
 	private String message;
 
-	public TaskMessage(String id, String batchNo, TaskEvent event) {
+	public JobMessage(String id, String jobId, TaskEvent event) {
 		this.id = id;
-		this.batchNo = batchNo;
+		this.jobId = jobId;
 		this.event = event;
 	}
 

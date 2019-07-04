@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.message.TaskEventService;
-import com.iwellmass.idc.message.TaskMessage;
+import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
@@ -76,7 +76,7 @@ public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
 	public void shutdown() {
 	}
 
-	public void send(TaskMessage message) {
+	public void send(JobMessage message) {
 
 		LOGGER.info("接收事件 {}, message = {}", message.getId(), message);
 

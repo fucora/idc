@@ -1,7 +1,5 @@
 package com.iwellmass.idc.scheduler;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,10 +25,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
+import com.iwellmass.idc.scheduler.quartz.ManagedProvider;
+import com.iwellmass.idc.scheduler.quartz.NoManagedProvider;
 import com.iwellmass.idc.scheduler.quartz.RecordIdGenerator;
 import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
 
@@ -56,10 +55,20 @@ public class SchedulerConfig {
 	}
 	
 	@Bean
+	public ConnectionProvider managedProvider() {
+		return new ManagedProvider();
+	}
+	
+	@Bean
+	public ConnectionProvider noManagedProvider() {
+		return new NoManagedProvider();
+	}
+	
+	@Bean
 	public IDCJobstoreCMT idcJobStore() {
 
-		DBConnectionManager.getInstance().addConnectionProvider("ds1", new ManagedProvider());
-		DBConnectionManager.getInstance().addConnectionProvider("ds2", new NoManagedProvider());
+		DBConnectionManager.getInstance().addConnectionProvider("ds1", managedProvider());
+		DBConnectionManager.getInstance().addConnectionProvider("ds2", noManagedProvider());
 
 		IDCJobstoreCMT cmt = new IDCJobstoreCMT();
 		cmt.setDataSource("ds1");
@@ -115,41 +124,6 @@ public class SchedulerConfig {
 		// start scheduler
 		if (startAuto) {
 			scheduler().start();
-		}
-	}
-	
-	class NoManagedProvider implements ConnectionProvider {
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			Connection conn = dataSource.getConnection();
-			return conn;
-		}
-
-		@Override
-		public void shutdown() throws SQLException {
-		}
-
-		@Override
-		public void initialize() throws SQLException {
-		}
-
-	}
-
-	class ManagedProvider implements ConnectionProvider {
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			Connection conn = DataSourceUtils.doGetConnection(dataSource);
-			return conn;
-		}
-
-		@Override
-		public void shutdown() throws SQLException {
-		}
-
-		@Override
-		public void initialize() throws SQLException {
 		}
 	}
 	

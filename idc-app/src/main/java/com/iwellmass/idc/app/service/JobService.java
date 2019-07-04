@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,11 +26,19 @@ import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.app.vo.JobVO;
 import com.iwellmass.idc.scheduler.model.AbstractJob;
 import com.iwellmass.idc.scheduler.model.Job;
+import com.iwellmass.idc.scheduler.model.Task;
+import com.iwellmass.idc.scheduler.model.TaskID;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
 public class JobService {
+	
+	static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
+	
+	@Resource
+	TaskRepository taskRepository;
 
 	@Resource
 	JobRepository jobRepository;
@@ -38,6 +48,10 @@ public class JobService {
 
 	public Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
+	}
+	
+	public Task getTask(String taskName) {
+		return taskRepository.findById(new TaskID(taskName)).orElseThrow(()-> new AppException("调度 '" + taskName + "' 不存在"));
 	}
 	
 	public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
@@ -63,136 +77,19 @@ public class JobService {
 	}
 
 	public void clear(String id) {
-
+		// TODO
 	}
 
-	public void createTask(String id, String scheduleId) {
-
+	@Transactional
+	public void createJob(String id, String taskName) {
+		Task task = getTask(taskName);
+		if (task.getState().isRunning()) {
+			Job job = new Job(id, task);
+			jobRepository.save(job);
+		} else {
+			LOGGER.error("调度已关闭：" + task.getState());
+		}
 	}
-//
-//    @Transactional
-//    public void add(Job task) {
-//    	// 设置默认值
-//        if (task.getTaskType() == TaskType.WORKFLOW) {
-////            task.setGroup("idc");
-//            task.setContentType("workflow");
-//            // task.setWorkflowId(task.getTaskGroup() + "-" + task.getTaskId());
-//        }
-//    	
-//        Job check = taskRepository.findById(task.getId()).get();
-//        
-//      
-//        // 排序字段
-//        task.setUpdatetime(LocalDateTime.now());
-//        
-//        taskRepository.save(task);
-//        // idcPlugin.refresh(task);
-//    }
-//
-//    @Transactional
-//    public void update(Job task) {
-//        Job oldTask = taskRepository.findById(task.getId()).get();
-//        
-//        if (oldTask == null) {
-//        	oldTask = task;
-//        } else {
-//        	oldTask.setContentType(task.getContentType());
-//        	oldTask.setName(task.getName());
-//        	oldTask.setDescription(task.getDescription());
-//            // 子任务重新注册时我们需要刷新他的参数
-//            if (task.getTaskType() == TaskType.WORKFLOW) {
-//            	oldTask.setParam(task.getParam());
-//            }
-//        }
-//        
-//        oldTask.setUpdatetime(LocalDateTime.now());
-//        
-//        taskRepository.save(oldTask);
-//    }
-//
-//    public Job getTask(String batchNo) {
-//        return taskRepository.findById(batchNo).get();
-//    }
-//
-//    public List<Job> getTasksByType(TaskType taskType) {
-//        Sort sort = new Sort(Direction.DESC, "updatetime");
-//        // return taskRepository.findByTaskType(taskType, sort);
-//        return null;
-//    }
-//
-//
-//    @Transactional
-//    public Job modifyGraph(Job task) {
-//        Assert.isTrue(null != task.getId(), "未传入taskId");
-//        Assert.isTrue(null != task.getTaskGroup(), "未传入taskGroup");
-//        
-//        // 检查是否存在该task
-//        Job oldTask = taskRepository.findById(task.getId()).get();
-//        if (oldTask == null) {
-//            throw new AppException("未查找到该taskKey对应的task信息");
-//        }
-//        
-////        List<WorkflowEdge> edges = IDCUtils.parseWorkflowEdge(task.getGraph());
-////        for (WorkflowEdge we : edges) {
-////            we.setParentTaskKey(task.getTaskKey()); // 刷新 parentTaskKey
-////        }
-//        
-//        // 刷新 version
-//        Workflow workflow = new Workflow();
-////        workflow.setTaskId(task.getTaskId());
-////        workflow.setTaskGroup(task.getTaskGroup());
-////        workflow.setGraph(task.getGraph());
-//        // 工作流是否已改变
-//        workflowService.saveWorkflow(workflow);
-//
-//    	// 更新刷新时间
-//    	oldTask.setUpdatetime(LocalDateTime.now());
-//    	// 更新工作流的画图数据
-////    	oldTask.setGraph(task.getGraph());
-////    	oldTask.setWorkflowId(workflow.getWorkflowId());
-//    	return taskRepository.save(oldTask);
-//    }
-//
-//    /**
-//     * 查找Node_task 下的parameter
-//     *
-//     * @param taskKey
-//     * @return
-//     */
-//    public List<ExecParam> getParam(String batchNo) {
-//        Job task = taskRepository.findById(batchNo).get();
-//        if (task == null) {
-//            throw new AppException("未找到指定task任务");
-//        }
-//        return task.getParam();
-//    }
-//
-//    /**
-//     * 查询 Task 声明的所有参数信息
-//     */
-//    public List<String> getParams(String taskKey) {
-//        // 查询满足要求的Task
-//        Job task = taskRepository.findById(taskKey).get();
-//        if (task == null) {
-//            throw new AppException("未查找到指定task:" + taskKey);
-//        }
-//        if (task.getTaskType().equals(TaskType.WORKFLOW)) {
-//            //  工作流任务
-//           //  return taskRepository.findAllSubTask(taskKey.getTaskId(), taskKey.getTaskGroup()).stream().map(SimpleTaskVO::new).collect(Collectors.toList());
-//        	return null;
-//        } else {
-//            // NODE_TASK
-//            return null;
-//        }
-//    }
-//
-//	public void validate(String batchNo) {
-//		Job task = taskRepository.findById(batchNo).get();
-//		if (task.getTaskType() == TaskType.WORKFLOW) {
-//			Workflow workflow = null;//workflowService.findOne(task.getWorkflowId());
-//			Assert.isTrue(workflow != null, "未配置工作流");
-//		}
-//	}
 
 	@Transactional
 	public void test(String id, String action) {

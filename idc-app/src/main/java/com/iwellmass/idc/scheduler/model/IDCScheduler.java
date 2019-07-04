@@ -1,5 +1,8 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 import javax.annotation.Resource;
 
 import org.quartz.JobBuilder;
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.app.scheduler.Taskinitializer;
+import com.iwellmass.idc.app.scheduler.JobBootstrap;
 import com.iwellmass.idc.app.vo.ReTaskVO;
 import com.iwellmass.idc.app.vo.TaskVO;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
@@ -30,16 +33,24 @@ public class IDCScheduler {
 	@Resource
 	Scheduler qs;
 
-	public Task getJob(String name) {
-		return taskRepository.findById(name).orElseThrow(() -> new AppException("未找到调度计划"));
+	public Task getTask(String name) {
+		return taskRepository.findById(new TaskID(name)).orElseThrow(() -> new AppException("未找到调度计划"));
 	}
 
 	@Transactional
 	public void schedule(TaskVO vo) {
 		Task task = new Task(vo.getTaskName(), vo.getTaskId(), vo.getTaskGroup());
 		BeanUtils.copyProperties(vo, task);
+		// 生效时间
+		if (vo.getStartDate() != null) {
+			task.setStarttime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));
+		}
+		// 失效时间
+		if (vo.getEndDate() != null) {
+			task.setEndtime(LocalDateTime.of(vo.getEndDate(), LocalTime.MAX));
+		}
 		// 创建作业
-		JobDetail jobDetail = JobBuilder.newJob(Taskinitializer.class)
+		JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
 			.withIdentity(task.getTaskId(), task.getDomain())
 			.requestRecovery().build();
 		
@@ -47,6 +58,8 @@ public class IDCScheduler {
 		try {
 			taskRepository.save(task);
 			Trigger trigger = vo.buildTrigger(task.getTriggerKey());
+			
+			trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, task.getTaskName());
 			qs.scheduleJob(jobDetail, trigger);
 		} catch (SchedulerException e) {
 			throw new AppException(e);
@@ -55,7 +68,7 @@ public class IDCScheduler {
 
 	@Transactional
 	public void reschedule(String name, ReTaskVO reVO) {
-		Task task = getJob(name);
+		Task task = getTask(name);
 		// 清理现场
 		task.clear();
 		BeanUtils.copyProperties(reVO, task);
@@ -70,7 +83,7 @@ public class IDCScheduler {
 
 	@Transactional
 	public void unschedule(String name) {
-		Task task = getJob(name);
+		Task task = getTask(name);
 		try {
 			qs.unscheduleJob(task.getTriggerKey());
 		} catch (SchedulerException e) {
@@ -81,7 +94,7 @@ public class IDCScheduler {
 
 	@Transactional
 	public void pause(String name) {
-		Task job = getJob(name);
+		Task job = getTask(name);
 		try {
 			qs.pauseTrigger(job.getTriggerKey());
 		} catch (SchedulerException e) {
@@ -91,7 +104,7 @@ public class IDCScheduler {
 
 	@Transactional
 	public void resume(String name) {
-		Task job = getJob(name);
+		Task job = getTask(name);
 		// TODO check
 		try {
 			qs.resumeTrigger(job.getTriggerKey());

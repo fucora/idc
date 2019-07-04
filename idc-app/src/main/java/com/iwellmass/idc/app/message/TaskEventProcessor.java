@@ -9,7 +9,7 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iwellmass.idc.message.TaskMessage;
+import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.model.AbstractJob;
 import com.iwellmass.idc.scheduler.model.Job;
 import com.iwellmass.idc.scheduler.model.JobState;
@@ -30,7 +30,7 @@ public class TaskEventProcessor implements org.quartz.Job {
 	static final String CXT_ALL_JOB_REPOSITORY = "allJobRepository";
 
 	@Setter
-	TaskMessage message;
+	JobMessage message;
 
 	@Setter
 	IDCJobStore idcJobStore;
@@ -56,10 +56,10 @@ public class TaskEventProcessor implements org.quartz.Job {
 			return;
 		}
 		
-		Optional<AbstractJob> opt = allJobRepository.findById(message.getBatchNo());
+		Optional<AbstractJob> opt = allJobRepository.findById(message.getJobId());
 		
 		if (!opt.isPresent()) {
-			LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getBatchNo());
+			LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getJobId());
 			return;
 		}
 		

@@ -22,7 +22,7 @@ public interface SimpleTriggerBuilder {
 
 		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
 			.withIdentity(key)
-			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
+			.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires());
 
 		if (getStartDate() != null) {
 			builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));

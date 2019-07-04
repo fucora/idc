@@ -12,6 +12,7 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.JobStoreCMT;
 import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.Setter;
 
@@ -127,5 +128,13 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 			}
 			return null;
 		});
+	}
+
+	@Override
+	protected void closeConnection(Connection conn) {
+		boolean springManaged = TransactionSynchronizationManager.isActualTransactionActive();
+		if (!springManaged) {
+			super.closeConnection(conn);
+		}
 	}
 }

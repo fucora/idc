@@ -21,6 +21,7 @@ import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.TaskVO;
 import com.iwellmass.idc.scheduler.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.Task;
+import com.iwellmass.idc.scheduler.model.TaskID;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
@@ -31,20 +32,15 @@ public class TaskService {
 	
 	public TaskVO getTask(String name) {
 		
-		Task job = taskRepository.findById(name).orElseThrow(()-> new AppException("任务不存在"));
+		Task task = taskRepository.findById(new TaskID(name)).orElseThrow(()-> new AppException("任务不存在"));
 
-		TaskVO vo;
-		if (job.getScheduleType() == ScheduleType.AUTO) {
-			vo = new CronTaskVO();
-		} else {
-			vo = new ManualTaskVO();
+		TaskVO vo = task.getScheduleType() == ScheduleType.AUTO ? new CronTaskVO() : new ManualTaskVO();
+		BeanUtils.copyProperties(task, vo, "workflow");
+		if (task.getStarttime() != null) {
+			vo.setStartDate(task.getStarttime().toLocalDate());
 		}
-		BeanUtils.copyProperties(job, vo, "workflow");
-		if (job.getStarttime() != null) {
-			vo.setStartDate(job.getStarttime().toLocalDate());
-		}
-		if (job.getEndtime() != null) {
-			vo.setEndDate(job.getEndtime().toLocalDate());
+		if (task.getEndtime() != null) {
+			vo.setEndDate(task.getEndtime().toLocalDate());
 		}
 		return vo;
 	}

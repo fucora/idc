@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.scheduler.model.ScheduleType;
@@ -25,7 +26,7 @@ import lombok.Setter;
 @Getter
 @Setter
 
-@JsonTypeInfo(use = Id.NAME, property = "scheduleType")
+@JsonTypeInfo(use = Id.NAME, property = "scheduleType", include = As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
 	@Type (name = "MANUAL", value = ManualTaskVO.class),
 	@Type (name = "AUTO", value = CronTaskVO.class)
@@ -80,7 +81,9 @@ public abstract class TaskVO {
 	public abstract Map<String, Object> getProps();
 	
 	public void setProps(Map<String, Object> props) {
-		BeanUtils.copyProperties(props, this);
+		if (props != null) {
+			BeanUtils.copyProperties(props, this);
+		}
 	}
 	
 }

@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RenewMessage extends TaskMessage {
+public class RenewMessage extends JobMessage {
 
 	private static final long serialVersionUID = -8973355861973877439L;
 	

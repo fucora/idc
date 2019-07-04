@@ -34,8 +34,8 @@ public interface CronTriggerBuilder {
 	default Trigger buildTrigger(TriggerKey key) {
 
 		TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
-				.withIdentity(key)
-				.withSchedule(CronScheduleBuilder.cronSchedule(toCronExpression()));
+			.withIdentity(key)
+			.withSchedule(CronScheduleBuilder.cronSchedule(toCronExpression()));
 
 		if (getStartDate() != null) {
 			builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));
