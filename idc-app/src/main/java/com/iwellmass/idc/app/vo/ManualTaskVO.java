@@ -3,6 +3,7 @@ package com.iwellmass.idc.app.vo;
 import java.util.Map;
 
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 
 public class ManualTaskVO extends TaskVO implements SimpleTriggerBuilder{
 
@@ -12,7 +13,7 @@ public class ManualTaskVO extends TaskVO implements SimpleTriggerBuilder{
 	}
 
 	@Override
-	public Trigger buildTrigger(String name, String group) {
-		return SimpleTriggerBuilder.super.buildTrigger(name, group);
+	public Trigger buildTrigger(TriggerKey key) {
+		return SimpleTriggerBuilder.super.buildTrigger(key);
 	}
 }

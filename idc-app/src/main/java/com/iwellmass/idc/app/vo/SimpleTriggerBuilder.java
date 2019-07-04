@@ -8,6 +8,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
 
 import com.iwellmass.idc.app.util.IDCUtils;
 
@@ -17,10 +18,11 @@ public interface SimpleTriggerBuilder {
 
 	LocalDate getEndDate();
 
-	default Trigger buildTrigger(String name, String group) {
+	default Trigger buildTrigger(TriggerKey key) {
 
-		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(name, group)
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule());
+		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
+			.withIdentity(key)
+			.withSchedule(SimpleScheduleBuilder.simpleSchedule());
 
 		if (getStartDate() != null) {
 			builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));

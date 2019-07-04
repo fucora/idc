@@ -5,13 +5,18 @@ import java.util.Optional;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.message.TaskMessage;
+import com.iwellmass.idc.scheduler.model.AbstractJob;
 import com.iwellmass.idc.scheduler.model.Job;
+import com.iwellmass.idc.scheduler.model.JobState;
+import com.iwellmass.idc.scheduler.model.NodeJob;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
+import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
 import lombok.Setter;
 
@@ -20,8 +25,9 @@ public class TaskEventProcessor implements org.quartz.Job {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(TaskEventProcessor.class);
 	
+	static final String CXT_JOB_SERVICE = "jobService";
 	static final String CXT_JOB_STORE = "idcJobStore";
-	static final String CXT_TASK_REPOSITORY = "taskRepository";
+	static final String CXT_ALL_JOB_REPOSITORY = "allJobRepository";
 
 	@Setter
 	TaskMessage message;
@@ -30,44 +36,50 @@ public class TaskEventProcessor implements org.quartz.Job {
 	IDCJobStore idcJobStore;
 
 	@Setter
-	JobRepository jobRepository;
+	AllJobRepository allJobRepository;
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
+		// safe execute...
+		try {
+			doExecute(context);
+		} catch (Exception e) {
+			LOGGER.error("ERROR: " + message );
+			LOGGER.error(e.getMessage(), e);
+		}
+	}
+	
+	public void doExecute(JobExecutionContext context) {
 
 		if (message == null) {
 			LOGGER.error("ERROR: message cannot be null, trigger {}", context.getTrigger().getKey());
 			return;
 		}
-		Optional<Job> optJob = jobRepository.findById(message.getBatchNo());
-		if (!optJob.isPresent()) {
+		
+		Optional<AbstractJob> opt = allJobRepository.findById(message.getBatchNo());
+		
+		if (!opt.isPresent()) {
 			LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getBatchNo());
 			return;
 		}
-		Job job = optJob.get();
-
+		
+		AbstractJob runningJob = opt.get();
 		try {
 			switch (message.getEvent()) {
 			case START: {
-				job.start();
+				runningJob.start();
 				break;
 			}
 			case RENEW: {
-				job.renew();
+				runningJob.renew();
 				break;
 			}
 			case FINISH: {
-				job.finish();
-				// TODO
-				// lockSupport.unlockTrigger(Schedule.buildTriggerKey(task.getScheduleId()),
-				// UnlockInstruction.SET_UNLOCK);
+				runningJob.complete(JobState.FINISHED);
 				break;
 			}
 			case FAIL: {
-				job.fail();
-				// TODO
-				// lockSupport.unlockTrigger(Schedule.buildTriggerKey(task.getScheduleId()),
-				// UnlockInstruction.SET_ERROR);
+				runningJob.complete(JobState.FAILED);
 				break;
 			}
 			default: {
@@ -79,5 +91,21 @@ public class TaskEventProcessor implements org.quartz.Job {
 			LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
 		}
 		
+		// Release trigger
+		if (runningJob instanceof Job) {
+			Job job = (Job) runningJob;
+			TriggerKey tk = job.getTask().getTriggerKey();
+			if (job.getState().isSuccess()) {
+				idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+			} else {
+				idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+			}
+		} 
+		else {
+			// 刷新主任务
+			NodeJob job = (NodeJob) runningJob;
+			Job mainJob = job.getMainJob();
+			mainJob.refresh();
+		}
 	}
 }

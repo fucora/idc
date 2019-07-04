@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.model.CronType;
@@ -27,7 +28,7 @@ public class ReCronTaskVO extends ReTaskVO implements CronTriggerBuilder{
 	private LocalTime duetime = LocalTime.MIN;
 
 	@Override
-	public Trigger buildTrigger(String name, String group) {
-		return CronTriggerBuilder.super.buildTrigger(name, group);
+	public Trigger buildTrigger(TriggerKey key) {
+		return CronTriggerBuilder.super.buildTrigger(key);
 	}
 }

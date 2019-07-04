@@ -19,23 +19,21 @@ public class NodeJob extends AbstractJob {
 
 	@Column(name = "task_id")
 	private String taskId;
-	
+
 	@Column(name = "node_id")
 	private String nodeId;
-	
-	@Column(name = "container")
-	private String container;
-	
+
 	@Column(name = "main_id")
 	private String mainId;
-	
+
+	@Column(name = "container")
+	private String container;
+
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-		@JoinColumn(name = "task_id", referencedColumnName = "pid", insertable = false, updatable = false),
-		@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false)
-	})
+	@JoinColumns({ @JoinColumn(name = "task_id", referencedColumnName = "pid", insertable = false, updatable = false),
+			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private NodeTask nodeTask;
-	
+
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "main_id", referencedColumnName = "id", insertable = false, updatable = false)
 	private Job mainJob;
@@ -48,23 +46,6 @@ public class NodeJob extends AbstractJob {
 		// 设置 ID
 		this.container = container;
 		this.nodeId = nodeTask.getId();
-	}
-
-	@Override
-	public void start0() {
-	}
-
-	@Override
-	public void renew() {
-	}
-
-	@Override
-	public void finish() {
-	}
-
-	@Override
-	public void fail() {
-
 	}
 
 	private static final String id(String container, String nodeId) {

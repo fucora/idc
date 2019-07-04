@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import com.iwellmass.idc.scheduler.model.AbstractJob;
 
 @Repository
-public interface JobRepository2 extends CrudRepository<AbstractJob, String>, JpaSpecificationExecutor<AbstractJob> {
-	
+public interface AllJobRepository extends CrudRepository<AbstractJob, String>, JpaSpecificationExecutor<AbstractJob> {
+
 }

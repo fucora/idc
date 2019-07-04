@@ -1,5 +1,7 @@
 package com.iwellmass.idc.app.controller;
 
+import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
+
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -51,13 +53,6 @@ public class JobController {
         return ServiceResult.success(jobService.getAllAssignee());
     }
 //
-//    @ApiOperation("获取子任务实例")
-//    @GetMapping("/{id}/sub-job-instance")
-//    public ServiceResult<List<JobInstance>> getWorkflowTask(@PathVariable("id") Integer id) {
-//        List<JobInstance> result = queryService.getWorkflowSubInstance(id);
-//        return ServiceResult.success(result);
-//    }
-//
 //    @ApiOperation("重跑任务")
 //    @PostMapping("/{id}/redo")
 //    public ServiceResult<String> restart(@PathVariable(name = "id") Integer id, @RequestBody(required = false) RedoRequest redoRequest) {
@@ -91,5 +86,12 @@ public class JobController {
 //        PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
 //        return ServiceResult.success(data);
 //    }
+    
+    @ApiOperation("获取子任务实例")
+    @GetMapping("/{id}/test/{action}")
+    public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
+        jobService.test(id, action);
+        return ServiceResult.success(MSG_OP_SUCCESS);
+    }
 
 }

@@ -45,9 +45,9 @@ public class IDCScheduler {
 		
 		// 调度
 		try {
-			Trigger trigger = vo.buildTrigger(task.getTaskName(), Task.GROUP_PRIMARY);
-			qs.scheduleJob(jobDetail, trigger);
 			taskRepository.save(task);
+			Trigger trigger = vo.buildTrigger(task.getTriggerKey());
+			qs.scheduleJob(jobDetail, trigger);
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}
@@ -55,14 +55,14 @@ public class IDCScheduler {
 
 	@Transactional
 	public void reschedule(String name, ReTaskVO reVO) {
-		Task job = getJob(name);
+		Task task = getJob(name);
 		// 清理现场
-		job.clear();
-		BeanUtils.copyProperties(reVO, job);
+		task.clear();
+		BeanUtils.copyProperties(reVO, task);
 		try {
-			Trigger trigger = reVO.buildTrigger(job.getTaskName(), Task.GROUP_PRIMARY);
+			Trigger trigger = reVO.buildTrigger(task.getTriggerKey());
 			qs.rescheduleJob(trigger.getKey(), trigger);
-			taskRepository.save(job);
+			taskRepository.save(task);
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}
@@ -70,12 +70,13 @@ public class IDCScheduler {
 
 	@Transactional
 	public void unschedule(String name) {
-		Task job = getJob(name);
+		Task task = getJob(name);
 		try {
-			qs.unscheduleJob(job.getTriggerKey());
+			qs.unscheduleJob(task.getTriggerKey());
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}
+		taskRepository.delete(task);
 	}
 
 	@Transactional

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -59,5 +60,5 @@ public abstract class ReTaskVO {
 	@ApiModelProperty("业务类型")
 	String contentType;
 	
-	public abstract Trigger buildTrigger(String name, String group);
+	public abstract Trigger buildTrigger(TriggerKey key);
 }

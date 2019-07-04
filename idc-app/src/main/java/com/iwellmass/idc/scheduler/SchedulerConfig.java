@@ -32,6 +32,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
 import com.iwellmass.idc.scheduler.quartz.RecordIdGenerator;
+import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
 
 @Configuration
 @ComponentScan
@@ -41,15 +42,14 @@ public class SchedulerConfig {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(SchedulerConfig.class);
 
-	public static boolean clear = false;
-	
+	public static boolean clearBeforStart = Boolean.valueOf(System.getProperty("idc.scheduler.clearBeforStart", "false"));
+
 	@Value(value = "${idc.scheduler.start-auto:true}")
 	private Boolean startAuto;
-	
 
 	@Resource
 	DataSource dataSource;
-	
+
 	public RecordIdGenerator recordIdGenerator() {
 		AtomicLong seq = new AtomicLong();
 		return () -> String.valueOf(seq.incrementAndGet());
@@ -65,6 +65,7 @@ public class SchedulerConfig {
 		cmt.setDataSource("ds1");
 		cmt.setNonManagedTXDataSource("ds2");
 		cmt.setRecordIdGenerator(recordIdGenerator());
+		cmt.setDontSetAutoCommitFalse(true);
 		return cmt;
 	}
 	
@@ -98,17 +99,22 @@ public class SchedulerConfig {
 		Scheduler scheduler = DirectSchedulerFactory.getInstance().getScheduler(schedulerName);
 		scheduler.setJobFactory(new PropertySettingJobFactory());
 		
-		if (clear) {
-			scheduler.clear();
-		}
-		// export
 		return scheduler;
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
-	public void autoStart() throws SchedulerException {
+	public void autoStart(ApplicationReadyEvent event) throws SchedulerException {
+		// set default executor
+		IDCJobExecutor executor = event.getApplicationContext().getBean(IDCJobExecutor.class);
+		IDCJobExecutors.setGlobalExecutor(executor);
+		// clear before
+		if (clearBeforStart) {
+			LOGGER.info("clear scheduler...");
+			scheduler().clear();
+		}
+		// start scheduler
 		if (startAuto) {
-			 // scheduler().start();
+			scheduler().start();
 		}
 	}
 	
@@ -134,7 +140,7 @@ public class SchedulerConfig {
 
 		@Override
 		public Connection getConnection() throws SQLException {
-			Connection conn = DataSourceUtils.getConnection(dataSource);
+			Connection conn = DataSourceUtils.doGetConnection(dataSource);
 			return conn;
 		}
 
@@ -146,5 +152,5 @@ public class SchedulerConfig {
 		public void initialize() throws SQLException {
 		}
 	}
-
+	
 }

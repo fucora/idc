@@ -11,6 +11,7 @@ import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
 
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.Assert;
@@ -30,10 +31,10 @@ public interface CronTriggerBuilder {
 
 	CronType getCronType();
 
-	default Trigger buildTrigger(String name, String group) {
+	default Trigger buildTrigger(TriggerKey key) {
 
 		TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
-				.withIdentity(name, group)
+				.withIdentity(key)
 				.withSchedule(CronScheduleBuilder.cronSchedule(toCronExpression()));
 
 		if (getStartDate() != null) {

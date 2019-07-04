@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.springframework.beans.BeanUtils;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -73,7 +74,7 @@ public abstract class TaskVO {
 	@ApiModelProperty("业务类型")
 	String contentType;
 	
-	public abstract Trigger buildTrigger(String name, String group);
+	public abstract Trigger buildTrigger(TriggerKey tk);
 	
 	@JsonIgnore
 	public abstract Map<String, Object> getProps();

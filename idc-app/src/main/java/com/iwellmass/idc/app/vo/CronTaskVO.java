@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.model.CronType;
@@ -38,7 +39,7 @@ public class CronTaskVO extends TaskVO implements CronTriggerBuilder {
 	}
 
 	@Override
-	public Trigger buildTrigger(String name, String group) {
-		return CronTriggerBuilder.super.buildTrigger(name, group);
+	public Trigger buildTrigger(TriggerKey key) {
+		return CronTriggerBuilder.super.buildTrigger(key);
 	}
 }

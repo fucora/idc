@@ -1,5 +1,4 @@
 package com.iwellmass.idc.scheduler.model;
-
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
@@ -21,6 +20,8 @@ import javax.persistence.Transient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.iwellmass.idc.scheduler.IDCJobExecutors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -72,32 +73,61 @@ public abstract class AbstractJob {
 	}
 
 	public void start() {
-		this.state = JobState.NEW;
+		if (!state.isComplete()) {
+			throw new JobException("任务已执行");
+			
+		}
+		if (getTask() == null) {
+			throw new JobException("任务不存在");
+		}
+		
 		if (taskType == TaskType.WORKFLOW) {
 			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
 			Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
-			Set<NodeTask> successors = workflow.successors(NodeTask.START);
-			@SuppressWarnings("unlikely-arg-type")
+			// 找到立即节点
+			Set<String> successors = workflow.successors(NodeTask.START);
 			Iterator<NodeJob> iterator = getSubJobs().stream()
 				.filter(sub -> successors.contains(sub.getNodeId()))
 				.iterator();
+			// any success
+			boolean anySuccess = false;
 			while (iterator.hasNext()) {
-				NodeJob subJob = iterator.next();
-				subJob.start();
+				NodeJob next = iterator.next();
+				try {
+					next.start();
+					anySuccess = true;
+				} catch (Exception e) {
+					anySuccess |= false;
+					next.setState(JobState.FAILED);
+				}
+			}
+			// 贪婪模式
+			if (!anySuccess) {
+				setState(JobState.FAILED);
 			}
 		} else {
-			// 业务 CODE
-			this.start0();
+			IDCJobExecutors.getExecutor().execute(this);
 		}
 	}
 	
-	abstract void start0();
+	public void renew() {
+		checkRunning();
+		this.setUpdatetime(LocalDateTime.now());
+	}
 
-	public abstract void renew();
-
-	public abstract void finish();
+	public void complete(JobState state) {
+		checkRunning();
+		if (state.isComplete()) {
+			throw new IllegalArgumentException("非法的完成状态: " + state);
+		}
+		setState(state);
+	}
 	
-	public abstract void fail();
+	private void checkRunning() {
+		if (this.getState().isComplete()) {
+			throw new JobException("任务已结束: " + this.state)  ;
+		}
+	}
 	
 	@Transient
 	public abstract AbstractTask getTask();

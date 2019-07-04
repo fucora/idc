@@ -19,10 +19,11 @@ import org.quartz.spi.SchedulerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.message.TaskEventService;
 import com.iwellmass.idc.message.TaskMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
 public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
 
@@ -38,16 +39,20 @@ public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
 	private Scheduler scheduler;
 
 	@Resource
+	JobService jobService;
+	
+	@Resource
 	IDCJobStore idcJobStore;
 
 	@Resource
-	JobRepository jobRepository;
+	AllJobRepository allJobRepository;
 
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		scheduler.getContext().put(NAME, this);
+		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_SERVICE, jobService);
 		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_STORE, idcJobStore);
-		scheduler.getContext().put(TaskEventProcessor.CXT_TASK_REPOSITORY, jobRepository);
+		scheduler.getContext().put(TaskEventProcessor.CXT_ALL_JOB_REPOSITORY, allJobRepository);
 		this.scheduler = scheduler;
 	}
 

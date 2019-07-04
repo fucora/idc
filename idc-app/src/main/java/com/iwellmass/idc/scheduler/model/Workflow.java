@@ -54,7 +54,7 @@ public class Workflow {
 	@JoinColumn(name = "pid", updatable = false)
 	private List<WorkflowEdge> edges;
 
-	public Set<NodeTask> successors(String node) {
+	public Set<String> successors(String node) {
 		return null;
 	}
 }

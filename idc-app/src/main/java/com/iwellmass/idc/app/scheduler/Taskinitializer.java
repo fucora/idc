@@ -16,7 +16,7 @@ public class Taskinitializer implements org.quartz.Job {
 	public static final String PROP_SCHEDULE_ID = "scheduleId";
 
 	@Setter
-	JobService taskService;
+	JobService jobService;
 	
 	@Setter
 	private String scheduleId;
@@ -28,11 +28,11 @@ public class Taskinitializer implements org.quartz.Job {
 		
 		// 恢复的任务，清理现场
 		if (context.isRecovering()) {
-			taskService.clear(batchNo);
+			jobService.clear(batchNo);
 		}
 
 		try {
-			taskService.createTask(batchNo, scheduleId);
+			jobService.createTask(batchNo, scheduleId);
 		} catch (Exception e) {
 			throw new JobExecutionException(e.getMessage(), e);
 		}

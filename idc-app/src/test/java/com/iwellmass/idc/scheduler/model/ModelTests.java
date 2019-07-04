@@ -13,7 +13,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.iwellmass.idc.scheduler.SchedulerConfig;
-import com.iwellmass.idc.scheduler.repository.JobRepository2;
+import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @RunWith(SpringRunner.class)
@@ -23,14 +23,14 @@ public class ModelTests {
 	
 	@BeforeClass
 	public static void before() {
-		SchedulerConfig.clear = true;
+		SchedulerConfig.clearBeforStart = true;
 	}
 
 	@Resource
 	TaskRepository taskRepo;
 	
 	@Resource
-	JobRepository2 jobRepo2;
+	AllJobRepository jobRepo2;
 
 	@Test
 	public void test() {

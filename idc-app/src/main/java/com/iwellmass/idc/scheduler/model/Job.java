@@ -5,6 +5,8 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
@@ -38,6 +40,7 @@ public class Job extends AbstractJob {
 	private String assignee;
 	
 	@Column(name = "job_type")
+	@Enumerated(EnumType.STRING)
 	private JobType jobType;
 	
 	@Column(name = "load_date")
@@ -66,31 +69,13 @@ public class Job extends AbstractJob {
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.AUTO : JobType.MANUAL;
 	}
 
-	public void start() {
-		if (task.getState().isRunning()) {
-			throw new JobException("任务已关闭: " + task.getState());
+	/**
+	 * 刷新最新状态
+	 */
+	public void refresh() {
+		if (this.getTaskType() == TaskType.WORKFLOW) {
+			
 		}
-		super.start();
-	}
-
-	@Override
-	void start0() {
-		// 业务代码
-	}
-	
-	
-	
-	public void renew() {
-		if (state.isFailure()) {
-			throw new JobException("Task already completed: " + this.state);
-		}
-	}
-
-	public void finish() {
-		this.state = JobState.FINISHED;
-	}
-
-	public void fail() {
-		this.state = JobState.FAILED;
+		// else ignore
 	}
 }

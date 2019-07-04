@@ -1,13 +1,18 @@
 package com.iwellmass.idc.app.service;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ReflectionUtils;
 
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
@@ -17,7 +22,9 @@ import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.JobQueryParam;
 import com.iwellmass.idc.app.vo.JobRuntimeVO;
 import com.iwellmass.idc.app.vo.JobVO;
+import com.iwellmass.idc.scheduler.model.AbstractJob;
 import com.iwellmass.idc.scheduler.model.Job;
+import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 
 @Service
@@ -25,6 +32,9 @@ public class JobService {
 
 	@Resource
 	JobRepository jobRepository;
+	
+	@Resource
+	AllJobRepository allJobRepository;
 
 	public Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
@@ -183,5 +193,16 @@ public class JobService {
 //			Assert.isTrue(workflow != null, "未配置工作流");
 //		}
 //	}
+
+	@Transactional
+	public void test(String id, String action) {
+		AbstractJob job = allJobRepository.findById(id).get();
+		Method method = ReflectionUtils.findMethod(job.getClass(), action);
+		try {
+			method.invoke(job);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new ApplicationContextException(e.getMessage(), e);
+		}
+	}
 
 }

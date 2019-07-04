@@ -20,8 +20,7 @@ import com.iwellmass.idc.scheduler.SchedulerConfig;
 @Configuration
 @EnableResourceServer
 @Import({ SchedulerConfig.class })
-public class IDCApplication  {
-
+public class IDCApplication {
 
 	public static void main(String[] args) {
 		new SpringApplicationBuilder(IDCApplication.class).web(WebApplicationType.SERVLET).run(args);
@@ -36,5 +35,4 @@ public class IDCApplication  {
 			return ServiceResult.failure(e.getMessage());
 		}
 	}
-
 }
