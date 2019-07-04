@@ -49,6 +49,34 @@ public class WorkflowService {
 		});
 	}
 	
+	public GraphVO getGraph(String id) {
+		Workflow workflow = get(id);
+		
+		// 设置前端 VO
+		GraphVO gvo = new GraphVO();
+		List<NodeTask> nodes = workflow.getTaskNodes();
+		if (nodes != null) {
+			List<NodeVO> nvos = nodes.stream().map(n -> {
+				NodeVO nvo = new NodeVO();
+				BeanUtils.copyProperties(n, nvo);
+				return nvo;
+			}).collect(Collectors.toList());
+			gvo.setNodes(nvos);
+		}
+		List<WorkflowEdge> edges = workflow.getEdges();
+		if (edges != null) {
+			List<EdgeVO> nvos = edges.stream().map(n -> {
+				EdgeVO nvo = new EdgeVO();
+				nvo.setId(n.getId());
+				nvo.setSource(new SourceVO(n.getSource()));
+				nvo.setTarget(new TargetVO(n.getTarget()));
+				return nvo;
+			}).collect(Collectors.toList());
+			gvo.setEdges(nvos);
+		}
+		return gvo;
+	}
+	
 	public void saveGraph(String id, GraphVO gvo) {
 		// 格式化graph
 		DirectedAcyclicGraph<String, EdgeVO> workflowGraph = new DirectedAcyclicGraph<>(EdgeVO.class);
@@ -151,30 +179,6 @@ public class WorkflowService {
 		WorkflowVO vo = new WorkflowVO();
 		
 		BeanUtils.copyProperties(workflow, vo);
-
-		// 设置前端 VO
-		GraphVO gvo = new GraphVO();
-		List<NodeTask> nodes = workflow.getTaskNodes();
-		
-		if (nodes != null) {
-			List<NodeVO> nvos = nodes.stream().map(n -> {
-				NodeVO nvo = new NodeVO();
-				BeanUtils.copyProperties(n, nvo);
-				return nvo;
-			}).collect(Collectors.toList());
-			gvo.setNodes(nvos);
-		}
-		List<WorkflowEdge> edges = workflow.getEdges();
-		if (edges != null) {
-			List<EdgeVO> nvos = edges.stream().map(n -> {
-				EdgeVO nvo = new EdgeVO();
-				nvo.setId(n.getId());
-				nvo.setSource(new SourceVO(n.getSource()));
-				nvo.setTarget(new TargetVO(n.getTarget()));
-				return nvo;
-			}).collect(Collectors.toList());
-			gvo.setEdges(nvos);
-		}
 		return vo;
 	}
 	

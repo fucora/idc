@@ -17,15 +17,27 @@ import lombok.Setter;
 @Table(name = "idc_node_job")
 public class NodeJob extends AbstractJob {
 
+	/**
+	 * Task ID
+	 */
 	@Column(name = "task_id")
 	private String taskId;
 
+	/**
+	 * 工作流图结点ID
+	 */
 	@Column(name = "node_id")
 	private String nodeId;
 
+	/**
+	 * 主 Job ID
+	 */
 	@Column(name = "main_id")
 	private String mainId;
 
+	/**
+	 * 运行时父 Job ID
+	 */
 	@Column(name = "container")
 	private String container;
 

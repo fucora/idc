@@ -37,23 +37,41 @@ public abstract class AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractJob.class);
 	
+	/**
+	 * 全局唯一ID
+	 */
 	@Id
 	String id;
 	
+	/**
+	 * Task类型
+	 */
 	@Column(name = "task_type")
 	@Enumerated(EnumType.STRING)
 	TaskType taskType;
 	
+	/**
+	 * 开始时间
+	 */
 	@Column(name = "starttime")
 	LocalDateTime starttime;
 	
+	/**
+	 * 最近更新时间
+	 */
 	@Column(name = "updatetime")
 	LocalDateTime updatetime;
 
+	/**
+	 * Job状态
+	 */
 	@Column(name = "state")
 	@Enumerated(EnumType.STRING)
 	JobState state;
 	
+	/**
+	 * 子Job
+	 */
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "container")
 	List<NodeJob> subJobs;

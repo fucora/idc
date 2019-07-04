@@ -30,9 +30,15 @@ public class Job extends AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
 	
+	/**
+	 * 调度名（Task.taskName）
+	 */
 	@Column(name = "task_name")
 	private  String taskName;
 	
+	/**
+	 * 调度组（）
+	 */
 	@Column(name = "task_group")
 	private String taskGroup;
 	

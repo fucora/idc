@@ -27,6 +27,9 @@ import com.iwellmass.idc.scheduler.util.TaskStateConverter;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 调度
+ */
 @Getter
 @Setter
 @Entity
@@ -42,7 +45,7 @@ public class Task extends AbstractTask {
 	
 	// ~~ constructor ~~
 	/**
-	 * 计划名称
+	 * 调度名称，主键
 	 */
 	@Id
 	@Column(name = "task_name")
