@@ -52,34 +52,25 @@ public class JobController {
     public ServiceResult<List<Assignee>> assignee() {
         return ServiceResult.success(jobService.getAllAssignee());
     }
-//
-//    @ApiOperation("重跑任务")
-//    @PostMapping("/{id}/redo")
-//    public ServiceResult<String> restart(@PathVariable(name = "id") Integer id, @RequestBody(required = false) RedoRequest redoRequest) {
-//
-//        if (redoRequest == null) {
-//            redoRequest = new RedoRequest();
-//        }
-//        redoRequest.setInstanceId(id);
-//        jobInstanceService.redo(redoRequest);
-//        return ServiceResult.success("success");
-//    }
-//
-//    @ApiOperation("取消任务")
-//    @PostMapping("/{id}/cancle")
-//    public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id, @RequestBody(required = false) CancleRequest redoRequest) {
-//        redoRequest.setInstanceId(id);
-//        jobInstanceService.cancle(redoRequest);
-//        return ServiceResult.success("success");
-//    }
-//
-//    @ApiOperation("强制结束任务")
-//    @PostMapping("/{id}/force-complete")
-//    public ServiceResult<String> forceComplete(@PathVariable(name = "id") Integer id) {
-//        jobInstanceService.forceComplete(id);
-//        return ServiceResult.success("success");
-//    }
-//
+
+    @ApiOperation("重跑任务")
+    @PostMapping("/{id}/redo")
+    public ServiceResult<String> restart(@PathVariable(name = "id") Integer id) {
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("取消任务")
+    @PostMapping("/{id}/cancle")
+    public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id) {
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("强制结束任务")
+    @PostMapping("/{id}/force-complete")
+    public ServiceResult<String> forceComplete(@PathVariable(name = "id") Integer id) {
+        return ServiceResult.success("success");
+    }
+
 //    @ApiOperation("任务日志(分页)")
 //    @PostMapping("/{id}/log")
 //    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") Integer id, Pager pager) {
@@ -87,7 +78,7 @@ public class JobController {
 //        return ServiceResult.success(data);
 //    }
     
-    @ApiOperation("获取子任务实例")
+    @ApiOperation("测试执行")
     @GetMapping("/{id}/test/{action}")
     public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
         jobService.test(id, action);

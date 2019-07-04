@@ -30,11 +30,11 @@ public abstract class JobMessage implements Serializable {
 
 	private final String jobId;
 
-	private final TaskEvent event;
+	private final JobEvent event;
 
 	private String message;
 
-	public JobMessage(String id, String jobId, TaskEvent event) {
+	public JobMessage(String id, String jobId, JobEvent event) {
 		this.id = id;
 		this.jobId = jobId;
 		this.event = event;

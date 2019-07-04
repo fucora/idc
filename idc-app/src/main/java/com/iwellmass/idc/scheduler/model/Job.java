@@ -22,6 +22,9 @@ import com.iwellmass.idc.scheduler.util.ExecParamConverter;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 主实例
+ */
 @Getter
 @Setter
 @Entity
@@ -31,31 +34,46 @@ public class Job extends AbstractJob {
 	static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
 	
 	/**
-	 * 调度名（Task.taskName）
+	 * 任务名（Task.taskName）
 	 */
 	@Column(name = "task_name")
 	private  String taskName;
 	
 	/**
-	 * 调度组（）
+	 * 任务组（Task.taskGroup）
 	 */
 	@Column(name = "task_group")
 	private String taskGroup;
 	
+	/**
+	 * 责任人
+	 */
 	@Column(name = "assignee", length = 20)
 	private String assignee;
 	
+	/**
+	 * 实例类型（手动、自动、补数、测试）
+	 */
 	@Column(name = "job_type")
 	@Enumerated(EnumType.STRING)
 	private JobType jobType;
 	
+	/**
+	 * 业务日期
+	 */
 	@Column(name = "load_date")
 	private String loadDate;
 	
+	/**
+	 * 运行时参数
+	 */
 	@Column(name = "param", columnDefinition = "TEXT")
 	@Convert(converter = ExecParamConverter.class)
 	private List<ExecParam> param;
 	
+	/**
+	 * 主任务（Task）
+	 */
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumns({
 		@JoinColumn(name = "task_name", referencedColumnName = "task_name", insertable = false, updatable = false),

@@ -14,4 +14,10 @@ public class WorkflowQueryParam extends Pager {
 	@ApiModelProperty("关键字")
 	@Like(value = "taskName")
 	private String keyword;
+	
+	public WorkflowQueryParam() {
+		// 默认参数
+		setPage(0);
+		setLimit(10);
+	}
 }

@@ -1,6 +1,9 @@
 package com.iwellmass.idc.app.vo;
 
 
+/**
+ * 封装责任人
+ */
 public class Assignee {
 	
 	private String assignee;

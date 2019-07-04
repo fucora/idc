@@ -28,6 +28,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * 抽象实例，描述一个实例（由 Task 生成）最基本的要素
+ */
 @Getter
 @Setter
 @Entity
@@ -38,13 +41,13 @@ public abstract class AbstractJob {
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractJob.class);
 	
 	/**
-	 * 全局唯一ID
+	 * 全局唯一 ID
 	 */
 	@Id
 	String id;
 	
 	/**
-	 * Task类型
+	 * 任务类型（Task）
 	 */
 	@Column(name = "task_type")
 	@Enumerated(EnumType.STRING)
@@ -63,14 +66,14 @@ public abstract class AbstractJob {
 	LocalDateTime updatetime;
 
 	/**
-	 * Job状态
+	 * 实例状态（Job）
 	 */
 	@Column(name = "state")
 	@Enumerated(EnumType.STRING)
 	JobState state;
 	
 	/**
-	 * 子Job
+	 * 子实例（SubJob）
 	 */
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "container")
@@ -146,6 +149,14 @@ public abstract class AbstractJob {
 			throw new IllegalArgumentException("非法的完成状态: " + state);
 		}
 		setState(state);
+	}
+	
+	public void redo() {
+		// TODO 编写重做逻辑
+	}
+	
+	public void cancle() {
+		// TODO 编写取消逻辑
 	}
 	
 	private void checkRunning() {

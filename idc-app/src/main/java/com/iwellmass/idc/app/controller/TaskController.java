@@ -17,10 +17,10 @@ import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.Assignee;
-import com.iwellmass.idc.app.vo.ReTaskVO;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
-import com.iwellmass.idc.app.vo.TaskVO;
+import com.iwellmass.idc.app.vo.task.ReTaskVO;
+import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.IDCScheduler;
 
 import io.swagger.annotations.ApiOperation;

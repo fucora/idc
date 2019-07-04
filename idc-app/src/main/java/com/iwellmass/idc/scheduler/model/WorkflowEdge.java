@@ -9,6 +9,9 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 边关系
+ */
 @Getter
 @Setter
 @Entity

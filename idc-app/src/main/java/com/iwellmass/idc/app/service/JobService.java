@@ -32,6 +32,9 @@ import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
+/**
+ * Job 服务
+ */
 @Service
 public class JobService {
 	
@@ -46,7 +49,7 @@ public class JobService {
 	@Resource
 	AllJobRepository allJobRepository;
 
-	public Job getJob(String id) {
+	Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
 	}
 	
@@ -83,11 +86,13 @@ public class JobService {
 	@Transactional
 	public void createJob(String id, String taskName) {
 		Task task = getTask(taskName);
-		if (task.getState().isRunning()) {
+		// 有可能前台强制取消了调度
+		// 或者调度已过期、已被删除
+		if (task.getState().isTerminated()) {
+			LOGGER.error("调度已关闭：" + task.getState());
+		} else {
 			Job job = new Job(id, task);
 			jobRepository.save(job);
-		} else {
-			LOGGER.error("调度已关闭：" + task.getState());
 		}
 	}
 

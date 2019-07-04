@@ -31,6 +31,7 @@ public class JobBootstrap implements org.quartz.Job {
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		
 		try {
+			// 全局唯一
 			String jobId = context.getFireInstanceId();
 			
 			// 恢复的任务，清理现场

@@ -20,12 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.app.service.JobService;
-import com.iwellmass.idc.message.TaskEventService;
+import com.iwellmass.idc.message.JobEventService;
 import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
-public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
+public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(TaskEventPlugin.class);
 
@@ -100,18 +100,18 @@ public class TaskEventPlugin implements SchedulerPlugin, TaskEventService {
 		}
 	}
 
-	public static final TaskEventService eventService(String schdName) {
+	public static final JobEventService eventService(String schdName) {
 		try {
 			Scheduler scheduler = SchedulerRepository.getInstance().lookup(schdName);
-			return (TaskEventService) scheduler.getContext().get(NAME);
+			return (JobEventService) scheduler.getContext().get(NAME);
 		} catch (SchedulerException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
 
-	public static final TaskEventService eventService(Scheduler scheduler) {
+	public static final JobEventService eventService(Scheduler scheduler) {
 		try {
-			return (TaskEventService) scheduler.getContext().get(NAME);
+			return (JobEventService) scheduler.getContext().get(NAME);
 		} catch (SchedulerException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}

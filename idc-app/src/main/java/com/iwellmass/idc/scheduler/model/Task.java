@@ -52,7 +52,7 @@ public class Task extends AbstractTask {
 	private String taskName;
 	
 	/**
-	 * 计划组
+	 * 调度组
 	 */
 	@Id
 	@Column(name = "task_group")

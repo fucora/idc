@@ -4,6 +4,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * 失败消息
+ */
 public class FailMessage extends JobMessage {
 
 	private static final long serialVersionUID = -8973355861973877439L;
@@ -11,7 +14,7 @@ public class FailMessage extends JobMessage {
 	public FailMessage(//@formatter:off
 		@JsonProperty("id") String id,
 		@JsonProperty("batchNo") String batchNo) {//@formatter:on
-		super(id, batchNo, TaskEvent.FAIL);
+		super(id, batchNo, JobEvent.FAIL);
 	}
 	
 	public static final FailMessage newMessage(String batchNo) {

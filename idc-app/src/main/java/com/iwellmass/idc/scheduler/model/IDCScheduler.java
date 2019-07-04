@@ -18,10 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.app.scheduler.JobBootstrap;
-import com.iwellmass.idc.app.vo.ReTaskVO;
-import com.iwellmass.idc.app.vo.TaskVO;
+import com.iwellmass.idc.app.vo.task.ReTaskVO;
+import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
+/**
+ * 领域服务，负责调度相关的操作
+ */
 @Service
 public class IDCScheduler {
 

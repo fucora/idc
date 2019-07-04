@@ -5,16 +5,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import org.quartz.TriggerKey;
+import org.springframework.lang.Nullable;
 
 public class IDCUtils {
-	
-	public static final String GROUP_DEFAULT = "idc.default";
-	
-	
-	
-	public static final String REDO_GROUP = "idc";
-	
 	
 	public static final LocalDateTime toLocalDateTime(Long mill) {
 		if (mill == null) {
@@ -23,7 +16,12 @@ public class IDCUtils {
 		return Instant.ofEpochMilli(mill).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 
-	public static final Date toDate(LocalDateTime localDateTime) {
+	/**
+	 * {@link LocalDateTime} --&gt; {@link Date}
+	 * @param localDateTime
+	 * @return date
+	 */
+	public static final Date toDate(@Nullable LocalDateTime localDateTime) {
 		if (localDateTime == null) {
 			return null;
 		}
@@ -44,10 +42,6 @@ public class IDCUtils {
 		}
 		long mill = date.getTime();
 		return Instant.ofEpochMilli(mill).atZone(ZoneId.systemDefault()).toLocalDateTime();
-	}
-	
-	public static boolean isBlockingGroup(TriggerKey key) {
-		return GROUP_DEFAULT.equals(key.getGroup());
 	}
 	
 }

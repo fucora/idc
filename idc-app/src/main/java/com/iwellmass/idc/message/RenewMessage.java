@@ -4,6 +4,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * 续租消息
+ */
 public class RenewMessage extends JobMessage {
 
 	private static final long serialVersionUID = -8973355861973877439L;
@@ -11,7 +14,7 @@ public class RenewMessage extends JobMessage {
 	public RenewMessage(//@formatter:off
 		@JsonProperty("id") String id,
 		@JsonProperty("batchNo") String batchNo) {//@formatter:on
-		super(id, batchNo, TaskEvent.RENEW);
+		super(id, batchNo, JobEvent.RENEW);
 	}
 	
 	

@@ -73,7 +73,7 @@ public class SchedulerConfig {
 		IDCJobstoreCMT cmt = new IDCJobstoreCMT();
 		cmt.setDataSource("ds1");
 		cmt.setNonManagedTXDataSource("ds2");
-		cmt.setRecordIdGenerator(recordIdGenerator());
+		// cmt.setRecordIdGenerator(recordIdGenerator());
 		cmt.setDontSetAutoCommitFalse(true);
 		return cmt;
 	}

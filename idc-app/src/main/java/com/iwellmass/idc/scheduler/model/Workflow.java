@@ -15,6 +15,9 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 工作流
+ */
 @Getter
 @Setter
 @Entity

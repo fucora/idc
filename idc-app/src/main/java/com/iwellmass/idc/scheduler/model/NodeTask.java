@@ -9,6 +9,9 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 工作流节点，包装一个可执行的任务
+ */
 @Getter
 @Setter
 @Entity
@@ -20,14 +23,14 @@ public class NodeTask extends AbstractTask {
 	public static final String END = "END";
 
 	/**
-	 * 工作流
+	 * 工作流 ID
 	 */
 	@Id
 	@Column(name = "pid")
 	private String pid;
 	
 	/**
-	 * node id
+	 * 节点ID，本工作流内全局唯一
 	 */
 	@Id
 	@Column(name = "id")

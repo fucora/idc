@@ -1,5 +1,8 @@
 package com.iwellmass.idc.scheduler.model;
 
+/**
+ * 任务类型
+ */
 public enum TaskType {
 
 	/**

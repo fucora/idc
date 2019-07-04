@@ -24,6 +24,10 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 	@Setter
 	private RecordIdGenerator recordIdGenerator;
 
+	public IDCJobstoreCMT() {
+		this.recordIdGenerator = super::getFiredTriggerRecordId;
+	}
+	
 	/*
 	 * 自定义 entry id
 	 */
@@ -31,7 +35,7 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 	public synchronized String getFiredTriggerRecordId() {
 		return recordIdGenerator.generate();
 	}
-
+	
 	/*
 	 * 并发控制
 	 */

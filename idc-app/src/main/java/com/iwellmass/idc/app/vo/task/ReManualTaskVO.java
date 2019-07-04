@@ -1,4 +1,4 @@
-package com.iwellmass.idc.app.vo;
+package com.iwellmass.idc.app.vo.task;
 
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;

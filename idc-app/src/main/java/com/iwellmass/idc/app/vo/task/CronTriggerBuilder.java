@@ -1,4 +1,4 @@
-package com.iwellmass.idc.app.vo;
+package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
