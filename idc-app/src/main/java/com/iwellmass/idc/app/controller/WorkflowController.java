@@ -18,6 +18,7 @@ import com.iwellmass.common.util.PageData;
 import com.iwellmass.idc.app.service.WorkflowService;
 import com.iwellmass.idc.app.vo.WorkflowQueryParam;
 import com.iwellmass.idc.app.vo.WorkflowVO;
+import com.iwellmass.idc.app.vo.graph.GraphVO;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -45,9 +46,10 @@ public class WorkflowController {
 	@PutMapping
 	@ApiOperation("更新工作流")
 	public ServiceResult<String> update(@RequestBody WorkflowVO vo) {
-		workflowService.save(vo);
+		workflowService.update(vo);
 		return ServiceResult.success(MSG_OP_SUCCESS);
 	}
+	
 
 	@GetMapping("{id}")
 	@ApiOperation("获取工作流")
@@ -55,11 +57,18 @@ public class WorkflowController {
 		WorkflowVO vo = workflowService.getWorkflow(id);
 		return ServiceResult.success(vo);
 	}
-
+	
 	@DeleteMapping("{id}")
 	@ApiOperation("删除工作流")
 	public ServiceResult<String> delete(@PathVariable("id") String id) {
 		workflowService.delete(id);
+		return ServiceResult.success(MSG_OP_SUCCESS);
+	}
+	
+	@PostMapping("{id}/graph")
+	@ApiOperation("更新工作流依赖")
+	public ServiceResult<String> updateGraph(@PathVariable("id") String id, GraphVO gvo) {
+		workflowService.saveGraph(id, gvo);
 		return ServiceResult.success(MSG_OP_SUCCESS);
 	}
 }

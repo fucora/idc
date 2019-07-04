@@ -46,16 +46,13 @@ public class WorkflowService {
 				BeanUtils.copyProperties(model, vo);
 				return vo;
 			});
-
 		});
 	}
-
-	public void save(WorkflowVO vo) {
-
+	
+	public void saveGraph(String id, GraphVO gvo) {
 		// 格式化graph
 		DirectedAcyclicGraph<String, EdgeVO> workflowGraph = new DirectedAcyclicGraph<>(EdgeVO.class);
 
-		GraphVO gvo = vo.getGraph();
 		Map<String, NodeVO> nodeMap = gvo.getNodes().stream()
 				.collect(Collectors.toMap(NodeVO::getId, Function.identity()));
 		nodeMap.keySet().forEach(workflowGraph::addVertex);
@@ -92,14 +89,10 @@ public class WorkflowService {
 			}
 		});
 
-		Workflow workflow = new Workflow();
-
-		BeanUtils.copyProperties(vo, workflow);
-
 		// nodes
 		List<NodeTask> nodes = nodeMap.values().stream().map(node -> {
 			NodeTask tk = new NodeTask();
-			tk.setPid(vo.getId());
+			tk.setPid(id);
 			tk.setId(node.getId());
 			tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
 			if (sysNodes.contains(node.getId())) {
@@ -110,19 +103,41 @@ public class WorkflowService {
 			tk.setTaskType(node.getTaskType());
 			return tk;
 		}).collect(Collectors.toList());
-		workflow.setTaskNodes(nodes);
 
 		// edges
 		List<WorkflowEdge> edges = gvo.getEdges().stream().map(evo -> {
 			WorkflowEdge we = new WorkflowEdge();
-			we.setPid(vo.getId());
+			we.setPid(id);
 			we.setId(evo.getId());
 			we.setSource(evo.getSource().getId());
 			we.setTarget(evo.getTarget().getId());
 			return we;
 		}).collect(Collectors.toList());
 
+		Workflow workflow = getModel(id);
+		workflow.setTaskNodes(nodes);
 		workflow.setEdges(edges);
+		workflowRepository.save(workflow);
+	}
+
+	@Transactional
+	public void save(WorkflowVO vo) {
+		
+		if (workflowRepository.existsById(vo.getId())) {
+			throw new AppException("任务已存在");
+		}
+		// 格式化graph
+		Workflow workflow = new Workflow();
+		BeanUtils.copyProperties(vo, workflow);
+		// nodes
+		workflowRepository.save(workflow);
+	}
+	
+	@Transactional
+	public void update(WorkflowVO vo) {
+		Workflow workflow = getModel(vo.getId());
+		BeanUtils.copyProperties(vo, workflow);
+		// nodes
 		workflowRepository.save(workflow);
 	}
 	
@@ -160,8 +175,12 @@ public class WorkflowService {
 			}).collect(Collectors.toList());
 			gvo.setEdges(nvos);
 		}
-		vo.setGraph(gvo);
 		return vo;
+	}
+	
+	
+	Workflow getModel(String id) {
+		return workflowRepository.findById(id).orElseThrow(() -> new AppException("工作流不存在"));
 	}
 
 	@Transactional

@@ -111,7 +111,7 @@ public abstract class AbstractJob {
 			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
 			
 			ExecuteRequest request = new ExecuteRequest();
-			request.setDomain(task.domain);
+			request.setDomain(task.getDomain());
 			
 			IDCJobExecutors.getExecutor().execute(request);
 		}

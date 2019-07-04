@@ -13,7 +13,6 @@ import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.model.AbstractJob;
 import com.iwellmass.idc.scheduler.model.Job;
 import com.iwellmass.idc.scheduler.model.JobState;
-import com.iwellmass.idc.scheduler.model.NodeJob;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
@@ -104,9 +103,6 @@ public class TaskEventProcessor implements org.quartz.Job {
 		} 
 		else {
 			// 刷新主任务
-			NodeJob job = (NodeJob) runningJob;
-			Job mainJob = job.getMainJob();
-			mainJob.refresh();
 		}
 	}
 }

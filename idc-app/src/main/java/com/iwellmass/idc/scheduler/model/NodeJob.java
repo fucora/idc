@@ -34,10 +34,6 @@ public class NodeJob extends AbstractJob {
 			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private NodeTask nodeTask;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "main_id", referencedColumnName = "id", insertable = false, updatable = false)
-	private Job mainJob;
-
 	public NodeJob() {
 	}
 
