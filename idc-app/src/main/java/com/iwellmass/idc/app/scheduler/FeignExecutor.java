@@ -11,8 +11,6 @@ import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
-import com.iwellmass.idc.scheduler.model.AbstractJob;
-import com.iwellmass.idc.scheduler.model.AbstractTask;
 import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
 
 import feign.Client;
@@ -42,13 +40,12 @@ public class FeignExecutor implements IDCJobExecutor {
 	Contract contract;
 
 	@Override
-	public void execute(AbstractJob job) {
+	public void execute(ExecuteRequest request) {
 
-		AbstractTask task = job.getTask();
 
-		IDCJob idcJob = registryMap.computeIfAbsent(task.getDomain(), this::newFeignClient);
+		IDCJob idcJob = registryMap.computeIfAbsent(request.getDomain(), this::newFeignClient);
 
-		idcJob.execute(null);
+		idcJob.execute(request);
 
 		for (int i = 0; i < 10; i++) {
 			try {

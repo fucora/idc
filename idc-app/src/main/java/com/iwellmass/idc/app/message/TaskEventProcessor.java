@@ -89,6 +89,7 @@ public class TaskEventProcessor implements org.quartz.Job {
 			}
 		} catch (Exception e) {
 			LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
+			LOGGER.error(e.getMessage(), e);
 		}
 		
 		// Release trigger

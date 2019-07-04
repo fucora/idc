@@ -1,8 +1,8 @@
 package com.iwellmass.idc.scheduler.service;
 
-import com.iwellmass.idc.scheduler.model.AbstractJob;
+import com.iwellmass.idc.app.scheduler.ExecuteRequest;
 
 public interface IDCJobExecutor {
 
-	void execute(AbstractJob job);
+	void execute(ExecuteRequest request);
 }

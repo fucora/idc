@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.iwellmass.idc.app.scheduler.ExecuteRequest;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 
 import lombok.Getter;
@@ -64,6 +65,7 @@ public abstract class AbstractJob {
 		Objects.requireNonNull(task);
 		this.id = id; // 作业 ID
 		this.taskType = task.getTaskType(); // 任务类型
+		this.state = JobState.NONE;
 		if(taskType == TaskType.WORKFLOW) { // 创建子任务
 			subJobs = Objects.requireNonNull(task.getWorkflow())
 				.getTaskNodes().stream()
@@ -73,9 +75,8 @@ public abstract class AbstractJob {
 	}
 
 	public void start() {
-		if (!state.isComplete()) {
+		if (state.isComplete()) {
 			throw new JobException("任务已执行");
-			
 		}
 		if (getTask() == null) {
 			throw new JobException("任务不存在");
@@ -106,7 +107,13 @@ public abstract class AbstractJob {
 				setState(JobState.FAILED);
 			}
 		} else {
-			IDCJobExecutors.getExecutor().execute(this);
+			
+			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
+			
+			ExecuteRequest request = new ExecuteRequest();
+			request.setDomain(task.domain);
+			
+			IDCJobExecutors.getExecutor().execute(request);
 		}
 	}
 	
