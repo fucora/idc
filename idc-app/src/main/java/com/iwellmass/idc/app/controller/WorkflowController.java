@@ -67,9 +67,9 @@ public class WorkflowController {
 	
 	@GetMapping("{id}/graph")
 	@ApiOperation("获取工作流依赖")
-	public ServiceResult<String> getGraph(@PathVariable("id") String id) {
-		workflowService.getGraph(id);
-		return ServiceResult.success(MSG_OP_SUCCESS);
+	public ServiceResult<GraphVO> getGraph(@PathVariable("id") String id) {
+		GraphVO gvo = workflowService.getGraph(id);
+		return ServiceResult.success(gvo);
 	}
 	
 	@PostMapping("{id}/graph")
