@@ -74,7 +74,7 @@ public class WorkflowController {
 	
 	@PostMapping("{id}/graph")
 	@ApiOperation("更新工作流依赖")
-	public ServiceResult<String> updateGraph(@PathVariable("id") String id, GraphVO gvo) {
+	public ServiceResult<String> updateGraph(@PathVariable("id") String id, @RequestBody GraphVO gvo) {
 		workflowService.saveGraph(id, gvo);
 		return ServiceResult.success(MSG_OP_SUCCESS);
 	}

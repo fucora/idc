@@ -33,8 +33,7 @@ public class JobController {
 	
     @ApiOperation("获取 JOB 运行状态")
     @PostMapping("/runtime")
-    public ServiceResult<PageData<JobRuntimeVO>> runtime(
-            @RequestParam(required = false) JobQueryParam qm, Pager pager) {
+    public ServiceResult<PageData<JobRuntimeVO>> runtime(@RequestParam(required = false) JobQueryParam qm, Pager pager) {
         PageData<JobRuntimeVO> taskInstance = jobService.query(qm);
         return ServiceResult.success(taskInstance);
     }
