@@ -14,6 +14,8 @@ public class NodeVO {
 	private String id;
 	
 	private String taskId;
+
+	private String taskName;
 	
 	private TaskType taskType;
 	

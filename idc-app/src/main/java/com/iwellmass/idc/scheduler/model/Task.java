@@ -45,13 +45,6 @@ public class Task extends AbstractTask {
 	
 	// ~~ constructor ~~
 	/**
-	 * 调度名称，主键
-	 */
-	@Id
-	@Column(name = "task_name")
-	private String taskName;
-	
-	/**
 	 * 调度组
 	 */
 	@Id

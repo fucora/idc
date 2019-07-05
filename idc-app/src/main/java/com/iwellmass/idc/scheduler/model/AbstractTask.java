@@ -1,12 +1,6 @@
 package com.iwellmass.idc.scheduler.model;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,10 +14,18 @@ import lombok.Setter;
 public abstract class AbstractTask {
 
 	/**
+	 * 调度名称，主键
+	 */
+	@Id
+	@Column(name = "task_name")
+	protected String taskName;
+
+	/**
 	 * 任务ID
 	 */
 	@Column(name = "task_id")
 	String taskId;
+
 	/**
 	 * 任务类型
 	 */
