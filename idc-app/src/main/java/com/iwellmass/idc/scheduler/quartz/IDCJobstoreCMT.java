@@ -25,7 +25,7 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 	private RecordIdGenerator recordIdGenerator;
 
 	public IDCJobstoreCMT() {
-		this.recordIdGenerator = super::getFiredTriggerRecordId;
+		this.recordIdGenerator = ()->super.getFiredTriggerRecordId();
 	}
 	
 	/*
