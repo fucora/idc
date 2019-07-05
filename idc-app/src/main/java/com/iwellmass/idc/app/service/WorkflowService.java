@@ -91,9 +91,8 @@ public class WorkflowService {
 		// required
 		List<String> sysNodes = Arrays.asList(NodeTask.START, NodeTask.END);
 		
-		sysNodes.forEach(requiredVertex -> {
-			Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点");
-		});
+		sysNodes.forEach(requiredVertex ->
+				Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
 
 		// 校验graph是否正确,检查孤立点
 		workflowGraph.vertexSet().forEach(tk -> {
@@ -122,6 +121,7 @@ public class WorkflowService {
 			NodeTask tk = new NodeTask();
 			tk.setPid(id);
 			tk.setId(node.getId());
+			tk.setTaskName(node.getTaskName());
 			tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
 			if (sysNodes.contains(node.getId())) {
 				tk.setDomain("idc");
