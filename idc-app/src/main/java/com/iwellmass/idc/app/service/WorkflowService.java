@@ -76,7 +76,8 @@ public class WorkflowService {
 		}
 		return gvo;
 	}
-	
+
+	@Transactional
 	public void saveGraph(String id, GraphVO gvo) {
 		// 格式化graph
 		DirectedAcyclicGraph<String, EdgeVO> workflowGraph = new DirectedAcyclicGraph<>(EdgeVO.class);
@@ -92,7 +93,7 @@ public class WorkflowService {
 		List<String> sysNodes = Arrays.asList(NodeTask.START, NodeTask.END);
 		
 		sysNodes.forEach(requiredVertex ->
-				Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
+				Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点")); // 判定是否包含 start end 节点
 
 		// 校验graph是否正确,检查孤立点
 		workflowGraph.vertexSet().forEach(tk -> {
@@ -143,8 +144,10 @@ public class WorkflowService {
 		}).collect(Collectors.toList());
 
 		Workflow workflow = getModel(id);
-		workflow.setTaskNodes(nodes);
-		workflow.setEdges(edges);
+		workflow.getEdges().clear();
+		workflow.getTaskNodes().clear();
+		workflow.getEdges().addAll(edges);
+		workflow.getTaskNodes().addAll(nodes);
 		workflowRepository.save(workflow);
 	}
 

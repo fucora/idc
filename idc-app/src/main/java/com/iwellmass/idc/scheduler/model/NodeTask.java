@@ -28,12 +28,12 @@ public class NodeTask extends AbstractTask {
 	@Id
 	@Column(name = "pid")
 	private String pid;
-	
+
 	/**
 	 * 节点ID，本工作流内全局唯一
 	 */
 	@Id
 	@Column(name = "id")
 	private String id;
-	
+
 }

@@ -3,14 +3,7 @@ package com.iwellmass.idc.scheduler.model;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -46,15 +39,15 @@ public class Workflow {
 	/**
 	 * 节点
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "pid", updatable = false)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
+	@JoinColumn(name = "pid",updatable = false)
 	private List<NodeTask> taskNodes;
 	
 	/**
 	 * 边关系
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "pid", updatable = false)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
+	@JoinColumn(name = "pid",updatable = false)
 	private List<WorkflowEdge> edges;
 
 	public Set<String> successors(String node) {

@@ -19,19 +19,20 @@ import lombok.Setter;
 @Table(name = "idc_workflow_edge")
 public class WorkflowEdge {
 
-	
+
 	/**
 	 * 工作流ID
 	 */
 	@Id
-	@Column
+	@Column(name = "pid")
 	private String pid;
-	
-	
+
+
 	/**
 	 * 边 ID
 	 */
 	@Id
+	@Column
 	private String id;
 
 	/**

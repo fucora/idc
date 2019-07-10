@@ -4,11 +4,11 @@ spring:
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
+#  datasource:
+#    driverClassName: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+#    username: root
+#    password: zjhz2017
 
 server:
   port: 9306
@@ -79,6 +79,13 @@ feign:
 ---
 spring:
   profiles: gray
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://grayeureka.iwellmass.com/idc?characterEncoding=utf8&useSSL=false
+    username: root
+    password: zjhz2017
+  jpa:
+    show-sql: true
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 1
@@ -97,6 +104,11 @@ eureka:
 ---
 spring:
   profiles: dev
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+    username: root
+    password: zjhz2017
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 1
