@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @IdClass(WfID.class)
-@Table(name = "idc_node_task")
+@Table(name = "idc_workflow_node")
 public class NodeTask extends AbstractTask {
 	
 	public static final String START = "START";

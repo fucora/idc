@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "idc_node_job")
+@Table(name = "idc_plan_instance_node")
 public class NodeJob extends AbstractJob {
 
 	/**

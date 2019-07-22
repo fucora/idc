@@ -28,7 +28,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "idc_job")
+@Table(name = "idc_plan_instance")
 public class Job extends AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
