@@ -8,7 +8,7 @@ public enum TaskType {
 	/**
 	 * 简单任务
 	 */
-	SIMPLE, 
+	SIMPLE,
 	
 	/**
 	 * 工作流任务

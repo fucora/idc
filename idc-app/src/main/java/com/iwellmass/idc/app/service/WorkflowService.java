@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +48,7 @@ public class WorkflowService {
     public PageData<WorkflowVO> query(WorkflowQueryParam qm) {
         return QueryUtils.doJpaQuery(qm, pageable -> {
             Specification<Workflow> spec = SpecificationBuilder.toSpecification(qm);
-            return workflowRepository.findAll(spec, pageable).map(model -> {
+            return workflowRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(),pageable.getPageSize(),Sort.Direction.DESC,"updatetime")).map(model -> {
                 WorkflowVO vo = new WorkflowVO();
                 BeanUtils.copyProperties(model, vo);
                 vo.setCanModify(canModify(vo.getId()));
@@ -149,6 +152,7 @@ public class WorkflowService {
         }).collect(Collectors.toList());
 
         Workflow workflow = getModel(id);
+        workflow.setUpdatetime(LocalDateTime.now());
         workflow.getEdges().clear();
         workflow.getTaskNodes().clear();
         workflow.getEdges().addAll(edges);
@@ -173,6 +177,7 @@ public class WorkflowService {
     public void update(WorkflowVO vo) {
         Workflow workflow = getModel(vo.getId());
         BeanUtils.copyProperties(vo, workflow);
+        workflow.setUpdatetime(LocalDateTime.now());
         // nodes
         workflowRepository.save(workflow);
     }
