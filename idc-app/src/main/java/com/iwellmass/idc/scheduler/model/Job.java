@@ -102,4 +102,8 @@ public class Job extends AbstractJob {
 		}
 		// else ignore
 	}
+
+	public boolean isComplete() {
+		return state.isComplete();
+	}
 }

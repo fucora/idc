@@ -15,4 +15,6 @@ public interface TaskRepository extends CrudRepository<Task, TaskID>, JpaSpecifi
 	
 	@Query("SELECT DISTINCT assignee FROM Task WHERE assignee IS NOT NULL")
 	List<String> findAllAssignee();
+
+	List<Task> findAllByTaskId(String taskId);
 }

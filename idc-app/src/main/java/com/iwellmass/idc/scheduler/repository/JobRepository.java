@@ -1,6 +1,7 @@
 package com.iwellmass.idc.scheduler.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,10 @@ public interface JobRepository extends CrudRepository<Job, String>, JpaSpecifica
 	
 	
 	@Query("SELECT DISTINCT assignee FROM Job WHERE assignee IS NOT NULL")
-	public List<String> findAllAssignee();
-	
+	List<String> findAllAssignee();
+
+	Optional<Job> findAllByTaskNameAndTaskGroup(String taskName,String taskGroup);
+
+	List<Job> findAllByTaskNameIn(List<String> taskNames);
+
 }
