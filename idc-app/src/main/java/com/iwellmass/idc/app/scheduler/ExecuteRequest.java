@@ -8,4 +8,5 @@ import lombok.Setter;
 public class ExecuteRequest {
 
 	private String domain;
+	private String contentType;
 }

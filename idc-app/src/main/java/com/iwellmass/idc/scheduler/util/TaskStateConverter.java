@@ -13,7 +13,11 @@ public class TaskStateConverter implements AttributeConverter<TaskState, String>
 
 	@Override
 	public TaskState convertToEntityAttribute(String dbData) {
-		return TaskState.NORMAL;
+		if(dbData==null)
+		{
+			return  TaskState.NONE;
+		}
+		return TaskState.valueOf(dbData);
 	}
 	
 }

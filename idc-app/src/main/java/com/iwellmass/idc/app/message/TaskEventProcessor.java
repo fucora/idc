@@ -1,7 +1,11 @@
 package com.iwellmass.idc.app.message;
 
+import java.beans.Transient;
+import java.util.List;
 import java.util.Optional;
 
+import com.iwellmass.idc.scheduler.model.*;
+import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -10,14 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.message.JobMessage;
-import com.iwellmass.idc.scheduler.model.AbstractJob;
-import com.iwellmass.idc.scheduler.model.Job;
-import com.iwellmass.idc.scheduler.model.JobState;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
 import lombok.Setter;
+import org.springframework.transaction.annotation.Transactional;
 
 @DisallowConcurrentExecution
 public class TaskEventProcessor implements org.quartz.Job {
@@ -27,6 +29,7 @@ public class TaskEventProcessor implements org.quartz.Job {
 	static final String CXT_JOB_SERVICE = "jobService";
 	static final String CXT_JOB_STORE = "idcJobStore";
 	static final String CXT_ALL_JOB_REPOSITORY = "allJobRepository";
+	static final String CXT_ALL_WORKFLOW_REPOSITORY = "workflowRepository";
 
 	@Setter
 	JobMessage message;
@@ -36,6 +39,9 @@ public class TaskEventProcessor implements org.quartz.Job {
 
 	@Setter
 	AllJobRepository allJobRepository;
+
+	@Setter
+	WorkflowRepository workflowRepository;
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -47,14 +53,13 @@ public class TaskEventProcessor implements org.quartz.Job {
 			LOGGER.error(e.getMessage(), e);
 		}
 	}
-	
+
 	public void doExecute(JobExecutionContext context) {
 
 		if (message == null) {
 			LOGGER.error("ERROR: message cannot be null, trigger {}", context.getTrigger().getKey());
 			return;
 		}
-		
 		Optional<AbstractJob> opt = allJobRepository.findById(message.getJobId());
 		
 		if (!opt.isPresent()) {
@@ -63,6 +68,13 @@ public class TaskEventProcessor implements org.quartz.Job {
 		}
 		
 		AbstractJob runningJob = opt.get();
+		//提前填充job
+		AbstractTask abstractTask =  runningJob.getTask();
+		if(abstractTask.getTaskType()== TaskType.WORKFLOW)
+		{
+		  Workflow workflow = workflowRepository.findById(abstractTask.getTaskId()).get();
+		  abstractTask.setWorkflow(workflow);
+		}
 		try {
 			switch (message.getEvent()) {
 			case START: {

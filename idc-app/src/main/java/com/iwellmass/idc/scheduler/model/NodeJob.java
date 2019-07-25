@@ -47,7 +47,7 @@ public class NodeJob extends AbstractJob {
 	/**
 	 * 关联的子任务
 	 */
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumns({ @JoinColumn(name = "task_id", referencedColumnName = "pid", insertable = false, updatable = false),
 			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private NodeTask nodeTask;
@@ -60,6 +60,8 @@ public class NodeJob extends AbstractJob {
 		// 设置 ID
 		this.container = container;
 		this.nodeId = nodeTask.getId();
+		this.nodeTask = nodeTask;
+		this.taskId = nodeTask.getPid();
 	}
 
 	private static final String id(String container, String nodeId) {

@@ -6,17 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +65,7 @@ public abstract class AbstractJob {
 	/**
 	 * 子实例（SubJob）
 	 */
-	@OneToMany(cascade = CascadeType.ALL)
+	@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
 	@JoinColumn(name = "container")
 	List<NodeJob> subJobs;
 	
@@ -90,7 +80,8 @@ public abstract class AbstractJob {
 		if(taskType == TaskType.WORKFLOW) { // 创建子任务
 			subJobs = Objects.requireNonNull(task.getWorkflow())
 				.getTaskNodes().stream()
-				.map(node -> new NodeJob(id, node))
+				.map(node -> new
+						NodeJob(id, node))
 				.collect(Collectors.toList());
 		}
 	}
@@ -119,6 +110,7 @@ public abstract class AbstractJob {
 					next.start();
 					anySuccess = true;
 				} catch (Exception e) {
+					e.printStackTrace();
 					anySuccess |= false;
 					next.setState(JobState.FAILED);
 				}

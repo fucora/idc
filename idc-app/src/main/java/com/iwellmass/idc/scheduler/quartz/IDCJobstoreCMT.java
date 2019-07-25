@@ -16,7 +16,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import lombok.Setter;
 
-public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
+	public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 
 	@Setter
 	private int parallelMax = 2;

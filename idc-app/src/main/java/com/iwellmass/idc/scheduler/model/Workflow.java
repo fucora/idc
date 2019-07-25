@@ -1,5 +1,6 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.util.HashSet;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +10,8 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 /**
  * 工作流
@@ -19,20 +22,20 @@ import lombok.Setter;
 @Table(name = "idc_workflow")
 public class Workflow {
 
-    /**
-     * id
-     */
-    @Id
-    @Column(name = "id")
-    private String id;
+	/**
+	 * id
+	 */
+	@Id
+	@Column(name = "id")
+	private String id;
 
-    /**
-     * 名称
-     */
-    @Column(name = "task_name")
-    private String taskName;
+	/**
+	 * 名称
+	 */
+	@Column(name = "task_name")
+	private String taskName;
 
-    /**
+	/**
      * 描述
      */
     @Column(name = "description", columnDefinition = "TEXT")
@@ -45,23 +48,35 @@ public class Workflow {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updatetime;
 
-    /**
-     * 节点
-     */
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "pid", updatable = false)
-    private List<NodeTask> taskNodes;
+	/**
+	 * 节点
+	 */
 
-    /**
-     * 边关系
-     */
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "pid", updatable = false)
-    private List<WorkflowEdge> edges;
+	@Fetch(FetchMode.SELECT)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
+	@JoinColumn(name = "pid",updatable = false)
+	private List<NodeTask> taskNodes;
 
-    public Set<String> successors(String node) {
-        return null;
-    }
+	/**
+	 * 边关系
+	 */
+
+	@Fetch(FetchMode.SELECT)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
+	@JoinColumn(name = "pid",updatable = false)
+	private List<WorkflowEdge> edges;
+
+	public Set<String> successors(String node) {
+		Set<String> result = new HashSet<>();
+		for(WorkflowEdge workflowEdge:edges)
+		{
+			if(workflowEdge.getSource().equals(node))
+			{
+				result.add(workflowEdge.getTarget());
+			}
+		}
+		return result;
+	}
 
     public Workflow() {
         updatetime = LocalDateTime.now();
