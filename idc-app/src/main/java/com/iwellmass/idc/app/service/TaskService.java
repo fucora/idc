@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.service;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,16 +27,24 @@ import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
 public class TaskService {
-	
+
 	@Resource
 	TaskRepository taskRepository;
-	
-	public TaskVO getTask(String name) {
-		
-		Task task = taskRepository.findById(new TaskID(name)).orElseThrow(()-> new AppException("任务不存在"));
 
-		TaskVO vo = task.getScheduleType() == ScheduleType.AUTO ? new CronTaskVO() : new ManualTaskVO();
-		BeanUtils.copyProperties(task, vo, "workflow");
+	public TaskVO getTask(String name) {
+
+		Task task = taskRepository.findById(new TaskID(name)).orElseThrow(()-> new AppException("任务不存在"));
+		TaskVO vo;
+		if (task.getScheduleType() == ScheduleType.AUTO) {
+			vo = new CronTaskVO();
+			BeanUtils.copyProperties(task, vo, "workflow");
+			vo.setContentType(task.getProps().get("cronType").toString());
+            ((CronTaskVO) vo).setDays((List<Integer>) task.getProps().get("days"));
+            ((CronTaskVO) vo).setDuetime((LocalTime) task.getProps().get("duetime"));
+		} else {
+			vo = new ManualTaskVO();
+			BeanUtils.copyProperties(task, vo, "workflow");
+		}
 		if (task.getStarttime() != null) {
 			vo.setStartDate(task.getStarttime().toLocalDate());
 		}

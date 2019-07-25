@@ -1,10 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -48,13 +45,22 @@ public class WorkflowService {
     public PageData<WorkflowVO> query(WorkflowQueryParam qm) {
         return QueryUtils.doJpaQuery(qm, pageable -> {
             Specification<Workflow> spec = SpecificationBuilder.toSpecification(qm);
-            return workflowRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(),pageable.getPageSize(),Sort.Direction.DESC,"updatetime")).map(model -> {
+            return workflowRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.Direction.DESC, "updatetime")).map(model -> {
                 WorkflowVO vo = new WorkflowVO();
                 BeanUtils.copyProperties(model, vo);
                 vo.setCanModify(canModify(vo.getId()));
                 return vo;
             });
         });
+    }
+
+    public List<WorkflowVO> queryAll() {
+        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime")).stream().map(model -> {
+            WorkflowVO vo = new WorkflowVO();
+            BeanUtils.copyProperties(model, vo);
+            vo.setCanModify(canModify(vo.getId()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     public GraphVO getGraph(String id) {

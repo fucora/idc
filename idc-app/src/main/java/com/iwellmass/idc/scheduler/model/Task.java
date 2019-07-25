@@ -18,6 +18,8 @@ import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.app.vo.task.TaskVO;
+import com.iwellmass.idc.model.CronType;
 import io.swagger.annotations.ApiModelProperty;
 import org.quartz.TriggerKey;
 
@@ -39,129 +41,122 @@ import lombok.Setter;
 @IdClass(TaskID.class)
 @Table(name = "idc_plan")
 @SecondaryTable(name = "QRTZ_TRIGGERS", pkJoinColumns = {
-	@PrimaryKeyJoinColumn(name = "TRIGGER_NAME", referencedColumnName = "task_name"),
-	@PrimaryKeyJoinColumn(name = "TRIGGER_GROUP", referencedColumnName = "task_group"),
+        @PrimaryKeyJoinColumn(name = "TRIGGER_NAME", referencedColumnName = "task_name"),
+        @PrimaryKeyJoinColumn(name = "TRIGGER_GROUP", referencedColumnName = "task_group"),
 })
 public class Task extends AbstractTask {
 
-	public static final String GROUP_PRIMARY = "primary";
-	
-	// ~~ constructor ~~
-	/**
-	 * 调度组
-	 */
-	@Id
-	@Column(name = "task_group")
-	private String taskGroup = GROUP_PRIMARY;
+    public static final String GROUP_PRIMARY = "primary";
 
-	/**
-	 * 业务类型
-	 */
-	@Column(name = "content_type")
-	private String contentType;
-	
-	/**
-	 * 责任人
-	 */
-	@Column(name = "assignee", length = 20)
-	private String assignee;
+    // ~~ constructor ~~
+    /**
+     * 调度组
+     */
+    @Id
+    @Column(name = "task_group")
+    private String taskGroup = GROUP_PRIMARY;
 
-	/**
-	 * 运行参数
-	 */
-	@Column(name = "param", columnDefinition = "TEXT")
-	@Convert(converter = ExecParamConverter.class)
-	private List<ExecParam> param;
-	
-	
-	// ~~ others ~~
-	
-	/**
-	 * 调度方式
-	 */
-	@Column(name = "schedule_type")
-	@Enumerated(EnumType.STRING)
-	private ScheduleType scheduleType;
-	
-	/**
-	 * 出错重试
-	 */
-	@Column(name = "is_retry")
-	private Boolean isRetry;
+    /**
+     * 业务类型
+     */
+    @Column(name = "content_type")
+    private String contentType;
 
-	/**
-	 * 出错时阻塞
-	 */
-	@Column(name = "block_on_error")
-	private Boolean blockOnError;
+    /**
+     * 责任人
+     */
+    @Column(name = "assignee", length = 20)
+    private String assignee;
 
-	/**
-	 * 生效时间
-	 */
-	@Column(name = "starttime")
-	private LocalDateTime starttime;
+    /**
+     * 运行参数
+     */
+    @Column(name = "param", columnDefinition = "TEXT")
+    @Convert(converter = ExecParamConverter.class)
+    private List<ExecParam> param;
 
-	/**
-	 * 失效时间
-	 */
-	@Column(name = "endtime")
-	private LocalDateTime endtime;
 
-	@ApiModelProperty("具体执行时间")
-	@JsonFormat(timezone = "GMT+8", pattern="HH:mm:ss")
-	@Column(name = "duetime")
-	private LocalTime duetime = LocalTime.MIN;
+    // ~~ others ~~
 
-//	private List<Integer>
+    /**
+     * 调度方式
+     */
+    @Column(name = "schedule_type")
+    @Enumerated(EnumType.STRING)
+    private ScheduleType scheduleType;
 
-	/**
-	 * 其他参数（反显前端用）
-	 */
-	@Column(name = "props", columnDefinition = "TEXT")
-	@Convert(converter = MapConverter.class)
-	private Map<String, Object> props;
+    /**
+     * 出错重试
+     */
+    @Column(name = "is_retry")
+    private Boolean isRetry;
 
-	/**
-	 * 创建时间
-	 */
-	@Column(name = "createtime")
-	private LocalDateTime createtime;
+    /**
+     * 出错时阻塞
+     */
+    @Column(name = "block_on_error")
+    private Boolean blockOnError;
 
-	/**
-	 * 更新时间
-	 */
-	@Column(name = "updatetime")
-	private LocalDateTime updatetime;
+    /**
+     * 生效时间
+     */
+    @Column(name = "starttime")
+    private LocalDateTime starttime;
 
-	@Column(table="QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
-	@Convert(converter = LocalLongConverter.class)
-	private LocalDateTime prevFireTime;
+    /**
+     * 失效时间
+     */
+    @Column(name = "endtime")
+    private LocalDateTime endtime;
 
-	@Column(table="QRTZ_TRIGGERS", name = "NEXT_FIRE_TIME", insertable = false, updatable = false)
-	@Convert(converter = LocalLongConverter.class)
-	private LocalDateTime nextFireTime;
+    /**
+     * 其他参数（反显前端用）
+     */
+    @Column(name = "props", columnDefinition = "TEXT")
+    @Convert(converter = MapConverter.class)
+    private Map<String, Object> props;
 
-	@Column(table="QRTZ_TRIGGERS", name = "TRIGGER_STATE", insertable = false, updatable = false)
-	@Convert(converter = TaskStateConverter.class)
-	private TaskState state;
-	
-	public Task() {
-	}
+    /**
+     * 创建时间
+     */
+    @Column(name = "createtime")
+    private LocalDateTime createtime;
 
-	public Task(String name, String taskId, String domain) {
-		this.taskName = name;
-		this.taskId = taskId;
-		this.domain = domain;
-		this.setCreatetime(LocalDateTime.now());
-		this.setUpdatetime(this.createtime);
-	}
+    /**
+     * 更新时间
+     */
+    @Column(name = "updatetime")
+    private LocalDateTime updatetime;
 
-	public TriggerKey getTriggerKey() {
-		Objects.requireNonNull(taskName);
-		Objects.requireNonNull(taskGroup);
-		return new TriggerKey(taskName, taskGroup);
-	}
+    @Column(table = "QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
+    @Convert(converter = LocalLongConverter.class)
+    private LocalDateTime prevFireTime;
 
-	public void clear() {
-	}
+    @Column(table = "QRTZ_TRIGGERS", name = "NEXT_FIRE_TIME", insertable = false, updatable = false)
+    @Convert(converter = LocalLongConverter.class)
+    private LocalDateTime nextFireTime;
+
+    @Column(table = "QRTZ_TRIGGERS", name = "TRIGGER_STATE", insertable = false, updatable = false)
+    @Convert(converter = TaskStateConverter.class)
+    private TaskState state;
+
+    public Task() {
+    }
+
+    public Task(TaskVO vo) {
+        this.taskName = vo.getTaskName();
+        this.taskId = vo.getTaskId();
+        this.domain = vo.getTaskGroup();
+        this.setCreatetime(LocalDateTime.now());
+        this.setUpdatetime(this.createtime);
+    }
+
+    public TriggerKey getTriggerKey() {
+        Objects.requireNonNull(taskName);
+        Objects.requireNonNull(taskGroup);
+        return new TriggerKey(taskName, taskGroup);
+    }
+
+    public void clear() {
+    }
 }

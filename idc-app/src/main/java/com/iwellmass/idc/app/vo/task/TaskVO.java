@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +79,15 @@ public abstract class TaskVO {
 	String contentType;
 	
 	public abstract Trigger buildTrigger(TriggerKey tk);
-	
+
+//	public LocalTime getChildDueTime() {
+//		if (this.scheduleType.equals(ScheduleType.AUTO)) {
+//			return ((CronTaskVO)this).getDuetime();
+//		} else {
+//			return ((ManualTaskVO)this).getDuetime();
+//		}
+//	}
+
 	@JsonIgnore
 	public abstract Map<String, Object> getProps();
 	

@@ -43,7 +43,7 @@ public class IDCScheduler {
 
 	@Transactional
 	public void schedule(TaskVO vo) {
-		Task task = new Task(vo.getTaskName(), vo.getTaskId(), vo.getTaskGroup());
+		Task task = new Task(vo);
 		BeanUtils.copyProperties(vo, task);
 		// 生效时间
 		if (vo.getStartDate() != null) {

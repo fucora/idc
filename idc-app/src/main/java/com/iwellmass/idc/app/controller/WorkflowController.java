@@ -22,6 +22,8 @@ import com.iwellmass.idc.app.vo.graph.GraphVO;
 
 import io.swagger.annotations.ApiOperation;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/workflow")
 public class WorkflowController {
@@ -33,6 +35,13 @@ public class WorkflowController {
 	@ApiOperation("查询工作流列表")
 	public ServiceResult<PageData<WorkflowVO>> query(WorkflowQueryParam param) {
 		PageData<WorkflowVO> data = workflowService.query(param);
+		return ServiceResult.success(data);
+	}
+
+	@GetMapping("/all")
+	@ApiOperation("查询所有工作流")
+	public ServiceResult<List<WorkflowVO>> queryAll() {
+		List<WorkflowVO> data = workflowService.queryAll();
 		return ServiceResult.success(data);
 	}
 
