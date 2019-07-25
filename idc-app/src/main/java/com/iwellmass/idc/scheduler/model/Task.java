@@ -1,6 +1,7 @@
 package com.iwellmass.idc.scheduler.model;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import org.quartz.TriggerKey;
 
@@ -105,6 +107,12 @@ public class Task extends AbstractTask {
 	@Column(name = "endtime")
 	private LocalDateTime endtime;
 
+	@ApiModelProperty("具体执行时间")
+	@JsonFormat(timezone = "GMT+8", pattern="HH:mm:ss")
+	@Column(name = "duetime")
+	private LocalTime duetime = LocalTime.MIN;
+
+//	private List<Integer>
 
 	/**
 	 * 其他参数（反显前端用）
