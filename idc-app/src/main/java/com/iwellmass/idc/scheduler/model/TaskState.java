@@ -5,18 +5,14 @@ package com.iwellmass.idc.scheduler.model;
  */
 public enum TaskState {
 
-//	WAITING,
-//	PAUSED,
-//	ACQUIRED,
-//	BLOCKED,
-//	ERROR
+	WAITING,
+	PAUSED,
+	ACQUIRED,
+	BLOCKED,
+	ERROR,
 	NONE,
 	NORMAL,
-	PAUSED,
-	COMPLETE,
-	ERROR,
-	BLOCKED;
-
+	COMPLETE;
 	public boolean isTerminated() {
 		return this==COMPLETE||this==ERROR;
 	}

@@ -70,7 +70,7 @@ public abstract class TaskVO {
 	String taskId;
 
 	@ApiModelProperty("业务域")
-	String taskGroup;
+	String domain;
 
 	@ApiModelProperty("任务类型")
 	TaskType taskType;

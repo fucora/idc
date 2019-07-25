@@ -158,7 +158,7 @@ public class Task extends AbstractTask {
     public Task(TaskVO vo) {
         this.taskName = vo.getTaskName();
         this.taskId = vo.getTaskId();
-        this.domain = vo.getTaskGroup();
+        this.taskGroup = Task.GROUP_PRIMARY;
         this.setCreatetime(LocalDateTime.now());
         this.setUpdatetime(this.createtime);
     }

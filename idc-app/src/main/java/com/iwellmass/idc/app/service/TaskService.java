@@ -39,7 +39,7 @@ public class TaskService {
         if (task.getScheduleType() == ScheduleType.AUTO) {
             vo = new CronTaskVO();
             BeanUtils.copyProperties(task, vo, "workflow");
-            vo.setContentType(task.getProps().get("cronType").toString());
+            ((CronTaskVO) vo).setCronType(CronType.valueOf(task.getProps().get("cronType").toString()));
             if (((CronTaskVO) vo).getCronType().equals(CronType.MONTHLY)) {
                 ((CronTaskVO) vo).setDays((List<Integer>) task.getProps().get("days"));
             }

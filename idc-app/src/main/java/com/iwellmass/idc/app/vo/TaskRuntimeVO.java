@@ -18,7 +18,7 @@ public class TaskRuntimeVO  {
 	@ApiModelProperty("计划")
 	private String taskName;
 	
-	@ApiModelProperty("业务ID")
+	@ApiModelProperty("工作流ID")
 	private String taskId;
 
 	@ApiModelProperty("业务域")
