@@ -16,6 +16,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.quartz.TriggerKey;
 
 import com.iwellmass.common.param.ExecParam;
@@ -85,6 +86,12 @@ public class Task extends AbstractTask {
 	 */
 	@Column(name = "is_retry")
 	private Boolean isRetry;
+
+	/**
+	 * 出错时阻塞
+	 */
+	@Column(name = "block_on_error")
+	private Boolean blockOnError;
 
 	/**
 	 * 生效时间
