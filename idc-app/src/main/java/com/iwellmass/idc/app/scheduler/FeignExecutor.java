@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.JobEnv;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import com.iwellmass.idc.scheduler.model.Job;
 import com.iwellmass.idc.scheduler.model.NodeJob;
@@ -89,5 +90,10 @@ public class FeignExecutor implements IDCJobExecutor {
 		IDCJob feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract).target(IDCJob.class, path);
 		return feginClient;
+	}
+
+	@Override
+	public void execute(JobEnv jobEnv) {
+
 	}
 }
