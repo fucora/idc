@@ -2,6 +2,7 @@ package com.iwellmass.idc.scheduler.model;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Date;
 
 import javax.annotation.Resource;
 
@@ -63,7 +64,8 @@ public class IDCScheduler {
 			Trigger trigger = vo.buildTrigger(task.getTriggerKey());
 			
 			trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, task.getTaskName());
-			qs.scheduleJob(jobDetail, trigger);
+			Date d = qs.scheduleJob(jobDetail, trigger);
+			LOGGER.info("task scheduled :"+d);
 		} catch (SchedulerException e) {
 			throw new AppException(e);
 		}

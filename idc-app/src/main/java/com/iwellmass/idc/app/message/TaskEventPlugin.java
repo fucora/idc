@@ -4,6 +4,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -47,12 +48,16 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 	@Resource
 	AllJobRepository allJobRepository;
 
+	@Resource
+	WorkflowRepository workflowRepository;
+
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		scheduler.getContext().put(NAME, this);
 		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_SERVICE, jobService);
 		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_STORE, idcJobStore);
 		scheduler.getContext().put(TaskEventProcessor.CXT_ALL_JOB_REPOSITORY, allJobRepository);
+		scheduler.getContext().put(TaskEventProcessor.CXT_ALL_WORKFLOW_REPOSITORY, workflowRepository);
 		this.scheduler = scheduler;
 	}
 

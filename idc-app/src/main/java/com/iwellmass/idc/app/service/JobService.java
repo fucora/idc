@@ -88,12 +88,12 @@ public class JobService {
 		Task task = getTask(taskName);
 		// 有可能前台强制取消了调度
 		// 或者调度已过期、已被删除
-		if (task.getState().isTerminated()) {
-			LOGGER.error("调度已关闭：" + task.getState());
-		} else {
+//		if (task.getState().isTerminated()) {
+//			LOGGER.error("调度已关闭：" + task.getState());
+//		} else {
 			Job job = new Job(id, task);
 			jobRepository.save(job);
-		}
+//		}
 	}
 
 	@Transactional

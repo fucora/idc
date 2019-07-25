@@ -74,7 +74,7 @@ public class Job extends AbstractJob {
 	/**
 	 * 主任务（Task）
 	 */
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumns({
 		@JoinColumn(name = "task_name", referencedColumnName = "task_name", insertable = false, updatable = false),
 		@JoinColumn(name = "task_group", referencedColumnName = "task_group", insertable = false, updatable = false)
