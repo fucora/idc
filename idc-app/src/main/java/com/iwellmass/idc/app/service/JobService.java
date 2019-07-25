@@ -62,7 +62,7 @@ public class JobService {
 		return QueryUtils.doJpaQuery(jqm, pageable -> {
 			return jobRepository.findAll(spec, pageable).map(job -> {
 				JobRuntimeVO vo = new JobRuntimeVO();
-				BeanUtils.copyProperties(job, vo);;
+				BeanUtils.copyProperties(job, vo);
 				return vo;
 			});
 		});

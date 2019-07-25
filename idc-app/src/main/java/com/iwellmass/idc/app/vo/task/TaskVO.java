@@ -66,7 +66,7 @@ public abstract class TaskVO {
 	private Boolean blockOnError = true;
 	
 	// copy-of-task
-	@ApiModelProperty("业务ID")
+	@ApiModelProperty("工作流ID")
 	String taskId;
 
 	@ApiModelProperty("业务域")
@@ -77,16 +77,12 @@ public abstract class TaskVO {
 
 	@ApiModelProperty("业务类型")
 	String contentType;
+
+	@ApiModelProperty("具体时间")
+	@JsonFormat(timezone = "GMT+8", pattern = "HHmmss")
+	LocalTime duetime = LocalTime.MIN;
 	
 	public abstract Trigger buildTrigger(TriggerKey tk);
-
-//	public LocalTime getChildDueTime() {
-//		if (this.scheduleType.equals(ScheduleType.AUTO)) {
-//			return ((CronTaskVO)this).getDuetime();
-//		} else {
-//			return ((ManualTaskVO)this).getDuetime();
-//		}
-//	}
 
 	@JsonIgnore
 	public abstract Map<String, Object> getProps();

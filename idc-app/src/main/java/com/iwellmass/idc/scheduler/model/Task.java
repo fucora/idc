@@ -128,6 +128,12 @@ public class Task extends AbstractTask {
     @Column(name = "updatetime")
     private LocalDateTime updatetime;
 
+    /**
+     * 具体时间
+     */
+    @Column(name = "duetime")
+    LocalTime duetime;
+
     @Column(table = "QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
     @Convert(converter = LocalLongConverter.class)
     private LocalDateTime prevFireTime;
