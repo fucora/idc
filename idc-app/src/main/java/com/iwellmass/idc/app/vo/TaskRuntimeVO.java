@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.vo;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.scheduler.model.TaskState;
 
 import io.swagger.annotations.ApiModel;
@@ -27,9 +28,11 @@ public class TaskRuntimeVO  {
 	private String assignee;
 	
 	@ApiModelProperty("上一批次")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime prevFireTime;
 	
 	@ApiModelProperty("下一批次")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime nextFireTime;
 	
 	@ApiModelProperty("调度状态")

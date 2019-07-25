@@ -2,6 +2,7 @@ package com.iwellmass.idc.scheduler.model;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,12 +102,14 @@ public class Task extends AbstractTask {
      * 生效时间
      */
     @Column(name = "starttime")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     private LocalDateTime starttime;
 
     /**
      * 失效时间
      */
     @Column(name = "endtime")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     private LocalDateTime endtime;
 
     /**
@@ -120,19 +123,22 @@ public class Task extends AbstractTask {
      * 创建时间
      */
     @Column(name = "createtime")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     private LocalDateTime createtime;
 
     /**
      * 更新时间
      */
     @Column(name = "updatetime")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     private LocalDateTime updatetime;
 
     /**
      * 具体时间
      */
     @Column(name = "duetime")
-    LocalTime duetime;
+    @JsonFormat(pattern = "HH:mm:ss", timezone = "GMT+8")
+    private LocalTime duetime;
 
     @Column(table = "QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
     @Convert(converter = LocalLongConverter.class)

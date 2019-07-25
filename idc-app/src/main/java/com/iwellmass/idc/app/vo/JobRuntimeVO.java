@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.vo;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.scheduler.model.JobState;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -19,9 +20,11 @@ public class JobRuntimeVO {
 	private String name;
 	
 	@ApiModelProperty("开始时间")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime starttime;
 	
 	@ApiModelProperty("更新时间")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	private LocalDateTime updatetime;
 	
 	@ApiModelProperty("业务日期")

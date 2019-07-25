@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +48,14 @@ public abstract class AbstractJob {
 	 * 开始时间
 	 */
 	@Column(name = "starttime")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDateTime starttime;
 	
 	/**
 	 * 最近更新时间
 	 */
 	@Column(name = "updatetime")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDateTime updatetime;
 
 	/**
