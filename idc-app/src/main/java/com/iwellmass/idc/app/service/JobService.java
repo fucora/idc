@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,7 @@ public class JobService {
 	public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
 		Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
 		return QueryUtils.doJpaQuery(jqm, pageable -> {
-			return jobRepository.findAll(spec, pageable).map(job -> {
+			return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(),pageable.getPageSize(),Sort.by(Sort.Direction.DESC,"starttime"))).map(job -> {
 				JobRuntimeVO vo = new JobRuntimeVO();
 				BeanUtils.copyProperties(job, vo);
 				return vo;

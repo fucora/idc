@@ -49,14 +49,14 @@ public abstract class AbstractJob {
 	 * 开始时间
 	 */
 	@Column(name = "starttime")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	LocalDateTime starttime;
 	
 	/**
 	 * 最近更新时间
 	 */
 	@Column(name = "updatetime")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	LocalDateTime updatetime;
 
 	/**

@@ -1,6 +1,5 @@
 package com.iwellmass.idc.app.vo;
 
-import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.util.Pager;
 
@@ -12,11 +11,7 @@ import lombok.Setter;
 @Setter
 public class JobQueryParam extends Pager{
 
-	@ApiModelProperty("关键字")
-	@Like(value = "name")
-	String keyword;
-	
 	@ApiModelProperty("指定任务")
-	@Equal(value = "name")
+	@Like
 	String taskName;
 }

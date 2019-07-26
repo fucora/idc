@@ -1,5 +1,6 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -93,7 +94,9 @@ public class Job extends AbstractJob {
 		this.taskName = task.getTaskName();
 		this.taskGroup = task.getTaskGroup();
 		this.assignee = task.getAssignee();
-		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.AUTO : JobType.MANUAL;
+		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
+		this.starttime = LocalDateTime.now();
+		this.updatetime = LocalDateTime.now();
 	}
 
 	/**

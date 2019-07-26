@@ -6,12 +6,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
@@ -33,7 +28,7 @@ public class JobController {
 	
     @ApiOperation("获取 JOB 运行状态")
     @PostMapping("/runtime")
-    public ServiceResult<PageData<JobRuntimeVO>> runtime(@RequestParam(required = false) JobQueryParam qm) {
+    public ServiceResult<PageData<JobRuntimeVO>> runtime(@RequestBody(required = false) JobQueryParam qm) {
         PageData<JobRuntimeVO> taskInstance = jobService.query(qm);
         return ServiceResult.success(taskInstance);
     }
