@@ -47,15 +47,15 @@ public class IDCScheduler {
 		BeanUtils.copyProperties(vo, task);
 		// 生效时间
 		if (vo.getStartDate() != null) {
-			task.setStarttime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));
+			task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));
 		}
 		// 失效时间
 		if (vo.getEndDate() != null) {
-			task.setEndtime(LocalDateTime.of(vo.getEndDate(), LocalTime.MAX));
+			task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.MAX));
 		}
 		// 创建作业
 		JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
-			.withIdentity(task.getTaskId(), task.getDomain())
+			.withIdentity(task.getTaskName(), task.getTaskGroup())
 			.requestRecovery().build();
 		
 		// 调度

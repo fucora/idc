@@ -9,6 +9,7 @@ public enum TaskState {
 	PAUSED,
 	ACQUIRED,
 	BLOCKED,
+	SUSPENDED,
 	ERROR,
 	NONE,
 	NORMAL,

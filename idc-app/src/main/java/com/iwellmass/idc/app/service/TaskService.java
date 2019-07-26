@@ -47,11 +47,11 @@ public class TaskService {
             vo = new ManualTaskVO();
             BeanUtils.copyProperties(task, vo, "workflow");
         }
-        if (task.getStarttime() != null) {
-            vo.setStartDate(task.getStarttime().toLocalDate());
+        if (task.getStartDateTime() != null) {
+            vo.setStartDate(task.getStartDateTime().toLocalDate());
         }
-        if (task.getEndtime() != null) {
-            vo.setEndDate(task.getEndtime().toLocalDate());
+        if (task.getEndDateTime() != null) {
+            vo.setEndDate(task.getEndDateTime().toLocalDate());
         }
         return vo;
     }

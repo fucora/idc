@@ -53,13 +53,13 @@ public abstract class TaskVO {
 	
 	@ApiModelProperty("调度方式")
 	ScheduleType scheduleType;
-	
+
 	@ApiModelProperty("生效日期")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyyMMdd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDate startDate;
 
 	@ApiModelProperty("失效日期")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyyMMdd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDate endDate;
 	
 	@ApiModelProperty("出错时阻塞")

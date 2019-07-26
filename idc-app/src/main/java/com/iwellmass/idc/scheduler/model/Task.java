@@ -1,5 +1,6 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -101,16 +102,16 @@ public class Task extends AbstractTask {
     /**
      * 生效时间
      */
-    @Column(name = "starttime")
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
-    private LocalDateTime starttime;
+    @Column(name = "start_datetime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime startDateTime;
 
     /**
      * 失效时间
      */
-    @Column(name = "endtime")
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
-    private LocalDateTime endtime;
+    @Column(name = "end_datetime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime endDateTime;
 
     /**
      * 其他参数（反显前端用）
