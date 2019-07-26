@@ -20,5 +20,7 @@ public class NodeVO {
 	private TaskType taskType;
 	
 	private String domain;
+
+	private String type;
 	
 }
