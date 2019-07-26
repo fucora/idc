@@ -1,0 +1,35 @@
+{
+  "id": "jtfx",
+  "taskName": "集团风险",
+  "description": "测试工作流",
+  "taskNodes": [{
+    "pid": "jtfx",
+    "id": "START",
+    "taskId": "start",
+    "taskName": "起点",
+    "domain": "idc"
+  },{
+    "pid": "jtfx",
+    "id": "do_jtfx",
+    "taskId": "df_task_001",
+    "taskName": "集团风险任务",
+    "domain": "idc"
+  },{
+    "pid": "jtfx",
+    "id": "END",
+    "taskId": "end",
+    "taskName": "终点",
+    "domain": "idc"
+  }],
+  "edges": [{
+    "pid": "jtfx",
+    "id": "START-do_jtfx",
+    "source": "START",
+    "target": "do_jtfx"
+  },{
+    "pid": "jtfx",
+    "id": "do_jtfx-END",
+    "source": "do_jtfx",
+    "target": "END"
+  }]
+}

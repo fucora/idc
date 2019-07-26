@@ -21,55 +21,61 @@ import com.iwellmass.idc.model.CronType;
 
 public interface CronTriggerBuilder {
 
-	LocalDate getStartDate();
+    LocalDate getStartDate();
 
-	LocalDate getEndDate();
+    LocalDate getEndDate();
 
-	LocalTime getDuetime();
+    LocalTime getDuetime();
 
-	List<Integer> getDays();
+    List<Integer> getDays();
 
-	CronType getCronType();
+    CronType getCronType();
 
-	default Trigger buildTrigger(TriggerKey key) {
+    default String getExpression() {
+        return null;
+    }
 
-		TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
-			.withIdentity(key)
-			.withSchedule(CronScheduleBuilder.cronSchedule(toCronExpression()));
+    default Trigger buildTrigger(TriggerKey key) {
 
-		if (getStartDate() != null) {
-			builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));
-		}
+        TriggerBuilder<CronTrigger> builder = TriggerBuilder.newTrigger()
+                .withIdentity(key)
+                .withSchedule(CronScheduleBuilder.cronSchedule(toCronExpression()));
 
-		if (getEndDate() != null) {
-			builder.endAt(IDCUtils.toDate(LocalDateTime.of(getEndDate(), LocalTime.MAX)));
-		}
-		return builder.build();
-	}
+        if (getStartDate() != null) {
+            builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));
+        }
 
-	default String toCronExpression() {
-		List<Integer> days = getDays();
-		LocalTime duetime = getDuetime();
+        if (getEndDate() != null) {
+            builder.endAt(IDCUtils.toDate(LocalDateTime.of(getEndDate(), LocalTime.MAX)));
+        }
+        return builder.build();
+    }
 
-		switch (getCronType()) {
-		case MONTHLY: {
-			Assert.isFalse(Utils.isNullOrEmpty(days), "月调度配置不能为空");
-			boolean isLast = days.stream().filter(i -> i < 0).count() == 1;
-			if (isLast && days.size() > 1) {
-				throw new AppException("最后 N 天不能使用组合配置模式");
-			}
-			return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
-					isLast ? days.get(0) == -1 ? "L" : "L" + (days.get(0) + 1)
-							: String.join(",", days.stream().map(String::valueOf).collect(Collectors.toList())));
-		}
-		case WEEKLY: {
-			throw new UnsupportedOperationException("not supported yet");
-		}
-		case DAILY:
-			return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
-		default:
-			throw new AppException("接收的调度类型" + Arrays.asList(CronType.values()));
-		}
-	}
+    default String toCronExpression() {
+        List<Integer> days = getDays();
+        LocalTime duetime = getDuetime();
+
+        switch (getCronType()) {
+            case MONTHLY: {
+                Assert.isFalse(Utils.isNullOrEmpty(days), "月调度配置不能为空");
+                boolean isLast = days.stream().filter(i -> i < 0).count() == 1;
+                if (isLast && days.size() > 1) {
+                    throw new AppException("最后 N 天不能使用组合配置模式");
+                }
+                return String.format("%s %s %s %s * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour(),
+                        isLast ? days.get(0) == -1 ? "L" : "L" + (days.get(0) + 1)
+                                : String.join(",", days.stream().map(String::valueOf).collect(Collectors.toList())));
+            }
+            case WEEKLY: {
+                throw new UnsupportedOperationException("not supported yet");
+            }
+            case DAILY:
+                return String.format("%s %s %s * * ? *", duetime.getSecond(), duetime.getMinute(), duetime.getHour());
+            case CUSTOMER:
+                return getExpression();
+            default:
+                throw new AppException("接收的调度类型" + Arrays.asList(CronType.values()));
+        }
+    }
 
 }

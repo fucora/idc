@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Resource;
 import javax.sql.DataSource;
 
+import com.iwellmass.idc.scheduler.quartz.*;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.DirectSchedulerFactory;
@@ -27,10 +28,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.iwellmass.idc.app.message.TaskEventPlugin;
-import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
-import com.iwellmass.idc.scheduler.quartz.ManagedProvider;
-import com.iwellmass.idc.scheduler.quartz.NoManagedProvider;
-import com.iwellmass.idc.scheduler.quartz.RecordIdGenerator;
 import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
 
 @Configuration
@@ -48,6 +45,8 @@ public class SchedulerConfig {
 
 	@Resource
 	DataSource dataSource;
+
+
 
 	public RecordIdGenerator recordIdGenerator() {
 		AtomicLong seq = new AtomicLong();
@@ -84,31 +83,8 @@ public class SchedulerConfig {
 	}
 	
 	@Bean
-	public Scheduler scheduler() throws SchedulerException {
-
-		String schedulerName = "idc-schd";
-		String schedulerInstanceId = "idc-schd-01";
-		String rmiRegistryHost = null;
-		int rmiRegistryPort = 0;
-		int idleWaitTime = -1;
-		int dbFailureRetryInterval = -1;
-		boolean jmxExport = false;
-		String jmxObjectName = null;
-
-		SimpleThreadPool threadPool = new SimpleThreadPool();
-		threadPool.setThreadCount(1);
-		threadPool.setThreadNamePrefix("qw-");
-
-		Map<String, SchedulerPlugin> schedulerPluginMap = new HashMap<>();
-		schedulerPluginMap.put(TaskEventPlugin.NAME, taskEventPlugin());
-		
-		DirectSchedulerFactory.getInstance().createScheduler(schedulerName, schedulerInstanceId, threadPool, idcJobStore(), schedulerPluginMap,
-			rmiRegistryHost, rmiRegistryPort, idleWaitTime, dbFailureRetryInterval, jmxExport, jmxObjectName);
-		
-		Scheduler scheduler = DirectSchedulerFactory.getInstance().getScheduler(schedulerName);
-		scheduler.setJobFactory(new PropertySettingJobFactory());
-		
-		return scheduler;
+	public Scheduler scheduler() {
+		return IDCSchedulerFactory.getScheduler(taskEventPlugin(), idcJobStore());
 	}
 
 	@EventListener(ApplicationReadyEvent.class)

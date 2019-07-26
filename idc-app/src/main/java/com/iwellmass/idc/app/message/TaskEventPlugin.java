@@ -5,6 +5,7 @@ import java.util.concurrent.RejectedExecutionException;
 import javax.annotation.Resource;
 
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import lombok.Setter;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -39,15 +40,19 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
 	private Scheduler scheduler;
 
+	@Setter
 	@Resource
 	JobService jobService;
-	
+
+	@Setter
 	@Resource
 	IDCJobStore idcJobStore;
 
+	@Setter
 	@Resource
 	AllJobRepository allJobRepository;
 
+	@Setter
 	@Resource
 	WorkflowRepository workflowRepository;
 
@@ -121,4 +126,5 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
+
 }

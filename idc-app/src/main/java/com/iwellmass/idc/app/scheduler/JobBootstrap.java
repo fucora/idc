@@ -33,7 +33,7 @@ public class JobBootstrap implements org.quartz.Job {
 		try {
 			// 全局唯一
 			String jobId = context.getFireInstanceId();
-			
+			LOGGER.info("开始执行任务：{} , taskName: {} ", jobId, taskName);
 			// 恢复的任务，清理现场
 			if (context.isRecovering()) {
 				jobService.clear(jobId);
