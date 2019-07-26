@@ -86,11 +86,11 @@ public class TaskEventProcessor implements org.quartz.Job {
 				break;
 			}
 			case FINISH: {
-				runningJob.complete(JobState.FINISHED);
+				runningJob.success();
 				break;
 			}
 			case FAIL: {
-				runningJob.complete(JobState.FAILED);
+				runningJob.failed();
 				break;
 			}
 			default: {
@@ -114,7 +114,12 @@ public class TaskEventProcessor implements org.quartz.Job {
 			}
 		} 
 		else {
-			// 刷新主任务
+			//通过container找到主任务并继续执行后续任务
+			//如果下一个任务是end 则触发一个workflow执行结束的事件
+
 		}
+
+		//更新job状态？
+		allJobRepository.save(runningJob);
 	}
 }

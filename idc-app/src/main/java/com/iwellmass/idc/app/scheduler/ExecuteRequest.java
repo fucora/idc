@@ -9,4 +9,5 @@ public class ExecuteRequest {
 
 	private String domain;
 	private String contentType;
+	private JobEnvAdapter jobEnvAdapter;
 }

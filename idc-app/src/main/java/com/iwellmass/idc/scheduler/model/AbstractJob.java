@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +99,7 @@ public abstract class AbstractJob {
 		}
 		
 		if (taskType == TaskType.WORKFLOW) {
+			//TODO 如果是workflow需要在此代码块中修改job的状态
 			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
 			Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
 			// 找到立即节点
@@ -128,8 +130,9 @@ public abstract class AbstractJob {
 			
 			ExecuteRequest request = new ExecuteRequest();
 			request.setDomain(task.getDomain());
-			
-			IDCJobExecutors.getExecutor().execute(request);
+			JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
+			request.setJobEnvAdapter(jobEnvAdapter);
+//			IDCJobExecutors.getExecutor().execute(request);
 		}
 	}
 	
@@ -138,14 +141,21 @@ public abstract class AbstractJob {
 		this.setUpdatetime(LocalDateTime.now());
 	}
 
-	public void complete(JobState state) {
+	public void success() {
 		checkRunning();
-		if (state.isComplete()) {
-			throw new IllegalArgumentException("非法的完成状态: " + state);
-		}
-		setState(state);
+		setState(JobState.FINISHED);
 	}
-	
+
+	public void failed() {
+		checkRunning();
+		setState(JobState.FAILED);
+	}
+
+	public void onCompelete()
+	{
+
+	}
+
 	public void redo() {
 		// TODO 编写重做逻辑
 	}
