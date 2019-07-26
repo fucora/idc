@@ -8,8 +8,12 @@ import javax.persistence.JoinColumns;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.iwellmass.idc.app.scheduler.ExecuteRequest;
+import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Objects;
 
 /**
  * 子任务（可由 Job 触发，也可由 NodeJob 触发），需要将 {@link NodeJob#getId()} 设置到子任务的 {@link NodeJob#container} 字段
@@ -53,6 +57,17 @@ public class NodeJob extends AbstractJob {
 	private NodeTask nodeTask;
 
 	public NodeJob() {
+	}
+
+	@Override
+	public void doStart() {
+		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
+
+		ExecuteRequest request = new ExecuteRequest();
+		request.setDomain(task.getDomain());
+		JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
+		request.setJobEnvAdapter(jobEnvAdapter);
+//			IDCJobExecutors.getExecutor().execute(request);
 	}
 
 	public NodeJob(String container, NodeTask nodeTask) {

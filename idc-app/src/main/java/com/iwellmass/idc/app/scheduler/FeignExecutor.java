@@ -55,7 +55,7 @@ public class FeignExecutor implements IDCJobExecutor {
 		);
 
 
-		idcJob.execute(request);
+		idcJob.execute(request.getJobEnvAdapter());
 
 		for (int i = 0; i < 10; i++) {
 			try {
@@ -92,8 +92,5 @@ public class FeignExecutor implements IDCJobExecutor {
 		return feginClient;
 	}
 
-	@Override
-	public void execute(JobEnv jobEnv) {
 
-	}
 }

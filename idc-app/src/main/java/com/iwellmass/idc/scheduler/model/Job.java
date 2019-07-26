@@ -1,6 +1,9 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -103,7 +106,42 @@ public class Job extends AbstractJob {
 		// else ignore
 	}
 
+	@Override
+	public void doStart() {
+		//TODO 如果是workflow需要在此代码块中修改job的状态
+		 runNextJob(NodeTask.START);
+
+	}
+
 	public boolean isComplete() {
 		return state.isComplete();
+	}
+
+	public void runNextJob(String startNode) {
+		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
+		Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
+		// 找到立即节点
+		Set<String> successors = workflow.successors(startNode);
+		Iterator<NodeJob> iterator = getSubJobs().stream()
+				.filter(sub -> successors.contains(sub.getNodeId()))
+				.iterator();
+
+		// any success
+		boolean anySuccess = false;
+		while (iterator.hasNext()) {
+			NodeJob next = iterator.next();
+			try {
+				next.start();
+				anySuccess = true;
+			} catch (Exception e) {
+				e.printStackTrace();
+				anySuccess |= false;
+				next.setState(JobState.FAILED);
+			}
+		}
+		// 贪婪模式
+		if (!anySuccess) {
+			setState(JobState.FAILED);
+		}
 	}
 }

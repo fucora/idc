@@ -1,9 +1,13 @@
 package com.iwellmass.idc.app.message;
 
 import java.beans.Transient;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import org.quartz.DisallowConcurrentExecution;
@@ -86,11 +90,12 @@ public class TaskEventProcessor implements org.quartz.Job {
 				break;
 			}
 			case FINISH: {
-				runningJob.complete(JobState.FINISHED);
+				runningJob.success();
+				onJobFinished(runningJob,context);
 				break;
 			}
 			case FAIL: {
-				runningJob.complete(JobState.FAILED);
+				runningJob.failed();
 				break;
 			}
 			default: {
@@ -114,7 +119,31 @@ public class TaskEventProcessor implements org.quartz.Job {
 			}
 		} 
 		else {
-			// 刷新主任务
+
+
 		}
+
+		//更新job状态？
+		allJobRepository.save(runningJob);
+	}
+
+	public void onJobFinished(AbstractJob runningJob,JobExecutionContext context) {
+			if(runningJob instanceof  Job) {
+
+			}
+			else{
+				NodeJob nodeJob = (NodeJob)runningJob;
+				Workflow workflow =   workflowRepository.findById(nodeJob.getTaskId()).get();
+				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
+
+				if(successors.size()==1&&successors.iterator().next().equals(NodeTask.END)){
+					FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
+					TaskEventPlugin.eventService(context.getScheduler()).send(message);
+					return;
+				}
+				Job parent = (Job)allJobRepository.findById(nodeJob.getContainer()).get();
+				parent.getTask().setWorkflow(workflow);
+				parent.runNextJob(nodeJob.getNodeId());
+			}
 	}
 }
