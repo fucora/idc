@@ -97,45 +97,13 @@ public abstract class AbstractJob {
 		if (getTask() == null) {
 			throw new JobException("任务不存在");
 		}
-		
-		if (taskType == TaskType.WORKFLOW) {
-			//TODO 如果是workflow需要在此代码块中修改job的状态
-			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
-			Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
-			// 找到立即节点
-			Set<String> successors = workflow.successors(NodeTask.START);
-			Iterator<NodeJob> iterator = getSubJobs().stream()
-				.filter(sub -> successors.contains(sub.getNodeId()))
-				.iterator();
-			// any success
-			boolean anySuccess = false;
-			while (iterator.hasNext()) {
-				NodeJob next = iterator.next();
-				try {
-					next.start();
-					anySuccess = true;
-				} catch (Exception e) {
-					e.printStackTrace();
-					anySuccess |= false;
-					next.setState(JobState.FAILED);
-				}
-			}
-			// 贪婪模式
-			if (!anySuccess) {
-				setState(JobState.FAILED);
-			}
-		} else {
-			
-			AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
-			
-			ExecuteRequest request = new ExecuteRequest();
-			request.setDomain(task.getDomain());
-			JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
-			request.setJobEnvAdapter(jobEnvAdapter);
-//			IDCJobExecutors.getExecutor().execute(request);
-		}
+		doStart();
 	}
-	
+
+	abstract public  void doStart();
+
+
+
 	public void renew() {
 		checkRunning();
 		this.setUpdatetime(LocalDateTime.now());
@@ -151,10 +119,6 @@ public abstract class AbstractJob {
 		setState(JobState.FAILED);
 	}
 
-	public void onCompelete()
-	{
-
-	}
 
 	public void redo() {
 		// TODO 编写重做逻辑
