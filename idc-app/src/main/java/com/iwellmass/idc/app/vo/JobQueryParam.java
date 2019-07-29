@@ -11,8 +11,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 public class JobQueryParam extends Pager{
@@ -25,11 +23,7 @@ public class JobQueryParam extends Pager{
 	@Equal
 	private JobType jobType;
 
-	@ApiModelProperty("开启时间")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	private LocalDateTime starttime;
-
-	@ApiModelProperty("结束时间")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	private LocalDateTime updatetime;
+	@ApiModelProperty("时间区间筛选")
+	@Between
+	private YMDHMSBetweenPair ymdhmsBetweenPair;
 }
