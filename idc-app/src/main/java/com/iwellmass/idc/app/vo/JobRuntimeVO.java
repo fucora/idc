@@ -17,13 +17,13 @@ public class JobRuntimeVO {
 	private String id;
 	
 	@ApiModelProperty("任务名称")
-	private String taskName;
+	private String taskName; // name
 	
 	@ApiModelProperty("开始时间")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime starttime;
 	
-	@ApiModelProperty("更新时间")
+	@ApiModelProperty("结束时间")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updatetime;
 	
