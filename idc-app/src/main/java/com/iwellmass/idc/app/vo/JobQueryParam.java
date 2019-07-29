@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.criteria.Between;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.Like;
@@ -25,9 +26,10 @@ public class JobQueryParam extends Pager{
 	private JobType jobType;
 
 	@ApiModelProperty("开启时间")
-	@Between(to = "updatetime")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime starttime;
 
 	@ApiModelProperty("结束时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updatetime;
 }
