@@ -6,16 +6,14 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.vo.*;
+import io.swagger.annotations.ApiModelProperty;
 import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.service.JobService;
-import com.iwellmass.idc.app.vo.Assignee;
-import com.iwellmass.idc.app.vo.JobQueryParam;
-import com.iwellmass.idc.app.vo.JobRuntimeVO;
-import com.iwellmass.idc.app.vo.JobVO;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -77,6 +75,13 @@ public class JobController {
     public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
         jobService.test(id, action);
         return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
+
+    @ApiModelProperty("查询调度计划下的node实例")
+    @GetMapping("/{instanceId}/detail")
+    public ServiceResult<JobVO> getPlanInstanceDetail(@PathVariable(name = "instanceId") String instanceId) {
+        return ServiceResult.success(jobService.getPlanInstanceDetail(instanceId));
     }
 
 }

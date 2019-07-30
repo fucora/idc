@@ -7,6 +7,12 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.common.ServiceResult;
+import com.iwellmass.idc.app.vo.*;
+import com.iwellmass.idc.app.vo.graph.GraphVO;
+import com.iwellmass.idc.app.vo.graph.NodeVO;
+import com.iwellmass.idc.scheduler.model.*;
+import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -22,14 +28,6 @@ import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.QueryUtils;
-import com.iwellmass.idc.app.vo.Assignee;
-import com.iwellmass.idc.app.vo.JobQueryParam;
-import com.iwellmass.idc.app.vo.JobRuntimeVO;
-import com.iwellmass.idc.app.vo.JobVO;
-import com.iwellmass.idc.scheduler.model.AbstractJob;
-import com.iwellmass.idc.scheduler.model.Job;
-import com.iwellmass.idc.scheduler.model.Task;
-import com.iwellmass.idc.scheduler.model.TaskID;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
@@ -50,6 +48,12 @@ public class JobService {
 	
 	@Resource
 	AllJobRepository allJobRepository;
+
+	@Resource
+	NodeJobRepository nodeJobRepository;
+
+	@Resource
+	WorkflowService workflowService;
 
 	Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
@@ -96,6 +100,18 @@ public class JobService {
 			Job job = new Job(id, task);
 			jobRepository.save(job);
 //		}
+	}
+
+	public JobVO getPlanInstanceDetail(String instanceId) {
+		List<NodeJobVO> nodeJobVOS = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例")).getSubJobs().stream().map(item -> {
+			NodeJobVO nodeJobVO = new NodeJobVO();
+			BeanUtils.copyProperties(item,nodeJobVO);
+			nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
+			return nodeJobVO;
+		}).collect(Collectors.toList());
+		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getTaskId());
+		JobVO jobVO = new JobVO(nodeJobVOS, graphVO);
+		return jobVO;
 	}
 
 	@Transactional
