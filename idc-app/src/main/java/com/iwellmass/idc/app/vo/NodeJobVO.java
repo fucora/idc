@@ -30,6 +30,8 @@ public class NodeJobVO {
 
     private TaskType taskType;
 
+    private String type;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime starttime;
 

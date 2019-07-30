@@ -107,6 +107,7 @@ public class JobService {
 			NodeJobVO nodeJobVO = new NodeJobVO();
 			BeanUtils.copyProperties(item,nodeJobVO);
 			nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
+			nodeJobVO.setType(item.getNodeTask().getType());
 			return nodeJobVO;
 		}).collect(Collectors.toList());
 		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getTaskId());
