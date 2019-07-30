@@ -37,32 +37,32 @@ import com.iwellmass.idc.scheduler.repository.TaskRepository;
  */
 @Service
 public class JobService {
-	
+
 	static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
-	
+
 	@Resource
 	TaskRepository taskRepository;
 
 	@Resource
 	JobRepository jobRepository;
-	
+
 	@Resource
 	AllJobRepository allJobRepository;
 
 	@Resource
-	NodeJobRepository nodeJobRepository;
+	WorkflowService workflowService;
 
 	@Resource
-	WorkflowService workflowService;
+    TaskService taskService;
 
 	Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
 	}
-	
+
 	public Task getTask(String taskName) {
 		return taskRepository.findById(new TaskID(taskName)).orElseThrow(()-> new AppException("调度 '" + taskName + "' 不存在"));
 	}
-	
+
 	public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
 		Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
 		return QueryUtils.doJpaQuery(jqm, pageable -> {
@@ -73,11 +73,11 @@ public class JobService {
 			});
 		});
 	}
-	
+
 	public List<Assignee> getAllAssignee() {
 		return jobRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
 	}
-	
+
 	public JobVO get(String id) {
 		JobVO jobVO = new JobVO();
 		Job job = getJob(id);
@@ -103,7 +103,8 @@ public class JobService {
 	}
 
 	public JobVO getPlanInstanceDetail(String instanceId) {
-		List<NodeJobVO> nodeJobVOS = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例")).getSubJobs().stream().map(item -> {
+		Job job = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例"));
+		List<NodeJobVO> nodeJobVOS = job.getSubJobs().stream().map(item -> {
 			NodeJobVO nodeJobVO = new NodeJobVO();
 			BeanUtils.copyProperties(item,nodeJobVO);
 			nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
@@ -111,7 +112,7 @@ public class JobService {
 			return nodeJobVO;
 		}).collect(Collectors.toList());
 		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getTaskId());
-		JobVO jobVO = new JobVO(nodeJobVOS, graphVO);
+		JobVO jobVO = new JobVO(nodeJobVOS, graphVO,taskService.getTask(job.getTaskName()));
 		return jobVO;
 	}
 

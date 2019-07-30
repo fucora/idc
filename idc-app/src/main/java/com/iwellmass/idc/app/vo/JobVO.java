@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.idc.app.vo.graph.GraphVO;
+import com.iwellmass.idc.app.vo.task.TaskVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,4 +21,7 @@ public class JobVO {
 
     @ApiModelProperty("图形依赖关系")
     private GraphVO graphVO;
+
+    @ApiModelProperty("调度计划基础信息")
+    private TaskVO taskVO;
 }
