@@ -17,6 +17,7 @@ import javax.persistence.JoinColumns;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,9 +111,9 @@ public class Job extends AbstractJob {
 	}
 
 	@Override
-	public void doStart() {
+	public void doStart(JobExecutionContext context) {
 		//TODO 如果是workflow需要在此代码块中修改job的状态
-		 runNextJob(NodeTask.START);
+		 runNextJob(NodeTask.START,context);
 
 	}
 
@@ -120,7 +121,7 @@ public class Job extends AbstractJob {
 		return state.isComplete();
 	}
 
-	public void runNextJob(String startNode) {
+	public void runNextJob(String startNode, JobExecutionContext context) {
 		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
 		Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
 		// 找到立即节点
@@ -134,7 +135,17 @@ public class Job extends AbstractJob {
 		while (iterator.hasNext()) {
 			NodeJob next = iterator.next();
 			try {
-				next.start();
+				Set<String> previous = 	workflow.getPrevious(next.getNodeId());
+
+				//如果存在未完成的任务 则不继续执行
+				boolean unfinishJob  =  getSubJobs().stream()
+						.filter(sub -> previous.contains(sub.getNodeId()))
+						.anyMatch(sub->!sub.getState().isSuccess());
+				if(unfinishJob){
+					anySuccess = true;
+					continue;
+				}
+				next.start(context);
 				anySuccess = true;
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -57,14 +57,14 @@ public class FeignExecutor implements IDCJobExecutor {
 
 		idcJob.execute(request.getJobEnvAdapter());
 
-		for (int i = 0; i < 10; i++) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			LOGGER.info("Go >> {}", i);
-		}
+//		for (int i = 0; i < 10; i++) {
+//			try {
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//			LOGGER.info("Go >> {}", i);
+//		}
 	}
 
 	private IDCJob newFeignClientold(String domain) {

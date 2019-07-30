@@ -78,6 +78,19 @@ public class Workflow {
 		return result;
 	}
 
+	public Set<String> getPrevious(String node) {
+		Set<String> result = new HashSet<>();
+		for(WorkflowEdge workflowEdge:edges) {
+			if(workflowEdge.getTarget().equals(node))
+			{
+				if(!workflowEdge.getSource().equals(NodeTask.START)){
+					result.add(workflowEdge.getSource());
+				}
+			}
+		}
+		return result;
+	}
+
     public Workflow() {
         updatetime = LocalDateTime.now();
     }

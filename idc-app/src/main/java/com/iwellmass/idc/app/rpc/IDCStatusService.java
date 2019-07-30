@@ -47,7 +47,7 @@ public class IDCStatusService {
 
 	@PutMapping("/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
-		FinishMessage message = FinishMessage.newMessage(event.getMessage()+"");
+		FinishMessage message = FinishMessage.newMessage(event.getInstanceId());
 		message.setMessage("启动结束");
 		TaskEventPlugin.eventService(qs).send(message);
 //		idcPlugin.getStatusService().fireCompleteEvent(event);

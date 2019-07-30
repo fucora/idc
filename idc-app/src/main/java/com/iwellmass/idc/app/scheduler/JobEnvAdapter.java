@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class JobEnvAdapter implements JobEnv {
 
-    Integer instanceId;
+    String instanceId;
     String jobId;
     String jobName;
     String loadDate;

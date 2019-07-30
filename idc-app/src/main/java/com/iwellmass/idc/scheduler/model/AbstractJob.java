@@ -10,6 +10,7 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
+import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,17 +91,17 @@ public abstract class AbstractJob {
 		}
 	}
 
-	public void start() {
+	public void start(JobExecutionContext context) {
 		if (state.isComplete()) {
 			throw new JobException("任务已执行");
 		}
 		if (getTask() == null) {
 			throw new JobException("任务不存在");
 		}
-		doStart();
+		doStart(context);
 	}
 
-	abstract public  void doStart();
+	abstract public  void doStart(JobExecutionContext context);
 
 
 

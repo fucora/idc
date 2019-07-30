@@ -8,10 +8,14 @@ import javax.persistence.JoinColumns;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.scheduler.ExecuteRequest;
 import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
+import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import lombok.Getter;
 import lombok.Setter;
+import org.quartz.JobExecutionContext;
 
 import java.util.Objects;
 
@@ -60,14 +64,25 @@ public class NodeJob extends AbstractJob {
 	}
 
 	@Override
-	public void doStart() {
-		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
-
+	public void doStart(JobExecutionContext context) {
+		NodeTask task = (NodeTask)Objects.requireNonNull(getTask(), "未找到任务");
+		if(nodeId.equals(NodeTask.END))
+		{
+			setState(JobState.FINISHED);
+			FinishMessage message = FinishMessage.newMessage(getContainer());
+			message.setMessage("启动结束");
+			TaskEventPlugin.eventService(context.getScheduler()).send(message);
+			return;
+		}
+		LOGGER.info("start rpc:"+nodeId+","+nodeTask.taskId);
 		ExecuteRequest request = new ExecuteRequest();
 		request.setDomain(task.getDomain());
+		request.setContentType(task.getType());
 		JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
+		jobEnvAdapter.setTaskId(task.getTaskId());
+		jobEnvAdapter.setInstanceId(id);
 		request.setJobEnvAdapter(jobEnvAdapter);
-//			IDCJobExecutors.getExecutor().execute(request);
+		IDCJobExecutors.getExecutor().execute(request);
 	}
 
 	public NodeJob(String container, NodeTask nodeTask) {

@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.message.JobEvent;
 import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
@@ -82,7 +83,7 @@ public class TaskEventProcessor implements org.quartz.Job {
 		try {
 			switch (message.getEvent()) {
 			case START: {
-				runningJob.start();
+				runningJob.start(context);
 				break;
 			}
 			case RENEW: {
@@ -91,7 +92,6 @@ public class TaskEventProcessor implements org.quartz.Job {
 			}
 			case FINISH: {
 				runningJob.success();
-				onJobFinished(runningJob,context);
 				break;
 			}
 			case FAIL: {
@@ -125,25 +125,28 @@ public class TaskEventProcessor implements org.quartz.Job {
 
 		//更新job状态？
 		allJobRepository.save(runningJob);
+		if(message.getEvent()== JobEvent.FINISH)
+		{
+			onJobFinished(runningJob,context);
+		}
 	}
 
 	public void onJobFinished(AbstractJob runningJob,JobExecutionContext context) {
 			if(runningJob instanceof  Job) {
 
-			}
-			else{
+			} else{
 				NodeJob nodeJob = (NodeJob)runningJob;
 				Workflow workflow =   workflowRepository.findById(nodeJob.getTaskId()).get();
-				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
+//				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
 
-				if(successors.size()==1&&successors.iterator().next().equals(NodeTask.END)){
-					FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
-					TaskEventPlugin.eventService(context.getScheduler()).send(message);
-					return;
-				}
+//				if(successors.size()==1&&successors.iterator().next().equals(NodeTask.END)){
+//					FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
+//					TaskEventPlugin.eventService(context.getScheduler()).send(message);
+//					return;
+//				}
 				Job parent = (Job)allJobRepository.findById(nodeJob.getContainer()).get();
 				parent.getTask().setWorkflow(workflow);
-				parent.runNextJob(nodeJob.getNodeId());
+				parent.runNextJob(nodeJob.getNodeId(),context);
 			}
 	}
 }

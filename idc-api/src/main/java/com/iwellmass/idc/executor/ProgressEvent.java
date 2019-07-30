@@ -10,18 +10,18 @@ public class ProgressEvent implements IDCJobEvent {
 
 	private static final long serialVersionUID = 8419433451011829906L;
 
-	private Integer instanceId;
+	private String instanceId;
 	private String message;
 	private JobInstanceStatus status;
 	private LocalDateTime time;
 
 	private ProgressEvent() {}
 	
-	public Integer getInstanceId() {
+	public String getInstanceId() {
 		return instanceId;
 	}
 
-	public ProgressEvent setInstanceId(Integer instanceId) {
+	public ProgressEvent setInstanceId(String instanceId) {
 		this.instanceId = instanceId;
 		return this;
 	}
@@ -59,7 +59,7 @@ public class ProgressEvent implements IDCJobEvent {
 		this.time = time;
 	}
 
-	public static ProgressEvent newEvent(Integer instanceId) {
+	public static ProgressEvent newEvent(String instanceId) {
 		ProgressEvent event = new ProgressEvent();
 		event.setInstanceId(instanceId);
 		event.time = LocalDateTime.now();

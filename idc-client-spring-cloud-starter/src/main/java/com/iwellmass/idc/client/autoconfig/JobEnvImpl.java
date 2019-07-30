@@ -3,10 +3,14 @@ package com.iwellmass.idc.client.autoconfig;
 import java.util.List;
 
 import com.iwellmass.common.param.ExecParam;
+import com.iwellmass.idc.JobEnv;
+import com.iwellmass.idc.model.CronType;
+import lombok.Data;
 
-public class JobEnvImpl  {
+@Data
+public class JobEnvImpl implements JobEnv {
 
-	private Integer instanceId;
+	private String instanceId;
 
 	private String jobId;
 
@@ -27,6 +31,21 @@ public class JobEnvImpl  {
 	private Long prevFireTime;
 
 	private String taskId;
+
+	@Override
+	public CronType getScheduleType() {
+		return null;
+	}
+
+	@Override
+	public String getDispatchType() {
+		return null;
+	}
+
+	@Override
+	public String getContentType() {
+		return null;
+	}
 
 //	public Integer getInstanceId() {
 //		return instanceId;

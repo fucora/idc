@@ -14,7 +14,7 @@ public class CompleteEvent implements IDCJobEvent {
 
 	private JobInstanceStatus finalStatus;
 
-	private Integer instanceId;
+	private String instanceId;
 
 	private String message;
 
@@ -40,7 +40,7 @@ public class CompleteEvent implements IDCJobEvent {
 		return finalStatus;
 	}
 
-	public Integer getInstanceId() {
+	public String getInstanceId() {
 		return instanceId;
 	}
 
@@ -57,7 +57,7 @@ public class CompleteEvent implements IDCJobEvent {
 		return setMessage(arrayFormat(message, args).getMessage());
 	}
 
-	public static CompleteEvent successEvent(int instanceId) {
+	public static CompleteEvent successEvent(String instanceId) {
 		CompleteEvent event = new CompleteEvent();
 		event.instanceId = instanceId;
 		event.finalStatus = JobInstanceStatus.FINISHED;
@@ -66,7 +66,7 @@ public class CompleteEvent implements IDCJobEvent {
 		return event;
 	}
 
-	public static CompleteEvent failureEvent(int instanceId) {
+	public static CompleteEvent failureEvent(String instanceId) {
 		CompleteEvent event = new CompleteEvent();
 		event.instanceId = instanceId;
 		event.finalStatus = JobInstanceStatus.FAILED;

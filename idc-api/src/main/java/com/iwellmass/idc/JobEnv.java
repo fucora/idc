@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 public interface JobEnv {
 
 	@ApiModelProperty("执行ID")
-	public Integer getInstanceId();
+	public String getInstanceId();
 
 	@ApiModelProperty("计划ID")
 	public String getJobId();
