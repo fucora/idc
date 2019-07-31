@@ -6,7 +6,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
+import com.iwellmass.idc.message.FinishMessage;
 import io.swagger.annotations.ApiModelProperty;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,19 +49,21 @@ public class JobController {
 
     @ApiOperation("重跑任务")
     @PostMapping("/{id}/redo")
-    public ServiceResult<String> restart(@PathVariable(name = "id") Integer id) {
+    public ServiceResult<String> redo(@PathVariable(name = "id") String id) {
+        jobService.redo(id);
         return ServiceResult.success("success");
     }
 
     @ApiOperation("取消任务")
-    @PostMapping("/{id}/cancle")
-    public ServiceResult<String> cancle(@PathVariable(name = "id") Integer id) {
+    @PostMapping("/{id}/cancel")
+    public ServiceResult<String> cancel(@PathVariable(name = "id") Integer id) {
         return ServiceResult.success("success");
     }
 
     @ApiOperation("强制结束任务")
     @PostMapping("/{id}/force-complete")
-    public ServiceResult<String> forceComplete(@PathVariable(name = "id") Integer id) {
+    public ServiceResult<String> forceComplete(@PathVariable(name = "id") String id) {
+        jobService.forceFinish(id);
         return ServiceResult.success("success");
     }
 
