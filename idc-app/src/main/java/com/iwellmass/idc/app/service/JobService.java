@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
@@ -15,13 +17,15 @@ import com.iwellmass.idc.app.vo.graph.NodeVO;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
+import com.iwellmass.idc.scheduler.repository.*;
 import org.quartz.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,9 +36,6 @@ import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.QueryUtils;
-import com.iwellmass.idc.scheduler.repository.AllJobRepository;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 /**
  * Job 服务
@@ -64,6 +65,10 @@ public class JobService {
 
 	@Resource
     TaskService taskService;
+
+
+	@Resource
+	private ExecutionLogRepository logRepository;
 
 	Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
@@ -149,6 +154,13 @@ public class JobService {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new ApplicationContextException(e.getMessage(), e);
 		}
+	}
+
+
+	public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
+		Pageable page =  PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
+		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}
 
 }

@@ -1,16 +1,14 @@
 package com.iwellmass.idc.app.message;
 
 import java.beans.Transient;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.JobEvent;
 import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import com.iwellmass.idc.scheduler.service.IDCLogger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -34,7 +32,8 @@ public class TaskEventProcessor implements org.quartz.Job {
 	static final String CXT_JOB_SERVICE = "jobService";
 	static final String CXT_JOB_STORE = "idcJobStore";
 	static final String CXT_ALL_JOB_REPOSITORY = "allJobRepository";
-	static final String CXT_ALL_WORKFLOW_REPOSITORY = "workflowRepository";
+	static final String CXT_WORKFLOW_REPOSITORY = "workflowRepository";
+	static final String CXT_LOGGER = "logger";
 
 	@Setter
 	JobMessage message;
@@ -48,10 +47,14 @@ public class TaskEventProcessor implements org.quartz.Job {
 	@Setter
 	WorkflowRepository workflowRepository;
 
+	@Setter
+	IDCLogger logger;
+
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		// safe execute...
 		try {
+			logger.log(message.getJobId(),message.getMessage());
 			doExecute(context);
 		} catch (Exception e) {
 			LOGGER.error("ERROR: " + message );

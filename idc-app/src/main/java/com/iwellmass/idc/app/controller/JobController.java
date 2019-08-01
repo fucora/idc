@@ -9,6 +9,7 @@ import javax.annotation.Resource;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.scheduler.model.ExecutionLog;
 import io.swagger.annotations.ApiModelProperty;
 import org.springframework.web.bind.annotation.*;
 
@@ -86,6 +87,13 @@ public class JobController {
     @GetMapping("/{instanceId}/detail")
     public ServiceResult<JobVO> getPlanInstanceDetail(@PathVariable(name = "instanceId") String instanceId) {
         return ServiceResult.success(jobService.getPlanInstanceDetail(instanceId));
+    }
+
+    @ApiOperation("任务日志(分页)")
+    @PostMapping("/{id}/log")
+    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") String id, Pager pager) {
+        PageData<ExecutionLog> data = jobService.getJobInstanceLog(id, pager);
+        return ServiceResult.success(data);
     }
 
 }
