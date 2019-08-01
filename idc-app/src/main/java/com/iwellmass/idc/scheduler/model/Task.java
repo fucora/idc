@@ -41,7 +41,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @IdClass(TaskID.class)
-@Table(name = "idc_plan")
+@Table(name = "idc_task")
 @SecondaryTable(name = "QRTZ_TRIGGERS", pkJoinColumns = {
         @PrimaryKeyJoinColumn(name = "TRIGGER_NAME", referencedColumnName = "task_name"),
         @PrimaryKeyJoinColumn(name = "TRIGGER_GROUP", referencedColumnName = "task_group"),

@@ -35,7 +35,7 @@ import lombok.Setter;
 	public synchronized String getFiredTriggerRecordId() {
 		return recordIdGenerator.generate();
 	}
-	
+
 	/*
 	 * 并发控制
 	 */
@@ -43,8 +43,8 @@ import lombok.Setter;
 	protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
 			throws JobPersistenceException {
 		int acceptCount = parallelMax;
+		// todo 查询实际执行的job有哪些. -> runningJobs
 		int runningJobs = 0;
-
 		acceptCount = parallelMax - runningJobs;
 
 		return acceptCount > 0

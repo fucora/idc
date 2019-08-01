@@ -25,7 +25,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Table(name = "idc_plan_instance_node")
+@Table(name = "idc_node_job")
 public class NodeJob extends AbstractJob {
 
 	/**

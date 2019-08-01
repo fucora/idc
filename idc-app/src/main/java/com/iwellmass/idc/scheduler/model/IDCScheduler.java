@@ -45,6 +45,7 @@ public class IDCScheduler {
 	public void schedule(TaskVO vo) {
 		Task task = new Task(vo);
 		BeanUtils.copyProperties(vo, task);
+		// todo fix
 		// 生效时间
 		if (vo.getStartDate() != null) {
 			task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));

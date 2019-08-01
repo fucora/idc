@@ -33,7 +33,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "idc_plan_instance")
+@Table(name = "idc_job")
 public class Job extends AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
@@ -129,6 +129,7 @@ public class Job extends AbstractJob {
 		Iterator<NodeJob> iterator = getSubJobs().stream()
 				.filter(sub -> successors.contains(sub.getNodeId()))
 				.iterator();
+
 
 		// any success
 		boolean anySuccess = false;
