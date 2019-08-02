@@ -1,14 +1,18 @@
 package com.iwellmass.idc.client.autoconfig;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.executor.CompleteEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +49,7 @@ public class IDCJobEndpoint {
 		} else {
 			try {
 				IDCJobContext context = contextFactory.newContext(jobEnv);
-				doExecute(context);
+				doExecute(job,context);
 				return ServiceResult.success("任务已提交");
 			} catch (Exception e) {
 				return ServiceResult.failure("任务已提交");
@@ -53,17 +57,17 @@ public class IDCJobEndpoint {
 		}
 	}
 	
-	private void doExecute(IDCJobContext context) {
+	private void doExecute(IDCJob job,IDCJobContext context) {
 
-//		CompletableFuture.runAsync(() -> job.execute(context), executor)
-//		.whenComplete((_void, cause) -> {
-//			if (cause != null) {
-//				CompleteEvent event = CompleteEvent.failureEvent(context.jobEnv.getInstanceId())
-//					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
-//					.setEndTime(LocalDateTime.now());
-//				context.complete(event);
-//			}
-//		});
+		CompletableFuture.runAsync(() -> job.execute(context), executor)
+		.whenComplete((_void, cause) -> {
+			if (cause != null) {
+				CompleteEvent event = CompleteEvent.failureEvent(context.getJobEnv().getInstanceId())
+					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
+					.setEndTime(LocalDateTime.now());
+				context.complete(event);
+			}
+		});
 	}
 	
 	
@@ -74,4 +78,5 @@ public class IDCJobEndpoint {
 			jobMap.put(job.toString(), job);
 		}
 	}
+
 }

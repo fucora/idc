@@ -6,18 +6,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.common.ServiceResult;
+import com.iwellmass.common.util.Pager;
+import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.graph.NodeVO;
+import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
+import com.iwellmass.idc.scheduler.repository.*;
+import org.quartz.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -28,41 +36,48 @@ import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.QueryUtils;
-import com.iwellmass.idc.scheduler.repository.AllJobRepository;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 /**
  * Job 服务
  */
 @Service
 public class JobService {
-
+	
 	static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
-
+	
 	@Resource
 	TaskRepository taskRepository;
 
 	@Resource
 	JobRepository jobRepository;
-
+	
 	@Resource
 	AllJobRepository allJobRepository;
+
+	@Resource
+	NodeJobRepository nodeJobRepository;
 
 	@Resource
 	WorkflowService workflowService;
 
 	@Resource
+	Scheduler qs;
+
+	@Resource
     TaskService taskService;
+
+
+	@Resource
+	private ExecutionLogRepository logRepository;
 
 	Job getJob(String id) {
 		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
 	}
-
+	
 	public Task getTask(String taskName) {
 		return taskRepository.findById(new TaskID(taskName)).orElseThrow(()-> new AppException("调度 '" + taskName + "' 不存在"));
 	}
-
+	
 	public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
 		Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
 		return QueryUtils.doJpaQuery(jqm, pageable -> {
@@ -73,11 +88,11 @@ public class JobService {
 			});
 		});
 	}
-
+	
 	public List<Assignee> getAllAssignee() {
 		return jobRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
 	}
-
+	
 	public JobVO get(String id) {
 		JobVO jobVO = new JobVO();
 		Job job = getJob(id);
@@ -100,6 +115,20 @@ public class JobService {
 			Job job = new Job(id, task);
 			jobRepository.save(job);
 //		}
+	}
+
+
+	public void redo(String jobId)
+	{
+		StartMessage message = StartMessage.newMessage(jobId);
+		message.setMessage("启动任务");
+		TaskEventPlugin.eventService(qs).send(message);
+	}
+	public void forceFinish(String jobId)
+	{
+		FinishMessage message = FinishMessage.newMessage(jobId);
+		message.setMessage("强制结束");
+		TaskEventPlugin.eventService(qs).send(message);
 	}
 
 	public JobVO getPlanInstanceDetail(String instanceId) {
@@ -125,6 +154,13 @@ public class JobService {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new ApplicationContextException(e.getMessage(), e);
 		}
+	}
+
+
+	public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
+		Pageable page =  PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
+		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+		return new PageData<>((int) data.getTotalElements(), data.getContent());
 	}
 
 }

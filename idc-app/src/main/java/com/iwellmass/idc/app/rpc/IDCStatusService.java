@@ -9,6 +9,8 @@ import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import io.swagger.annotations.ApiOperation;
 import org.quartz.Scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +29,12 @@ public class IDCStatusService {
 
 	@Inject
 	private IDCJobStore idcJobStore;
+
+	final Logger logger = LoggerFactory.getLogger(getClass());
 	@ApiOperation("任务开始")
 	@PutMapping("/start")
 	public void fireStartEvent(@RequestBody StartEvent event) {
+		logger.info("fireStartEvent",event.getInstanceId());
 //		taskEventPlugin.send(StartMessage.newMessage(String.valueOf(event.getInstanceId())));
 
 //		StartMessage message = StartMessage.newMessage(jobId);
@@ -47,6 +52,7 @@ public class IDCStatusService {
 
 	@PutMapping("/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
+		logger.info("fireCompleteEvent",event.getInstanceId());
 		FinishMessage message = FinishMessage.newMessage(event.getInstanceId());
 		message.setMessage("启动结束");
 		TaskEventPlugin.eventService(qs).send(message);
