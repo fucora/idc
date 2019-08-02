@@ -103,7 +103,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 	public void send(JobMessage message) {
 
 		LOGGER.info("接收事件 {}, message = {}", message.getId(), message);
-		idcLogger.log(message.getJobId(),message.getMessage());
+		idcLogger.log(message.getJobId(),"注册任务 jobId={}",message.getJobId());
 		// TODO 判断任务堆积
 
 		JobDataMap jobDataMap = new JobDataMap();
