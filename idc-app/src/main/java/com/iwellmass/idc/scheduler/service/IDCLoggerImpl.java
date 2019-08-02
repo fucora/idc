@@ -27,7 +27,6 @@ public class IDCLoggerImpl implements IDCLogger {
 		return this;
 	}
 
-	@Transactional
 	@Override
 	public IDCLogger log(String instanceId, String message, Object... args) {
 		try {
