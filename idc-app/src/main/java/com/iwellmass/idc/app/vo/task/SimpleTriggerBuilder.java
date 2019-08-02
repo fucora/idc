@@ -14,24 +14,13 @@ import com.iwellmass.idc.app.util.IDCUtils;
 
 public interface SimpleTriggerBuilder {
 
-	LocalDate getStartDate();
+    default Trigger buildTrigger(TriggerKey key) {
 
-	LocalDate getEndDate();
-
-	default Trigger buildTrigger(TriggerKey key) {
-
-		TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
-			.withIdentity(key)
-			.withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires());
-
-		if (getStartDate() != null) {
-			builder.startAt(IDCUtils.toDate(LocalDateTime.of(getStartDate(), LocalTime.MIN)));
-		}
-
-		if (getEndDate() != null) {
-			builder.endAt(IDCUtils.toDate(LocalDateTime.of(getEndDate(), LocalTime.MAX)));
-		}
-		return builder.build();
-	}
+        TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
+                .withIdentity(key)
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires())
+                .startNow();
+        return builder.build();
+    }
 
 }
