@@ -69,6 +69,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
+		jobHelper.setScheduler(scheduler);
 		scheduler.getContext().put(NAME, this);
 		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_SERVICE, jobService);
 		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_STORE, idcJobStore);
