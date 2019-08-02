@@ -7,6 +7,7 @@ import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
+import lombok.Setter;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.util.Set;
 @Component
 public class JobHelper {
 
-    @Autowired
+    @Setter
     private Scheduler scheduler;
 
     @Autowired
