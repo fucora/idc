@@ -24,7 +24,9 @@ public enum TaskState {
 	@ApiModelProperty("正在执行")
 	NORMAL,
 	@ApiModelProperty("执行完成")
-	COMPLETE;
+	COMPLETE,
+	@ApiModelProperty("已取消")
+	CANCEL;
 	public boolean isTerminated() {
 		return this==COMPLETE||this==ERROR;
 	}

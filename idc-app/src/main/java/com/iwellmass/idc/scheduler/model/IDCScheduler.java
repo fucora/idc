@@ -90,7 +90,10 @@ public class IDCScheduler {
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
-        taskRepository.delete(task);
+//        taskRepository.delete(task);    // 取消调度时不删除task信息
+        task.setState(TaskState.CANCEL);
+        taskRepository.save(task);
+
     }
 
     @Transactional
