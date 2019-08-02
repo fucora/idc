@@ -28,11 +28,11 @@ public class TaskRuntimeVO  {
 	private String assignee;
 	
 	@ApiModelProperty("上一批次")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime prevFireTime;
 	
 	@ApiModelProperty("下一批次")
-	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime nextFireTime;
 	
 	@ApiModelProperty("调度状态")
