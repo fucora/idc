@@ -63,27 +63,27 @@ public class NodeJob extends AbstractJob {
 	public NodeJob() {
 	}
 
-	@Override
-	public void doStart(JobExecutionContext context) {
-		NodeTask task = (NodeTask)Objects.requireNonNull(getTask(), "未找到任务");
-		if(nodeId.equals(NodeTask.END))
-		{
-			setState(JobState.FINISHED);
-			FinishMessage message = FinishMessage.newMessage(getContainer());
-			message.setMessage("启动结束");
-			TaskEventPlugin.eventService(context.getScheduler()).send(message);
-			return;
-		}
-		LOGGER.info("start rpc:"+nodeId+","+nodeTask.taskId);
-		ExecuteRequest request = new ExecuteRequest();
-		request.setDomain(task.getDomain());
-		request.setContentType(task.getType());
-		JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
-		jobEnvAdapter.setTaskId(task.getTaskId());
-		jobEnvAdapter.setInstanceId(id);
-		request.setJobEnvAdapter(jobEnvAdapter);
-		IDCJobExecutors.getExecutor().execute(request);
-	}
+//	@Override
+//	public void doStart(JobExecutionContext context) {
+//		NodeTask task = (NodeTask)Objects.requireNonNull(getTask(), "未找到任务");
+//		if(nodeId.equals(NodeTask.END))
+//		{
+//			setState(JobState.FINISHED);
+//			FinishMessage message = FinishMessage.newMessage(getContainer());
+//			message.setMessage("启动结束");
+//			TaskEventPlugin.eventService(context.getScheduler()).send(message);
+//			return;
+//		}
+//		LOGGER.info("start rpc:"+nodeId+","+nodeTask.taskId);
+//		ExecuteRequest request = new ExecuteRequest();
+//		request.setDomain(task.getDomain());
+//		request.setContentType(task.getType());
+//		JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
+//		jobEnvAdapter.setTaskId(task.getTaskId());
+//		jobEnvAdapter.setInstanceId(id);
+//		request.setJobEnvAdapter(jobEnvAdapter);
+//		IDCJobExecutors.getExecutor().execute(request);
+//	}
 
 	public NodeJob(String container, NodeTask nodeTask) {
 		super(id(container, nodeTask.getId()), nodeTask);

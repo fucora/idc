@@ -17,6 +17,8 @@ public class ExecutionLog {
 	private LocalDateTime time;
 	
 	private String message;
+
+	private String detail;
 	
 	public ExecutionLog() {
 		this.time = LocalDateTime.now();

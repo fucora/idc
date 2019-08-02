@@ -4,6 +4,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
@@ -61,6 +62,11 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 	@Resource
 	IDCLogger idcLogger;
 
+	@Setter
+	@Resource
+	JobHelper jobHelper;
+
+
 	@Override
 	public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
 		scheduler.getContext().put(NAME, this);
@@ -69,6 +75,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 		scheduler.getContext().put(TaskEventProcessor.CXT_ALL_JOB_REPOSITORY, allJobRepository);
 		scheduler.getContext().put(TaskEventProcessor.CXT_WORKFLOW_REPOSITORY, workflowRepository);
 		scheduler.getContext().put(TaskEventProcessor.CXT_LOGGER, idcLogger);
+		scheduler.getContext().put(TaskEventProcessor.CXT_JOB_HELPER, jobHelper);
 		this.scheduler = scheduler;
 	}
 
@@ -95,7 +102,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 	public void send(JobMessage message) {
 
 		LOGGER.info("接收事件 {}, message = {}", message.getId(), message);
-
+		idcLogger.log(message.getJobId(),message.getMessage());
 		// TODO 判断任务堆积
 
 		JobDataMap jobDataMap = new JobDataMap();

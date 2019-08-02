@@ -91,17 +91,17 @@ public abstract class AbstractJob {
 		}
 	}
 
-	public void start(JobExecutionContext context) {
-		if (state.isComplete()) {
-			throw new JobException("任务已执行");
-		}
-		if (getTask() == null) {
-			throw new JobException("任务不存在");
-		}
-		doStart(context);
-	}
+//	public void start(JobExecutionContext context) {
+//		if (state.isComplete()) {
+//			throw new JobException("任务已执行");
+//		}
+//		if (getTask() == null) {
+//			throw new JobException("任务不存在");
+//		}
+//		doStart(context);
+//	}
 
-	abstract public  void doStart(JobExecutionContext context);
+//	abstract public  void doStart(JobExecutionContext context);
 
 
 
