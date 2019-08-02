@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "t_idc_execution_log")
+@Table(name = "idc_execution_log")
 public class ExecutionLog {
 
 	private Long id;

@@ -52,7 +52,7 @@ public class IDCScheduler {
 		}
 		// 失效时间
 		if (vo.getEndDate() != null) {
-			task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.MAX));
+			task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23,59,59)));  // con't use  LocalTime.Max
 		}
 		// 创建作业
 		JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)

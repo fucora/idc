@@ -8,6 +8,8 @@ import javax.annotation.Resource;
 
 import com.iwellmass.idc.model.CronType;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -59,7 +61,7 @@ public class TaskService {
     public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {
         return QueryUtils.doJpaQuery(jqm, (p) -> {
             Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
-            return taskRepository.findAll(spec, p).map(t -> {
+            return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(),p.getPageSize(),Sort.by(Sort.Direction.DESC,"createtime"))).map(t -> {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 return vo;

@@ -121,7 +121,7 @@ public class Job extends AbstractJob {
 		return state.isComplete();
 	}
 
-	public void runNextJob(String startNode, JobExecutionContext context) {
+	public synchronized void runNextJob(String startNode, JobExecutionContext context) {
 		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
 		Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
 		// 找到立即节点
@@ -143,7 +143,7 @@ public class Job extends AbstractJob {
 						.filter(sub -> previous.contains(sub.getNodeId()))
 						.anyMatch(sub->!sub.getState().isSuccess());
 				if(unfinishJob){
-					anySuccess = true;
+//					anySuccess = true;
 					continue;
 				}
 				next.start(context);

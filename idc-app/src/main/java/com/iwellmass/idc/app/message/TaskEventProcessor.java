@@ -62,84 +62,81 @@ public class TaskEventProcessor implements org.quartz.Job {
 		}
 	}
 
-	public void doExecute(JobExecutionContext context) {
+    public void doExecute(JobExecutionContext context) {
 
-		if (message == null) {
-			LOGGER.error("ERROR: message cannot be null, trigger {}", context.getTrigger().getKey());
-			return;
-		}
-		Optional<AbstractJob> opt = allJobRepository.findById(message.getJobId());
-		
-		if (!opt.isPresent()) {
-			LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getJobId());
-			return;
-		}
-		
-		AbstractJob runningJob = opt.get();
-		//提前填充job
-		AbstractTask abstractTask =  runningJob.getTask();
-		if(abstractTask.getTaskType()== TaskType.WORKFLOW)
-		{
-		  Workflow workflow = workflowRepository.findById(abstractTask.getTaskId()).get();
-		  abstractTask.setWorkflow(workflow);
-		}
-		try {
-			switch (message.getEvent()) {
-			case START: {
-				runningJob.start(context);
-				break;
-			}
-			case RENEW: {
-				runningJob.renew();
-				break;
-			}
-			case FINISH: {
-				runningJob.success();
-				break;
-			}
-			case FAIL: {
-				runningJob.failed();
-				break;
-			}
-			default: {
-				// bad message...
-				LOGGER.error("Cannot process {}, unsupported event {}", message.getId(), message.getEvent());
-			}
-			}
-		} catch (Exception e) {
-			LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
-			LOGGER.error(e.getMessage(), e);
-		}
-		
-		// Release trigger
-		if (runningJob instanceof Job) {
-			Job job = (Job) runningJob;
-			TriggerKey tk = job.getTask().getTriggerKey();
-			if (job.getState().isSuccess()) {
-				idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-			} else {
-				idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
-			}
-		} 
-		else {
+        if (message == null) {
+            LOGGER.error("ERROR: message cannot be null, trigger {}", context.getTrigger().getKey());
+            return;
+        }
+        Optional<AbstractJob> opt = allJobRepository.findById(message.getJobId());
+
+        if (!opt.isPresent()) {
+            LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getJobId());
+            return;
+        }
+
+        AbstractJob runningJob = opt.get();
+        //提前填充job
+        AbstractTask abstractTask = runningJob.getTask();
+        if (abstractTask.getTaskType() == TaskType.WORKFLOW) {
+            Workflow workflow = workflowRepository.findById(abstractTask.getTaskId()).get();
+            abstractTask.setWorkflow(workflow);
+        }
+        try {
+            switch (message.getEvent()) {
+                case START: {
+                    runningJob.start(context);
+                    break;
+                }
+                case RENEW: {
+                    runningJob.renew();
+                    break;
+                }
+                case FINISH: {
+                    runningJob.success();
+                    break;
+                }
+                case FAIL: {
+                    runningJob.failed();
+                    break;
+                }
+                default: {
+                    // bad message...
+                    LOGGER.error("Cannot process {}, unsupported event {}", message.getId(), message.getEvent());
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
+            LOGGER.error(e.getMessage(), e);
+        }
+
+        // Release trigger
+        if (runningJob instanceof Job) {
+            Job job = (Job) runningJob;
+            TriggerKey tk = job.getTask().getTriggerKey();
+            if (job.getState().isSuccess()) {
+                idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+            } else {
+                idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+            }
+        } else {
 
 
-		}
+        }
 
-		//更新job状态？
-		allJobRepository.save(runningJob);
-		if(message.getEvent()== JobEvent.FINISH)
-		{
-			onJobFinished(runningJob,context);
-		}
-	}
+        //更新job状态？
+        allJobRepository.save(runningJob);
+        if (message.getEvent() == JobEvent.FINISH) {
+            onJobFinished(runningJob, context);
+        }
+    }
 
-	public void onJobFinished(AbstractJob runningJob,JobExecutionContext context) {
-			if(runningJob instanceof  Job) {
+    public void onJobFinished(AbstractJob runningJob, JobExecutionContext context) {
+        if (runningJob instanceof Job) {
 
-			} else{
-				NodeJob nodeJob = (NodeJob)runningJob;
-				Workflow workflow =   workflowRepository.findById(nodeJob.getTaskId()).get();
+        } else {
+            NodeJob nodeJob = (NodeJob) runningJob;
+            Workflow workflow = workflowRepository.findById(nodeJob.getTaskId()).get();
 //				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
 
 //				if(successors.size()==1&&successors.iterator().next().equals(NodeTask.END)){
@@ -147,9 +144,9 @@ public class TaskEventProcessor implements org.quartz.Job {
 //					TaskEventPlugin.eventService(context.getScheduler()).send(message);
 //					return;
 //				}
-				Job parent = (Job)allJobRepository.findById(nodeJob.getContainer()).get();
-				parent.getTask().setWorkflow(workflow);
-				parent.runNextJob(nodeJob.getNodeId(),context);
-			}
-	}
+            Job parent = (Job) allJobRepository.findById(nodeJob.getContainer()).get();
+            parent.getTask().setWorkflow(workflow);
+            parent.runNextJob(nodeJob.getNodeId(), context);
+        }
+    }
 }
