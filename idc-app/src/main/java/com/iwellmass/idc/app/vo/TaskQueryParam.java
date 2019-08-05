@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.util.Pager;
@@ -17,8 +18,8 @@ import lombok.Setter;
 @Setter
 public class TaskQueryParam extends Pager {
 
-	@ApiModelProperty("计划名称")
-	@Like(value = "taskName")
+	@ApiModelProperty("计划名称或者工作流id")
+	@CustomCriteria(builder = CustomCriteriaBuilder.class)
 	private String keyword;
 
 	@ApiModelProperty("节点类型")
@@ -37,11 +38,6 @@ public class TaskQueryParam extends Pager {
 	@Equal
 	private String assignee;
 
-	@ApiModelProperty("工作流id")
-	@Equal
-	private String workflowId;
-
-	
 	public TaskQueryParam() {
 		setPage(0);
 		setLimit(10);

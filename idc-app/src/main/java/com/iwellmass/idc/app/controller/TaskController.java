@@ -36,8 +36,8 @@ public class TaskController {
     private TaskService taskService;
 
     @ApiOperation("获取调度运行时信息")
-    @GetMapping("/runtime")
-    public ServiceResult<PageData<TaskRuntimeVO>> getJobRuntime(TaskQueryParam jqm) {
+    @PostMapping("/runtime")
+    public ServiceResult<PageData<TaskRuntimeVO>> getJobRuntime(@RequestBody TaskQueryParam jqm) {
         PageData<TaskRuntimeVO> ret = taskService.query(jqm);
         return ServiceResult.success(ret);
     }
