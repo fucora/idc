@@ -53,7 +53,7 @@ public class JobHelper {
 
     public void executeJob(Job job)
     {
-        idcLogger.log(job.getId(),"执行workflow{}",job.getTask().getWorkflow().getId());
+        idcLogger.log(job.getId(),"执行workflow id={}",job.getTask().getWorkflow().getId());
         runNextJob(job,NodeTask.START);
     }
 
@@ -65,7 +65,7 @@ public class JobHelper {
             idcLogger.log(job.getId(),"执行task end,container={}",job.getContainer());
             job.setState(JobState.FINISHED);
             FinishMessage message = FinishMessage.newMessage(job.getContainer());
-            message.setMessage("启动结束");
+            message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
             return;
         }
