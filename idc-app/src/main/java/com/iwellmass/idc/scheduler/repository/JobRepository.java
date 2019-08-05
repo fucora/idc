@@ -19,6 +19,8 @@ public interface JobRepository extends CrudRepository<Job, String>, JpaSpecifica
 
 	Optional<Job> findAllByTaskNameAndTaskGroup(String taskName,String taskGroup);
 
+	List<Job> findAllByTaskName(String taskName);
+
 	List<Job> findAllByTaskNameIn(List<String> taskNames);
 
 }

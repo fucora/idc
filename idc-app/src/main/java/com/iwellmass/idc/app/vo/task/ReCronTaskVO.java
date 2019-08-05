@@ -23,6 +23,9 @@ public class ReCronTaskVO extends ReTaskVO implements CronTriggerBuilder{
 	@ApiModelProperty("哪一天")
 	private List<Integer> days;
 
+	@ApiModelProperty("cron表达式(仅自定义周期时需要)")
+	private String expression;
+
 	@ApiModelProperty("具体时间")
 	@JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
 	private LocalTime duetime = LocalTime.MIN;

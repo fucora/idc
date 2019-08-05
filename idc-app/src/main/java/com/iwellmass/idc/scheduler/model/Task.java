@@ -124,14 +124,14 @@ public class Task extends AbstractTask {
      * 创建时间
      */
     @Column(name = "createtime")
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createtime;
 
     /**
      * 更新时间
      */
     @Column(name = "updatetime")
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatetime;
 
     /**
@@ -168,9 +168,5 @@ public class Task extends AbstractTask {
         Objects.requireNonNull(taskName);
         Objects.requireNonNull(taskGroup);
         return new TriggerKey(taskName, taskGroup);
-    }
-
-    public void clear() {
-        // todo 清除
     }
 }

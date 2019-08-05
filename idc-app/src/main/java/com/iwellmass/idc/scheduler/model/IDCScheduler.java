@@ -3,9 +3,13 @@ package com.iwellmass.idc.scheduler.model;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -33,6 +37,10 @@ public class IDCScheduler {
 
     @Resource
     TaskRepository taskRepository;
+    @Resource
+    JobRepository jobRepository;
+    @Resource
+    NodeJobRepository nodeJobRepository;
 
     @Resource
     Scheduler qs;
@@ -68,10 +76,10 @@ public class IDCScheduler {
     }
 
     @Transactional
-    public void reschedule(String name, ReTaskVO reVO) {
-        Task task = getTask(name);
+    public void reschedule(ReTaskVO reVO) {
+        Task task = getTask(reVO.getTaskName());
         // 清理现场
-        task.clear();
+        clear(task);
         BeanUtils.copyProperties(reVO, task);
         try {
             Trigger trigger = reVO.buildTrigger(task.getTriggerKey());
@@ -115,5 +123,15 @@ public class IDCScheduler {
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
+    }
+
+
+    // todo 清除之前任务产生job,node_job实例，甚至log信息
+    public void clear(Task task) {
+        List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
+        // node_job
+        nodeJobRepository.deleteAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
+        // job
+        jobRepository.deleteAll(jobs);
     }
 }

@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.quartz.Trigger;
@@ -28,7 +29,10 @@ import lombok.Setter;
 	@Type (name = "AUTO", value = ReCronTaskVO.class)
 })
 public abstract class ReTaskVO {
-	
+
+	@ApiModelProperty("计划名称")
+	String taskName;
+
 	@ApiModelProperty("描述")
 	String description;
 
@@ -54,7 +58,10 @@ public abstract class ReTaskVO {
 	
 	@ApiModelProperty("出错时阻塞")
 	private Boolean blockOnError = true;
-	
+
+	@ApiModelProperty("业务域")
+	String domain;
+
 	@ApiModelProperty("任务类型")
 	TaskType taskType;
 

@@ -77,10 +77,6 @@ public abstract class TaskVO {
 
 	@ApiModelProperty("业务类型")
 	String contentType;
-
-	@ApiModelProperty("具体时间")
-	@JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
-	LocalTime duetime = LocalTime.MIN;
 	
 	public abstract Trigger buildTrigger(TriggerKey tk);
 

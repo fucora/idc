@@ -100,7 +100,7 @@ eureka:
       enabled: true
     lease:
       duration: 5
-    register-with-eureka: false
+    register-with-eureka: true
 
 ---
 spring:

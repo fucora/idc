@@ -12,4 +12,7 @@ public interface NodeJobRepository extends CrudRepository<NodeJob, String>, JpaS
 
 	List<NodeJob> findAllByContainer(String container);
 
+	List<NodeJob> findAllByContainerIn(List<String> containers);
+
+	void deleteAllByContainerIn(List<String> containers);
 }
