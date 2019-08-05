@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
@@ -230,7 +231,7 @@ public class WorkflowService {
 
 
     public List<WorkflowVO> queryAvailableWorkflow() {
-        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime")).stream().filter(workflow -> workflow.getEdges() != null).map(model -> {
+        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime")).stream().filter(workflow -> !Utils.isNullOrEmpty(workflow.getEdges())).map(model -> {
             WorkflowVO vo = new WorkflowVO();
             BeanUtils.copyProperties(model, vo);
             vo.setCanModify(canModify(vo.getId()));
