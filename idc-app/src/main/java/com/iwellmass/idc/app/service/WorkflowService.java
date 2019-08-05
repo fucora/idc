@@ -229,4 +229,14 @@ public class WorkflowService {
     }
 
 
+    public List<WorkflowVO> queryAvailableWorkflow() {
+        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime")).stream().filter(workflow -> workflow.getEdges() != null).map(model -> {
+            WorkflowVO vo = new WorkflowVO();
+            BeanUtils.copyProperties(model, vo);
+            vo.setCanModify(canModify(vo.getId()));
+            return vo;
+        }).collect(Collectors.toList());
+    }
+
+
 }

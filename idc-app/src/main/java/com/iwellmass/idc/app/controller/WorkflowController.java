@@ -87,4 +87,11 @@ public class WorkflowController {
 		workflowService.saveGraph(id, gvo);
 		return ServiceResult.success(MSG_OP_SUCCESS);
 	}
+
+	@GetMapping("/available")
+	@ApiOperation("查询可用的工作流,")
+	public ServiceResult<List<WorkflowVO>> queryAvailableWorkflow() {
+		List<WorkflowVO> data = workflowService.queryAvailableWorkflow();
+		return ServiceResult.success(data);
+	}
 }
