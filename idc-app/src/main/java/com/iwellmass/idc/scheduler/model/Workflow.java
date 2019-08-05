@@ -32,8 +32,8 @@ public class Workflow {
 	/**
 	 * 名称
 	 */
-	@Column(name = "task_name")
-	private String taskName;
+	@Column(name = "workflow_name")
+	private String workflowName;
 
 	/**
      * 描述

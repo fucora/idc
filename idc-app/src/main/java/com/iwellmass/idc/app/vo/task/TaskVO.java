@@ -67,7 +67,7 @@ public abstract class TaskVO {
 	
 	// copy-of-task
 	@ApiModelProperty("工作流ID")
-	String taskId;
+	String workflowId;
 
 	@ApiModelProperty("业务域")
 	String domain;
@@ -77,6 +77,7 @@ public abstract class TaskVO {
 
 	@ApiModelProperty("业务类型")
 	String contentType;
+
 	
 	public abstract Trigger buildTrigger(TriggerKey tk);
 

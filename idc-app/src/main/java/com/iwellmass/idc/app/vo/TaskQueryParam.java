@@ -37,6 +37,10 @@ public class TaskQueryParam extends Pager {
 	@Equal
 	private String assignee;
 
+	@ApiModelProperty("工作流id")
+	@Equal
+	private String workflowId;
+
 	
 	public TaskQueryParam() {
 		setPage(0);

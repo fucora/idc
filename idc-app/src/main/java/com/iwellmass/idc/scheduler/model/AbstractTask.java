@@ -23,8 +23,8 @@ public abstract class AbstractTask {
 	/**
 	 * 任务ID
 	 */
-	@Column(name = "task_id")
-	String taskId;
+	@Column(name = "workflow_id")
+	String workflowId;
 
 	/**
 	 * 任务类型
@@ -49,6 +49,6 @@ public abstract class AbstractTask {
 	 * 所指向的工作流（只有在 taskType == WORKFLOW 时才会有值）
 	 */
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "task_id", insertable = false, updatable = false)
+	@JoinColumn(name = "workflow_id", insertable = false, updatable = false)
 	private Workflow workflow;
 }

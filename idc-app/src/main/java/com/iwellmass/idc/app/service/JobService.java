@@ -140,7 +140,7 @@ public class JobService {
 			nodeJobVO.setType(item.getNodeTask().getType());
 			return nodeJobVO;
 		}).collect(Collectors.toList());
-		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getTaskId());
+		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
 		JobVO jobVO = new JobVO(nodeJobVOS, graphVO,taskService.getTask(job.getTaskName()));
 		return jobVO;
 	}

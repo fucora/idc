@@ -106,7 +106,7 @@ public class TaskEventProcessorTest {
 
         // 根据workflow生成job
         Task task = new Task();
-        task.setTaskId(workflowId001);
+        task.setWorkflowId(workflowId001);
         task.setTaskType(TaskType.WORKFLOW);
         task.setTaskName(taskName);
         task.setTaskGroup(taskGroup);

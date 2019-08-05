@@ -31,8 +31,8 @@ public class NodeJob extends AbstractJob {
 	/**
 	 *  任务ID（Task.taskId）
 	 */
-	@Column(name = "task_id")
-	private String taskId;
+	@Column(name = "workflow_id")
+	private String workflowId;
 
 	/**
 	 * 工作流结点ID（NodeTask.id）
@@ -56,7 +56,7 @@ public class NodeJob extends AbstractJob {
 	 * 关联的子任务
 	 */
 	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumns({ @JoinColumn(name = "task_id", referencedColumnName = "pid", insertable = false, updatable = false),
+	@JoinColumns({ @JoinColumn(name = "workflow_id", referencedColumnName = "pid", insertable = false, updatable = false),
 			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private NodeTask nodeTask;
 
@@ -91,7 +91,7 @@ public class NodeJob extends AbstractJob {
 		this.container = container;
 		this.nodeId = nodeTask.getId();
 		this.nodeTask = nodeTask;
-		this.taskId = nodeTask.getPid();
+		this.workflowId = nodeTask.getPid();
 	}
 
 	private static final String id(String container, String nodeId) {
@@ -100,7 +100,7 @@ public class NodeJob extends AbstractJob {
 	}
 
 	@Override
-	public AbstractTask getTask() {
+	public NodeTask getTask() {
 		return getNodeTask();
 	}
 }

@@ -90,7 +90,7 @@ public class IDCSchedulerTest {
     @Test
     public void schedule() throws IOException, InterruptedException, SchedulerException {
         CronTaskVO taskVO = new CronTaskVO();
-        taskVO.setTaskId("testId");
+        taskVO.setWorkflowId("testId");
         taskVO.setTaskName("testName");
         taskVO.setDomain("testDomain");
         taskVO.setCronType(CronType.CUSTOMER);
@@ -106,7 +106,7 @@ public class IDCSchedulerTest {
 
 
     private void mockTaskRepository(CronTaskVO taskVO) {
-        Workflow workflow = IDCTestUtils.loadWorkflow(taskVO.getTaskId());
+        Workflow workflow = IDCTestUtils.loadWorkflow(taskVO.getWorkflowId());
 
         Task task = new Task();
         BeanUtils.copyProperties(taskVO, task);

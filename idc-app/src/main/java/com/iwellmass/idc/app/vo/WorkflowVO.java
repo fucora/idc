@@ -12,7 +12,7 @@ public class WorkflowVO {
 	private String id;
 
 	@ApiModelProperty("名称")
-	private String taskName;
+	private String workflowName;
 	
 	@ApiModelProperty("描述")
 	private String description;

@@ -64,6 +64,7 @@ public class TaskService {
             return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(),p.getPageSize(),Sort.by(Sort.Direction.DESC,"createtime"))).map(t -> {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
+                vo.setWorkflowName(t.getWorkflow().getWorkflowName());
                 return vo;
             });
         });

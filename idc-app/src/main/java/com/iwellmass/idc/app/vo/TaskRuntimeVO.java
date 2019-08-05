@@ -15,11 +15,11 @@ import lombok.Setter;
 @ApiModel("调度计划运行时信息")
 public class TaskRuntimeVO  {
 
-	@ApiModelProperty("计划")
+	@ApiModelProperty("计划名称")
 	private String taskName;
 	
 	@ApiModelProperty("工作流ID")
-	private String taskId;
+	private String workflowId;
 
 	@ApiModelProperty("业务域")
 	private String taskGroup;
@@ -37,5 +37,7 @@ public class TaskRuntimeVO  {
 	
 	@ApiModelProperty("调度状态")
 	private TaskState state;
-	
+
+	@ApiModelProperty("工作流名称")
+	String workflowName;
 }

@@ -39,4 +39,7 @@ public class NodeTask extends AbstractTask {
 	@Column(name = "type")
 	private String type;
 
+	@Column(name = "task_id")
+	private String taskId;
+
 }

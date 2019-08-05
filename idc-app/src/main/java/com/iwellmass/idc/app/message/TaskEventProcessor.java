@@ -84,7 +84,7 @@ public class TaskEventProcessor implements org.quartz.Job {
         //提前填充job
         AbstractTask abstractTask = runningJob.getTask();
         if (abstractTask.getTaskType() == TaskType.WORKFLOW) {
-            Workflow workflow = workflowRepository.findById(abstractTask.getTaskId()).get();
+            Workflow workflow = workflowRepository.findById(abstractTask.getWorkflowId()).get();
             abstractTask.setWorkflow(workflow);
         }
         try {
@@ -141,7 +141,7 @@ public class TaskEventProcessor implements org.quartz.Job {
 
         } else {
             NodeJob nodeJob = (NodeJob) runningJob;
-            Workflow workflow = workflowRepository.findById(nodeJob.getTaskId()).get();
+            Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
 
 //				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
 

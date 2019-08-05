@@ -220,7 +220,7 @@ public class WorkflowService {
     // 工作流是否能够更新或者删除
     public boolean canModify(String wfId) {
         // todo 考虑工作流嵌套情况
-        List<Task> tasks = taskRepository.findAllByTaskId(wfId);
+        List<Task> tasks = taskRepository.findAllByWorkflowId(wfId);
         if (tasks == null || tasks.isEmpty() ||
                 jobRepository.findAllByTaskNameIn(tasks.stream().map(Task::getTaskName).collect(Collectors.toList())).stream().filter(item -> !item.isComplete()).collect(Collectors.toList()).size() == 0) {
             return true;
