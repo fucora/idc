@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.util.Pager;
 
@@ -12,7 +13,7 @@ import lombok.Setter;
 public class WorkflowQueryParam extends Pager {
 
 	@ApiModelProperty("关键字")
-	@Like(value = "taskName")
+	@CustomCriteria(builder = WorkflowCustomCriteriaBuilder.class)
 	private String keyword;
 	
 	public WorkflowQueryParam() {

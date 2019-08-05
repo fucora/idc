@@ -2,7 +2,6 @@ package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
-import com.iwellmass.common.criteria.Like;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.scheduler.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.TaskType;
@@ -19,7 +18,7 @@ import lombok.Setter;
 public class TaskQueryParam extends Pager {
 
 	@ApiModelProperty("计划名称或者工作流id")
-	@CustomCriteria(builder = CustomCriteriaBuilder.class)
+	@CustomCriteria(builder = TaskCustomCriteriaBuilder.class)
 	private String keyword;
 
 	@ApiModelProperty("节点类型")

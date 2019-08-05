@@ -16,12 +16,12 @@ import javax.persistence.criteria.Root;
  * @date 2019/8/5 16:49
  * @description
  */
-public class CustomCriteriaBuilder implements PredicateBuilder<CustomCriteria> {
+public class WorkflowCustomCriteriaBuilder implements PredicateBuilder<CustomCriteria> {
     @Override
     public <T> Predicate build(Root<T> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder, CriteriaInfo<CustomCriteria> criteriaInfo, ArgValueSupplier argValueSupplier) {
         Object argValue = argValueSupplier.getValue(criteriaInfo.getArgName());
         String value = String.valueOf(criteriaInfo.getConverter().convert(argValue));
-        return criteriaBuilder.or(criteriaBuilder.like(root.get("taskName"), "%" + value.replace("_", "\\_") + "%"),
-                criteriaBuilder.equal(root.get("workflowId"), value.replace("_", "\\_")));
+        return criteriaBuilder.or(criteriaBuilder.like(root.get("workflowName"), "%" + value.replace("_", "\\_") + "%"),
+                criteriaBuilder.equal(root.get("id"), value.replace("_", "\\_")));
     }
 }
