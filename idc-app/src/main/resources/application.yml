@@ -102,6 +102,8 @@ eureka:
       duration: 5
     register-with-eureka: true
 
+idc.scheduler.start-auto: false
+
 ---
 spring:
   profiles: dev
@@ -124,5 +126,5 @@ eureka:
       enabled: true
     lease:
       duration: 5
-      
-idc.scheduler.start-auto: false
+
+idc.scheduler.start-auto: true
