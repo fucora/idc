@@ -42,125 +42,124 @@ import com.iwellmass.common.util.QueryUtils;
  */
 @Service
 public class JobService {
-	
-	static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
-	
-	@Resource
-	TaskRepository taskRepository;
 
-	@Resource
-	JobRepository jobRepository;
-	
-	@Resource
-	AllJobRepository allJobRepository;
+    static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
-	@Resource
-	NodeJobRepository nodeJobRepository;
+    @Resource
+    TaskRepository taskRepository;
 
-	@Resource
-	WorkflowService workflowService;
+    @Resource
+    JobRepository jobRepository;
 
-	@Resource
-	Scheduler qs;
+    @Resource
+    AllJobRepository allJobRepository;
 
-	@Resource
+    @Resource
+    NodeJobRepository nodeJobRepository;
+
+    @Resource
+    WorkflowService workflowService;
+
+    @Resource
+    Scheduler qs;
+
+    @Resource
     TaskService taskService;
 
 
-	@Resource
-	private ExecutionLogRepository logRepository;
+    @Resource
+    private ExecutionLogRepository logRepository;
 
-	Job getJob(String id) {
-		return jobRepository.findById(id).orElseThrow(()-> new AppException("任务 '" + id + "' 不存在"));
-	}
-	
-	public Task getTask(String taskName) {
-		return taskRepository.findById(new TaskID(taskName)).orElseThrow(()-> new AppException("调度 '" + taskName + "' 不存在"));
-	}
-	
-	public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
-		Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
-		return QueryUtils.doJpaQuery(jqm, pageable -> {
-			return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(),pageable.getPageSize(),Sort.by(Sort.Direction.DESC,"starttime"))).map(job -> {
-				JobRuntimeVO vo = new JobRuntimeVO();
-				BeanUtils.copyProperties(job, vo);
-				return vo;
-			});
-		});
-	}
-	
-	public List<Assignee> getAllAssignee() {
-		return jobRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
-	}
-	
-	public JobVO get(String id) {
-		JobVO jobVO = new JobVO();
-		Job job = getJob(id);
-		BeanUtils.copyProperties(job, jobVO);
-		return jobVO;
-	}
+    Job getJob(String id) {
+        return jobRepository.findById(id).orElseThrow(() -> new AppException("任务 '" + id + "' 不存在"));
+    }
 
-	public void clear(String id) {
-		// TODO
-	}
+    public Task getTask(String taskName) {
+        return taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("调度 '" + taskName + "' 不存在"));
+    }
 
-	@Transactional
-	public void createJob(String id, String taskName) {
-		Task task = getTask(taskName);
-		// 有可能前台强制取消了调度
-		// 或者调度已过期、已被删除
+    public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
+        Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
+        return QueryUtils.doJpaQuery(jqm, pageable -> {
+            return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "starttime"))).map(job -> {
+                JobRuntimeVO vo = new JobRuntimeVO();
+                BeanUtils.copyProperties(job, vo);
+                return vo;
+            });
+        });
+    }
+
+    public List<Assignee> getAllAssignee() {
+        return jobRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
+    }
+
+    public JobVO get(String id) {
+        JobVO jobVO = new JobVO();
+        Job job = getJob(id);
+        BeanUtils.copyProperties(job, jobVO);
+        return jobVO;
+    }
+
+    public void clear(String id) {
+        // TODO
+    }
+
+    @Transactional
+    public void createJob(String id, String taskName) {
+        Task task = getTask(taskName);
+        // 有可能前台强制取消了调度
+        // 或者调度已过期、已被删除
 //		if (task.getState().isTerminated()) {
 //			LOGGER.error("调度已关闭：" + task.getState());
 //		} else {
-			Job job = new Job(id, task);
-			jobRepository.save(job);
+        Job job = new Job(id, task);
+        jobRepository.save(job);
 //		}
-	}
+    }
 
 
-	public void redo(String jobId)
-	{
-		StartMessage message = StartMessage.newMessage(jobId);
-		message.setMessage("启动任务");
-		TaskEventPlugin.eventService(qs).send(message);
-	}
-	public void forceFinish(String jobId)
-	{
-		FinishMessage message = FinishMessage.newMessage(jobId);
-		message.setMessage("强制结束");
-		TaskEventPlugin.eventService(qs).send(message);
-	}
+    public void redo(String jobId) {
+        StartMessage message = StartMessage.newMessage(jobId);
+        message.setMessage("启动任务");
+        TaskEventPlugin.eventService(qs).send(message);
+    }
 
-	public JobVO getPlanInstanceDetail(String instanceId) {
-		Job job = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例"));
-		List<NodeJobVO> nodeJobVOS = job.getSubJobs().stream().map(item -> {
-			NodeJobVO nodeJobVO = new NodeJobVO();
-			BeanUtils.copyProperties(item,nodeJobVO);
-			nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
-			nodeJobVO.setType(item.getNodeTask().getType());
-			return nodeJobVO;
-		}).collect(Collectors.toList());
-		GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
-		JobVO jobVO = new JobVO(nodeJobVOS, graphVO,taskService.getTask(job.getTaskName()));
-		return jobVO;
-	}
+    public void forceFinish(String jobId) {
+        FinishMessage message = FinishMessage.newMessage(jobId);
+        message.setMessage("强制结束");
+        TaskEventPlugin.eventService(qs).send(message);
+    }
 
-	@Transactional
-	public void test(String id, String action) {
-		AbstractJob job = allJobRepository.findById(id).get();
-		Method method = ReflectionUtils.findMethod(job.getClass(), action);
-		try {
-			method.invoke(job);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new ApplicationContextException(e.getMessage(), e);
-		}
-	}
+    public JobVO getPlanInstanceDetail(String instanceId) {
+        Job job = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例"));
+        List<NodeJobVO> nodeJobVOS = job.getSubJobs().stream().map(item -> {
+            NodeJobVO nodeJobVO = new NodeJobVO();
+            BeanUtils.copyProperties(item, nodeJobVO);
+            nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
+            nodeJobVO.setType(item.getNodeTask().getType());
+            return nodeJobVO;
+        }).collect(Collectors.toList());
+        GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
+        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()));
+        return jobVO;
+    }
+
+    @Transactional
+    public void test(String id, String action) {
+        AbstractJob job = allJobRepository.findById(id).get();
+        Method method = ReflectionUtils.findMethod(job.getClass(), action);
+        try {
+            method.invoke(job);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new ApplicationContextException(e.getMessage(), e);
+        }
+    }
 
 
-	public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
-		Pageable page =  PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
-		Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
-		return new PageData<>((int) data.getTotalElements(), data.getContent());
-	}
+    public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
+        Pageable page = PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
+        Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+        return new PageData<>((int) data.getTotalElements(), data.getContent());
+    }
 
 }

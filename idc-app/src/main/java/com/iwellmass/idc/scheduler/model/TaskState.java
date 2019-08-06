@@ -15,7 +15,7 @@ public enum TaskState {
 	ACQUIRED,
 	@ApiModelProperty("执行阻塞")
 	BLOCKED,
-	@ApiModelProperty("冻结")
+	@ApiModelProperty("扩展状态,阻断作用,实际是正在运行")
 	SUSPENDED,
 	@ApiModelProperty("执行异常")
 	ERROR,
