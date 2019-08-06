@@ -51,6 +51,9 @@ public class IDCScheduler {
 
     @Transactional
     public void schedule(TaskVO vo) {
+        if (taskRepository.findById(new TaskID(vo.getTaskName())).isPresent()) {
+            throw new AppException("该调度计划已存在,若为新调度计划,请更改计划名称");
+        }
         Task task = new Task(vo);
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {

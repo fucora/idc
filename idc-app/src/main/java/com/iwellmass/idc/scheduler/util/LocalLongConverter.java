@@ -26,4 +26,9 @@ public class LocalLongConverter implements AttributeConverter<LocalDateTime, Lon
 		return Instant.ofEpochMilli(dbData).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 
+	public static void main(String[] args) {
+		LocalDateTime localDateTime = new LocalLongConverter().convertToEntityAttribute(1565061171037l);
+		System.out.println(localDateTime);
+	}
+
 }

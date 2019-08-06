@@ -61,14 +61,14 @@ public class JobHelper {
     {
         NodeTask task = (NodeTask)Objects.requireNonNull(job.getTask(), "未找到任务");
         if(job.getNodeId().equals(NodeTask.END))
-        {
-            idcLogger.log(job.getId(),"执行task end,container={}",job.getContainer());
-            job.setState(JobState.FINISHED);
-            FinishMessage message = FinishMessage.newMessage(job.getContainer());
-            message.setMessage("执行结束");
-            TaskEventPlugin.eventService(scheduler).send(message);
-            return;
-        }
+    {
+        idcLogger.log(job.getId(),"执行task end,container={}",job.getContainer());
+        job.setState(JobState.FINISHED);
+        FinishMessage message = FinishMessage.newMessage(job.getContainer());
+        message.setMessage("执行结束");
+        TaskEventPlugin.eventService(scheduler).send(message);
+        return;
+    }
         idcLogger.log(job.getId(),"执行task id={}, task = {},container={}",job.getId(),job.getTask().getTaskId(),job.getContainer());
         ExecuteRequest request = new ExecuteRequest();
         request.setDomain(task.getDomain());

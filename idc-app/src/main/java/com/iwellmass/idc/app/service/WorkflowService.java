@@ -64,8 +64,8 @@ public class WorkflowService {
         }).collect(Collectors.toList());
     }
 
-    public GraphVO getGraph(String id) {
-        Workflow workflow = get(id);
+    public GraphVO getGraph(String workflowId) {
+        Workflow workflow = get(workflowId);
 
         // 设置前端 VO
         GraphVO gvo = new GraphVO();

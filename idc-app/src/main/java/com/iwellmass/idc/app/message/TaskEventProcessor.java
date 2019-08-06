@@ -119,10 +119,12 @@ public class TaskEventProcessor implements org.quartz.Job {
         if (runningJob instanceof Job) {
             Job job = (Job) runningJob;
             TriggerKey tk = job.getTask().getTriggerKey();
-            if (job.getState().isSuccess()) {
-                idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-            } else {
+            if (job.getState().isComplete()) {
+                if (job.getState().isSuccess()) {
+                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                } else {
                 idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                }
             }
         } else {
 
