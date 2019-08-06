@@ -27,7 +27,7 @@ public class JobController {
 	@Resource
 	JobService jobService;
 	
-    @ApiOperation("获取 JOB 运行状态")
+    @ApiOperation("获取 JOB 实例")
     @PostMapping("/runtime")
     public ServiceResult<PageData<JobRuntimeVO>> runtime(@RequestBody(required = false) JobQueryParam qm) {
         PageData<JobRuntimeVO> taskInstance = jobService.query(qm);

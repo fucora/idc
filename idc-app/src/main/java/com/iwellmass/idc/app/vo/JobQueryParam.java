@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class JobQueryParam extends Pager{
 
 	@ApiModelProperty("指定任务")
-	@Like
+	@Equal
 	private String taskName;
 
 	@ApiModelProperty("job的类型")
