@@ -123,7 +123,7 @@ public class TaskEventProcessor implements org.quartz.Job {
                 if (job.getState().isSuccess()) {
                     idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
                 } else {
-                idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
                 }
             }
         } else {
