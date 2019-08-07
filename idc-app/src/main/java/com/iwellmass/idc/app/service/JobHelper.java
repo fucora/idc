@@ -6,11 +6,16 @@ import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
+import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
+import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
+import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
+import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +33,14 @@ public class JobHelper {
 
     @Autowired
     private IDCLogger idcLogger;
+    @Autowired
+    IDCJobStore idcJobStore;
+    @Autowired
+    AllJobRepository allJobRepository;
+    @Autowired
+    WorkflowRepository workflowRepository;
 
+    // 启动
     public void start(AbstractJob job) {
         if (job.getState().isComplete()) {
             throw new JobException("任务已执行");
@@ -43,28 +55,37 @@ public class JobHelper {
         }
     }
 
+    // 重跑
     public void renew(AbstractJob job) {
         checkRunning(job);
         job.setUpdatetime(LocalDateTime.now());
     }
 
+    // 成功
     public void success(AbstractJob job) {
         checkRunning(job);
         job.setState(JobState.FINISHED);
+        onJobFinished(job);
     }
 
+    // 失败
     public void failed(AbstractJob job) {
         checkRunning(job);
         job.setState(JobState.FAILED);
     }
 
+    // 重跑
     public void redo(AbstractJob job) {
         // TODO 编写重做逻辑
     }
 
+    // 取消
     public void cancle(AbstractJob job) {
         // TODO 编写取消逻辑
     }
+
+    // 跳过
+    public void skip(AbstractJob job){}
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -118,7 +139,6 @@ public class JobHelper {
                 .filter(sub -> successors.contains(sub.getNodeId()))
                 .iterator();
 
-        // any success
         while (iterator.hasNext()) {
             NodeJob next = iterator.next();
             try {
@@ -136,6 +156,28 @@ public class JobHelper {
                 next.setState(JobState.FAILED);
                 job.setState(JobState.FAILED);
             }
+        }
+    }
+
+    // job finish
+    public void onJobFinished(AbstractJob runningJob) {
+        if (runningJob instanceof Job) {
+            // Release trigger
+            Job job = (Job) runningJob;
+            TriggerKey tk = job.getTask().getTriggerKey();
+            if (job.getState().isComplete()) {
+                if (job.getState().isSuccess()) {
+                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                } else {
+                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                }
+            }
+        } else {
+            NodeJob nodeJob = (NodeJob) runningJob;
+            Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
+            Job parent = (Job) allJobRepository.findById(nodeJob.getContainer()).get();
+            parent.getTask().setWorkflow(workflow);
+            runNextJob(parent, nodeJob.getNodeId());
         }
     }
 }

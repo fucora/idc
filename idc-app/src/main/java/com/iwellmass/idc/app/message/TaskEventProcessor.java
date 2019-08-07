@@ -114,48 +114,8 @@ public class TaskEventProcessor implements org.quartz.Job {
             LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
             LOGGER.error(e.getMessage(), e);
         }
-
-        // Release trigger
-        if (runningJob instanceof Job) {
-            Job job = (Job) runningJob;
-            TriggerKey tk = job.getTask().getTriggerKey();
-            if (job.getState().isComplete()) {
-                if (job.getState().isSuccess()) {
-                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-                } else {
-                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
-                }
-            }
-        } else {
-
-
-        }
-
-        //更新job状态？
+        //更新job状态
         allJobRepository.save(runningJob);
-        if (message.getEvent() == JobEvent.FINISH) {
-            onJobFinished(runningJob, context);
-        }
     }
 
-    public void onJobFinished(AbstractJob runningJob, JobExecutionContext context) {
-        if (runningJob instanceof Job) {
-
-        } else {
-            NodeJob nodeJob = (NodeJob) runningJob;
-            Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
-
-//				Set<String> successors=  workflow.successors(nodeJob.getNodeId());
-
-//				if(successors.size()==1&&successors.iterator().next().equals(NodeTask.END)){
-//					FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
-//					TaskEventPlugin.eventService(context.getScheduler()).send(message);
-//					return;
-//				}
-
-            Job parent = (Job) allJobRepository.findById(nodeJob.getContainer()).get();
-            parent.getTask().setWorkflow(workflow);
-            jobHelper.runNextJob(parent, nodeJob.getNodeId());
-        }
-    }
 }
