@@ -102,7 +102,7 @@ eureka:
       duration: 5
     register-with-eureka: true
 
-idc.scheduler.start-auto: true
+idc.scheduler.start-auto: false
 
 ---
 spring:
