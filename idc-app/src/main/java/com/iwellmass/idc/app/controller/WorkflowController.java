@@ -89,7 +89,7 @@ public class WorkflowController {
 	}
 
 	@GetMapping("/available")
-	@ApiOperation("查询可用的工作流,")
+	@ApiOperation("查询可用的工作流")
 	public ServiceResult<List<WorkflowVO>> queryAvailableWorkflow() {
 		List<WorkflowVO> data = workflowService.queryAvailableWorkflow();
 		return ServiceResult.success(data);

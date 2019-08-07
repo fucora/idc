@@ -15,7 +15,8 @@ public class TaskStateConverter implements AttributeConverter<TaskState, String>
 	public TaskState convertToEntityAttribute(String dbData) {
 		if(dbData==null)
 		{
-			return  TaskState.NONE;
+			// 当没有对应的trigger信息时只能是整个trigger执行完成,trigger信息被quartz删除，其他状态,trigger信息将保存
+			return  TaskState.COMPLETE;
 		}
 		return TaskState.valueOf(dbData);
 	}
