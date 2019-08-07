@@ -114,8 +114,6 @@ public class TaskEventProcessor implements org.quartz.Job {
             LOGGER.error("Cannot process {}, {}", message.getId(), e.getMessage());
             LOGGER.error(e.getMessage(), e);
         }
-        //更新job状态
-        allJobRepository.save(runningJob);
     }
 
 }

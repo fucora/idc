@@ -64,14 +64,14 @@ public class JobHelper {
     // 成功
     public void success(AbstractJob job) {
         checkRunning(job);
-        job.setState(JobState.FINISHED);
+        modifyJobState(job, JobState.FINISHED);
         onJobFinished(job);
     }
 
     // 失败
     public void failed(AbstractJob job) {
         checkRunning(job);
-        job.setState(JobState.FAILED);
+        modifyJobState(job, JobState.FAILED);
     }
 
     // 重跑
@@ -85,7 +85,8 @@ public class JobHelper {
     }
 
     // 跳过
-    public void skip(AbstractJob job){}
+    public void skip(AbstractJob job) {
+    }
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -103,21 +104,20 @@ public class JobHelper {
 
     public void executeJob(Job job) {
         idcLogger.log(job.getId(), "执行workflow id={}", job.getTask().getWorkflow().getId());
-        job.setState(JobState.RUNNING);
+        modifyJobState(job, JobState.RUNNING);
         runNextJob(job, NodeTask.START);
     }
 
     public void executeNodeJob(NodeJob job) {
-        NodeTask task = (NodeTask) Objects.requireNonNull(job.getTask(), "未找到任务");
+        NodeTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         if (job.getNodeId().equals(NodeTask.END)) {
             idcLogger.log(job.getId(), "执行task end,container={}", job.getContainer());
-            job.setState(JobState.FINISHED);
             FinishMessage message = FinishMessage.newMessage(job.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
             return;
         }
-        job.setState(JobState.RUNNING);
+        modifyJobState(job, JobState.RUNNING);
         idcLogger.log(job.getId(), "执行task id={}, task = {},container={}", job.getId(), job.getTask().getTaskId(), job.getContainer());
         ExecuteRequest request = new ExecuteRequest();
         request.setDomain(task.getDomain());
@@ -153,8 +153,8 @@ public class JobHelper {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                next.setState(JobState.FAILED);
-                job.setState(JobState.FAILED);
+                modifyJobState(next, JobState.FAILED);
+                modifyJobState(job, JobState.FAILED);
             }
         }
     }
@@ -179,5 +179,10 @@ public class JobHelper {
             parent.getTask().setWorkflow(workflow);
             runNextJob(parent, nodeJob.getNodeId());
         }
+    }
+
+    private void modifyJobState(AbstractJob job, JobState state) {
+        job.setState(state);
+        allJobRepository.save(job);
     }
 }
