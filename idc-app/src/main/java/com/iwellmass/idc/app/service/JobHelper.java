@@ -29,9 +29,6 @@ public class JobHelper {
     @Autowired
     private IDCLogger idcLogger;
 
-    @Inject
-    private JobRepository jobRepository;
-
     public void start(AbstractJob job) {
         if (job.getState().isComplete()) {
             throw new JobException("任务已执行");
@@ -71,7 +68,7 @@ public class JobHelper {
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
-            throw new JobException("任务已结束: " + job.getState())  ;
+            throw new JobException("任务已结束: " + job.getState());
         }
     }
 
@@ -122,7 +119,6 @@ public class JobHelper {
                 .iterator();
 
         // any success
-        boolean anySuccess = false;
         while (iterator.hasNext()) {
             NodeJob next = iterator.next();
             try {
@@ -132,21 +128,14 @@ public class JobHelper {
                 boolean unfinishJob = job.getSubJobs().stream()
                         .filter(sub -> previous.contains(sub.getNodeId()))
                         .anyMatch(sub -> !sub.getState().isSuccess());
-                if (unfinishJob) {
-                    anySuccess = true;
-                    continue;
+                if (!unfinishJob) {
+                    startJob(next);
                 }
-                startJob(next);
-                anySuccess = true;
             } catch (Exception e) {
                 e.printStackTrace();
-                anySuccess |= false;
                 next.setState(JobState.FAILED);
+                job.setState(JobState.FAILED);
             }
-        }
-        // 贪婪模式
-        if (!anySuccess) {
-            job.setState(JobState.FAILED);
         }
     }
 }

@@ -63,7 +63,7 @@ public abstract class TaskVO {
 	LocalDate endDate;
 	
 	@ApiModelProperty("出错时阻塞")
-	private Boolean blockOnError = true;
+	Boolean blockOnError = true;
 	
 	// copy-of-task
 	@ApiModelProperty("工作流ID")

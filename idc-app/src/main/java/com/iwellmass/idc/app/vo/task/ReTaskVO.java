@@ -57,7 +57,7 @@ public abstract class ReTaskVO {
 	LocalDate endDate;
 	
 	@ApiModelProperty("出错时阻塞")
-	private Boolean blockOnError = true;
+	Boolean blockOnError = true;
 
 	@ApiModelProperty("业务域")
 	String domain;

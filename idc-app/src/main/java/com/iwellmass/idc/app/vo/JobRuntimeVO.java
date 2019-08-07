@@ -31,5 +31,9 @@ public class JobRuntimeVO {
 	private String loadDate;
 	
 	@ApiModelProperty("JOB状态")
-	JobState state;
+	private JobState state;
+
+	@ApiModelProperty("执行批次")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	private LocalDateTime shouldFireTime;
 }
