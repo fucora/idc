@@ -17,6 +17,7 @@ import javax.persistence.JoinColumns;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,13 @@ public class Job extends AbstractJob {
 	@Column(name = "param", columnDefinition = "TEXT")
 	@Convert(converter = ExecParamConverter.class)
 	private List<ExecParam> param;
+
+	/**
+	 * 执行批次
+	 */
+	@Column(name = "should_fire_time")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	private LocalDateTime shouldFireTime;
 	
 	/**
 	 * 主任务（Task）
@@ -98,6 +106,7 @@ public class Job extends AbstractJob {
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
 		this.starttime = LocalDateTime.now();
 		this.updatetime = LocalDateTime.now();
+		this.shouldFireTime = task.getPrevFireTime();
 	}
 
 	/**

@@ -100,40 +100,40 @@ public abstract class AbstractJob {
 //		}
 //		doStart(context);
 //	}
-
+//
 //	abstract public  void doStart(JobExecutionContext context);
-
-
-
-	public void renew() {
-		checkRunning();
-		this.setUpdatetime(LocalDateTime.now());
-	}
-
-	public void success() {
-		checkRunning();
-		setState(JobState.FINISHED);
-	}
-
-	public void failed() {
-		checkRunning();
-		setState(JobState.FAILED);
-	}
-
-
-	public void redo() {
-		// TODO 编写重做逻辑
-	}
-	
-	public void cancle() {
-		// TODO 编写取消逻辑
-	}
-	
-	private void checkRunning() {
-		if (this.getState().isComplete()) {
-			throw new JobException("任务已结束: " + this.state)  ;
-		}
-	}
+//
+//
+//
+//	public void renew() {
+//		checkRunning();
+//		this.setUpdatetime(LocalDateTime.now());
+//	}
+//
+//	public void success() {
+//		checkRunning();
+//		setState(JobState.FINISHED);
+//	}
+//
+//	public void failed() {
+//		checkRunning();
+//		setState(JobState.FAILED);
+//	}
+//
+//
+//	public void redo() {
+//		// TODO 编写重做逻辑
+//	}
+//
+//	public void cancle() {
+//		// TODO 编写取消逻辑
+//	}
+//
+//	private void checkRunning() {
+//		if (this.getState().isComplete()) {
+//			throw new JobException("任务已结束: " + this.state)  ;
+//		}
+//	}
 	
 	@Transient
 	public abstract AbstractTask getTask();

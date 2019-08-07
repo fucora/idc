@@ -94,15 +94,15 @@ public class TaskEventProcessor implements org.quartz.Job {
                     break;
                 }
                 case RENEW: {
-                    runningJob.renew();
+                    jobHelper.renew(runningJob);
                     break;
                 }
                 case FINISH: {
-                    runningJob.success();
+                    jobHelper.success(runningJob);
                     break;
                 }
                 case FAIL: {
-                    runningJob.failed();
+                    jobHelper.failed(runningJob);
                     break;
                 }
                 default: {

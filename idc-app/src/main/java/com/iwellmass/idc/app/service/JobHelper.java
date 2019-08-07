@@ -6,6 +6,7 @@ import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
+import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
 import org.quartz.JobExecutionContext;
@@ -13,6 +14,8 @@ import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -25,6 +28,9 @@ public class JobHelper {
 
     @Autowired
     private IDCLogger idcLogger;
+
+    @Inject
+    private JobRepository jobRepository;
 
     public void start(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -40,6 +46,34 @@ public class JobHelper {
         }
     }
 
+    public void renew(AbstractJob job) {
+        checkRunning(job);
+        job.setUpdatetime(LocalDateTime.now());
+    }
+
+    public void success(AbstractJob job) {
+        checkRunning(job);
+        job.setState(JobState.FINISHED);
+    }
+
+    public void failed(AbstractJob job) {
+        checkRunning(job);
+        job.setState(JobState.FAILED);
+    }
+
+    public void redo(AbstractJob job) {
+        // TODO 编写重做逻辑
+    }
+
+    public void cancle(AbstractJob job) {
+        // TODO 编写取消逻辑
+    }
+
+    private void checkRunning(AbstractJob job) {
+        if (job.getState().isComplete()) {
+            throw new JobException("任务已结束: " + job.getState())  ;
+        }
+    }
 
     public void startJob(AbstractJob job) {
         if (job.getTaskType() == TaskType.WORKFLOW) {
@@ -51,6 +85,7 @@ public class JobHelper {
 
     public void executeJob(Job job) {
         idcLogger.log(job.getId(), "执行workflow id={}", job.getTask().getWorkflow().getId());
+        job.setState(JobState.RUNNING);
         runNextJob(job, NodeTask.START);
     }
 
@@ -64,6 +99,7 @@ public class JobHelper {
             TaskEventPlugin.eventService(scheduler).send(message);
             return;
         }
+        job.setState(JobState.RUNNING);
         idcLogger.log(job.getId(), "执行task id={}, task = {},container={}", job.getId(), job.getTask().getTaskId(), job.getContainer());
         ExecuteRequest request = new ExecuteRequest();
         request.setDomain(task.getDomain());
