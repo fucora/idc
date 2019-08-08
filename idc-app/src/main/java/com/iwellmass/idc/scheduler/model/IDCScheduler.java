@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.message.TaskEventProcessor;
+import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import org.quartz.JobBuilder;
@@ -78,32 +80,29 @@ public class IDCScheduler {
         }
     }
 
-    // 任何情况下均可进行重新调度,当任务执行完成需要构建新的jobDetail
+    // 正在执行的trigger 不能直接调用该接口
     @Transactional
     public void reschedule(ReTaskVO reVO) {
         Task oldTask = getTask(reVO.getTaskName());
-        // 清理现场
-        clear(oldTask);
-        Task newTask = reVO.buildNewTask(oldTask);
-        BeanUtils.copyProperties(reVO, newTask);
-        if (reVO.getScheduleType().equals(ScheduleType.AUTO)) {
-            newTask.setStartDateTime(LocalDateTime.of(reVO.getStartDate(), LocalTime.MIN));// 生效时间
-            newTask.setEndDateTime(LocalDateTime.of(reVO.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
-        }
         try {
-            Trigger trigger = reVO.buildTrigger(newTask.getTriggerKey());
-            trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, oldTask.getTaskName());
-            if (oldTask.getState().isComplete()) {
-                // 构建job信息进行调度
-                JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
-                        .withIdentity(oldTask.getTaskName(), oldTask.getTaskGroup())
-                        .requestRecovery().build();
-                qs.scheduleJob(jobDetail, trigger);
-            } else {
-                // 直接重新调度
-                qs.rescheduleJob(trigger.getKey(), trigger);
+            if (qs.checkExists(oldTask.getTriggerKey())) {
+                throw new AppException("请先取消调度再尝试");
+            }
+            // 清理现场
+            clear(oldTask);
+            Task newTask = reVO.buildNewTask(oldTask);
+            BeanUtils.copyProperties(reVO, newTask);
+            if (reVO.getScheduleType().equals(ScheduleType.AUTO)) {
+                newTask.setStartDateTime(LocalDateTime.of(reVO.getStartDate(), LocalTime.MIN));// 生效时间
+                newTask.setEndDateTime(LocalDateTime.of(reVO.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
             }
             taskRepository.save(newTask);
+            Trigger trigger = reVO.buildTrigger(newTask.getTriggerKey());
+            trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, oldTask.getTaskName());
+            JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
+                    .withIdentity(oldTask.getTaskName(), oldTask.getTaskGroup())
+                    .requestRecovery().build();
+            qs.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
