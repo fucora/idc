@@ -31,6 +31,10 @@ public enum TaskState {
 		return this==COMPLETE||this==ERROR;
 	}
 
+	public boolean isComplete() {
+		return this == COMPLETE;
+	}
+
 	public String desc() {
 		return name();
 	}

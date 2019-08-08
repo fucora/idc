@@ -76,6 +76,7 @@ public class TaskEventProcessor implements org.quartz.Job {
         Optional<AbstractJob> opt = allJobRepository.findById(message.getJobId());
 
         if (!opt.isPresent()) {
+            // 可能是重新调度时后被删除或者误删
             LOGGER.warn("Cannot process {}, Task {} 不存在", message.getId(), message.getJobId());
             return;
         }

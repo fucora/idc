@@ -1,9 +1,13 @@
 package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iwellmass.idc.scheduler.model.Task;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
@@ -48,11 +52,11 @@ public abstract class ReTaskVO {
 	@ApiModelProperty("调度方式")
 	ScheduleType scheduleType;
 	
-	@ApiModelProperty("生效日期 yyyy-MM-dd")
+	@ApiModelProperty("生效日期")
 	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDate startDate;
 
-	@ApiModelProperty("失效日期, yyyy-MM-dd")
+	@ApiModelProperty("失效日期")
 	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
 	LocalDate endDate;
 	
@@ -69,4 +73,17 @@ public abstract class ReTaskVO {
 	String contentType;
 	
 	public abstract Trigger buildTrigger(TriggerKey key);
+
+	@JsonIgnore
+	public abstract Map<String, Object> getProps();
+
+	public Task buildNewTask(Task oldTask) {
+		Task newTask = new Task();
+		newTask.setTaskName(oldTask.getTaskName());
+		newTask.setTaskGroup(oldTask.getTaskGroup());
+		newTask.setWorkflowId(oldTask.getWorkflowId());
+		newTask.setCreatetime(LocalDateTime.now());
+		newTask.setUpdatetime(newTask.getCreatetime());
+		return newTask;
+	}
 }

@@ -78,16 +78,32 @@ public class IDCScheduler {
         }
     }
 
+    // 任何情况下均可进行重新调度,当任务执行完成需要构建新的jobDetail
     @Transactional
     public void reschedule(ReTaskVO reVO) {
-        Task task = getTask(reVO.getTaskName());
+        Task oldTask = getTask(reVO.getTaskName());
         // 清理现场
-        clear(task);
-        BeanUtils.copyProperties(reVO, task);
+        clear(oldTask);
+        Task newTask = reVO.buildNewTask(oldTask);
+        BeanUtils.copyProperties(reVO, newTask);
+        if (reVO.getScheduleType().equals(ScheduleType.AUTO)) {
+            newTask.setStartDateTime(LocalDateTime.of(reVO.getStartDate(), LocalTime.MIN));// 生效时间
+            newTask.setEndDateTime(LocalDateTime.of(reVO.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
+        }
         try {
-            Trigger trigger = reVO.buildTrigger(task.getTriggerKey());
-            qs.rescheduleJob(trigger.getKey(), trigger);
-            taskRepository.save(task);
+            Trigger trigger = reVO.buildTrigger(newTask.getTriggerKey());
+            trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, oldTask.getTaskName());
+            if (oldTask.getState().isComplete()) {
+                // 构建job信息进行调度
+                JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
+                        .withIdentity(oldTask.getTaskName(), oldTask.getTaskGroup())
+                        .requestRecovery().build();
+                qs.scheduleJob(jobDetail, trigger);
+            } else {
+                // 直接重新调度
+                qs.rescheduleJob(trigger.getKey(), trigger);
+            }
+            taskRepository.save(newTask);
         } catch (SchedulerException e) {
             throw new AppException(e);
         }

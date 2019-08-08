@@ -1,8 +1,11 @@
 package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.iwellmass.common.util.Utils;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
@@ -29,6 +32,15 @@ public class ReCronTaskVO extends ReTaskVO implements CronTriggerBuilder{
 	@ApiModelProperty("具体时间")
 	@JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
 	private LocalTime duetime = LocalTime.MIN;
+
+	@Override
+	public Map<String, Object> getProps() {
+		Map<String, Object> props = new HashMap<>();
+		props.put("cronType", cronType);
+		props.put("days", days);
+		props.put("expression", Utils.isNullOrEmpty(expression) ? "" : expression);
+		return props;
+	}
 
 	@Override
 	public Trigger buildTrigger(TriggerKey key) {
