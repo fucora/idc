@@ -100,9 +100,9 @@ eureka:
       enabled: true
     lease:
       duration: 5
-    register-with-eureka: true
+    register-with-eureka: false
 
-idc.scheduler.start-auto: false
+idc.scheduler.start-auto: true
 
 ---
 spring:
