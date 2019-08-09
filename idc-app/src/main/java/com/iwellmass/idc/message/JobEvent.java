@@ -9,12 +9,12 @@ public enum JobEvent {
 	 * 开始
 	 */
 	START,
-	
+
 	/**
 	 * 续租
 	 */
 	RENEW,
-	
+
 	/**
 	 * 完成
 	 */
@@ -23,5 +23,21 @@ public enum JobEvent {
 	/**
 	 * 失败
 	 */
-	FAIL;
+	FAIL,
+
+	/**
+	 * 重跑
+	 */
+	REDO,
+
+	/**
+	 * 取消
+	 */
+	CANCEL,
+
+	/**
+	 * 跳过
+	 */
+	SKIP,
+
 }

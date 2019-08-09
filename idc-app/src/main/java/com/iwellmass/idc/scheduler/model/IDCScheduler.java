@@ -85,8 +85,9 @@ public class IDCScheduler {
     public void reschedule(ReTaskVO reVO) {
         Task oldTask = getTask(reVO.getTaskName());
         try {
+
             if (qs.checkExists(oldTask.getTriggerKey())) {
-                throw new AppException("请先取消调度再尝试");
+                qs.unscheduleJob(oldTask.getTriggerKey());
             }
             // 清理现场
             clear(oldTask);
@@ -102,6 +103,7 @@ public class IDCScheduler {
             JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
                     .withIdentity(oldTask.getTaskName(), oldTask.getTaskGroup())
                     .requestRecovery().build();
+
             qs.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
             throw new AppException(e);

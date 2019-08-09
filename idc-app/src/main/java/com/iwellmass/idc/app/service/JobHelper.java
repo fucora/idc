@@ -40,6 +40,8 @@ public class JobHelper {
     @Autowired
     WorkflowRepository workflowRepository;
 
+    //==============================================  processor调用
+
     // 启动
     public void start(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -76,17 +78,23 @@ public class JobHelper {
 
     // 重跑
     public void redo(AbstractJob job) {
-        // TODO 编写重做逻辑
+
     }
 
     // 取消
     public void cancle(AbstractJob job) {
-        // TODO 编写取消逻辑
+        checkRunning(job);
+
     }
 
     // 跳过
     public void skip(AbstractJob job) {
+        checkRunning(job);
+        modifyJobState(job,JobState.SKIPPED);
+        onJobFinished(job);
     }
+
+    //==============================================  内部调用
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -129,7 +137,6 @@ public class JobHelper {
         IDCJobExecutors.getExecutor().execute(request);
     }
 
-
     public void runNextJob(Job job, String startNode) {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
@@ -159,7 +166,6 @@ public class JobHelper {
         }
     }
 
-    // job finish
     public void onJobFinished(AbstractJob runningJob) {
         if (runningJob instanceof Job) {
             // Release trigger
