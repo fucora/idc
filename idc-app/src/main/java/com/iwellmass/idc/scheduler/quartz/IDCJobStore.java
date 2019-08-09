@@ -1,6 +1,7 @@
 package com.iwellmass.idc.scheduler.quartz;
 
 import org.quartz.JobDetail;
+import org.quartz.JobPersistenceException;
 import org.quartz.TriggerKey;
 import org.quartz.spi.JobStore;
 import org.quartz.utils.ClassUtils;
@@ -15,4 +16,6 @@ public interface IDCJobStore extends JobStore {
 	default boolean isSuspendAfterExecution(JobDetail jobDetail) {
 		return ClassUtils.isAnnotationPresent(jobDetail.getJobClass(), SuspendScheduleAfterExecution.class);
 	}
+
+	void reschedule(Runnable runnable) throws JobPersistenceException;
 }

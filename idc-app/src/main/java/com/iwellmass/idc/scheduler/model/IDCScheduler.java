@@ -7,16 +7,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
-import com.iwellmass.idc.app.message.TaskEventProcessor;
-import com.iwellmass.idc.app.service.JobHelper;
+import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
+import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -43,6 +39,8 @@ public class IDCScheduler {
     JobRepository jobRepository;
     @Resource
     NodeJobRepository nodeJobRepository;
+    @Inject
+    IDCJobStore jobStore;
 
     @Resource
     Scheduler qs;
@@ -83,11 +81,18 @@ public class IDCScheduler {
     // 正在执行的trigger 不能直接调用该接口
     @Transactional
     public void reschedule(ReTaskVO reVO) {
+//        try {
+//            jobStore.reschedule(() -> {
+//
+//            });
+//        } catch (JobPersistenceException e) {
+//            e.printStackTrace();
+//        }
         Task oldTask = getTask(reVO.getTaskName());
         try {
 
             if (qs.checkExists(oldTask.getTriggerKey())) {
-                qs.unscheduleJob(oldTask.getTriggerKey());
+                throw new AppException("请先取消调度后再重新调度");
             }
             // 清理现场
             clear(oldTask);
