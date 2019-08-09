@@ -16,6 +16,4 @@ public interface IDCJobStore extends JobStore {
 	default boolean isSuspendAfterExecution(JobDetail jobDetail) {
 		return ClassUtils.isAnnotationPresent(jobDetail.getJobClass(), SuspendScheduleAfterExecution.class);
 	}
-
-	void reschedule(Runnable runnable) throws JobPersistenceException;
 }

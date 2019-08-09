@@ -143,13 +143,4 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
         }
     }
 
-    @Override
-    public void reschedule(Runnable runnable) throws JobPersistenceException {
-        executeInLock(LOCK_TRIGGER_ACCESS, (TransactionCallback<Void>) conn -> {
-            runnable.run();
-            return null;
-        });
-    }
-
-
 }

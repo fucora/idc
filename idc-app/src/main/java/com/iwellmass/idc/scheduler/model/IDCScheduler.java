@@ -39,8 +39,6 @@ public class IDCScheduler {
     JobRepository jobRepository;
     @Resource
     NodeJobRepository nodeJobRepository;
-    @Inject
-    IDCJobStore jobStore;
 
     @Resource
     Scheduler qs;
@@ -81,13 +79,6 @@ public class IDCScheduler {
     // 正在执行的trigger 不能直接调用该接口
     @Transactional
     public void reschedule(ReTaskVO reVO) {
-//        try {
-//            jobStore.reschedule(() -> {
-//
-//            });
-//        } catch (JobPersistenceException e) {
-//            e.printStackTrace();
-//        }
         Task oldTask = getTask(reVO.getTaskName());
         try {
 
