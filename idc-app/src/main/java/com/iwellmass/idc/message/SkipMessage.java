@@ -1,25 +1,25 @@
 package com.iwellmass.idc.message;
 
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.UUID;
+
 /**
- * 失败消息
+ * 跳过消息
  */
-public class FailMessage extends JobMessage {
+public class SkipMessage extends JobMessage {
 
-	private static final long serialVersionUID = -2251630353833441320L;
+	private static final long serialVersionUID = -8876144121388923451L;
 
-	public FailMessage(//@formatter:off
+	public SkipMessage(//@formatter:off
 					   @JsonProperty("id") String id,
 					   @JsonProperty("batchNo") String batchNo) {//@formatter:on
-		super(id, batchNo, JobEvent.FAIL);
+		super(id, batchNo, JobEvent.SKIP);
 	}
 	
-	public static final FailMessage newMessage(String batchNo) {
+	public static final SkipMessage newMessage(String batchNo) {
 		String id = UUID.randomUUID().toString();
-		return new FailMessage(id, batchNo);
+		return new SkipMessage(id, batchNo);
 	}
 
 	public void setMessage(String message, Throwable e) {

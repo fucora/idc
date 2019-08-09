@@ -94,10 +94,6 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.start(runningJob);
                     break;
                 }
-                case RENEW: {
-                    jobHelper.renew(runningJob);
-                    break;
-                }
                 case FINISH: {
                     jobHelper.success(runningJob);
                     break;
@@ -106,6 +102,15 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.failed(runningJob);
                     break;
                 }
+                case REDO:
+                    jobHelper.redo(runningJob);
+                    break;
+                case CANCEL:
+                    jobHelper.cancle(runningJob);
+                    break;
+                case SKIP:
+                    jobHelper.skip(runningJob);
+                    break;
                 default: {
                     // bad message...
                     LOGGER.error("Cannot process {}, unsupported event {}", message.getId(), message.getEvent());

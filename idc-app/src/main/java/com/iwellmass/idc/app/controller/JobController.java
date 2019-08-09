@@ -48,15 +48,15 @@ public class JobController {
         return ServiceResult.success(jobService.getAllAssignee());
     }
 
-    @ApiOperation("重跑任务")
-    @PostMapping("/{id}/redo")
+    @ApiOperation("重跑Job，NodeJob任务")
+    @GetMapping("/{id}/redo")
     public ServiceResult<String> redo(@PathVariable(name = "id") String id) {
         jobService.redo(id);
         return ServiceResult.success("success");
     }
 
-    @ApiOperation("取消任务")
-    @PostMapping("/{id}/cancel")
+    @ApiOperation("取消任务:暂时没有取消的场景")
+    @GetMapping("/{id}/cancel")
     public ServiceResult<String> cancel(@PathVariable(name = "id") Integer id) {
         return ServiceResult.success("success");
     }

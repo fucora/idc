@@ -11,11 +11,6 @@ public enum JobEvent {
 	START,
 
 	/**
-	 * 续租
-	 */
-	RENEW,
-
-	/**
 	 * 完成
 	 */
 	FINISH,

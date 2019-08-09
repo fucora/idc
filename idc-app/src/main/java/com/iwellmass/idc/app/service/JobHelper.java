@@ -78,7 +78,11 @@ public class JobHelper {
 
     // 重跑
     public void redo(AbstractJob job) {
-
+        if (job.getTaskType() == TaskType.WORKFLOW) {
+            executeJob((Job) job);
+        } else {
+            executeNodeJob((NodeJob) job);
+        }
     }
 
     // 取消
@@ -102,7 +106,7 @@ public class JobHelper {
         }
     }
 
-    public void startJob(AbstractJob job) {
+    private void startJob(AbstractJob job) {
         if (job.getTaskType() == TaskType.WORKFLOW) {
             executeJob((Job) job);
         } else {
@@ -110,13 +114,13 @@ public class JobHelper {
         }
     }
 
-    public void executeJob(Job job) {
+    private void executeJob(Job job) {
         idcLogger.log(job.getId(), "执行workflow id={}", job.getTask().getWorkflow().getId());
         modifyJobState(job, JobState.RUNNING);
         runNextJob(job, NodeTask.START);
     }
 
-    public void executeNodeJob(NodeJob job) {
+    private void executeNodeJob(NodeJob job) {
         NodeTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         if (job.getNodeId().equals(NodeTask.END)) {
             idcLogger.log(job.getId(), "执行task end,container={}", job.getContainer());
@@ -137,7 +141,7 @@ public class JobHelper {
         IDCJobExecutors.getExecutor().execute(request);
     }
 
-    public void runNextJob(Job job, String startNode) {
+    private void runNextJob(Job job, String startNode) {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
         // 找到立即节点
@@ -166,7 +170,7 @@ public class JobHelper {
         }
     }
 
-    public void onJobFinished(AbstractJob runningJob) {
+    private void onJobFinished(AbstractJob runningJob) {
         if (runningJob instanceof Job) {
             // Release trigger
             Job job = (Job) runningJob;

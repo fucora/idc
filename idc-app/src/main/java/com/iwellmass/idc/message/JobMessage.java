@@ -13,31 +13,33 @@ import lombok.Setter;
 import lombok.ToString;
 
 @JsonTypeInfo(use = Id.NAME, property = "event", visible = true, include = As.EXISTING_PROPERTY)
-@JsonSubTypes({ 
-	@Type(name = "START", value = RenewMessage.class),
-	@Type(name = "RENEW", value = RenewMessage.class),
-	@Type(name = "FINISH", value = FinishMessage.class),
-	@Type(name = "FAIL", value = FailMessage.class)
-	})
+@JsonSubTypes({
+        @Type(name = "START", value = StartMessage.class),
+        @Type(name = "FINISH", value = FinishMessage.class),
+        @Type(name = "FAIL", value = FailMessage.class),
+        @Type(name = "REDO", value = RedoMessage.class),
+        @Type(name = "CANCEL", value = CancelMessage.class),
+        @Type(name = "SKIP", value = SkipMessage.class),
+})
 @Getter
 @Setter
-@ToString(of = { "jobId", "event", "message" })
+@ToString(of = {"jobId", "event", "message"})
 public abstract class JobMessage implements Serializable {
 
-	private static final long serialVersionUID = -1153750416491653924L;
+    private static final long serialVersionUID = -7298110033212656554L;
 
-	private final String id;
+    private final String id;
 
-	private final String jobId;
+    private final String jobId;
 
-	private final JobEvent event;
+    private final JobEvent event;
 
-	private String message;
+    private String message;
 
-	public JobMessage(String id, String jobId, JobEvent event) {
-		this.id = id;
-		this.jobId = jobId;
-		this.event = event;
-	}
+    public JobMessage(String id, String jobId, JobEvent event) {
+        this.id = id;
+        this.jobId = jobId;
+        this.event = event;
+    }
 
 }

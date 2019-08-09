@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ public class JobService {
     }
 
     public List<Assignee> getAllAssignee() {
-        return jobRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
+        return jobRepository.findAllAssignee().stream().map(Assignee::new).sorted(Comparator.comparing(Assignee::getAssignee)).collect(Collectors.toList());
     }
 
     public JobVO get(String id) {
@@ -117,10 +118,9 @@ public class JobService {
 //		}
     }
 
-
     public void redo(String jobId) {
         StartMessage message = StartMessage.newMessage(jobId);
-        message.setMessage("启动任务");
+        message.setMessage("启动任务" + jobId);
         TaskEventPlugin.eventService(qs).send(message);
     }
 

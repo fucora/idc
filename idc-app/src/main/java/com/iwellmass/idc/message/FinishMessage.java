@@ -9,11 +9,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class FinishMessage extends JobMessage {
 
-	private static final long serialVersionUID = -8973355861973877439L;
-	
+	private static final long serialVersionUID = -461924759242824796L;
+
 	public FinishMessage(//@formatter:off
-		@JsonProperty("id") String id,
-		@JsonProperty("batchNo") String batchNo) {//@formatter:on
+						 @JsonProperty("id") String id,
+						 @JsonProperty("batchNo") String batchNo) {//@formatter:on
 		super(id, batchNo, JobEvent.FINISH);
 	}
 	
