@@ -6,9 +6,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
-import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.model.ExecutionLog;
 import io.swagger.annotations.ApiModelProperty;
 import org.springframework.web.bind.annotation.*;
@@ -62,9 +60,9 @@ public class JobController {
     }
 
     @ApiOperation("跳过任务")
-    @PostMapping("/{id}/force-complete")
-    public ServiceResult<String> forceComplete(@PathVariable(name = "id") String id) {
-        jobService.forceFinish(id);
+    @PostMapping("/{id}/skip")
+    public ServiceResult<String> skip(@PathVariable(name = "id") String id) {
+        jobService.skip(id);
         return ServiceResult.success("success");
     }
 

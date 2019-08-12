@@ -80,6 +80,13 @@ public class JobHelper {
     public void failed(AbstractJob job) {
         checkRunning(job);
         modifyJobState(job, JobState.FAILED);
+        try {
+            if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
+                idcJobStore.releaseTrigger(job.asJob().getTask().getTriggerKey(), ReleaseInstruction.SET_ERROR);
+            }
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

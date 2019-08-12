@@ -83,6 +83,7 @@ public class TaskService {
             for (Job job : jobs) {
                 if (job.getState().equals(JobState.NONE) || job.getState().equals(JobState.RUNNING)) {
                     taskRuntimeVO.setState(TaskState.NORMAL);
+                    break;
                 }
             }
 

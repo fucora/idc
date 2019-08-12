@@ -17,6 +17,7 @@ import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.graph.NodeVO;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.RedoMessage;
+import com.iwellmass.idc.message.SkipMessage;
 import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
@@ -125,8 +126,8 @@ public class JobService {
         TaskEventPlugin.eventService(qs).send(message);
     }
 
-    public void forceFinish(String jobId) {
-        FinishMessage message = FinishMessage.newMessage(jobId);
+    public void skip(String jobId) {
+        SkipMessage message = SkipMessage.newMessage(jobId);
         message.setMessage("强制结束");
         TaskEventPlugin.eventService(qs).send(message);
     }
