@@ -143,4 +143,21 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
         }
     }
 
+    /**
+     * update trigger state from other state to suspend
+     *
+     * @param triggerKey
+     */
+    public void updateTriggerStateToSuspended(TriggerKey triggerKey) {
+        retryExecuteInNonManagedTXLock(LOCK_TRIGGER_ACCESS, (conn -> {
+            try {
+                getDelegate().updateTriggerState(conn, triggerKey, STATE_SUSPENDED);
+                signalSchedulingChangeOnTxCompletion(0L);
+            } catch (SQLException e) {
+                throw new JobPersistenceException(e.getMessage(), e);
+            }
+            return null;
+        }));
+    }
+
 }

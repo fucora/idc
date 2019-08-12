@@ -8,6 +8,7 @@ import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
+import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
@@ -15,10 +16,9 @@ import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
-import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -50,6 +50,10 @@ public class JobHelper {
     JobRepository jobRepository;
     @Inject
     NodeJobRepository nodeJobRepository;
+    @Inject
+    IDCJobstoreCMT idcJobstoreCMT;
+    @Inject
+    JobService jobService;
 
     //==============================================  processor call
 
@@ -82,6 +86,7 @@ public class JobHelper {
      * redo job:adapt different strategy with the kind of job ,the kind of absJob contain nodeJob and job
      * when job is nodeJob: clear the nodeJob and generate a new nodeJob instance,the new nodeJob instance contain new jobId,but the containnerId must use oldJod's containnerId
      * when job is task's instance,job : the jobId can't be generated then clear all subJobs of the job and recreate all job's subJobs
+     *
      * @param job
      */
     public void redo(AbstractJob job) {
@@ -89,12 +94,25 @@ public class JobHelper {
             throw new AppException("该job以完成");
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
-            executeJob((Job) job);
+            // clear all sunbJobs and job
+            nodeJobRepository.deleteAll(job.getSubJobs());
+            jobRepository.delete(job.asJob());
+            // recover trigger state
+            try {
+                if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
+                    idcJobstoreCMT.updateTriggerStateToSuspended(job.asJob().getTask().getTriggerKey());
+                }
+            } catch (SchedulerException e) {
+                e.printStackTrace();
+            }
+            // recreate job
+            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName());
+            executeJob(jobRepository.findById(job.getId()).get());
         } else {
             // create new nodeJob instance
-            NodeJob newNodeJob = new NodeJob(job.toNodeJob().getContainer(), job.toNodeJob().getNodeTask());
+            NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
             // clear
-            nodeJobRepository.delete(job.toNodeJob());
+            nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
             executeNodeJob(newNodeJob);
         }
@@ -164,7 +182,7 @@ public class JobHelper {
 
     private void runNextJob(Job job, String startNode) {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
-        Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
+        Workflow workflow = workflowRepository.findById(task.getWorkflowId()).orElseThrow(() -> new AppException("未找到指定工作流"));
         // 找到立即节点
         Set<String> successors = workflow.successors(startNode);
         Iterator<NodeJob> iterator = job.getSubJobs().stream()
@@ -214,6 +232,12 @@ public class JobHelper {
 
     private void modifyJobState(AbstractJob job, JobState state) {
         job.setState(state);
+        if (job.getState().equals(JobState.RUNNING)) {
+            job.setStarttime(LocalDateTime.now());
+            job.setUpdatetime(null);
+        } else {
+            job.setUpdatetime(LocalDateTime.now());
+        }
         allJobRepository.save(job);
     }
 }

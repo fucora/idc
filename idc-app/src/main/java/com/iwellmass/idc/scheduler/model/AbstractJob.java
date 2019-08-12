@@ -92,7 +92,7 @@ public abstract class AbstractJob {
 		}
 	}
 
-	public Job toJob() {
+	public Job asJob() {
 		if (this instanceof Job) {
 			return (Job)this;
 		} else {
@@ -100,7 +100,7 @@ public abstract class AbstractJob {
 		}
 	}
 
-	public NodeJob toNodeJob() {
+	public NodeJob asNodeJob() {
 		if (this instanceof NodeJob) {
 			return (NodeJob)this;
 		} else {
