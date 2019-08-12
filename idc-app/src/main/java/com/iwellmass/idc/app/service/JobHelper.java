@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.service;
 
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.scheduler.ExecuteRequest;
 import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
@@ -10,6 +11,7 @@ import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
@@ -25,24 +27,32 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * @author nobita chen
+ * @email nobita0522@qq.com
+ * @date 2019/6/25 15:04
+ */
 @Component
 public class JobHelper {
 
     @Setter
     private Scheduler scheduler;
 
-    @Autowired
+    @Inject
     private IDCLogger idcLogger;
-    @Autowired
+    @Inject
     IDCJobStore idcJobStore;
-    @Autowired
+    @Inject
     AllJobRepository allJobRepository;
-    @Autowired
+    @Inject
     WorkflowRepository workflowRepository;
+    @Inject
+    JobRepository jobRepository;
+    @Inject
+    NodeJobRepository nodeJobRepository;
 
-    //==============================================  processor调用
+    //==============================================  processor call
 
-    // 启动
     public void start(AbstractJob job) {
         if (job.getState().isComplete()) {
             throw new JobException("任务已执行");
@@ -57,51 +67,60 @@ public class JobHelper {
         }
     }
 
-    // 重跑
-    public void renew(AbstractJob job) {
-        checkRunning(job);
-        job.setUpdatetime(LocalDateTime.now());
-    }
-
-    // 成功
     public void success(AbstractJob job) {
         checkRunning(job);
         modifyJobState(job, JobState.FINISHED);
         onJobFinished(job);
     }
 
-    // 失败
     public void failed(AbstractJob job) {
         checkRunning(job);
         modifyJobState(job, JobState.FAILED);
     }
 
-    // 重跑
+    /**
+     * redo job:adapt different strategy with the kind of job ,the kind of absJob contain nodeJob and job
+     * when job is nodeJob: clear the nodeJob and generate a new nodeJob instance,the new nodeJob instance contain new jobId,but the containnerId must use oldJod's containnerId
+     * when job is task's instance,job : the jobId can't be generated then clear all subJobs of the job and recreate all job's subJobs
+     * @param job
+     */
     public void redo(AbstractJob job) {
+        if (job.getState().equals(JobState.FINISHED)) {
+            throw new AppException("该job以完成");
+        }
         if (job.getTaskType() == TaskType.WORKFLOW) {
             executeJob((Job) job);
         } else {
-            executeNodeJob((NodeJob) job);
+            // create new nodeJob instance
+            NodeJob newNodeJob = new NodeJob(job.toNodeJob().getContainer(), job.toNodeJob().getNodeTask());
+            // clear
+            nodeJobRepository.delete(job.toNodeJob());
+            nodeJobRepository.save(newNodeJob);
+            executeNodeJob(newNodeJob);
         }
     }
 
-    // 取消
     public void cancle(AbstractJob job) {
         checkRunning(job);
 
     }
 
-    // 跳过
     public void skip(AbstractJob job) {
         checkRunning(job);
-        modifyJobState(job,JobState.SKIPPED);
+        modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
     }
 
-    //==============================================  内部调用
+    //==============================================  this class call
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
+            throw new JobException("任务已结束: " + job.getState());
+        }
+    }
+
+    private void checkNotRunning(AbstractJob job) {
+        if (!job.getState().isComplete()) {
             throw new JobException("任务已结束: " + job.getState());
         }
     }

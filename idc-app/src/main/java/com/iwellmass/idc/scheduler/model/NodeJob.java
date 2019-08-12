@@ -92,11 +92,12 @@ public class NodeJob extends AbstractJob {
 		this.nodeId = nodeTask.getId();
 		this.nodeTask = nodeTask;
 		this.workflowId = nodeTask.getPid();
+		this.state = JobState.NONE;
 	}
 
 	private static final String id(String container, String nodeId) {
 		// TODO hash 对齐
-		return container + "_" + nodeId;
+		return container + "_" + nodeId + "_" + System.currentTimeMillis();
 	}
 
 	@Override

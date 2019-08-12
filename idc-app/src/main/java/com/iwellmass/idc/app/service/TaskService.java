@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 
 import com.iwellmass.idc.model.CronType;
+import com.iwellmass.idc.scheduler.model.*;
+import com.iwellmass.idc.scheduler.repository.JobRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,9 +25,6 @@ import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.task.CronTaskVO;
 import com.iwellmass.idc.app.vo.task.ManualTaskVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
-import com.iwellmass.idc.scheduler.model.ScheduleType;
-import com.iwellmass.idc.scheduler.model.Task;
-import com.iwellmass.idc.scheduler.model.TaskID;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
@@ -33,6 +32,8 @@ public class TaskService {
 
     @Resource
     TaskRepository taskRepository;
+    @Resource
+    JobRepository jobRepository;
 
     public TaskVO getTask(String name) {
 
@@ -65,6 +66,8 @@ public class TaskService {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 vo.setWorkflowName(t.getWorkflow().getWorkflowName());
+                // twice validate task'state when complete ,the task is like to be running
+                twiceValidateState(t,vo);
                 return vo;
             });
         });
@@ -72,5 +75,17 @@ public class TaskService {
 
     public List<Assignee> getAllAssignee() {
         return taskRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
+    }
+
+    void twiceValidateState(Task task,TaskRuntimeVO taskRuntimeVO) {
+        if (task.getState().equals(TaskState.COMPLETE)) {
+            List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
+            for (Job job : jobs) {
+                if (job.getState().equals(JobState.NONE) || job.getState().equals(JobState.RUNNING)) {
+                    taskRuntimeVO.setState(TaskState.NORMAL);
+                }
+            }
+
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.graph.NodeVO;
 import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.message.RedoMessage;
 import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
@@ -119,8 +120,8 @@ public class JobService {
     }
 
     public void redo(String jobId) {
-        StartMessage message = StartMessage.newMessage(jobId);
-        message.setMessage("启动任务" + jobId);
+        RedoMessage message = RedoMessage.newMessage(jobId);
+        message.setMessage("重启任务" + jobId);
         TaskEventPlugin.eventService(qs).send(message);
     }
 

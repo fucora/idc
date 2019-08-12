@@ -8,21 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.CronType;
 import io.swagger.annotations.ApiModelProperty;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.quartz.TriggerKey;
 
 import com.iwellmass.common.param.ExecParam;
@@ -149,6 +143,11 @@ public class Task extends AbstractTask {
     @Convert(converter = LocalLongConverter.class)
     private LocalDateTime nextFireTime;
 
+    /**
+     * attention : the state field only stand for trigger's state can't mean task state.
+     * then state is complete the task's the last job may well is running.so we need to twice validate state in taskRunTimeVO
+     * see {@link TaskRuntimeVO#state}
+     */
     @Column(table = "QRTZ_TRIGGERS", name = "TRIGGER_STATE", insertable = false, updatable = false)
     @Convert(converter = TaskStateConverter.class)
     private TaskState state;

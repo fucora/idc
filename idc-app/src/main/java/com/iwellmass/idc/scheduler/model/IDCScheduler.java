@@ -115,7 +115,7 @@ public class IDCScheduler {
             throw new AppException(e);
         }
 //        taskRepository.delete(task);    // 取消调度时不删除task信息
-        task.setState(TaskState.CANCEL);
+//        task.setState(TaskState.CANCEL);   don't need
         taskRepository.save(task);
 
     }

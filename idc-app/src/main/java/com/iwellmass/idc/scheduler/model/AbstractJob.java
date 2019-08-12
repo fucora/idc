@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
@@ -88,6 +89,22 @@ public abstract class AbstractJob {
 				.map(node -> new
 						NodeJob(id, node))
 				.collect(Collectors.toList());
+		}
+	}
+
+	public Job toJob() {
+		if (this instanceof Job) {
+			return (Job)this;
+		} else {
+			throw new AppException("this job:" + this.getClass() + " isn't job");
+		}
+	}
+
+	public NodeJob toNodeJob() {
+		if (this instanceof NodeJob) {
+			return (NodeJob)this;
+		} else {
+			throw new AppException("this job:" + this.getClass() + " isn't NodeJob");
 		}
 	}
 
