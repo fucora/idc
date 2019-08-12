@@ -183,6 +183,7 @@ public class JobHelper {
     private void runNextJob(Job job, String startNode) {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         Workflow workflow = workflowRepository.findById(task.getWorkflowId()).orElseThrow(() -> new AppException("未找到指定工作流"));
+        task.setWorkflow(workflow);
         // 找到立即节点
         Set<String> successors = workflow.successors(startNode);
         Iterator<NodeJob> iterator = job.getSubJobs().stream()

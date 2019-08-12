@@ -71,20 +71,20 @@ public class TaskController {
     }
 
     @ApiOperation("取消调度")
-    @PostMapping(path = "/{name}/unschedule")
+    @GetMapping(path = "/{name}/unschedule")
     public ServiceResult<String> unschedule(@PathVariable("name") String name) {
         idcs.unschedule(name);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
-    @PostMapping(value = "/{name}/pause")
+    @GetMapping(value = "/{name}/pause")
     @ApiOperation("暂停调度")
     public ServiceResult<String> pause(@PathVariable("name") String name) {
         idcs.pause(name);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
-    @PostMapping(value = "/{name}/resume")
+    @GetMapping(value = "/{name}/resume")
     @ApiOperation("恢复调度")
     public ServiceResult<String> resume(@PathVariable("name") String name) {
         idcs.resume(name);

@@ -61,7 +61,7 @@ public class JobController {
         return ServiceResult.success("success");
     }
 
-    @ApiOperation("强制结束任务")
+    @ApiOperation("跳过任务")
     @PostMapping("/{id}/force-complete")
     public ServiceResult<String> forceComplete(@PathVariable(name = "id") String id) {
         jobService.forceFinish(id);
