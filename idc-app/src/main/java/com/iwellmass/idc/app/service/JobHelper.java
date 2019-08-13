@@ -125,6 +125,7 @@ public class JobHelper {
         }
     }
 
+    // wait for apply
     public void cancle(AbstractJob job) {
         checkRunning(job);
 
@@ -134,7 +135,7 @@ public class JobHelper {
      * @param job
      */
     public void skip(AbstractJob job) {
-        checkRunning(job);
+        checkSuccess(job);
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // modify state of all subJobs of the job to skip
             job.getSubJobs().forEach(subJob -> {
@@ -152,6 +153,12 @@ public class JobHelper {
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
             throw new JobException("job:" + job.getId() +  "已结束,状态为: " + job.getState());
+        }
+    }
+
+    private void checkSuccess(AbstractJob job) {
+        if (job.getState().isSuccess()) {
+            throw new JobException("job:" + job.getId() +  "已成功或跳过,状态为: " + job.getState());
         }
     }
 
@@ -177,7 +184,7 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob job) {
         NodeTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
-        if (job.getNodeId().equals(NodeTask.END)) {
+        if (job.getNodeId().equals(NodeTask.END) && !jobRepository.findById(job.getContainer()).get().getState().isComplete()) {
             idcLogger.log(job.getId(), "执行task end,container={}", job.getContainer());
             FinishMessage message = FinishMessage.newMessage(job.getContainer());
             message.setMessage("执行结束");

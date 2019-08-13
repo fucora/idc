@@ -20,7 +20,7 @@ public enum JobState {
 	@ApiModelProperty("失败")
 	FAILED,
 	@ApiModelProperty("取消")
-	CANCLED;
+	CANCEL;
 	
 	public boolean isComplete() {
 		return isSuccess() || isFailure();
@@ -33,7 +33,7 @@ public enum JobState {
 	
 	// 任务有错误
 	public boolean isFailure() {
-		return this == FAILED || this == JobState.CANCLED;
+		return this == FAILED || this == JobState.CANCEL;
 	}
 
 	public String desc() {

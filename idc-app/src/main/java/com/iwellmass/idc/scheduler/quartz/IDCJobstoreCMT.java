@@ -106,8 +106,14 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
     }
 
     @Override
-    public void resumeTrigger(Connection conn, TriggerKey key) throws JobPersistenceException {
-        super.resumeTrigger(conn, key);
+    public void resumeTrigger(Connection conn, TriggerKey triggerKey) throws JobPersistenceException {
+        super.resumeTrigger(conn, triggerKey);
+        // LOCKED_PAUSE -> LOCKED
+        try {
+            getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_SUSPENDED,STATE_PAUSED_SUSPENDED);
+        } catch (SQLException e) {
+            throw new JobPersistenceException(e.getMessage(), e);
+        }
     }
 
 

@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 /**
- * 跳过消息
+ * @author nobita
+ * @email nobita0522@qq.com
+ * @date 2019/8/13 14:08
+ * @description 跳过消息
  */
 public class SkipMessage extends JobMessage {
 

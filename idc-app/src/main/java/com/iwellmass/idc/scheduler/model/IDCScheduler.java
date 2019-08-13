@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.service.TaskService;
+import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
@@ -39,6 +41,8 @@ public class IDCScheduler {
     JobRepository jobRepository;
     @Resource
     NodeJobRepository nodeJobRepository;
+    @Resource
+    TaskService taskService;
 
     @Resource
     Scheduler qs;
@@ -126,9 +130,18 @@ public class IDCScheduler {
 
     @Transactional
     public void pause(String name) {
-        Task job = getTask(name);
+        Task task = getTask(name);
+        TaskRuntimeVO vo = new TaskRuntimeVO();
+        BeanUtils.copyProperties(task, vo);
+        taskService.twiceValidateState(task, vo);
+        if (!vo.getState().isRunning()) {
+            throw new AppException("该计划:" + task.getTaskName() + "未运行,状态为:" + vo.getState().name());
+        }
         try {
-            qs.pauseTrigger(job.getTriggerKey());
+            LOGGER.info("暂停任务:" + name);
+            if (qs.checkExists(task.getTriggerKey())) {
+                qs.pauseTrigger(task.getTriggerKey());
+            }
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
@@ -136,22 +149,27 @@ public class IDCScheduler {
 
     @Transactional
     public void resume(String name) {
-        Task job = getTask(name);
-        // TODO check
+        Task task = getTask(name);
+        TaskRuntimeVO vo = new TaskRuntimeVO();
+        BeanUtils.copyProperties(task, vo);
+        taskService.twiceValidateState(task, vo);
+        if (!vo.getState().isPaused()) {
+            throw new AppException("该计划:" + task.getTaskName() + "未处于暂停状态,状态为:" + vo.getState().name());
+        }
         try {
-            qs.resumeTrigger(job.getTriggerKey());
+            LOGGER.info("恢复任务:" + name);
+            qs.resumeTrigger(task.getTriggerKey());
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
     }
 
-
-    // todo 清除之前任务产生job,node_job实例，甚至log信息
     public void clear(Task task) {
         List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
         // node_job
         nodeJobRepository.deleteAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
         // job
         jobRepository.deleteAll(jobs);
+        // log ...
     }
 }

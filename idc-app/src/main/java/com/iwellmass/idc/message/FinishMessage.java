@@ -5,7 +5,10 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * 成功消息
+ * @author nobita
+ * @email nobita0522@qq.com
+ * @date 2019/8/13 14:08
+ * @description 成功消息
  */
 public class FinishMessage extends JobMessage {
 

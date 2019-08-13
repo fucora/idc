@@ -5,7 +5,10 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * 失败消息
+ * @author nobita
+ * @email nobita0522@qq.com
+ * @date 2019/8/13 14:08
+ * @description 失败消息
  */
 public class FailMessage extends JobMessage {
 

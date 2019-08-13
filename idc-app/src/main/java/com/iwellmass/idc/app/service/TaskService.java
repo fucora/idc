@@ -1,6 +1,5 @@
 package com.iwellmass.idc.app.service;
 
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,7 +76,7 @@ public class TaskService {
     }
 
     // twice validate task'state when complete ,the task is like to be running or error
-    private void twiceValidateState(Task task, TaskRuntimeVO taskRuntimeVO) {
+    public void twiceValidateState(Task task, TaskRuntimeVO taskRuntimeVO) {
         if (task.getState().equals(TaskState.COMPLETE)) {
             List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
             if (jobs.size() == 0) {
@@ -86,7 +85,7 @@ public class TaskService {
             }
             for (Job job : jobs) {
                 if (job.getState().equals(JobState.NONE) || job.getState().equals(JobState.RUNNING)) {
-                    taskRuntimeVO.setState(TaskState.NORMAL);
+                    taskRuntimeVO.setState(TaskState.EXECUTING);
                     return;
                 }
                 if (job.getState().equals(JobState.FAILED)) {
