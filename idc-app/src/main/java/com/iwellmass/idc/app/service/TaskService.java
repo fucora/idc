@@ -66,7 +66,6 @@ public class TaskService {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 vo.setWorkflowName(t.getWorkflow().getWorkflowName());
-                // twice validate task'state when complete ,the task is like to be running
                 twiceValidateState(t,vo);
                 return vo;
             });
@@ -77,7 +76,8 @@ public class TaskService {
         return taskRepository.findAllAssignee().stream().map(Assignee::new).collect(Collectors.toList());
     }
 
-    void twiceValidateState(Task task,TaskRuntimeVO taskRuntimeVO) {
+    // twice validate task'state when complete ,the task is like to be running or error
+    private void twiceValidateState(Task task, TaskRuntimeVO taskRuntimeVO) {
         if (task.getState().equals(TaskState.COMPLETE)) {
             List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
             for (Job job : jobs) {
