@@ -97,7 +97,7 @@ public class JobHelper {
      * @param job
      */
     public void redo(AbstractJob job) {
-        if (job.getState().equals(JobState.FINISHED)) {
+        if (job.getState().isSuccess()) {
             throw new AppException("该job以完成:" + job.getId());
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
