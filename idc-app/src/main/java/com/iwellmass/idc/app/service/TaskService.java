@@ -85,8 +85,10 @@ public class TaskService {
                     taskRuntimeVO.setState(TaskState.NORMAL);
                     break;
                 }
+                if (job.getState().equals(JobState.FAILED)) {
+                    taskRuntimeVO.setState(TaskState.ERROR);
+                }
             }
-
         }
     }
 }
