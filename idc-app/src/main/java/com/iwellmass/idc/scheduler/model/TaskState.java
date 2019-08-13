@@ -9,7 +9,7 @@ public enum TaskState {
 
 	@ApiModelProperty("等待执行")
 	WAITING,
-	@ApiModelProperty("冻结")
+	@ApiModelProperty("暂停")
 	PAUSED,
 	@ApiModelProperty("准备执行")
 	ACQUIRED,
@@ -17,6 +17,8 @@ public enum TaskState {
 	BLOCKED,
 	@ApiModelProperty("扩展状态,阻断作用,实际是正在运行")
 	SUSPENDED,
+	@ApiModelProperty("暂停")
+	PAUSED_SUSPENDED,
 	@ApiModelProperty("执行异常")
 	ERROR,
 	@ApiModelProperty("未执行")

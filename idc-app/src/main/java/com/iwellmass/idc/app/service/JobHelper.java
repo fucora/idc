@@ -65,9 +65,9 @@ public class JobHelper {
             throw new JobException("任务不存在");
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
-            executeJob((Job) job);
+            executeJob(job.asJob());
         } else {
-            executeNodeJob((NodeJob) job);
+            executeNodeJob(job.asNodeJob());
         }
     }
 
@@ -98,7 +98,7 @@ public class JobHelper {
      */
     public void redo(AbstractJob job) {
         if (job.getState().equals(JobState.FINISHED)) {
-            throw new AppException("该job以完成");
+            throw new AppException("该job以完成:" + job.getId());
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // clear all sunbJobs and job
@@ -130,8 +130,19 @@ public class JobHelper {
 
     }
 
+    /**
+     * @param job
+     */
     public void skip(AbstractJob job) {
         checkRunning(job);
+        if (job.getTaskType() == TaskType.WORKFLOW) {
+            // modify state of all subJobs of the job to skip
+            job.getSubJobs().forEach(subJob -> {
+                if (!subJob.getNodeId().equalsIgnoreCase(NodeTask.START) && !subJob.getNodeId().equalsIgnoreCase(NodeTask.END) && !subJob.getState().isComplete()) {
+                    subJob.setState(JobState.SKIPPED);
+                }
+            });
+        }
         modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
     }
@@ -140,7 +151,7 @@ public class JobHelper {
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
-            throw new JobException("任务已结束: " + job.getState());
+            throw new JobException("job:" + job.getId() +  "已结束,状态为: " + job.getState());
         }
     }
 
@@ -152,9 +163,9 @@ public class JobHelper {
 
     private void startJob(AbstractJob job) {
         if (job.getTaskType() == TaskType.WORKFLOW) {
-            executeJob((Job) job);
+            executeJob(job.asJob());
         } else {
-            executeNodeJob((NodeJob) job);
+            executeNodeJob(job.asNodeJob());
         }
     }
 
@@ -220,7 +231,7 @@ public class JobHelper {
     private void onJobFinished(AbstractJob runningJob) {
         if (runningJob instanceof Job) {
             // Release trigger
-            Job job = (Job) runningJob;
+            Job job = runningJob.asJob();
             TriggerKey tk = job.getTask().getTriggerKey();
             if (job.getState().isComplete()) {
                 if (job.getState().isSuccess()) {
@@ -230,7 +241,7 @@ public class JobHelper {
                 }
             }
         } else {
-            NodeJob nodeJob = (NodeJob) runningJob;
+            NodeJob nodeJob = runningJob.asNodeJob();
             Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
             Job parent = (Job) allJobRepository.findById(nodeJob.getContainer()).get();
             parent.getTask().setWorkflow(workflow);

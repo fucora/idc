@@ -128,7 +128,7 @@ public class JobService {
 
     public void skip(String jobId) {
         SkipMessage message = SkipMessage.newMessage(jobId);
-        message.setMessage("强制结束");
+        message.setMessage("跳过任务 jobId:" + jobId);
         TaskEventPlugin.eventService(qs).send(message);
     }
 

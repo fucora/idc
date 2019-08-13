@@ -59,7 +59,7 @@ public class JobController {
         return ServiceResult.success("success");
     }
 
-    @ApiOperation("跳过任务")
+    @ApiOperation("跳过指定任务")
     @GetMapping("/{id}/skip")
     public ServiceResult<String> skip(@PathVariable(name = "id") String id) {
         jobService.skip(id);

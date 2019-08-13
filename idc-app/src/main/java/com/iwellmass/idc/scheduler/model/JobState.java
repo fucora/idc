@@ -1,32 +1,26 @@
 package com.iwellmass.idc.scheduler.model;
 
+import io.swagger.annotations.ApiModelProperty;
+
 // copy-of-YARN :) NEW, NEW_SAVING, SUBMITTED, ACCEPTED, RUNNING, FINISHED, FAILED, KILLED
 public enum JobState {
 	
-	// 未调度
+	@ApiModelProperty("未调度")
 	NONE,
-	
-	//等待派发
+	@ApiModelProperty("等待派发")
 	NEW,
-	
-	//已派发
+	@ApiModelProperty("已派发")
 	ACCEPTED,
-	
-	//运行中
+	@ApiModelProperty("运行中")
 	RUNNING,
-	
-	//成功
+	@ApiModelProperty("成功")
 	FINISHED,
-	
-	// 跳过
+	@ApiModelProperty("跳过")
 	SKIPPED,
-	
-	// 失败
+	@ApiModelProperty("失败")
 	FAILED,
-	
-	// 取消
+	@ApiModelProperty("取消")
 	CANCLED;
-	
 	
 	public boolean isComplete() {
 		return isSuccess() || isFailure();
