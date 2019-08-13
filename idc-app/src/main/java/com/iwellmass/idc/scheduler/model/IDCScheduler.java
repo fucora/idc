@@ -114,9 +114,13 @@ public class IDCScheduler {
         } catch (SchedulerException e) {
             throw new AppException(e);
         }
-//        taskRepository.delete(task);    // 取消调度时不删除task信息
-//        task.setState(TaskState.CANCEL);   don't need
-        taskRepository.save(task);
+//        taskRepository.delete(task);    // don't delete task
+        // delete all job and nodeJob
+        List<Job> jobs = jobRepository.findAllByTaskName(name);
+        List<NodeJob> nodeJobs = nodeJobRepository.findAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
+        nodeJobRepository.deleteAll(nodeJobs);
+        jobRepository.deleteAll(jobs);
+//        taskRepository.save(task);
 
     }
 

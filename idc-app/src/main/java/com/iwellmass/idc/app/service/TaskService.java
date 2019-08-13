@@ -80,13 +80,18 @@ public class TaskService {
     private void twiceValidateState(Task task, TaskRuntimeVO taskRuntimeVO) {
         if (task.getState().equals(TaskState.COMPLETE)) {
             List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
+            if (jobs.size() == 0) {
+                taskRuntimeVO.setState(TaskState.CANCEL);
+                return;
+            }
             for (Job job : jobs) {
                 if (job.getState().equals(JobState.NONE) || job.getState().equals(JobState.RUNNING)) {
                     taskRuntimeVO.setState(TaskState.NORMAL);
-                    break;
+                    return;
                 }
                 if (job.getState().equals(JobState.FAILED)) {
                     taskRuntimeVO.setState(TaskState.ERROR);
+                    return;
                 }
             }
         }
