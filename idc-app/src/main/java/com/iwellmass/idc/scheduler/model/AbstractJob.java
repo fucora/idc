@@ -33,27 +33,27 @@ import lombok.ToString;
 public abstract class AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(AbstractJob.class);
-	
+
 	/**
 	 * 全局唯一 ID
 	 */
 	@Id
 	String id;
-	
+
 	/**
 	 * 任务类型（Task）
 	 */
 	@Column(name = "task_type")
 	@Enumerated(EnumType.STRING)
 	TaskType taskType;
-	
+
 	/**
 	 * 开始时间
 	 */
 	@Column(name = "starttime")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	LocalDateTime starttime;
-	
+
 	/**
 	 * 最近更新时间
 	 */
@@ -67,14 +67,14 @@ public abstract class AbstractJob {
 	@Column(name = "state")
 	@Enumerated(EnumType.STRING)
 	JobState state;
-	
+
 	/**
 	 * 子实例（SubJob）
 	 */
 	@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
 	@JoinColumn(name = "container")
 	List<NodeJob> subJobs;
-	
+
 	public AbstractJob() {
 	}
 
@@ -151,7 +151,7 @@ public abstract class AbstractJob {
 //			throw new JobException("任务已结束: " + this.state)  ;
 //		}
 //	}
-	
+
 	@Transient
 	public abstract AbstractTask getTask();
 }

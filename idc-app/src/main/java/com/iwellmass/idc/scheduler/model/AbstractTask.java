@@ -33,7 +33,7 @@ public abstract class AbstractTask {
 	@Column(name = "task_type")
 	@Enumerated(EnumType.STRING)
 	private TaskType taskType;
-	
+
 	/**
 	 * 任务域
 	 */

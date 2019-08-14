@@ -1,5 +1,7 @@
 package com.iwellmass.idc.app.service;
 
+import com.iwellmass.idc.app.vo.execParam.ReferParam;
+
 /**
  * @author nobita chen
  * @email nobita0522@qq.com
@@ -8,7 +10,12 @@ package com.iwellmass.idc.app.service;
  */
 public class ExecParamHelper {
 
+    public static void parse() {
+        ReferParam referParam = new ReferParam();
 
+
+
+    }
 
 
 }
