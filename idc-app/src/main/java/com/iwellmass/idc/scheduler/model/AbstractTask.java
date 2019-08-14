@@ -23,6 +23,7 @@ public abstract class AbstractTask {
 	/**
 	 * 任务ID
 	 */
+	@Id
 	@Column(name = "workflow_id")
 	String workflowId;
 

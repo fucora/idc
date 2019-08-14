@@ -54,7 +54,7 @@ public class Workflow {
 
 	@Fetch(FetchMode.SELECT)
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
-	@JoinColumn(name = "pid",updatable = false)
+	@JoinColumn(name = "workflow_id",updatable = false)
 	private List<NodeTask> taskNodes;
 
 	/**
@@ -63,7 +63,7 @@ public class Workflow {
 
 	@Fetch(FetchMode.SELECT)
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
-	@JoinColumn(name = "pid",updatable = false)
+	@JoinColumn(name = "workflow_id",updatable = false)
 	private List<WorkflowEdge> edges;
 
 	public Set<String> successors(String node) {

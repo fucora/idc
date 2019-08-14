@@ -21,13 +21,7 @@ public class NodeTask extends AbstractTask {
 	
 	public static final String START = "START";
 	public static final String END = "END";
-
-	/**
-	 * 工作流 ID
-	 */
-	@Id
-	@Column(name = "pid")
-	private String pid;
+	public static final String CONTROL = "CONTROL";  // use to concurrent control
 
 	/**
 	 * 节点ID，本工作流内全局唯一

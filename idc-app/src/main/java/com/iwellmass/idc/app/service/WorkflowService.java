@@ -135,7 +135,7 @@ public class WorkflowService {
         // nodes
         List<NodeTask> nodes = nodeMap.values().stream().map(node -> {
             NodeTask tk = new NodeTask();
-            tk.setPid(id);
+            tk.setWorkflowId(id);
             tk.setId(node.getId());
             tk.setTaskName(node.getTaskName());
             tk.setType(node.getType());
@@ -145,14 +145,13 @@ public class WorkflowService {
             } else {
                 tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));
             }
-            tk.setTaskType(node.getTaskType());
             return tk;
         }).collect(Collectors.toList());
 
         // edges
         List<WorkflowEdge> edges = gvo.getEdges().stream().map(evo -> {
             WorkflowEdge we = new WorkflowEdge();
-            we.setPid(id);
+            we.setWorkflowId(id);
             we.setId(evo.getId());
             we.setSource(evo.getSource().getId());
             we.setTarget(evo.getTarget().getId());

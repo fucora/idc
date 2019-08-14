@@ -13,7 +13,7 @@ public class WfID implements Serializable{
 
 	private static final long serialVersionUID = 1300186826817591465L;
 
-	private String pid;
+	private String workflowId;
 	
 	private String id;
 

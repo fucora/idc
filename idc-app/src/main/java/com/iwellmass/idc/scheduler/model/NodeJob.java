@@ -56,7 +56,7 @@ public class NodeJob extends AbstractJob {
 	 * 关联的子任务
 	 */
 	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumns({ @JoinColumn(name = "workflow_id", referencedColumnName = "pid", insertable = false, updatable = false),
+	@JoinColumns({ @JoinColumn(name = "workflow_id", referencedColumnName = "workflow_id", insertable = false, updatable = false),
 			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
 	private NodeTask nodeTask;
 
@@ -91,7 +91,7 @@ public class NodeJob extends AbstractJob {
 		this.container = container;
 		this.nodeId = nodeTask.getId();
 		this.nodeTask = nodeTask;
-		this.workflowId = nodeTask.getPid();
+		this.workflowId = nodeTask.getWorkflowId();
 		this.state = JobState.NONE;
 	}
 

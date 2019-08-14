@@ -24,8 +24,8 @@ public class WorkflowEdge {
 	 * 工作流ID
 	 */
 	@Id
-	@Column(name = "pid")
-	private String pid;
+	@Column(name = "workflow_id")
+	private String workflowId;
 
 
 	/**

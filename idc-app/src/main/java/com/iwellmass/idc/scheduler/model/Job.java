@@ -113,7 +113,7 @@ public class Job extends AbstractJob {
 	 */
 	public void refresh() {
 		if (this.getTaskType() == TaskType.WORKFLOW) {
-			
+
 		}
 		// else ignore
 	}
