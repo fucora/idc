@@ -4,8 +4,8 @@ import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
-import com.iwellmass.idc.message.FinishMessage;
-import com.iwellmass.idc.message.StartMessage;
+import com.iwellmass.idc.message.*;
+import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import io.swagger.annotations.ApiOperation;
 import org.quartz.Scheduler;
@@ -53,7 +53,21 @@ public class IDCStatusService {
 	@PutMapping("/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
 		logger.info("fireCompleteEvent",event.getInstanceId());
-		FinishMessage message = FinishMessage.newMessage(event.getInstanceId());
+		JobInstanceStatus jobInstanceStatus =  event.getFinalStatus();
+		JobMessage message;
+		if(jobInstanceStatus==JobInstanceStatus.FINISHED)
+		{
+			message = FinishMessage.newMessage(event.getInstanceId());
+		}else if(jobInstanceStatus==JobInstanceStatus.FAILED)
+		{
+			message = FailMessage.newMessage(event.getInstanceId());
+		}
+		else if(jobInstanceStatus==JobInstanceStatus.CANCLED)
+		{
+			message = CancelMessage.newMessage(event.getInstanceId());
+		}else{
+			throw new RuntimeException("illegal message type:"+jobInstanceStatus+",instanceId:"+event.getInstanceId());
+		}
 		message.setMessage(event.getMessage());
 		TaskEventPlugin.eventService(qs).send(message);
 //		idcPlugin.getStatusService().fireCompleteEvent(event);
