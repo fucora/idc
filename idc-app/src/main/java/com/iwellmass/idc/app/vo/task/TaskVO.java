@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.iwellmass.common.param.ExecParam;
-import com.iwellmass.idc.scheduler.model.ScheduleType;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;

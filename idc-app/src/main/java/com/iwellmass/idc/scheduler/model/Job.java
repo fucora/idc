@@ -1,10 +1,7 @@
 package com.iwellmass.idc.scheduler.model;
 
 import java.time.LocalDateTime;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -18,7 +15,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.quartz.JobExecutionContext;
+import com.iwellmass.idc.model.ScheduleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,52 +115,7 @@ public class Job extends AbstractJob {
 		// else ignore
 	}
 
-//	@Override
-//	public void doStart(JobExecutionContext context) {
-//		//TODO 如果是workflow需要在此代码块中修改job的状态
-//		 runNextJob(NodeTask.START,context);
-//
-//	}
-
 	public boolean isComplete() {
 		return state.isComplete();
 	}
-
-//	public void runNextJob(String startNode, JobExecutionContext context) {
-//		AbstractTask task = Objects.requireNonNull(getTask(), "未找到任务");
-//		Workflow workflow = Objects.requireNonNull(task.getWorkflow(), "未找到工作流");
-//		// 找到立即节点
-//		Set<String> successors = workflow.successors(startNode);
-//		Iterator<NodeJob> iterator = getSubJobs().stream()
-//				.filter(sub -> successors.contains(sub.getNodeId()))
-//				.iterator();
-//
-//		// any success
-//		boolean anySuccess = false;
-//		while (iterator.hasNext()) {
-//			NodeJob next = iterator.next();
-//			try {
-//				Set<String> previous = 	workflow.getPrevious(next.getNodeId());
-//
-//				//如果存在未完成的任务 则不继续执行
-//				boolean unfinishJob  =  getSubJobs().stream()
-//						.filter(sub -> previous.contains(sub.getNodeId()))
-//						.anyMatch(sub->!sub.getState().isSuccess());
-//				if(unfinishJob){
-//					anySuccess = true;
-//					continue;
-//				}
-//				next.start(context);
-//				anySuccess = true;
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				anySuccess |= false;
-//				next.setState(JobState.FAILED);
-//			}
-//		}
-//		// 贪婪模式
-//		if (!anySuccess) {
-//			setState(JobState.FAILED);
-//		}
-//	}
 }

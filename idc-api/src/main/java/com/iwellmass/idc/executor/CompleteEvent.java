@@ -40,7 +40,7 @@ public class CompleteEvent implements IDCJobEvent {
 		return finalStatus;
 	}
 
-	public String getInstanceId() {
+	public String getNodeJobId() {
 		return instanceId;
 	}
 

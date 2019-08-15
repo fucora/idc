@@ -48,7 +48,7 @@ public class IDCClientAutoConfiguration {
 
 
 	/*
-	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /idc-job/{idc-job-content-type}/execution
+	 * 发现 IDCJob，将其注册为 rest 资源，url 为 /idc-job/{idc-job-content-contentType}/execution
 	 * */
 	@Bean
 	public IDCJobHandlerMapping idcJobHandlerMapping(List<IDCJob> idcJobs, AutowireCapableBeanFactory autowire) {

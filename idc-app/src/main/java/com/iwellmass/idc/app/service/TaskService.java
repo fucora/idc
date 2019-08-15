@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 
 import com.iwellmass.idc.model.CronType;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import org.springframework.beans.BeanUtils;

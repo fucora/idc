@@ -1,10 +1,11 @@
 package com.iwellmass.idc.executor;
 
+import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.JobEnv;
 import com.iwellmass.idc.model.JobInstanceStatus;
 
 public interface IDCJobContext {
-    JobEnv getJobEnv();
+    ExecuteRequest getExecuteRequest();
 
     void complete(CompleteEvent event);
 

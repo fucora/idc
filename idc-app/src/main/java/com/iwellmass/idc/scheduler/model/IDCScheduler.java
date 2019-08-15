@@ -7,11 +7,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
-import javax.inject.Inject;
 
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
-import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import org.quartz.*;

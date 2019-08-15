@@ -1,22 +1,15 @@
 package com.iwellmass.idc.scheduler.model;
 import java.time.LocalDateTime;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
-import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.iwellmass.idc.app.scheduler.ExecuteRequest;
-import com.iwellmass.idc.scheduler.IDCJobExecutors;
 
 import lombok.Getter;
 import lombok.Setter;

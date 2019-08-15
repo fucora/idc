@@ -21,6 +21,6 @@ public class NodeVO {
 	
 	private String domain;
 
-	private String type;
+	private String contentType;
 	
 }

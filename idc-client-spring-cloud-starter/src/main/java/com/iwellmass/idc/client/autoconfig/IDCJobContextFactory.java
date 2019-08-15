@@ -1,5 +1,6 @@
 package com.iwellmass.idc.client.autoconfig;
 
+import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.executor.*;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import org.slf4j.Logger;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Component;
 import com.iwellmass.idc.JobEnv;
 
 import java.util.Objects;
-
-import static java.awt.MediaTracker.COMPLETE;
 
 @Component
 public class IDCJobContextFactory {
@@ -37,12 +36,12 @@ public class IDCJobContextFactory {
 
 	private class ExecutionContextImpl implements IDCJobContext {
 
-		private JobEnv jobEnv;
+		private ExecuteRequest executeRequest;
 		private int state = RUNNING; // TODO use CAS
 
 		@Override
-		public JobEnv getJobEnv() {
-			return jobEnv;
+		public ExecuteRequest getExecuteRequest() {
+			return executeRequest;
 		}
 
 		@Override
@@ -50,12 +49,12 @@ public class IDCJobContextFactory {
 			Objects.requireNonNull(event, "event 不能为空");
 
 			if (state == COMPLETE) {
-				LOGGER.warn("[{}] job already complete {}", event.getInstanceId());
+				LOGGER.warn("[{}] job already complete {}", event.getNodeJobId());
 				return;
 			}
 
-			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getInstanceId(),
-					jobEnv.getJobName(),
+			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
+					executeRequest.getTaskName(),
 					event.getFinalStatus());
 
 			try {
@@ -68,22 +67,22 @@ public class IDCJobContextFactory {
 		}
 
 
+
 		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
 			if (status == JobInstanceStatus.FINISHED) {
-				return CompleteEvent.successEvent(jobEnv.getInstanceId());
+				return CompleteEvent.successEvent(executeRequest.getNodeJobId());
 			} else if (status == JobInstanceStatus.FAILED) {
-				return CompleteEvent.failureEvent(jobEnv.getInstanceId());
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
 			} else {
-				return CompleteEvent.failureEvent(jobEnv.getInstanceId()).setFinalStatus(status);
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
 			}
 		}
 
 		public ProgressEvent newProgressEvent() {
-			return ProgressEvent.newEvent(jobEnv.getInstanceId());
+			return ProgressEvent.newEvent(executeRequest.getNodeJobId());
 		}
 		public StartEvent newStartEvent() {
-			return StartEvent.newEvent(jobEnv.getInstanceId());
-		}
-	}
+			return StartEvent.newEvent(executeRequest.getNodeJobId());
+		}	}
 
 }

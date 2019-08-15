@@ -5,11 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 
-import com.iwellmass.idc.JobEnv;
+import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
-import com.iwellmass.idc.scheduler.model.Job;
-import com.iwellmass.idc.scheduler.model.NodeJob;
-import com.iwellmass.idc.scheduler.model.NodeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
@@ -50,21 +47,8 @@ public class FeignExecutor implements IDCJobExecutor {
 //		IDCJob idcJob = registryMap.computeIfAbsent(request.getDomain(),request.getDomain(),this::newFeignClient);
 
 		String _key = request.getDomain() + request.getContentType();
-		IDCJob idcJob = registryMap.computeIfAbsent(_key, (key) ->
-			 newFeignClient( request.getDomain(), request.getContentType())
-		);
-
-
-		idcJob.execute(request.getJobEnvAdapter());
-
-//		for (int i = 0; i < 10; i++) {
-//			try {
-//				Thread.sleep(1000);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//			LOGGER.info("Go >> {}", i);
-//		}
+		IDCJob idcJob = registryMap.computeIfAbsent(_key, (key) -> newFeignClient( request.getDomain(), request.getContentType()));
+		idcJob.execute(request);
 	}
 
 	private IDCJob newFeignClientold(String domain) {

@@ -1,12 +1,11 @@
 package com.iwellmass.idc.executor;
 
+import com.iwellmass.idc.ExecuteRequest;
 import org.slf4j.helpers.MessageFormatter;
-
-import com.iwellmass.idc.JobEnv;
 
 public interface IDCJobExecutorService {
 
-	void execute(JobEnv context);
+	void execute(ExecuteRequest executeRequest);
 
 	static String toURI(String contentType) {
 		return MessageFormatter.format("/idc-job/{}", contentType).getMessage();

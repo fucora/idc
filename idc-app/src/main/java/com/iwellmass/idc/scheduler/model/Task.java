@@ -1,9 +1,7 @@
 package com.iwellmass.idc.scheduler.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,10 +11,7 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
-import com.iwellmass.idc.model.CronType;
-import io.swagger.annotations.ApiModelProperty;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import com.iwellmass.idc.model.ScheduleType;
 import org.quartz.TriggerKey;
 
 import com.iwellmass.common.param.ExecParam;
@@ -51,12 +46,6 @@ public class Task extends AbstractTask {
     @Id
     @Column(name = "task_group")
     private String taskGroup = GROUP_PRIMARY;
-
-    /**
-     * 业务类型
-     */
-    @Column(name = "content_type")
-    private String contentType;
 
     /**
      * 责任人

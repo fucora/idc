@@ -4,6 +4,7 @@ import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
+import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.*;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
@@ -34,8 +35,8 @@ public class IDCStatusService {
 	@ApiOperation("任务开始")
 	@PutMapping("/start")
 	public void fireStartEvent(@RequestBody StartEvent event) {
-		logger.info("fireStartEvent",event.getInstanceId());
-//		taskEventPlugin.send(StartMessage.newMessage(String.valueOf(event.getInstanceId())));
+		logger.info("fireStartEvent",event.getNodeJobId());
+//		taskEventPlugin.send(StartMessage.newMessage(String.valueOf(event.getNodeJobId())));
 
 //		StartMessage message = StartMessage.newMessage(jobId);
 //		message.setMessage("启动任务");
@@ -52,19 +53,19 @@ public class IDCStatusService {
 
 	@PutMapping("/complete")
 	public void fireCompleteEvent(@RequestBody CompleteEvent event) {
-		logger.info("fireCompleteEvent",event.getInstanceId());
+		logger.info("fireCompleteEvent",event.getNodeJobId());
 		JobInstanceStatus jobInstanceStatus =  event.getFinalStatus();
 		JobMessage message;
 		if(jobInstanceStatus==JobInstanceStatus.FINISHED)
 		{
-			message = FinishMessage.newMessage(event.getInstanceId());
+			message = FinishMessage.newMessage(event.getNodeJobId());
 		}else if(jobInstanceStatus==JobInstanceStatus.FAILED)
 		{
-			message = FailMessage.newMessage(event.getInstanceId());
+			message = FailMessage.newMessage(event.getNodeJobId());
 		}
 		else if(jobInstanceStatus==JobInstanceStatus.CANCLED)
 		{
-			message = CancelMessage.newMessage(event.getInstanceId());
+			message = CancelMessage.newMessage(event.getNodeJobId());
 		}else{
 			throw new RuntimeException("illegal message type:"+jobInstanceStatus+",instanceId:"+event.getInstanceId());
 		}

@@ -1,4 +1,4 @@
-package com.iwellmass.idc.scheduler.model;
+package com.iwellmass.idc.model;
 
 /**
  * 调度类型

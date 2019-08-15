@@ -17,7 +17,7 @@ public class ProgressEvent implements IDCJobEvent {
 
 	private ProgressEvent() {}
 	
-	public String getInstanceId() {
+	public String getNodeJobId() {
 		return instanceId;
 	}
 

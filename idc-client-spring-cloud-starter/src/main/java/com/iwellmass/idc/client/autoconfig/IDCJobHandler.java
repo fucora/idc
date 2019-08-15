@@ -2,7 +2,7 @@ package com.iwellmass.idc.client.autoconfig;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.param.ExecParam;
-import com.iwellmass.idc.JobEnv;
+import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.executor.*;
 import com.iwellmass.idc.model.JobInstanceStatus;
 import org.slf4j.Logger;
@@ -47,13 +47,13 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	@ResponseBody
 	@PostMapping(path = "/execution")
-	public ServiceResult<String> doExecute(@RequestBody JobEnvImpl jobEnv) {
-		LOGGER.info("[{}] job '{}' accepted, taskId: {}", jobEnv.getInstanceId(),
-				jobEnv.getJobName(), jobEnv.getTaskId());
+	public ServiceResult<String> doExecute(@RequestBody ExecuteRequest executeRequest) {
+		LOGGER.info("[{}] job '{}' accepted, taskId: {}", executeRequest.getNodeJobId(),
+				executeRequest.getTaskName(), executeRequest.getTaskId());
 		
 		
 		Map<String, String> ps = null;
-		List<ExecParam> eps = jobEnv.getParameter();
+		List<ExecParam> eps = executeRequest.getParams();
 		if (eps != null && !eps.isEmpty()) {
 			ps = new HashMap<>();
 			for (ExecParam ep : eps) {
@@ -61,21 +61,21 @@ public class IDCJobHandler implements IDCJobExecutorService {
 			}
 		}
 		
-		LOGGER.info("[{}] parameter: {}", jobEnv.getInstanceId(), jobEnv.getJobName(), ps);
+		LOGGER.info("[{}] parameter: {}", executeRequest.getNodeJobId(), executeRequest.getTaskName(), ps);
 		// safe execute
-		execute(jobEnv);
+		execute(executeRequest);
 		return ServiceResult.success("任务已提交");
 	}
 	
-	public void execute(JobEnv instance) {
+	public void execute(ExecuteRequest executeRequest) {
 		
 		ExecutionContextImpl context = new ExecutionContextImpl();
-		context.jobEnv = instance;
+		context.executeRequest = executeRequest;
 		
 		CompletableFuture.runAsync(() -> job.execute(context), executor)
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
-				CompleteEvent event = CompleteEvent.failureEvent(context.jobEnv.getInstanceId())
+				CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId())
 					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
 					.setEndTime(LocalDateTime.now());
 				context.complete(event);
@@ -85,12 +85,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
 	private class ExecutionContextImpl implements IDCJobContext {
 
-		private JobEnv jobEnv;
+		private ExecuteRequest executeRequest;
 		private int state = RUNNING; // TODO use CAS
 		
 		@Override
-		public JobEnv getJobEnv() {
-			return jobEnv;
+		public ExecuteRequest getExecuteRequest() {
+			return executeRequest;
 		}
 
 		@Override
@@ -98,12 +98,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
 			Objects.requireNonNull(event, "event 不能为空");
 
 			if (state == COMPLETE) {
-				LOGGER.warn("[{}] job already complete {}", event.getInstanceId());
+				LOGGER.warn("[{}] job already complete {}", event.getNodeJobId());
 				return;
 			}
 			
-			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getInstanceId(), 
-					jobEnv.getJobName(),
+			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
+					executeRequest.getTaskName(),
 					event.getFinalStatus());
 			
 			try {
@@ -118,19 +118,19 @@ public class IDCJobHandler implements IDCJobExecutorService {
 		
 		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
 			if (status == JobInstanceStatus.FINISHED) {
-				return CompleteEvent.successEvent(jobEnv.getInstanceId());
+				return CompleteEvent.successEvent(executeRequest.getNodeJobId());
 			} else if (status == JobInstanceStatus.FAILED) {
-				return CompleteEvent.failureEvent(jobEnv.getInstanceId());
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
 			} else {
-				return CompleteEvent.failureEvent(jobEnv.getInstanceId()).setFinalStatus(status);
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
 			}
 		}
 		
 		public ProgressEvent newProgressEvent() {
-			return ProgressEvent.newEvent(jobEnv.getInstanceId());
+			return ProgressEvent.newEvent(executeRequest.getNodeJobId());
 		}
 		public StartEvent newStartEvent() {
-			return StartEvent.newEvent(jobEnv.getInstanceId());
+			return StartEvent.newEvent(executeRequest.getNodeJobId());
 		}
 	}
 }

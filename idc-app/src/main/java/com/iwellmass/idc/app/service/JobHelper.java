@@ -1,9 +1,9 @@
 package com.iwellmass.idc.app.service;
 
+import com.google.common.collect.Lists;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
-import com.iwellmass.idc.app.scheduler.ExecuteRequest;
-import com.iwellmass.idc.app.scheduler.JobEnvAdapter;
+import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
@@ -54,6 +54,8 @@ public class JobHelper {
     IDCJobstoreCMT idcJobstoreCMT;
     @Inject
     JobService jobService;
+    @Inject
+    ExecParamHelper execParamHelper;
 
     //==============================================  processor call
 
@@ -182,26 +184,19 @@ public class JobHelper {
         runNextJob(job, NodeTask.START);
     }
 
-    private synchronized void executeNodeJob(NodeJob job) {
-        NodeTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
-        if (job.getNodeId().equals(NodeTask.END) && !jobRepository.findById(job.getContainer()).get().getState().isComplete()) {
-            idcLogger.log(job.getId(), "执行task end,container={}", job.getContainer());
-            FinishMessage message = FinishMessage.newMessage(job.getContainer());
+    private synchronized void executeNodeJob(NodeJob nodeJob) {
+        NodeTask task = Objects.requireNonNull(nodeJob.getTask(), "未找到任务");
+        if (nodeJob.getNodeId().equals(NodeTask.END) && !jobRepository.findById(nodeJob.getContainer()).get().getState().isComplete()) {
+            idcLogger.log(nodeJob.getId(), "执行task end,container={}", nodeJob.getContainer());
+            FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
             return;
         }
-        if (job.getState().equals(JobState.NONE)) {
-            modifyJobState(job, JobState.RUNNING);
-            idcLogger.log(job.getId(), "执行task id={}, task = {},container={}", job.getId(), job.getTask().getTaskId(), job.getContainer());
-            ExecuteRequest request = new ExecuteRequest();
-            request.setDomain(task.getDomain());
-            request.setContentType(task.getType());
-            JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
-            jobEnvAdapter.setTaskId(task.getTaskId());
-            jobEnvAdapter.setInstanceId(job.getId());
-            request.setJobEnvAdapter(jobEnvAdapter);
-            IDCJobExecutors.getExecutor().execute(request);
+        if (nodeJob.getState().equals(JobState.NONE)) {
+            modifyJobState(nodeJob, JobState.ACCEPTED);
+            idcLogger.log(nodeJob.getId(), "执行task id={}, task = {},container={}", nodeJob.getId(), nodeJob.getTask().getTaskId(), nodeJob.getContainer());
+            IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, task));
         }
     }
 
@@ -266,4 +261,5 @@ public class JobHelper {
         }
         allJobRepository.save(job);
     }
+
 }

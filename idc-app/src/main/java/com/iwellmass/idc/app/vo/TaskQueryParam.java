@@ -3,7 +3,7 @@ package com.iwellmass.idc.app.vo;
 import com.iwellmass.common.criteria.CustomCriteria;
 import com.iwellmass.common.criteria.Equal;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.scheduler.model.ScheduleType;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.TaskType;
 
 import io.swagger.annotations.ApiModelProperty;

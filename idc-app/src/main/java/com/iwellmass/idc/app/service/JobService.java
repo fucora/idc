@@ -7,18 +7,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
-import javax.inject.Inject;
 
-import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
-import com.iwellmass.idc.app.vo.graph.NodeVO;
-import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.RedoMessage;
 import com.iwellmass.idc.message.SkipMessage;
-import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
 import org.quartz.Scheduler;
@@ -138,7 +133,7 @@ public class JobService {
             NodeJobVO nodeJobVO = new NodeJobVO();
             BeanUtils.copyProperties(item, nodeJobVO);
             nodeJobVO.setTaskName(item.getNodeTask().getTaskName());
-            nodeJobVO.setType(item.getNodeTask().getType());
+            nodeJobVO.setContentType(item.getNodeTask().getContentType());
             return nodeJobVO;
         }).collect(Collectors.toList());
         GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());

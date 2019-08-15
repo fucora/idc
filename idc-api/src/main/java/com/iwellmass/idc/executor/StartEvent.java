@@ -25,7 +25,7 @@ public class StartEvent implements IDCJobEvent {
 		return this;
 	}
 
-	public String getInstanceId() {
+	public String getNodeJobId() {
 		return instanceId;
 	}
 

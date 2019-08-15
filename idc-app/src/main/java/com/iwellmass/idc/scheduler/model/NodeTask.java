@@ -30,10 +30,13 @@ public class NodeTask extends AbstractTask {
 	@Column(name = "id")
 	private String id;
 
-	@Column(name = "type")
-	private String type;
-
 	@Column(name = "task_id")
 	private String taskId;
+
+	/**
+	 * 业务类型
+	 */
+	@Column(name = "content_type")
+	private String contentType;
 
 }

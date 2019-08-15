@@ -138,7 +138,7 @@ public class WorkflowService {
             tk.setWorkflowId(id);
             tk.setId(node.getId());
             tk.setTaskName(node.getTaskName());
-            tk.setType(node.getType());
+            tk.setContentType(node.getContentType());
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
             if (sysNodes.contains(node.getId())) {
                 tk.setDomain("idc");

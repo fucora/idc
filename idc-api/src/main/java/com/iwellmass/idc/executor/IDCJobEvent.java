@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public interface IDCJobEvent extends Serializable{
 
-	String getInstanceId();
+	String getNodeJobId();
 	
 	String getMessage();
 	
