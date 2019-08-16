@@ -51,6 +51,11 @@
 			</dependency>
 			<dependency>
 				<groupId>com.iwellmass</groupId>
+				<artifactId>data-factory-api</artifactId>
+				<version>${wac.common.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.iwellmass</groupId>
 				<artifactId>wac-auth</artifactId>
 				<version>${wac.common.version}</version>
 			</dependency>

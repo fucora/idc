@@ -55,7 +55,7 @@ public class Workflow {
 	@Fetch(FetchMode.SELECT)
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
 	@JoinColumn(name = "workflow_id",updatable = false)
-	private List<NodeTask> taskNodes;
+	private List<NodeTask> nodeTasks;
 
 	/**
 	 * 边关系

@@ -2,6 +2,7 @@ package com.iwellmass.idc.scheduler.model;
 
 import javax.persistence.*;
 
+import com.iwellmass.common.exception.AppException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -52,4 +53,20 @@ public abstract class AbstractTask {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "workflow_id", insertable = false, updatable = false)
 	private Workflow workflow;
+
+	public Task asTask() {
+		if (this instanceof Task) {
+			return (Task)this;
+		} else {
+			throw new AppException("该task的类型错误"  + this.getClass());
+		}
+	}
+
+	public NodeTask asNodeTask() {
+		if (this instanceof NodeTask) {
+			return (NodeTask)this;
+		} else {
+			throw new AppException("该task的类型错误"  + this.getClass());
+		}
+	}
 }

@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.vo.task;
 
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;

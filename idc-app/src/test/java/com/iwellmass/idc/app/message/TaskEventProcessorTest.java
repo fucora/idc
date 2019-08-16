@@ -67,7 +67,7 @@ public class TaskEventProcessorTest {
 
         // 模拟一个触发的任务
         String jobId = "001";
-        List<NodeTask> taskNodes = workflow.getTaskNodes();
+        List<NodeTask> taskNodes = workflow.getNodeTasks();
         mockJob(task, taskNodes, jobId);
 
         // 模拟发送消息

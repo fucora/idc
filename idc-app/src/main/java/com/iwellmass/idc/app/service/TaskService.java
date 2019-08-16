@@ -1,10 +1,17 @@
 package com.iwellmass.idc.app.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.iwellmass.datafactory.common.vo.TaskDetailVO;
+import com.iwellmass.idc.app.rpc.DFTaskService;
+import com.iwellmass.idc.app.vo.task.*;
 import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
@@ -22,9 +29,6 @@ import com.iwellmass.common.util.QueryUtils;
 import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
-import com.iwellmass.idc.app.vo.task.CronTaskVO;
-import com.iwellmass.idc.app.vo.task.ManualTaskVO;
-import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
@@ -34,6 +38,9 @@ public class TaskService {
     TaskRepository taskRepository;
     @Resource
     JobRepository jobRepository;
+
+    @Inject
+    DFTaskService dfTaskService;
 
     public TaskVO getTask(String name) {
 
@@ -96,4 +103,28 @@ public class TaskService {
             }
         }
     }
+
+    public List<MergeTaskParamVO> getParams(String taskName) {
+        List<NodeTask> nodeTasks = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未找到指定taskName:" + taskName + "任务")).getWorkflow().getNodeTasks();
+        List<TaskDetailVO> taskDetailVOS = dfTaskService.batchQueryTaskInfo(nodeTasks.stream()
+                .filter(nt -> !nt.getTaskId().equalsIgnoreCase("start") && !nt.getTaskId().equalsIgnoreCase("end"))
+                .map(nt -> Long.valueOf(nt.getTaskId()))
+                .collect(Collectors.toList()))
+                .getResult();
+        return buildMergeTaskParamVOS(taskDetailVOS.stream().map(TaskParamVO::new).collect(Collectors.toList()));
+    }
+
+    public List<MergeTaskParamVO> buildMergeTaskParamVOS(List<TaskParamVO> taskParamVOS) {
+        Map<String, MergeTaskParamVO> mergeTaskParamVOS = Maps.newHashMap();
+        taskParamVOS.forEach(t -> t.getParams().forEach(p -> {
+            if (mergeTaskParamVOS.keySet().stream().noneMatch(m -> m.equals(p.getName()))) {
+                mergeTaskParamVOS.put(p.getName(), new MergeTaskParamVO(t.getNodeTaskName(), p));
+            } else {
+                mergeTaskParamVOS.get(p.getName()).setMergedNodeTaskName(String.join(",", mergeTaskParamVOS.get(p.getName()).getMergedNodeTaskName(), t.getNodeTaskName()));
+            }
+        }));
+        return mergeTaskParamVOS.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+    }
+
+
 }

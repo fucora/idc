@@ -68,7 +68,7 @@ public class Job extends AbstractJob {
 	private String loadDate;
 	
 	/**
-	 * 运行时参数
+	 * 运行时参数(保存已被解析的参数值,供nodeJob使用)
 	 */
 	@Column(name = "param", columnDefinition = "TEXT")
 	@Convert(converter = ExecParamConverter.class)

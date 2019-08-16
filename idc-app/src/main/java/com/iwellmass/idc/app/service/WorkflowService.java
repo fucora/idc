@@ -69,7 +69,7 @@ public class WorkflowService {
 
         // 设置前端 VO
         GraphVO gvo = new GraphVO();
-        List<NodeTask> nodes = workflow.getTaskNodes();
+        List<NodeTask> nodes = workflow.getNodeTasks();
         if (nodes != null) {
             List<NodeVO> nvos = nodes.stream().map(n -> {
                 NodeVO nvo = new NodeVO();
@@ -161,9 +161,9 @@ public class WorkflowService {
         Workflow workflow = getModel(id);
         workflow.setUpdatetime(LocalDateTime.now());
         workflow.getEdges().clear();
-        workflow.getTaskNodes().clear();
+        workflow.getNodeTasks().clear();
         workflow.getEdges().addAll(edges);
-        workflow.getTaskNodes().addAll(nodes);
+        workflow.getNodeTasks().addAll(nodes);
         workflowRepository.save(workflow);
     }
 
@@ -225,12 +225,16 @@ public class WorkflowService {
 
 
     public List<WorkflowVO> queryAvailableWorkflow() {
-        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime")).stream().filter(workflow -> !Utils.isNullOrEmpty(workflow.getEdges())).map(model -> {
-            WorkflowVO vo = new WorkflowVO();
-            BeanUtils.copyProperties(model, vo);
-            vo.setCanModify(canModify(vo.getId()));
-            return vo;
-        }).collect(Collectors.toList());
+        return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime"))
+                .stream()
+                .filter(workflow -> !Utils.isNullOrEmpty(workflow.getEdges()))
+                .map(model -> {
+                    WorkflowVO vo = new WorkflowVO();
+                    BeanUtils.copyProperties(model, vo);
+                    vo.setCanModify(canModify(vo.getId()));
+                    return vo;
+                })
+                .collect(Collectors.toList());
     }
 
 

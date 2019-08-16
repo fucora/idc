@@ -1,6 +1,5 @@
 package com.iwellmass.idc.scheduler.model;
 
-import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.app.IDCTestUtils;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.service.JobService;
@@ -12,10 +11,8 @@ import com.iwellmass.idc.scheduler.quartz.IDCSchedulerFactory;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
-import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.quartz.*;
@@ -23,22 +20,12 @@ import org.quartz.simpl.RAMJobStore;
 import org.quartz.spi.JobStore;
 import org.springframework.beans.BeanUtils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.StringReader;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static com.iwellmass.idc.app.IDCTestUtils.createJob;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.newJob;
-import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
-import static org.quartz.TriggerBuilder.newTrigger;
 
 
 /**
@@ -120,7 +107,7 @@ public class IDCSchedulerTest {
             String taskName = invocation.getArgument(1); // taskName
             System.out.println(jobId + " : " + taskName);
 
-            Job job = createJob(task, workflow.getTaskNodes(), jobId);
+            Job job = createJob(task, workflow.getNodeTasks(), jobId);
 
             when(allJobRepository.findById(jobId)).thenReturn(Optional.of(job));
 

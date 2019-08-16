@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,6 +90,12 @@ public class TaskController {
     public ServiceResult<String> resume(@PathVariable("name") String name) {
         idcs.resume(name);
         return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
+    @ApiOperation("查询调度计划的运行参数")
+    @GetMapping(path = "{taskName}/params")
+    public ServiceResult<List<MergeTaskParamVO>> getParams(@PathVariable(name = "taskName") String taskName) {
+        return ServiceResult.success(taskService.getParams(taskName));
     }
 
 }

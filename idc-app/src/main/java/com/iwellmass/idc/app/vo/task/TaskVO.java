@@ -48,7 +48,7 @@ public abstract class TaskVO {
 	Boolean isRetry = true;
 	
 	@ApiModelProperty("运行参数")
-	List<ExecParam> parameter;
+	List<ExecParam> params;
 	
 	@ApiModelProperty("调度方式")
 	ScheduleType scheduleType;
