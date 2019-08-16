@@ -67,7 +67,7 @@ public class IDCStatusService {
 		{
 			message = CancelMessage.newMessage(event.getNodeJobId());
 		}else{
-			throw new RuntimeException("illegal message type:"+jobInstanceStatus+",instanceId:"+event.getInstanceId());
+			throw new RuntimeException("illegal message type:"+jobInstanceStatus+",instanceId:"+event.getNodeJobId());
 		}
 		message.setMessage(event.getMessage());
 		TaskEventPlugin.eventService(qs).send(message);
