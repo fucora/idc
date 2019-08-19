@@ -6,12 +6,16 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.executor.CompleteEvent;
 import com.iwellmass.idc.executor.ProgressEvent;
 import com.iwellmass.idc.executor.StartEvent;
+import com.iwellmass.idc.message.RedoMessage;
+import com.iwellmass.idc.message.SkipMessage;
 import com.iwellmass.idc.scheduler.model.ExecutionLog;
 import io.swagger.annotations.ApiModelProperty;
+import org.quartz.Scheduler;
 import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
@@ -27,6 +31,8 @@ public class JobController {
 	
 	@Resource
 	JobService jobService;
+    @Resource
+    Scheduler qs;
 
     @ApiOperation("获取 JOB 实例")
     @PostMapping("/runtime")
@@ -51,8 +57,10 @@ public class JobController {
 
     @ApiOperation("重跑Job，NodeJob任务")
     @GetMapping("/{id}/redo")
-    public ServiceResult<String> redo(@PathVariable(name = "id") String id) {
-        jobService.redo(id);
+    public ServiceResult<String> redo(@PathVariable(name = "id") String jobId) {
+        RedoMessage message = RedoMessage.newMessage(jobId);
+        message.setMessage("重启任务:" + jobId);
+        TaskEventPlugin.eventService(qs).send(message);
         return ServiceResult.success("success");
     }
 
@@ -64,8 +72,10 @@ public class JobController {
 
     @ApiOperation("跳过指定任务")
     @GetMapping("/{id}/skip")
-    public ServiceResult<String> skip(@PathVariable(name = "id") String id) {
-        jobService.skip(id);
+    public ServiceResult<String> skip(@PathVariable(name = "id") String jobId) {
+        SkipMessage message = SkipMessage.newMessage(jobId);
+        message.setMessage("跳过任务 jobId:" + jobId);
+        TaskEventPlugin.eventService(qs).send(message);
         return ServiceResult.success("success");
     }
 

@@ -26,27 +26,15 @@ import javax.inject.Inject;
 @RequestMapping("/job")
 public class IDCJobStatusController {
 
-    @Inject
-    private TaskEventPlugin taskEventPlugin;
-    @Inject
-    private JobService jobService;
-    @Inject
-    private TaskService taskService;
-    @Inject
-    private JobHelper jobHelper;
-
-
     @Resource
     Scheduler qs;
-
-    @Inject
-    private IDCJobStore idcJobStore;
 
     final Logger logger = LoggerFactory.getLogger(getClass());
 
     @ApiOperation("任务开始")
     @PutMapping("/start")
     public void fireStartEvent(@RequestBody StartEvent event) {
+
         logger.info("jobReady:", event.getNodeJobId());
         ReadyMessage message = ReadyMessage.newMessage(event.getNodeJobId());
         message.setMessage("任务准备执行");

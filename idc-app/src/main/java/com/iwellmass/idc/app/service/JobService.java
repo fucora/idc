@@ -60,9 +60,6 @@ public class JobService {
     WorkflowService workflowService;
 
     @Resource
-    Scheduler qs;
-
-    @Resource
     TaskService taskService;
 
 
@@ -114,18 +111,6 @@ public class JobService {
         Job job = new Job(id, task, execParams);
         return jobRepository.save(job);
 //		}
-    }
-
-    public void redo(String jobId) {
-        RedoMessage message = RedoMessage.newMessage(jobId);
-        message.setMessage("重启任务:" + jobId);
-        TaskEventPlugin.eventService(qs).send(message);
-    }
-
-    public void skip(String jobId) {
-        SkipMessage message = SkipMessage.newMessage(jobId);
-        message.setMessage("跳过任务 jobId:" + jobId);
-        TaskEventPlugin.eventService(qs).send(message);
     }
 
     public JobVO getJobDetail(String jobId) {
