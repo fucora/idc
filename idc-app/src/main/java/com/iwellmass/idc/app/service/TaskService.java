@@ -16,6 +16,7 @@ import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,6 +39,8 @@ public class TaskService {
     TaskRepository taskRepository;
     @Resource
     JobRepository jobRepository;
+    @Resource
+    WorkflowRepository workflowRepository;
 
     @Inject
     DFTaskService dfTaskService;
@@ -69,11 +72,11 @@ public class TaskService {
     public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {
         return QueryUtils.doJpaQuery(jqm, (p) -> {
             Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
-            return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(),p.getPageSize(),Sort.by(Sort.Direction.DESC,"createtime"))).map(t -> {
+            return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(), p.getPageSize(), Sort.by(Sort.Direction.DESC, "createtime"))).map(t -> {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 vo.setWorkflowName(t.getWorkflow().getWorkflowName());
-                twiceValidateState(t,vo);
+                twiceValidateState(t, vo);
                 return vo;
             });
         });
@@ -104,8 +107,8 @@ public class TaskService {
         }
     }
 
-    public List<MergeTaskParamVO> getParams(String taskName) {
-        List<NodeTask> nodeTasks = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未找到指定taskName:" + taskName + "任务")).getWorkflow().getNodeTasks();
+    public List<MergeTaskParamVO> getParams(String workflowId) {
+        List<NodeTask> nodeTasks = workflowRepository.findById(workflowId).orElseThrow(() -> new AppException("未发现指定工作流:" + workflowId)).getNodeTasks();
         List<TaskDetailVO> taskDetailVOS = dfTaskService.batchQueryTaskInfo(nodeTasks.stream()
                 .filter(nt -> !nt.getTaskId().equalsIgnoreCase("start") && !nt.getTaskId().equalsIgnoreCase("end"))
                 .map(nt -> Long.valueOf(nt.getTaskId()))

@@ -93,9 +93,9 @@ public class TaskController {
     }
 
     @ApiOperation("查询调度计划的运行参数")
-    @GetMapping(path = "{taskName}/params")
-    public ServiceResult<List<MergeTaskParamVO>> getParams(@PathVariable(name = "taskName") String taskName) {
-        return ServiceResult.success(taskService.getParams(taskName));
+    @GetMapping(path = "{workflowId}/params")
+    public ServiceResult<List<MergeTaskParamVO>> getParams(@PathVariable(name = "workflowId") String workflowId) {
+        return ServiceResult.success(taskService.getParams(workflowId));
     }
 
 }
