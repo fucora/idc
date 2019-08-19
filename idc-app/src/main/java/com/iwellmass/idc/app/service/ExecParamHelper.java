@@ -62,7 +62,7 @@ public class ExecParamHelper {
     public List<ExecParam> parse(Task task) {
         ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now());
         ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
-        List<ExecParam> execParams = Lists.newArrayList(task.getParams());
+        List<ExecParam> execParams = copyExecParam(task.getParams());
         parser.parse(execParams);
         return execParams;
     }
@@ -75,6 +75,20 @@ public class ExecParamHelper {
             }
         }
         return loadDate;
+    }
+
+    // there must adapt a new List<ExecParam> copied on task'params,otherwise the task's params will be modified to the value after firstly parse
+    public List<ExecParam> copyExecParam(List<ExecParam> source) {
+        List<ExecParam> result = Lists.newArrayList();
+        source.forEach(e -> {
+            ExecParam r = new ExecParam();
+            r.setName(e.getName());
+            r.setDefaultExpr(e.getDefaultExpr());
+            r.setParamType(e.getParamType());
+            r.setValue(e.getValue());
+            result.add(r);
+        });
+        return result;
     }
 
     public static void main(String[] args) {

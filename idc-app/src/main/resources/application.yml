@@ -95,12 +95,12 @@ eureka:
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
   client:
     serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
     healthcheck:
       enabled: true
     lease:
       duration: 5
-    register-with-eureka: false
+    register-with-eureka: true
 
 idc.scheduler.start-auto: true
 
@@ -121,7 +121,7 @@ eureka:
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
   client:
     serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
+      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
     healthcheck:
       enabled: true
     lease:
