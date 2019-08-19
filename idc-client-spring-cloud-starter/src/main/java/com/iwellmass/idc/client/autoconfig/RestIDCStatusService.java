@@ -15,10 +15,9 @@ public interface RestIDCStatusService extends IDCStatusService {
 	@PutMapping(path = "/job/complete", consumes = MediaType.APPLICATION_JSON_VALUE)
 	void fireCompleteEvent(@RequestBody CompleteEvent event);
 	
-	
 	@PutMapping(path = "/job/start", consumes = MediaType.APPLICATION_JSON_VALUE)
 	void fireStartEvent(@RequestBody StartEvent event);
 
     @PutMapping(path = "/job/progress", consumes = MediaType.APPLICATION_JSON_VALUE)
-	void fireProgressEvent(ProgressEvent setMessage);
+	void fireProgressEvent(@RequestBody ProgressEvent setMessage);
 }

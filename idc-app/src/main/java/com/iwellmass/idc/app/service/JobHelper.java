@@ -157,6 +157,14 @@ public class JobHelper {
         onJobFinished(job);
     }
 
+    public void ready(AbstractJob job) {
+
+    }
+
+    public void running(AbstractJob job) {
+
+    }
+
     //==============================================  this class call
 
     private void checkRunning(AbstractJob job) {
@@ -258,7 +266,7 @@ public class JobHelper {
         }
     }
 
-    private void modifyJobState(AbstractJob job, JobState state) {
+    public void modifyJobState(AbstractJob job, JobState state) {
         job.setState(state);
         if (job.getState().equals(JobState.RUNNING)) {
             job.setStarttime(LocalDateTime.now());

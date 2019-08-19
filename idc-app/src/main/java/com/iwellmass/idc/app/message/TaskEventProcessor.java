@@ -113,6 +113,12 @@ public class TaskEventProcessor implements org.quartz.Job {
                 case SKIP:
                     jobHelper.skip(runningJob);
                     break;
+                case READY:
+                    jobHelper.ready(runningJob);
+                    break;
+                case RUNNING:
+                    jobHelper.running(runningJob);
+                    break;
                 default: {
                     // bad message...
                     LOGGER.error("Cannot process {}, unsupported event {}", message.getId(), message.getEvent());

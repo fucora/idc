@@ -35,4 +35,14 @@ public enum JobEvent {
 	 */
 	SKIP,
 
+	// =====================  nodeJob 回调
+	/**
+	 * 准备真正运行
+	 */
+	READY,
+
+	/**
+	 * 正在运行
+	 */
+	RUNNING
 }
