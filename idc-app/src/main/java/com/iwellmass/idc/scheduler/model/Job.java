@@ -70,9 +70,9 @@ public class Job extends AbstractJob {
 	/**
 	 * 运行时参数(保存已被解析的参数值,供nodeJob使用)
 	 */
-	@Column(name = "param", columnDefinition = "TEXT")
+	@Column(name = "params", columnDefinition = "TEXT")
 	@Convert(converter = ExecParamConverter.class)
-	private List<ExecParam> param;
+	private List<ExecParam> params;
 
 	/**
 	 * 执行批次
@@ -94,7 +94,7 @@ public class Job extends AbstractJob {
 	public Job() {
 	}
 
-	public Job(String id, Task task) {
+	public Job(String id, Task task,List<ExecParam> execParams) {
 		super(id, task);
 		// 实例类型
 		this.taskName = task.getTaskName();
@@ -103,6 +103,7 @@ public class Job extends AbstractJob {
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
 		this.starttime = LocalDateTime.now();
 		this.shouldFireTime = task.getPrevFireTime();
+		this.params = execParams;
 	}
 
 	/**

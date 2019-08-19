@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
  * @description when param is expr, this class contain the params that user can refer
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReferParam {
 
-    @ApiModelProperty("批次时间")
+    @ApiModelProperty("当前运行批次时间")
     private LocalDateTime shouldFireTime;
 
     @ApiModelProperty("实际运行时间")

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.param.ParamParser;
+import com.iwellmass.common.param.ParamType;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.app.util.IDCUtils;
@@ -15,8 +16,10 @@ import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +32,8 @@ import java.util.List;
 @Component
 public class ExecParamHelper {
 
+    static final String LOAD_DATE = "loadDate";
+
     @Inject
     JobRepository jobRepository;
     @Inject
@@ -40,8 +45,8 @@ public class ExecParamHelper {
         ExecuteRequest request = new ExecuteRequest();
         // task running
         request.setTaskId(nodeTask.getTaskId());
-        request.setParams(Lists.newArrayList());
-        request.setLoadDate("");
+        request.setParams(job.getParams());
+        request.setLoadDate(getLoadDate(job.getParams()));
         // build req url
         request.setDomain(nodeTask.getDomain());
         request.setContentType(nodeTask.getContentType());
@@ -54,36 +59,35 @@ public class ExecParamHelper {
         return request;
     }
 
-    public static void parse(NodeJob nodeJob) {
-        ReferParam referParam = new ReferParam();
-//        referParam.setShouldFireTime(nodeJob.get);
+    public List<ExecParam> parse(Task task) {
+        ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now());
+        ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
+        List<ExecParam> execParams = Lists.newArrayList(task.getParams());
+        parser.parse(execParams);
+        return execParams;
+    }
+
+    public String getLoadDate(List<ExecParam> execParams) {
+        String loadDate = "";
+        for (ExecParam p : execParams) {
+            if (p.getName().equalsIgnoreCase(LOAD_DATE)) {
+                loadDate = p.getValue();
+            }
+        }
+        return loadDate;
+    }
+
+    public static void main(String[] args) {
+        // 计算参数
+        Task task = new Task();
+        task.setPrevFireTime(LocalDateTime.now());
+        String a = "#idc.shouldFireTime.plusMonths(-2).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+        task.setParams(Lists.newArrayList(new ExecParam("loadDate", a, ParamType.VARCHAR)));
+        new ExecParamHelper().parse(task).forEach(execParam -> {
+            System.out.println(execParam.getValue());
+        });
 
 
     }
-
-//    public static void main(String[] args) {
-//        // 计算参数
-//        List<ExecParam> params = job.getParameter();
-//        if (!Utils.isNullOrEmpty(params)) {
-//            IDCDefaultParam dp = new IDCDefaultParam();
-//            dp.setShouldFireTime(IDCUtils.toLocalDateTime(ins.getShouldFireTime()));
-//            ParamParser parser = new ParamParser(Collections.singletonMap("idc", dp));
-//            parser.parse(params);
-//            ins.setParameter(params);
-//            for (ExecParam param : params) {
-//                if ("loadDate".equals(param.getName())) {
-//                    ins.setLoadDate(param.getValue());
-//                }
-//            }
-//        }
-//        // loadDate
-//        if (ins.getLoadDate() == null) {
-//            ins.setLoadDate(ins.getScheduleType().format(IDCUtils.toLocalDateTime(shouldFireTime)));
-//        }
-//        // clear first
-//        idcDriverDelegate.deleteJobInstance(conn, jobKey, ins.getShouldFireTime());
-//        // insert it
-//        return idcDriverDelegate.insertJobInstance(conn, ins).getInstanceId() + "";
-//    }
 
 }

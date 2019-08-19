@@ -4,7 +4,9 @@ import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.service.ExecParamHelper;
 import com.iwellmass.idc.app.service.JobHelper;
+import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
@@ -66,6 +68,13 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
     @Resource
     JobHelper jobHelper;
 
+    @Setter
+    @Resource
+    ExecParamHelper execParamHelper;
+
+    @Setter
+    @Resource
+    TaskService taskService;
 
     @Override
     public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
@@ -77,6 +86,8 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
         scheduler.getContext().put(TaskEventProcessor.CXT_WORKFLOW_REPOSITORY, workflowRepository);
         scheduler.getContext().put(TaskEventProcessor.CXT_LOGGER, idcLogger);
         scheduler.getContext().put(TaskEventProcessor.CXT_JOB_HELPER, jobHelper);
+        scheduler.getContext().put(TaskEventProcessor.CXT_EXE_PARAM_HELPER, execParamHelper);
+        scheduler.getContext().put(TaskEventProcessor.CXT_TASK_SERVICE, taskService);
         this.scheduler = scheduler;
     }
 

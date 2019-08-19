@@ -56,7 +56,7 @@ public class Task extends AbstractTask {
     /**
      * 运行参数(含有表达式)
      */
-    @Column(name = "param", columnDefinition = "TEXT")
+    @Column(name = "params", columnDefinition = "TEXT")
     @Convert(converter = ExecParamConverter.class)
     private List<ExecParam> params;
 

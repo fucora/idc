@@ -30,6 +30,11 @@ str = #strParam.subString(0, 3)
 
 ## LocalDateTime
 
+## 批次时间上个月的最后一天
+````
+#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')
+````
+
 表达式|返回值|描述|示例
 --|--|--|--
 plusMonths(int d)|LocalDateTime|上或下 d 月|*#ldt.plusMonths(1)* 下月当前时间

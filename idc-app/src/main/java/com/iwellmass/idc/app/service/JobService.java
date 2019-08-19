@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
@@ -103,14 +104,14 @@ public class JobService {
     }
 
     @Transactional
-    public Job createJob(String id, String taskName) {
+    public Job createJob(String id, String taskName, List<ExecParam> execParams) {
         Task task = getTask(taskName);
         // 有可能前台强制取消了调度
         // 或者调度已过期、已被删除
 //		if (task.getState().isTerminated()) {
 //			LOGGER.error("调度已关闭：" + task.getState());
 //		} else {
-        Job job = new Job(id, task);
+        Job job = new Job(id, task, execParams);
         return jobRepository.save(job);
 //		}
     }

@@ -102,17 +102,17 @@ public class IDCSchedulerTest {
         when(taskRepository.findById(new TaskID(taskVO.getTaskName()))).thenReturn(Optional.of(task));
 
         // 模拟jobService的创建job的行为
-        doAnswer(invocation -> {
-            String jobId = invocation.getArgument(0); // jobId
-            String taskName = invocation.getArgument(1); // taskName
-            System.out.println(jobId + " : " + taskName);
-
-            Job job = createJob(task, workflow.getNodeTasks(), jobId);
-
-            when(allJobRepository.findById(jobId)).thenReturn(Optional.of(job));
-
-            return null;
-        }).when(jobService).createJob(anyString(), anyString());
+//        doAnswer(invocation -> {
+//            String jobId = invocation.getArgument(0); // jobId
+//            String taskName = invocation.getArgument(1); // taskName
+//            System.out.println(jobId + " : " + taskName);
+//
+//            Job job = createJob(task, workflow.getNodeTasks(), jobId);
+//
+//            when(allJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+//
+//            return null;
+//        }).when(jobService).createJob(anyString(), anyString());
 
     }
 

@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.service;
 
 import com.google.common.collect.Lists;
 import com.iwellmass.common.exception.AppException;
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.message.FinishMessage;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -100,9 +102,12 @@ public class JobHelper {
      */
     public void redo(AbstractJob job) {
         if (job.getState().isSuccess()) {
-            throw new AppException("该job以完成:" + job.getId());
+            throw new AppException("该job已完成:" + job.getId());
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
+            // cache running param
+            List<ExecParam> execParams = job.asJob().getParams();
+
             // clear all sunbJobs and job
             nodeJobRepository.deleteAll(job.getSubJobs());
             jobRepository.delete(job.asJob());
@@ -115,7 +120,9 @@ public class JobHelper {
                 e.printStackTrace();
             }
             // recreate job
-            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName());
+            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams);
+            // edit run param
+
             executeJob(jobRepository.findById(job.getId()).get());
         } else {
             // create new nodeJob instance
@@ -154,13 +161,13 @@ public class JobHelper {
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
-            throw new JobException("job:" + job.getId() +  "已结束,状态为: " + job.getState());
+            throw new JobException("job:" + job.getId() + "已结束,状态为: " + job.getState());
         }
     }
 
     private void checkSuccess(AbstractJob job) {
         if (job.getState().isSuccess()) {
-            throw new JobException("job:" + job.getId() +  "已成功或跳过,状态为: " + job.getState());
+            throw new JobException("job:" + job.getId() + "已成功或跳过,状态为: " + job.getState());
         }
     }
 

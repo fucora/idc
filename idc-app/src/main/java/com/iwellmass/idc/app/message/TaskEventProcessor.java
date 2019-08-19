@@ -36,6 +36,8 @@ public class TaskEventProcessor implements org.quartz.Job {
     static final String CXT_WORKFLOW_REPOSITORY = "workflowRepository";
     static final String CXT_LOGGER = "logger";
     static final String CXT_JOB_HELPER = "jobHelper";
+    static final String CXT_EXE_PARAM_HELPER = "execParamHelper";
+    static final String CXT_TASK_SERVICE = "taskService";
 
     @Setter
     JobMessage message;
