@@ -82,9 +82,9 @@ public class JobController {
 
 
     @ApiModelProperty("查询调度计划下的node实例")
-    @GetMapping("/{instanceId}/detail")
-    public ServiceResult<JobVO> getPlanInstanceDetail(@PathVariable(name = "instanceId") String instanceId) {
-        return ServiceResult.success(jobService.getPlanInstanceDetail(instanceId));
+    @GetMapping("/{jobId}/detail")
+    public ServiceResult<JobVO> getJobDetail(@PathVariable(name = "jobId") String jobId) {
+        return ServiceResult.success(jobService.getJobDetail(jobId));
     }
 
     @ApiOperation("任务日志(分页)")

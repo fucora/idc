@@ -72,6 +72,7 @@ public class ExecParamHelper {
         for (ExecParam p : execParams) {
             if (p.getName().equalsIgnoreCase(LOAD_DATE)) {
                 loadDate = p.getValue();
+                break;
             }
         }
         return loadDate;
@@ -100,7 +101,6 @@ public class ExecParamHelper {
         new ExecParamHelper().parse(task).forEach(execParam -> {
             System.out.println(execParam.getValue());
         });
-
 
     }
 

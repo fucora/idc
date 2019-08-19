@@ -128,8 +128,8 @@ public class JobService {
         TaskEventPlugin.eventService(qs).send(message);
     }
 
-    public JobVO getPlanInstanceDetail(String instanceId) {
-        Job job = jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定计划实例"));
+    public JobVO getJobDetail(String jobId) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现指定计划实例"));
         List<NodeJobVO> nodeJobVOS = job.getSubJobs().stream().map(item -> {
             NodeJobVO nodeJobVO = new NodeJobVO();
             BeanUtils.copyProperties(item, nodeJobVO);
@@ -137,8 +137,8 @@ public class JobService {
             nodeJobVO.setContentType(item.getNodeTask().getContentType());
             return nodeJobVO;
         }).collect(Collectors.toList());
-        GraphVO graphVO = workflowService.getGraph(jobRepository.findById(instanceId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
-        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()));
+        GraphVO graphVO = workflowService.getGraph(jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
+        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()),job.getParams());
         return jobVO;
     }
 
