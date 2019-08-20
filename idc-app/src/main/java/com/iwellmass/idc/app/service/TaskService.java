@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.datafactory.common.vo.TaskDetailVO;
 import com.iwellmass.idc.app.rpc.DFTaskService;
 import com.iwellmass.idc.app.vo.task.*;
@@ -66,6 +67,16 @@ public class TaskService {
         if (task.getEndDateTime() != null) {
             vo.setEndDate(task.getEndDateTime().toLocalDate());
         }
+        List<MergeTaskParamVO> mergeTaskParamVOS = getParams(task.getWorkflowId());
+        for (MergeTaskParamVO m : mergeTaskParamVOS) {
+            for (ExecParam p : task.getParams()) {
+                if (m.getExecParam().getName().equals(p.getName())) {
+                    m.getExecParam().setDefaultExpr(p.getDefaultExpr());
+                    break;
+                }
+            }
+        }
+        vo.setMergeTaskParamVOS(mergeTaskParamVOS);
         return vo;
     }
 

@@ -77,6 +77,9 @@ public abstract class TaskVO {
 	@ApiModelProperty("业务类型")
 	String contentType;
 
+	@ApiModelProperty("合并后的参数配置")
+	List<MergeTaskParamVO> mergeTaskParamVOS;
+
 	
 	public abstract Trigger buildTrigger(TriggerKey tk);
 

@@ -13,6 +13,7 @@ import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
+import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
 import org.slf4j.Logger;
@@ -121,7 +122,8 @@ public class JobService {
             return nodeJobVO;
         }).collect(Collectors.toList());
         GraphVO graphVO = workflowService.getGraph(jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
-        List<MergeTaskParamVO> mergeTaskParamVOS = taskService.getParams(job.getTask().getWorkflowId());
+        TaskVO taskVO = taskService.getTask(job.getTaskName());
+        List<MergeTaskParamVO> mergeTaskParamVOS = taskVO.getMergeTaskParamVOS();
         for (MergeTaskParamVO m : mergeTaskParamVOS) {
             for (ExecParam p : job.getParams()) {
                 if (m.getExecParam().getName().equals(p.getName())) {
@@ -130,7 +132,7 @@ public class JobService {
                 }
             }
         }
-        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()), mergeTaskParamVOS);
+        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS);
         return jobVO;
     }
 
