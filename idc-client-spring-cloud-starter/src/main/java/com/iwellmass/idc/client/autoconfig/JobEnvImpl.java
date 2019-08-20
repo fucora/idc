@@ -51,7 +51,7 @@ public class JobEnvImpl implements JobEnv {
 //		return instanceId;
 //	}
 //
-//	public void setInstanceId(Integer instanceId) {
+//	public void setNodeJobId(Integer instanceId) {
 //		this.instanceId = instanceId;
 //	}
 //

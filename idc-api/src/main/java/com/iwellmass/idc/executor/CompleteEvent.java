@@ -15,7 +15,7 @@ public class CompleteEvent implements IDCJobEvent {
 
 	private JobInstanceStatus finalStatus;
 
-	private String instanceId;
+	private String nodeJobId;
 
 	private String message;
 
@@ -50,7 +50,7 @@ public class CompleteEvent implements IDCJobEvent {
 	}
 
 	public String getNodeJobId() {
-		return instanceId;
+		return nodeJobId;
 	}
 
 	public String getMessage() {
@@ -66,18 +66,18 @@ public class CompleteEvent implements IDCJobEvent {
 		return setMessage(arrayFormat(message, args).getMessage());
 	}
 
-	public static CompleteEvent successEvent(String instanceId) {
+	public static CompleteEvent successEvent(String nodeJobId) {
 		CompleteEvent event = new CompleteEvent();
-		event.instanceId = instanceId;
+		event.nodeJobId = nodeJobId;
 		event.finalStatus = JobInstanceStatus.FINISHED;
 		event.endTime = LocalDateTime.now();
 		event.setMessage("执行成功");
 		return event;
 	}
 
-	public static CompleteEvent failureEvent(String instanceId) {
+	public static CompleteEvent failureEvent(String nodeJobId) {
 		CompleteEvent event = new CompleteEvent();
-		event.instanceId = instanceId;
+		event.nodeJobId = nodeJobId;
 		event.finalStatus = JobInstanceStatus.FAILED;
 		event.endTime = LocalDateTime.now();
 		event.setMessage("执行失败");
@@ -86,7 +86,7 @@ public class CompleteEvent implements IDCJobEvent {
 
 	@Override
 	public String toString() {
-		return "CompleteEvent [endTime=" + endTime + ", finalStatus=" + finalStatus + ", instanceId=" + instanceId
+		return "CompleteEvent [endTime=" + endTime + ", finalStatus=" + finalStatus + ", nodeJobId=" + nodeJobId
 				+ ", message=" + message + "]";
 	}
 }

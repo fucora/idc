@@ -20,6 +20,8 @@ import lombok.ToString;
         @Type(name = "REDO", value = RedoMessage.class),
         @Type(name = "CANCEL", value = CancelMessage.class),
         @Type(name = "SKIP", value = SkipMessage.class),
+        @Type(name = "READY", value = ReadyMessage.class),
+        @Type(name = "RUNNING", value = RunningMessage.class),
 })
 @Getter
 @Setter

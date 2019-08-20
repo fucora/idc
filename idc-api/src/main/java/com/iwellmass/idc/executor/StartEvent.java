@@ -11,7 +11,7 @@ public class StartEvent implements IDCJobEvent {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime startTime;
 	
-	private String instanceId;
+	private String nodeJobId;
 	private String message;
 	
 	private StartEvent() {}
@@ -26,11 +26,11 @@ public class StartEvent implements IDCJobEvent {
 	}
 
 	public String getNodeJobId() {
-		return instanceId;
+		return nodeJobId;
 	}
 
-	public StartEvent setInstanceId(String instanceId) {
-		this.instanceId = instanceId;
+	public StartEvent setNodeJobId(String nodeJobId) {
+		this.nodeJobId = nodeJobId;
 		return this;
 	}
 
@@ -44,9 +44,9 @@ public class StartEvent implements IDCJobEvent {
 	}
 
 	
-	public static StartEvent newEvent(String instanceId) {
+	public static StartEvent newEvent(String nodeJobId) {
 		StartEvent event = new StartEvent();
-		event.setInstanceId(instanceId);
+		event.setNodeJobId(nodeJobId);
 		event.startTime = LocalDateTime.now();
 		return event;
 	}

@@ -72,7 +72,7 @@ public class NodeJob extends AbstractJob {
 //		request.setContentType(task.getContentType());
 //		JobEnvAdapter jobEnvAdapter = new JobEnvAdapter();
 //		jobEnvAdapter.setTaskId(task.getTaskId());
-//		jobEnvAdapter.setInstanceId(id);
+//		jobEnvAdapter.setNodeJobId(id);
 //		request.setJobEnvAdapter(jobEnvAdapter);
 //		IDCJobExecutors.getExecutor().execute(request);
 //	}

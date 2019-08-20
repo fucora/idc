@@ -10,7 +10,7 @@ public class ProgressEvent implements IDCJobEvent {
 
 	private static final long serialVersionUID = 8419433451011829906L;
 
-	private String instanceId;
+	private String nodeJobId;
 	private String message;
 	private JobInstanceStatus status;
 	private LocalDateTime time;
@@ -18,11 +18,11 @@ public class ProgressEvent implements IDCJobEvent {
 	private ProgressEvent() {}
 	
 	public String getNodeJobId() {
-		return instanceId;
+		return nodeJobId;
 	}
 
-	public ProgressEvent setInstanceId(String instanceId) {
-		this.instanceId = instanceId;
+	public ProgressEvent setNodeJobId(String nodeJobId) {
+		this.nodeJobId = nodeJobId;
 		return this;
 	}
 
@@ -59,9 +59,9 @@ public class ProgressEvent implements IDCJobEvent {
 		this.time = time;
 	}
 
-	public static ProgressEvent newEvent(String instanceId) {
+	public static ProgressEvent newEvent(String nodeJobId) {
 		ProgressEvent event = new ProgressEvent();
-		event.setInstanceId(instanceId);
+		event.setNodeJobId(nodeJobId);
 		event.time = LocalDateTime.now();
 		event.status = JobInstanceStatus.RUNNING;
 		return event;
@@ -69,7 +69,7 @@ public class ProgressEvent implements IDCJobEvent {
 
 	@Override
 	public String toString() {
-		return "ProgressEvent [instanceId=" + instanceId + ", message=" + message + "]";
+		return "ProgressEvent [nodeJobId=" + nodeJobId + ", message=" + message + "]";
 	}
 	
 	
