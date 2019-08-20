@@ -2,8 +2,8 @@ package com.iwellmass.idc.scheduler.service;
 
 public interface IDCLogger {
 
-	IDCLogger clearLog(String instanceId);
+	IDCLogger clearLog(String jobId);
 
-	IDCLogger log(String instanceId, String message, Object... args);
+	IDCLogger log(String jobId, String message, Object... args);
 
 }

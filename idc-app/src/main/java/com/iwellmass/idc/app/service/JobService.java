@@ -10,14 +10,10 @@ import javax.annotation.Resource;
 
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Pager;
-import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
-import com.iwellmass.idc.message.RedoMessage;
-import com.iwellmass.idc.message.SkipMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
-import org.quartz.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -141,7 +137,7 @@ public class JobService {
 
     public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
         Pageable page = PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
-        Page<ExecutionLog> data = logRepository.findByInstanceId(id, page);
+        Page<ExecutionLog> data = logRepository.findByJobId(id, page);
         return new PageData<>((int) data.getTotalElements(), data.getContent());
     }
 

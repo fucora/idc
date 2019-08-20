@@ -1,5 +1,6 @@
 package com.iwellmass.idc.executor;
 
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.model.JobInstanceStatus;
 
 import java.time.LocalDateTime;
@@ -18,8 +19,11 @@ public class CompleteEvent implements IDCJobEvent {
 
 	private String message;
 
+	private StackTraceElement[] stackTraceElements;
+
 	// protected
 	private CompleteEvent() {
+		new AppException().printStackTrace();
 	}
 
 	public LocalDateTime getEndTime() {
@@ -33,6 +37,11 @@ public class CompleteEvent implements IDCJobEvent {
 
 	public CompleteEvent setFinalStatus(JobInstanceStatus finalStatus) {
 		this.finalStatus = finalStatus;
+		return this;
+	}
+
+	public CompleteEvent setStackTraceElements(StackTraceElement[] stackTraceElements) {
+		this.stackTraceElements = stackTraceElements;
 		return this;
 	}
 

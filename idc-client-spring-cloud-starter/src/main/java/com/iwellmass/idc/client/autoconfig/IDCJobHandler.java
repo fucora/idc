@@ -26,111 +26,113 @@ import java.util.concurrent.CompletableFuture;
  */
 public class IDCJobHandler implements IDCJobExecutorService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobHandler.class);
-	
-	private static final int RUNNING = 0x01;
-	private static final int COMPLETE = 0x02;
-	private static final int NOTIFY_ERROR = 0x03;
+    private static final Logger LOGGER = LoggerFactory.getLogger(IDCJobHandler.class);
 
-	private final IDCJob job;
+    private static final int RUNNING = 0x01;
+    private static final int COMPLETE = 0x02;
+    private static final int NOTIFY_ERROR = 0x03;
 
-	@Inject
-	private IDCStatusService idcStatusService;
+    private final IDCJob job;
 
-	@Inject
-	@Named("idc-executor")
-	private AsyncTaskExecutor executor;
+    @Inject
+    private IDCStatusService idcStatusService;
 
-	public IDCJobHandler(IDCJob job) {
-		this.job = job;
-	}
+    @Inject
+    @Named("idc-executor")
+    private AsyncTaskExecutor executor;
 
-	@ResponseBody
-	@PostMapping(path = "/execution")
-	public ServiceResult<String> doExecute(@RequestBody ExecuteRequest executeRequest) {
-		LOGGER.info("[{}] job '{}' accepted, taskId: {}", executeRequest.getNodeJobId(),
-				executeRequest.getTaskName(), executeRequest.getTaskId());
-		
-		
-		Map<String, String> ps = null;
-		List<ExecParam> eps = executeRequest.getParams();
-		if (eps != null && !eps.isEmpty()) {
-			ps = new HashMap<>();
-			for (ExecParam ep : eps) {
-				ps .put(ep.getName(), ep.getValue());
-			}
-		}
-		
-		LOGGER.info("[{}] parameter: {}", executeRequest.getNodeJobId(), executeRequest.getTaskName(), ps);
-		// safe execute
-		execute(executeRequest);
-		return ServiceResult.success("任务已提交");
-	}
-	
-	public void execute(ExecuteRequest executeRequest) {
-		
-		ExecutionContextImpl context = new ExecutionContextImpl();
-		context.executeRequest = executeRequest;
-		
-		CompletableFuture.runAsync(() -> job.execute(context), executor)
-		.whenComplete((_void, cause) -> {
-			if (cause != null) {
-				CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId())
-					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
-					.setEndTime(LocalDateTime.now());
-				context.complete(event);
-			}
-		});
-	}
+    public IDCJobHandler(IDCJob job) {
+        this.job = job;
+    }
 
-	private class ExecutionContextImpl implements IDCJobContext {
+    @ResponseBody
+    @PostMapping(path = "/execution")
+    public ServiceResult<String> doExecute(@RequestBody ExecuteRequest executeRequest) {
+        LOGGER.info("[{}] job '{}' accepted, taskId: {}", executeRequest.getNodeJobId(),
+                executeRequest.getTaskName(), executeRequest.getTaskId());
 
-		private ExecuteRequest executeRequest;
-		private int state = RUNNING; // TODO use CAS
-		
-		@Override
-		public ExecuteRequest getExecuteRequest() {
-			return executeRequest;
-		}
 
-		@Override
-		public void complete(CompleteEvent event) {
-			Objects.requireNonNull(event, "event 不能为空");
+        Map<String, String> ps = null;
+        List<ExecParam> eps = executeRequest.getParams();
+        if (eps != null && !eps.isEmpty()) {
+            ps = new HashMap<>();
+            for (ExecParam ep : eps) {
+                ps.put(ep.getName(), ep.getValue());
+            }
+        }
 
-			if (state == COMPLETE) {
-				LOGGER.warn("[{}] job already complete {}", event.getNodeJobId());
-				return;
-			}
-			
-			LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
-					executeRequest.getTaskName(),
-					event.getFinalStatus());
-			
-			try {
-				idcStatusService.fireCompleteEvent(event);
-				state = COMPLETE;
-			} catch (Throwable e) {
-				state = NOTIFY_ERROR;
-				LOGGER.error("发送事件失败, EVENT: {}", event, e);
-			}
-		}
-		
-		
-		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
-			if (status == JobInstanceStatus.FINISHED) {
-				return CompleteEvent.successEvent(executeRequest.getNodeJobId());
-			} else if (status == JobInstanceStatus.FAILED) {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
-			} else {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
-			}
-		}
-		
-		public ProgressEvent newProgressEvent() {
-			return ProgressEvent.newEvent(executeRequest.getNodeJobId());
-		}
-		public StartEvent newStartEvent() {
-			return StartEvent.newEvent(executeRequest.getNodeJobId());
-		}
-	}
+        LOGGER.info("[{}] parameter: {}", executeRequest.getNodeJobId(), executeRequest.getTaskName(), ps);
+        // safe execute
+        execute(executeRequest);
+        return ServiceResult.success("任务已提交");
+    }
+
+    public void execute(ExecuteRequest executeRequest) {
+
+        ExecutionContextImpl context = new ExecutionContextImpl();
+        context.executeRequest = executeRequest;
+
+        CompletableFuture.runAsync(() -> job.execute(context), executor)
+                .whenComplete((_void, cause) -> {
+                    if (cause != null) {
+                        CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId())
+                                .setMessage("任务 {} 执行异常: {}", cause.getMessage())
+                                .setStackTraceElements(cause.getStackTrace())
+                                .setEndTime(LocalDateTime.now());
+                        context.complete(event);
+                    }
+                });
+    }
+
+    private class ExecutionContextImpl implements IDCJobContext {
+
+        private ExecuteRequest executeRequest;
+        private int state = RUNNING; // TODO use CAS
+
+        @Override
+        public ExecuteRequest getExecuteRequest() {
+            return executeRequest;
+        }
+
+        @Override
+        public void complete(CompleteEvent event) {
+            Objects.requireNonNull(event, "event 不能为空");
+
+            if (state == COMPLETE) {
+                LOGGER.warn("[{}] job already complete {}", event.getNodeJobId());
+                return;
+            }
+
+            LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
+                    executeRequest.getTaskName(),
+                    event.getFinalStatus());
+
+            try {
+                idcStatusService.fireCompleteEvent(event);
+                state = COMPLETE;
+            } catch (Throwable e) {
+                state = NOTIFY_ERROR;
+                LOGGER.error("发送事件失败, EVENT: {}", event, e);
+            }
+        }
+
+
+        public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
+            if (status == JobInstanceStatus.FINISHED) {
+                return CompleteEvent.successEvent(executeRequest.getNodeJobId());
+            } else if (status == JobInstanceStatus.FAILED) {
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
+            } else {
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
+            }
+        }
+
+        public ProgressEvent newProgressEvent() {
+            return ProgressEvent.newEvent(executeRequest.getNodeJobId());
+        }
+
+        public StartEvent newStartEvent() {
+            return StartEvent.newEvent(executeRequest.getNodeJobId());
+        }
+    }
 }

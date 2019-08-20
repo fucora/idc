@@ -158,11 +158,19 @@ public class JobHelper {
     }
 
     public void ready(AbstractJob job) {
-
+        checkRunning(job);
+        idcLogger.log(job.getId(), "job:{}," + "已成功派发,准备执行", job.getId());
+        if (job.getState() == JobState.ACCEPTED) {
+            modifyJobState(job, JobState.RUNNING);
+        }
     }
 
     public void running(AbstractJob job) {
-
+        checkRunning(job);
+        idcLogger.log(job.getId(), "job:{}," + "正在执行", job.getId());
+        if (job.getState() == JobState.ACCEPTED) {
+            modifyJobState(job, JobState.RUNNING);
+        }
     }
 
     //==============================================  this class call

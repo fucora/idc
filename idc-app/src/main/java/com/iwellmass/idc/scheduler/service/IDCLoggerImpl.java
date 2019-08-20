@@ -18,9 +18,9 @@ public class IDCLoggerImpl implements IDCLogger {
 	
 	@Transactional
 	@Override
-	public IDCLogger clearLog(String instanceId) {
+	public IDCLogger clearLog(String jobId) {
 		try {
-			logRepo.deleteByInstanceId(instanceId);
+			logRepo.deleteByJobId(jobId);
 		} catch (Throwable e) {
 			LOGGER.error("clear failured.");
 		}
@@ -28,14 +28,14 @@ public class IDCLoggerImpl implements IDCLogger {
 	}
 
 	@Override
-	public IDCLogger log(String instanceId, String message, Object... args) {
+	public IDCLogger log(String jobId, String message, Object... args) {
 		try {
 			if (message.contains("执行失败")) {
 				new RuntimeException().printStackTrace();
 			}
-			logRepo.log(instanceId, message, args);
+			logRepo.log(jobId, message, args);
 		} catch (Throwable e) {
-			LOGGER.info("INS[" + instanceId + "] >> " + message, args);
+			LOGGER.info("INS[" + jobId + "] >> " + message, args);
 		}
 		return this;
 	}
