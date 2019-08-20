@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.model.ScheduleType;
@@ -112,6 +113,12 @@ public class IDCScheduler {
     @Transactional
     public void unschedule(String name) {
         Task task = getTask(name);
+        // check this task whether contain running-job and we must judge it by nodeJob of task's job . if it contain then this task con't reschedule.
+        if (nodeJobRepository.findAllByContainerIn(jobRepository.findAllByTaskName(name).stream().map(Job::getId).collect(Collectors.toList()))
+                .stream().anyMatch(n -> n.getState()== JobState.RUNNING || n.getState()== JobState.ACCEPTED)) {
+            throw new AppException("该调度计划存在正在执行的任务,请等待执行完成后再尝试");
+        }
+
         try {
             qs.unscheduleJob(task.getTriggerKey());
         } catch (SchedulerException e) {
