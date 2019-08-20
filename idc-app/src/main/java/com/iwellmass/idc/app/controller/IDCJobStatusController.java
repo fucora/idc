@@ -35,18 +35,18 @@ public class IDCJobStatusController {
     @PutMapping("/start")
     public void fireStartEvent(@RequestBody StartEvent event) {
 
-        logger.info("jobReady:", event.getNodeJobId());
+        logger.info("jobReady:{}", event.getNodeJobId());
         ReadyMessage message = ReadyMessage.newMessage(event.getNodeJobId());
-        message.setMessage("任务准备执行");
+        message.setMessage("任务准备执行" + event.getNodeJobId());
         TaskEventPlugin.eventService(qs).send(message);
     }
 
     @ApiOperation("发送过程信息")
     @PutMapping(path = "/progress")
     public void saveRuntimeUrlLog(@RequestBody ProgressEvent event) {
-        logger.info("jobRunning:", event.getNodeJobId());
+        logger.info("jobRunning:{}", event.getNodeJobId());
         RunningMessage message = RunningMessage.newMessage(event.getNodeJobId());
-        message.setMessage("任务正在执行");
+        message.setMessage("任务正在执行" + event.getNodeJobId());
         TaskEventPlugin.eventService(qs).send(message);
     }
 

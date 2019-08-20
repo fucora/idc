@@ -23,7 +23,6 @@ public class CompleteEvent implements IDCJobEvent {
 
 	// protected
 	private CompleteEvent() {
-		new AppException().printStackTrace();
 	}
 
 	public LocalDateTime getEndTime() {
