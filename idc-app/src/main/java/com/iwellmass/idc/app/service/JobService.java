@@ -12,6 +12,7 @@ import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
+import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
@@ -119,7 +121,16 @@ public class JobService {
             return nodeJobVO;
         }).collect(Collectors.toList());
         GraphVO graphVO = workflowService.getGraph(jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现指定调度计划实例")).getTask().getWorkflowId());
-        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()),job.getParams());
+        List<MergeTaskParamVO> mergeTaskParamVOS = taskService.getParams(job.getTask().getWorkflowId());
+        for (MergeTaskParamVO m : mergeTaskParamVOS) {
+            for (ExecParam p : job.getParams()) {
+                if (m.getExecParam().getName().equals(p.getName())) {
+                    m.getExecParam().setValue(p.getValue());
+                    break;
+                }
+            }
+        }
+        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskService.getTask(job.getTaskName()), mergeTaskParamVOS);
         return jobVO;
     }
 

@@ -123,7 +123,7 @@ public class TaskService {
             if (mergeTaskParamVOS.keySet().stream().noneMatch(m -> m.equals(p.getName()))) {
                 mergeTaskParamVOS.put(p.getName(), new MergeTaskParamVO(t.getNodeTaskName(), p));
             } else {
-                mergeTaskParamVOS.get(p.getName()).setMergedNodeTaskName(String.join(",", mergeTaskParamVOS.get(p.getName()).getMergedNodeTaskName(), t.getNodeTaskName()));
+                mergeTaskParamVOS.get(p.getName()).setMergedNodeTaskName(String.join("、", mergeTaskParamVOS.get(p.getName()).getMergedNodeTaskName(), t.getNodeTaskName()));
             }
         }));
         return mergeTaskParamVOS.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());

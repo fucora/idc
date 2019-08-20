@@ -2,6 +2,7 @@ package com.iwellmass.idc.app.vo;
 
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
+import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.Job;
 import io.swagger.annotations.ApiModelProperty;
@@ -28,5 +29,5 @@ public class JobVO {
     private TaskVO taskVO;
 
     @ApiModelProperty("运行的实例参数信息")
-    private List<ExecParam> execParams;
+    private List<MergeTaskParamVO> mergeTaskParamVOS;
 }
