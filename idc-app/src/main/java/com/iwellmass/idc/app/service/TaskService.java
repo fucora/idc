@@ -125,7 +125,7 @@ public class TaskService {
                 .map(nt -> Long.valueOf(nt.getTaskId()))
                 .collect(Collectors.toList()))
                 .getResult();
-        return buildMergeTaskParamVOS(taskDetailVOS.stream().map(TaskParamVO::new).collect(Collectors.toList()));
+        return taskDetailVOS == null ? Lists.newArrayList() : buildMergeTaskParamVOS(taskDetailVOS.stream().map(TaskParamVO::new).collect(Collectors.toList()));
     }
 
     public List<MergeTaskParamVO> buildMergeTaskParamVOS(List<TaskParamVO> taskParamVOS) {
