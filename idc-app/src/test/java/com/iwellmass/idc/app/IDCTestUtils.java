@@ -2,13 +2,22 @@ package com.iwellmass.idc.app;
 
 import com.alibaba.fastjson.JSON;
 import com.iwellmass.idc.scheduler.model.*;
+import lombok.Getter;
 import org.assertj.core.util.Lists;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static org.mockito.Mockito.when;
 
@@ -40,6 +49,8 @@ public class IDCTestUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
         return null;
     }
 
@@ -53,7 +64,7 @@ public class IDCTestUtils {
 
 
         List<NodeJob> subJobs = Lists.newArrayList();
-        for (NodeTask nt: taskNodes) {
+        for (NodeTask nt : taskNodes) {
 
             NodeJob nodeJob = new NodeJob();
             nodeJob.setId("");
@@ -68,4 +79,29 @@ public class IDCTestUtils {
         return job;
     }
 
+    @Getter
+    public class stu implements Comparable<stu> {
+
+        public Integer a;
+
+        public stu(Integer a) {
+            this.a = a;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return true;
+        }
+
+
+        @Override
+        public int compareTo(stu o) {
+            return a > o.getA() ? 1 : -1;
+        }
+
+        @Override
+        public String toString() {
+            return a.toString();
+        }
+    }
 }
