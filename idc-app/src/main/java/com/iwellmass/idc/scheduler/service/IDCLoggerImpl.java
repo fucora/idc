@@ -35,7 +35,7 @@ public class IDCLoggerImpl implements IDCLogger {
 			}
 			logRepo.log(jobId, message, args);
 		} catch (Throwable e) {
-			LOGGER.info("INS[" + jobId + "] >> " + message, args);
+			LOGGER.info("job[" + jobId + "] >>>>> " + message, args);
 		}
 		return this;
 	}
