@@ -3,13 +3,16 @@ package com.iwellmass.idc.app.service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.google.common.collect.Lists;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.springframework.beans.BeanUtils;
@@ -40,6 +43,8 @@ public class WorkflowService {
     WorkflowRepository workflowRepository;
     @Resource
     JobRepository jobRepository;
+    @Resource
+    NodeJobRepository nodeJobRepository;
     @Resource
     TaskRepository taskRepository;
 
@@ -220,7 +225,11 @@ public class WorkflowService {
     // 工作流是否能够更新或者删除
     public boolean canModify(String wfId) {
         // todo 考虑工作流嵌套情况
-        return taskRepository.findAllByWorkflowId(wfId).stream().filter(t -> !t.getState().isTerminated()).collect(Collectors.toList()).size() == 0;
+        return nodeJobRepository.findAllByContainerIn(
+                jobRepository.findAllByTaskNameIn(
+                        taskRepository.findAllByWorkflowId(wfId).stream().map(Task::getTaskName).collect(Collectors.toList())
+                ).stream().map(Job::getId).collect(Collectors.toList())
+        ).stream().allMatch(n -> n.getState() == JobState.FINISHED);
     }
 
 
