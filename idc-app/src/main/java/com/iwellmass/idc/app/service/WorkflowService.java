@@ -101,7 +101,18 @@ public class WorkflowService {
     @Transactional
     public void saveGraph(String id, GraphVO gvo) {
         // empty task.job.nodeJob associated with this workflow.
-
+        if (workflowRepository.findById(id).get().getNodeTasks().size() != 0) {
+            // modify operation
+            List<Task> tasks = taskRepository.findAllByWorkflowId(id);
+            List<Job> jobs = jobRepository.findAllByTaskNameIn(tasks.stream().map(Task::getTaskName).collect(Collectors.toList()));
+            List<NodeJob> nodeJobs = nodeJobRepository.findAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
+            // nodeJob
+            nodeJobRepository.deleteAll(nodeJobs);
+            // job
+            jobRepository.deleteAll(jobs);
+            // task
+            taskRepository.deleteAll(tasks);
+        }
 
         // save new graph
         // format graph
