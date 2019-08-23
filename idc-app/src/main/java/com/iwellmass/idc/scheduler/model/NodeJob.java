@@ -85,6 +85,7 @@ public class NodeJob extends AbstractJob {
         this.nodeTask = nodeTask;
         this.workflowId = nodeTask.getWorkflowId();
         this.state = JobState.NONE;
+        this.taskType = TaskType.SIMPLE;
     }
 
     private static final String id(String container, String nodeId) {

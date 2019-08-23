@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Pager;
@@ -16,6 +17,7 @@ import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
+import com.iwellmass.idc.scheduler.service.IDCLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -41,25 +43,18 @@ import com.iwellmass.common.util.QueryUtils;
 @Service
 public class JobService {
 
-    static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
-
     @Resource
     TaskRepository taskRepository;
-
     @Resource
     JobRepository jobRepository;
-
     @Resource
     AllJobRepository allJobRepository;
-
-    @Resource
-    NodeJobRepository nodeJobRepository;
-
     @Resource
     WorkflowService workflowService;
-
     @Resource
     TaskService taskService;
+    @Inject
+    IDCLogger idcLogger;
 
 
     @Resource
@@ -137,14 +132,17 @@ public class JobService {
     }
 
     @Transactional
-    public void test(String id, String action) {
-        AbstractJob job = allJobRepository.findById(id).get();
-        Method method = ReflectionUtils.findMethod(job.getClass(), action);
-        try {
-            method.invoke(job);
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new ApplicationContextException(e.getMessage(), e);
-        }
+    public String test(String jobId, String template,String content) {
+//        AbstractJob job = allJobRepository.findById(id).get();
+//        Method method = ReflectionUtils.findMethod(job.getClass(), action);
+//        try {
+//            method.invoke(job);
+//        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+//            throw new ApplicationContextException(e.getMessage(), e);
+//        }
+//        idcLogger.log(jobId,template,content)
+        return null;
+
     }
 
 

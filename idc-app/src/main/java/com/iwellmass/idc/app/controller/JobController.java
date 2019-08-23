@@ -89,7 +89,7 @@ public class JobController {
     @ApiOperation("测试执行")
     @GetMapping("/{id}/test/{action}")
     public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
-        jobService.test(id, action);
+//        jobService.test(id, action);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
@@ -105,6 +105,12 @@ public class JobController {
     public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") String id, Pager pager) {
         PageData<ExecutionLog> data = jobService.getJobInstanceLog(id, pager);
         return ServiceResult.success(data);
+    }
+
+    @ApiOperation("test")
+    @GetMapping("/{jobId}/{template}/{content}")
+    public ServiceResult<String> test(@PathVariable(name = "jobId") String jobId,@PathVariable(name = "template") String template,@PathVariable(name = "content") String content) {
+        return ServiceResult.success(jobService.test(jobId,template,content));
     }
 
 }
