@@ -17,6 +17,9 @@ public class WorkflowVO {
 	@ApiModelProperty("描述")
 	private String description;
 
-	@ApiModelProperty("是否可以被删除或编辑")
+	@ApiModelProperty("是否可以编辑")
 	private boolean canModify = false;
+
+	@ApiModelProperty("是否可以删除")
+	private boolean canDelete = false;
 }

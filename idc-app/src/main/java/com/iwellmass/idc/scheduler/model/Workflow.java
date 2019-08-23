@@ -22,20 +22,20 @@ import org.hibernate.annotations.FetchMode;
 @Table(name = "idc_workflow")
 public class Workflow {
 
-	/**
-	 * id
-	 */
-	@Id
-	@Column(name = "id")
-	private String id;
+    /**
+     * id
+     */
+    @Id
+    @Column(name = "id")
+    private String id;
 
-	/**
-	 * 名称
-	 */
-	@Column(name = "workflow_name")
-	private String workflowName;
+    /**
+     * 名称
+     */
+    @Column(name = "workflow_name")
+    private String workflowName;
 
-	/**
+    /**
      * 描述
      */
     @Column(name = "description", columnDefinition = "TEXT")
@@ -48,50 +48,54 @@ public class Workflow {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updatetime;
 
-	/**
-	 * 节点
-	 */
+    /**
+     * 节点
+     */
 
-	@Fetch(FetchMode.SELECT)
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
-	@JoinColumn(name = "workflow_id",updatable = false)
-	private List<NodeTask> nodeTasks;
+    @Fetch(FetchMode.SELECT)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "workflow_id", updatable = false)
+    private List<NodeTask> nodeTasks;
 
-	/**
-	 * 边关系
-	 */
+    /**
+     * 边关系
+     */
 
-	@Fetch(FetchMode.SELECT)
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
-	@JoinColumn(name = "workflow_id",updatable = false)
-	private List<WorkflowEdge> edges;
+    @Fetch(FetchMode.SELECT)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "workflow_id", updatable = false)
+    private List<WorkflowEdge> edges;
 
-	public Set<String> successors(String node) {
-		Set<String> result = new HashSet<>();
-		for(WorkflowEdge workflowEdge:edges)
-		{
-			if(workflowEdge.getSource().equals(node))
-			{
-				result.add(workflowEdge.getTarget());
-			}
-		}
-		return result;
-	}
+    public Set<String> successors(String node) {
+        Set<String> result = new HashSet<>();
+        for (WorkflowEdge workflowEdge : edges) {
+            if (workflowEdge.getSource().equals(node)) {
+                result.add(workflowEdge.getTarget());
+            }
+        }
+        return result;
+    }
 
-	public Set<String> getPrevious(String node) {
-		Set<String> result = new HashSet<>();
-		for(WorkflowEdge workflowEdge:edges) {
-			if(workflowEdge.getTarget().equals(node))
-			{
-				if(!workflowEdge.getSource().equals(NodeTask.START)){
-					result.add(workflowEdge.getSource());
-				}
-			}
-		}
-		return result;
-	}
+    public Set<String> getPrevious(String node) {
+        Set<String> result = new HashSet<>();
+        for (WorkflowEdge workflowEdge : edges) {
+            if (workflowEdge.getTarget().equals(node)) {
+                if (!workflowEdge.getSource().equals(NodeTask.START)) {
+                    result.add(workflowEdge.getSource());
+                }
+            }
+        }
+        return result;
+    }
 
     public Workflow() {
         updatetime = LocalDateTime.now();
+    }
+
+    public Workflow(String id,String workflowName,String description) {
+        this.updatetime = LocalDateTime.now();
+        this.id = id;
+        this.workflowName = workflowName;
+        this.description = description;
     }
 }

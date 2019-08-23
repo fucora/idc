@@ -3,17 +3,15 @@ package com.iwellmass.idc.app.service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
 import com.google.common.collect.Lists;
 import com.iwellmass.common.util.Utils;
+import com.iwellmass.idc.app.vo.CloneWorkflowVO;
 import com.iwellmass.idc.scheduler.model.*;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import com.iwellmass.idc.scheduler.repository.TaskRepository;
+import com.iwellmass.idc.scheduler.repository.*;
 import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +32,6 @@ import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.graph.NodeVO;
 import com.iwellmass.idc.app.vo.graph.SourceVO;
 import com.iwellmass.idc.app.vo.graph.TargetVO;
-import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 
 @Service
 public class WorkflowService {
@@ -55,6 +52,7 @@ public class WorkflowService {
                 WorkflowVO vo = new WorkflowVO();
                 BeanUtils.copyProperties(model, vo);
                 vo.setCanModify(canModify(vo.getId()));
+                vo.setCanDelete(canDelete(vo.getId()));
                 return vo;
             });
         });
@@ -65,6 +63,7 @@ public class WorkflowService {
             WorkflowVO vo = new WorkflowVO();
             BeanUtils.copyProperties(model, vo);
             vo.setCanModify(canModify(vo.getId()));
+            vo.setCanDelete(canDelete(vo.getId()));
             return vo;
         }).collect(Collectors.toList());
     }
@@ -125,10 +124,10 @@ public class WorkflowService {
             workflowGraph.addEdge(evo.getSource().getId(), evo.getTarget().getId(), evo);
         }
 
-        // required
-        List<String> sysNodes = Arrays.asList(NodeTask.START, NodeTask.END);
 
-        sysNodes.forEach(requiredVertex ->
+        List<String> necessaryNode = Arrays.asList(NodeTask.START, NodeTask.END);    // required
+        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
+        necessaryNode.forEach(requiredVertex ->
                 Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点")); // 判定是否包含 start end 节点
 
         // validate graph whether is legal and contain isolated node
@@ -161,7 +160,7 @@ public class WorkflowService {
             tk.setTaskName(node.getTaskName());
             tk.setContentType(node.getContentType());
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
-            if (sysNodes.contains(node.getId())) {
+            if (systemNode.contains(node.getId())) {
                 tk.setDomain("idc");
             } else {
                 tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));
@@ -195,7 +194,6 @@ public class WorkflowService {
         if (workflowRepository.existsById(vo.getId())) {
             throw new AppException("任务已存在");
         }
-        // 格式化graph
         Workflow workflow = new Workflow();
         BeanUtils.copyProperties(vo, workflow);
         // nodes
@@ -212,7 +210,7 @@ public class WorkflowService {
     }
 
     Workflow get(String id) {
-        return workflowRepository.findById(id).orElseThrow(() -> new AppException("工作流不存在"));
+        return workflowRepository.findById(id).orElseThrow(() -> new AppException("工作流:" + id + "不存在"));
     }
 
     public WorkflowVO getWorkflow(String workflowId) {
@@ -224,7 +222,6 @@ public class WorkflowService {
         return vo;
     }
 
-
     Workflow getModel(String id) {
         return workflowRepository.findById(id).orElseThrow(() -> new AppException("工作流不存在"));
     }
@@ -232,15 +229,25 @@ public class WorkflowService {
     @Transactional
     public void delete(String id) {
         // todo 判断该工作流是否正在被使用中
-        if (canModify(id)) {
+        if (canDelete(id)) {
+            List<Task> tasks = taskRepository.findAllByWorkflowId(id);
+            List<Job> jobs = jobRepository.findAllByTaskNameIn(tasks.stream().map(Task::getTaskName).collect(Collectors.toList()));
+            List<NodeJob> nodeJobs = nodeJobRepository.findAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
+            // nodeJob
+            nodeJobRepository.deleteAll(nodeJobs);
+            // job
+            jobRepository.deleteAll(jobs);
+            // task
+            taskRepository.deleteAll(tasks);
+            // workflow
             workflowRepository.deleteById(id);
         } else {
             throw new AppException("该工作流存未完成的实例,不可删除");
         }
     }
 
-    // 工作流是否能够更新或者删除
-    public boolean canModify(String wfId) {
+    // judge the workflow whether can be deleted. when the all nodeJobs of job of task of workflow is complete ,the workflow can be deleted.
+    public boolean canDelete(String wfId) {
         // todo 考虑工作流嵌套情况
         return nodeJobRepository.findAllByContainerIn(
                 jobRepository.findAllByTaskNameIn(
@@ -249,6 +256,10 @@ public class WorkflowService {
         ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState() == JobState.FINISHED);
     }
 
+    // a workflow only can be inited once.judge a workflow whether can be inited with this workflow whether exist task.
+    public boolean canModify(String wfId) {
+        return taskRepository.findAllByWorkflowId(wfId).size() == 0;
+    }
 
     public List<WorkflowVO> queryAvailableWorkflow() {
         return workflowRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime"))
@@ -257,10 +268,51 @@ public class WorkflowService {
                 .map(model -> {
                     WorkflowVO vo = new WorkflowVO();
                     BeanUtils.copyProperties(model, vo);
-                    vo.setCanModify(canModify(vo.getId()));
+//                    vo.setCanModify(canDelete(vo.getId()));
                     return vo;
                 })
                 .collect(Collectors.toList());
+
+    }
+
+    // clone a workflow.contain clone the basic info of workflow and edge dependency and nodetaskInfo
+    @Transactional
+    public void clone(CloneWorkflowVO vo) {
+        if (workflowRepository.findById(vo.getNewWorkflowId()).isPresent()) {
+            throw new AppException("工作流已存在,id:" + vo.getNewWorkflowId() + ",请修改后再尝试");
+        }
+        Workflow oldWorkflow = get(vo.getOldWorkflowId());
+        Workflow newWorkflow = new Workflow(vo.getNewWorkflowId(), vo.getWorkflowName(), vo.getDescription());
+        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
+        List<NodeTask> nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
+            NodeTask nodeTask = new NodeTask();
+            nodeTask.setWorkflowId(vo.getNewWorkflowId());
+            nodeTask.setId(nt.getId());
+            nodeTask.setTaskName(nt.getTaskName());
+            nodeTask.setContentType(nt.getContentType());
+            nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
+            if (systemNode.contains(nt.getId())) {
+                nodeTask.setDomain("idc");
+            } else {
+                nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
+            }
+            return nodeTask;
+        }).collect(Collectors.toList());
+
+        // edges
+        List<WorkflowEdge> workflowEdges = oldWorkflow.getEdges().stream().map(edge -> {
+            WorkflowEdge we = new WorkflowEdge();
+            we.setWorkflowId(vo.getNewWorkflowId());
+            we.setId(edge.getId());
+            we.setSource(edge.getSource());
+            we.setTarget(edge.getTarget());
+            return we;
+        }).collect(Collectors.toList());
+
+        newWorkflow.setUpdatetime(LocalDateTime.now());
+        newWorkflow.setEdges(workflowEdges);
+        newWorkflow.setNodeTasks(nodeTasks);
+        workflowRepository.save(newWorkflow);
 
     }
 

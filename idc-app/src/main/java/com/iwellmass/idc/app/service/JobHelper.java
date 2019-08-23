@@ -82,17 +82,22 @@ public class JobHelper {
     public void failed(AbstractJob abstractJob) {
         checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FAILED);
-        if (!abstractJob.isJob()) {
+        TriggerKey triggerKey;
+        if (abstractJob.isJob()) {
+            triggerKey = abstractJob.asJob().getTask().getTriggerKey();
+        } else {
             // modify node'parent   state to failed
-            modifyJobState(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(),JobState.FAILED);
+            triggerKey = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get().getTask().getTriggerKey();
+            modifyJobState(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(), JobState.FAILED);
         }
         try {
-            if (scheduler.checkExists(abstractJob.asJob().getTask().getTriggerKey())) {
-                idcJobStore.releaseTrigger(abstractJob.asJob().getTask().getTriggerKey(), ReleaseInstruction.SET_ERROR);
+            if (scheduler.checkExists(triggerKey)) {
+                idcJobStore.releaseTrigger(triggerKey, ReleaseInstruction.SET_ERROR);
             }
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
+
     }
 
     /**

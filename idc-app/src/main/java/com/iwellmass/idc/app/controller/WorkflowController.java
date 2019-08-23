@@ -4,6 +4,7 @@ import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
 
 import javax.inject.Inject;
 
+import com.iwellmass.idc.app.vo.CloneWorkflowVO;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,6 +53,13 @@ public class WorkflowController {
 		return ServiceResult.success(MSG_OP_SUCCESS);
 	}
 
+	@PostMapping(path = "/clone")
+	@ApiOperation("克隆工作流")
+	public ServiceResult<String> clone(@RequestBody CloneWorkflowVO vo) {
+		workflowService.clone(vo);
+		return ServiceResult.success(MSG_OP_SUCCESS);
+	}
+
 	@PutMapping
 	@ApiOperation("更新工作流")
 	public ServiceResult<String> update(@RequestBody WorkflowVO vo) {
@@ -94,4 +102,6 @@ public class WorkflowController {
 		List<WorkflowVO> data = workflowService.queryAvailableWorkflow();
 		return ServiceResult.success(data);
 	}
+
+
 }
