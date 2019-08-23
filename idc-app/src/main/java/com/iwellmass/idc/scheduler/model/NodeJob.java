@@ -20,40 +20,40 @@ import lombok.Setter;
 @Table(name = "idc_node_job")
 public class NodeJob extends AbstractJob {
 
-	/**
-	 *  任务ID（Task.taskId）
-	 */
-	@Column(name = "workflow_id")
-	private String workflowId;
+    /**
+     * 任务ID（Task.taskId）
+     */
+    @Column(name = "workflow_id")
+    private String workflowId;
 
-	/**
-	 * 工作流结点ID（NodeTask.id）
-	 */
-	@Column(name = "node_id")
-	private String nodeId;
+    /**
+     * 工作流结点ID（NodeTask.id）
+     */
+    @Column(name = "node_id")
+    private String nodeId;
 
-	/**
-	 * 主 Job ID（Job.id）
-	 */
-	@Column(name = "main_id")
-	private String mainId;
+    /**
+     * 主 Job ID（Job.id）
+     */
+    @Column(name = "main_id")
+    private String mainId;
 
-	/**
-	 * 父 Job ID（Job.id OR NodeJob.id）
-	 */
-	@Column(name = "container")
-	private String container;
+    /**
+     * 父 Job ID（Job.id OR NodeJob.id）
+     */
+    @Column(name = "container")
+    private String container;
 
-	/**
-	 * 关联的子任务
-	 */
-	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumns({ @JoinColumn(name = "workflow_id", referencedColumnName = "workflow_id", insertable = false, updatable = false),
-			@JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false) })
-	private NodeTask nodeTask;
+    /**
+     * 关联的子任务
+     */
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumns({@JoinColumn(name = "workflow_id", referencedColumnName = "workflow_id", insertable = false, updatable = false),
+            @JoinColumn(name = "node_id", referencedColumnName = "id", insertable = false, updatable = false)})
+    private NodeTask nodeTask;
 
-	public NodeJob() {
-	}
+    public NodeJob() {
+    }
 
 //	@Override
 //	public void doStart(JobExecutionContext context) {
@@ -77,23 +77,28 @@ public class NodeJob extends AbstractJob {
 //		IDCJobExecutors.getExecutor().execute(request);
 //	}
 
-	public NodeJob(String container, NodeTask nodeTask) {
-		super(id(container, nodeTask.getId()), nodeTask);
-		// 设置 ID
-		this.container = container;
-		this.nodeId = nodeTask.getId();
-		this.nodeTask = nodeTask;
-		this.workflowId = nodeTask.getWorkflowId();
-		this.state = JobState.NONE;
-	}
+    public NodeJob(String container, NodeTask nodeTask) {
+        super(id(container, nodeTask.getId()), nodeTask);
+        // 设置 ID
+        this.container = container;
+        this.nodeId = nodeTask.getId();
+        this.nodeTask = nodeTask;
+        this.workflowId = nodeTask.getWorkflowId();
+        this.state = JobState.NONE;
+    }
 
-	private static final String id(String container, String nodeId) {
-		// TODO hash 对齐
-		return container + "_" + nodeId + "_" + System.currentTimeMillis();
-	}
+    private static final String id(String container, String nodeId) {
+        // TODO hash 对齐
+        return container + "_" + nodeId + "_" + System.currentTimeMillis();
+    }
 
-	@Override
-	public NodeTask getTask() {
-		return getNodeTask();
-	}
+    @Override
+    public NodeTask getTask() {
+        return getNodeTask();
+    }
+
+    // judge the nodeJob is systemNode
+    public boolean isSystemNode() {
+        return this.nodeId.equals(NodeTask.START) || this.nodeId.equals(NodeTask.END) || this.nodeId.equals(NodeTask.CONTROL);
+    }
 }

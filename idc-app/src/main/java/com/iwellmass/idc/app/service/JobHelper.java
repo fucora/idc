@@ -1,10 +1,8 @@
 package com.iwellmass.idc.app.service;
 
-import com.google.common.collect.Lists;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
-import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
@@ -209,6 +207,10 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask task = Objects.requireNonNull(nodeJob.getTask(), "未找到任务");
+        if (nodeJob.getNodeId().equals(NodeTask.CONTROL)) {
+            onJobFinished(nodeJob);
+            return;
+        }
         if (nodeJob.getNodeId().equals(NodeTask.END) && !jobRepository.findById(nodeJob.getContainer()).get().getState().isComplete()) {
             idcLogger.log(nodeJob.getId(), "执行task end,container={}", nodeJob.getContainer());
             FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
@@ -227,7 +229,7 @@ public class JobHelper {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         Workflow workflow = workflowRepository.findById(task.getWorkflowId()).orElseThrow(() -> new AppException("未找到指定工作流"));
         task.setWorkflow(workflow);
-        // 找到立即节点
+        // find the successors needed fire now
         Set<String> successors = workflow.successors(startNode);
         Iterator<NodeJob> iterator = job.getSubJobs().stream()
                 .filter(sub -> successors.contains(sub.getNodeId()))
@@ -238,9 +240,9 @@ public class JobHelper {
             try {
                 Set<String> previous = workflow.getPrevious(next.getNodeId());
 
-                //如果存在未完成的任务 则不继续执行
+                // if  the job's all previous jobs don't complete ,then skip this fire
                 boolean unfinishJob = job.getSubJobs().stream()
-                        .filter(sub -> previous.contains(sub.getNodeId()))
+                        .filter(sub -> !sub.isSystemNode() && previous.contains(sub.getNodeId()))
                         .anyMatch(sub -> !sub.getState().isSuccess());
                 if (!unfinishJob) {
                     startJob(next);
@@ -268,7 +270,7 @@ public class JobHelper {
         } else {
             NodeJob nodeJob = runningJob.asNodeJob();
             Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
-            Job parent = (Job) allJobRepository.findById(nodeJob.getContainer()).get();
+            Job parent = jobRepository.findById(nodeJob.getContainer()).get();
             parent.getTask().setWorkflow(workflow);
             runNextJob(parent, nodeJob.getNodeId());
         }

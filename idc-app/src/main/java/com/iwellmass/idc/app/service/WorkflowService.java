@@ -229,7 +229,7 @@ public class WorkflowService {
                 jobRepository.findAllByTaskNameIn(
                         taskRepository.findAllByWorkflowId(wfId).stream().map(Task::getTaskName).collect(Collectors.toList())
                 ).stream().map(Job::getId).collect(Collectors.toList())
-        ).stream().filter(nj -> !isSystemNode(nj)).allMatch(n -> n.getState() == JobState.FINISHED);
+        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState() == JobState.FINISHED);
     }
 
 
@@ -244,11 +244,7 @@ public class WorkflowService {
                     return vo;
                 })
                 .collect(Collectors.toList());
-    }
 
-    public boolean isSystemNode(NodeJob nodeJob) {
-        return nodeJob.getNodeId().equalsIgnoreCase(NodeTask.START) || nodeJob.getNodeId().equalsIgnoreCase(NodeTask.END) || nodeJob.getNodeId().equalsIgnoreCase(NodeTask.CONTROL);
     }
-
 
 }
