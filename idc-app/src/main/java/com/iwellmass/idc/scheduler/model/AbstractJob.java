@@ -101,6 +101,10 @@ public abstract class AbstractJob {
 		}
 	}
 
+	public boolean isJob() {
+		return this.taskType.equals(TaskType.WORKFLOW);
+	}
+
 //	public void start(JobExecutionContext context) {
 //		if (state.isComplete()) {
 //			throw new JobException("任务已执行");

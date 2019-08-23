@@ -73,18 +73,22 @@ public class JobHelper {
         }
     }
 
-    public void success(AbstractJob job) {
-        checkRunning(job);
-        modifyJobState(job, JobState.FINISHED);
-        onJobFinished(job);
+    public void success(AbstractJob abstractJob) {
+        checkRunning(abstractJob);
+        modifyJobState(abstractJob, JobState.FINISHED);
+        onJobFinished(abstractJob);
     }
 
-    public void failed(AbstractJob job) {
-        checkRunning(job);
-        modifyJobState(job, JobState.FAILED);
+    public void failed(AbstractJob abstractJob) {
+        checkRunning(abstractJob);
+        modifyJobState(abstractJob, JobState.FAILED);
+        if (!abstractJob.isJob()) {
+            // modify node'parent   state to failed
+            modifyJobState(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(),JobState.FAILED);
+        }
         try {
-            if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
-                idcJobStore.releaseTrigger(job.asJob().getTask().getTriggerKey(), ReleaseInstruction.SET_ERROR);
+            if (scheduler.checkExists(abstractJob.asJob().getTask().getTriggerKey())) {
+                idcJobStore.releaseTrigger(abstractJob.asJob().getTask().getTriggerKey(), ReleaseInstruction.SET_ERROR);
             }
         } catch (SchedulerException e) {
             e.printStackTrace();
@@ -93,7 +97,7 @@ public class JobHelper {
 
     /**
      * redo job:adapt different strategy with the kind of job ,the kind of absJob contain nodeJob and job
-     * when job is nodeJob: clear the nodeJob and generate a new nodeJob instance,the new nodeJob instance contain new jobId,but the containnerId must use oldJod's containnerId
+     * when job is nodeJob: clear the nodeJob and generate a new nodeJob instance,the new nodeJob instance contain new jobId,but the containnerId must use oldJod's containerId
      * when job is task's instance,job : the jobId can't be generated then clear all subJobs of the job and recreate all job's subJobs
      *
      * @param job
@@ -229,7 +233,7 @@ public class JobHelper {
         AbstractTask task = Objects.requireNonNull(job.getTask(), "未找到任务");
         Workflow workflow = workflowRepository.findById(task.getWorkflowId()).orElseThrow(() -> new AppException("未找到指定工作流"));
         task.setWorkflow(workflow);
-        // find the successors needed fire now
+        // find the successors node needed to fire now
         Set<String> successors = workflow.successors(startNode);
         Iterator<NodeJob> iterator = job.getSubJobs().stream()
                 .filter(sub -> successors.contains(sub.getNodeId()))

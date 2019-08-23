@@ -97,9 +97,14 @@ public class WorkflowService {
         return gvo;
     }
 
+    // must empty all task,job,nodeJob associated with this workflow.
     @Transactional
     public void saveGraph(String id, GraphVO gvo) {
-        // 格式化graph
+        // empty task.job.nodeJob associated with this workflow.
+
+
+        // save new graph
+        // format graph
         DirectedAcyclicGraph<String, EdgeVO> workflowGraph = new DirectedAcyclicGraph<>(EdgeVO.class);
 
         Map<String, NodeVO> nodeMap = gvo.getNodes().stream()
@@ -115,21 +120,21 @@ public class WorkflowService {
         sysNodes.forEach(requiredVertex ->
                 Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点")); // 判定是否包含 start end 节点
 
-        // 校验graph是否正确,检查孤立点
+        // validate graph whether is legal and contain isolated node
         workflowGraph.vertexSet().forEach(tk -> {
-            // 开始节点
+            // start
             if (NodeTask.START.equals(tk)) {
                 if (workflowGraph.inDegreeOf(tk) > 0) {
                     throw new AppException("开始节点不能作为下游节点");
                 }
             }
-            // 结束节点
+            // end
             else if (NodeTask.END.equals(tk)) {
                 if (workflowGraph.outDegreeOf(tk) > 0) {
                     throw new AppException("结束节点不能作为上游节点");
                 }
             }
-            // 其他节点
+            // other
             else {
                 if (workflowGraph.inDegreeOf(tk) == 0 || workflowGraph.outDegreeOf(tk) == 0) {
                     throw new AppException("节点" + tk + "依赖配置错误");
@@ -170,6 +175,7 @@ public class WorkflowService {
         workflow.getEdges().addAll(edges);
         workflow.getNodeTasks().addAll(nodes);
         workflowRepository.save(workflow);
+
     }
 
     @Transactional
