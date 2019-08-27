@@ -13,6 +13,7 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.JobStoreCMT;
 import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.Setter;
@@ -20,12 +21,13 @@ import lombok.Setter;
 public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 
     @Setter
-    private int parallelMax = 2;
+    private Integer maxRunningjobs;
 
     @Setter
     private RecordIdGenerator recordIdGenerator;
 
-    public IDCJobstoreCMT() {
+    public IDCJobstoreCMT(Integer maxRunningjobs) {
+        this.maxRunningjobs = maxRunningjobs;
         this.recordIdGenerator = () -> super.getFiredTriggerRecordId();
     }
 
@@ -43,10 +45,10 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
     @Override
     protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
             throws JobPersistenceException {
-        int acceptCount = parallelMax;
+        int acceptCount = maxRunningjobs;
         // todo 查询实际执行的job有哪些. -> runningJobs
         int runningJobs = 0;
-        acceptCount = parallelMax - runningJobs;
+        acceptCount = maxRunningjobs - runningJobs;
 
         return acceptCount > 0
                 ? super.acquireNextTrigger(conn, noLaterThan, Math.min(maxCount, acceptCount), timeWindow)

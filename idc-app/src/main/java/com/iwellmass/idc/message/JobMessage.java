@@ -22,6 +22,7 @@ import lombok.ToString;
         @Type(name = "SKIP", value = SkipMessage.class),
         @Type(name = "READY", value = ReadyMessage.class),
         @Type(name = "RUNNING", value = RunningMessage.class),
+        @Type(name = "TIMEOUT", value = TimeoutMessage.class)
 })
 @Getter
 @Setter

@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
+import com.iwellmass.idc.message.FailMessage;
 import com.iwellmass.idc.message.FinishMessage;
 import com.iwellmass.idc.message.JobMessage;
+import com.iwellmass.idc.message.TimeoutMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
@@ -91,7 +93,7 @@ public class JobHelper {
         if (abstractJob.isJob()) {
             triggerKey = abstractJob.asJob().getTask().getTriggerKey();
             ExecutionLog executionLog = ExecutionLog.createLog(abstractJob.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                    new ObjectMapper().setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY).writeValueAsString(message.getStackTraceElements()),
+                    null,
                     abstractJob.asJob().getShouldFireTime().format(formatter), abstractJob.asJob().getTask().getTaskName(), abstractJob.getId(), abstractJob.asJob().getLoadDate(), abstractJob.asJob().getTask().getWorkflowId());
             logger.log(executionLog);
         } else {
@@ -104,6 +106,7 @@ public class JobHelper {
             triggerKey = parent.getTask().getTriggerKey();
             modifyJobState(parent, JobState.FAILED);
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
+                    null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
             logger.log(jobExecutionLog);
         }
@@ -206,6 +209,19 @@ public class JobHelper {
         }
     }
 
+    /**
+     * when nodeJob have been distributed and don't callback in timeout seconds.
+     * check state.if the nodeJob is ACCEPTED or RUNNING update state to fail
+     * @param job
+     */
+    public void timeout(AbstractJob job) throws JsonProcessingException {
+        if (job.getState().isNotCallback()) {
+            logger.log(job.getId(),"节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                    job.asNodeJob().getNodeTask().getTaskId(),job.asNodeJob().getNodeTask().getDomain(),job.getId(),job.getState());
+            failed(job,FailMessage.newMessage(job.getId()));
+        }
+    }
+
     //==============================================  this class call
 
     private void checkRunning(AbstractJob job) {
@@ -258,6 +274,7 @@ public class JobHelper {
             modifyJobState(nodeJob, JobState.ACCEPTED);
             logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
                     , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
+            TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
             IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, task));
         }
     }

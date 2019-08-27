@@ -58,10 +58,10 @@ public class TaskEventProcessor implements org.quartz.Job {
     JobHelper jobHelper;
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) {
         // safe execute...
         try {
-//            logger.log(message.getJobId(), message.getMessage());
+            LOGGER.info("接收事件，类型[{}],，message = [{}]", message.getEvent().name(), message);
             doExecute(context);
         } catch (Exception e) {
             LOGGER.error("ERROR: " + message);
@@ -99,7 +99,7 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.success(runningJob);
                     break;
                 case FAIL:
-                    jobHelper.failed(runningJob,message);
+                    jobHelper.failed(runningJob, message);
                     break;
                 case REDO:
                     jobHelper.redo(runningJob);
@@ -115,6 +115,9 @@ public class TaskEventProcessor implements org.quartz.Job {
                     break;
                 case RUNNING:
                     jobHelper.running(runningJob);
+                    break;
+                case TIMEOUT:
+                    jobHelper.timeout(runningJob);
                     break;
                 default: {
                     // bad message...

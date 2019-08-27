@@ -42,11 +42,11 @@ public class SchedulerConfig {
 
 	@Value(value = "${idc.scheduler.start-auto:true}")
 	private Boolean startAuto;
+	@Value(value = "${idc.scheduler.maxRunningjobs:10}")
+	private Integer maxRunningjobs;
 
 	@Resource
 	DataSource dataSource;
-
-
 
 	public RecordIdGenerator recordIdGenerator() {
 		AtomicLong seq = new AtomicLong();
@@ -69,7 +69,7 @@ public class SchedulerConfig {
 		DBConnectionManager.getInstance().addConnectionProvider("ds1", managedProvider());
 		DBConnectionManager.getInstance().addConnectionProvider("ds2", noManagedProvider());
 
-		IDCJobstoreCMT cmt = new IDCJobstoreCMT();
+		IDCJobstoreCMT cmt = new IDCJobstoreCMT(maxRunningjobs);
 		cmt.setDataSource("ds1");
 		cmt.setNonManagedTXDataSource("ds2");
 		// cmt.setRecordIdGenerator(recordIdGenerator());

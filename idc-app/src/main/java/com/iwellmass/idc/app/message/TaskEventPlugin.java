@@ -1,5 +1,9 @@
 package com.iwellmass.idc.app.message;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Resource;
@@ -8,6 +12,7 @@ import javax.inject.Inject;
 import com.iwellmass.idc.app.service.ExecParamHelper;
 import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.app.service.TaskService;
+import com.iwellmass.idc.message.TimeoutMessage;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
@@ -31,6 +36,7 @@ import com.iwellmass.idc.message.JobEventService;
 import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
+import org.springframework.beans.factory.annotation.Value;
 
 public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
@@ -77,6 +83,9 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
     @Resource
     TaskService taskService;
 
+    @Value(value = "${idc.scheduler.callbackTimeout:1800}")
+    Long timeout;
+
     @Override
     public void initialize(String name, Scheduler scheduler, ClassLoadHelper loadHelper) throws SchedulerException {
         jobHelper.setScheduler(scheduler);
@@ -114,14 +123,12 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
     public void send(JobMessage message) {
 
-        LOGGER.info("接收事件，类型[{}],，message = [{}]", message.getEvent().name(), message);
         // TODO 判断任务堆积
-
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(TaskEventPlugin.PROP_MESSAGE, message);
-
         Trigger trigger = TriggerBuilder.newTrigger()//@formatter:off
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule())
+                .startAt(message instanceof TimeoutMessage ? new Date(LocalDateTime.now().plusSeconds(timeout).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) : new Date())
                 .withIdentity(message.getId())
                 .forJob(TaskEventPlugin.PROCESSOR_JOB_NAME, TaskEventPlugin.PROCESSOR_JOB_GROUP)
                 .usingJobData(jobDataMap)

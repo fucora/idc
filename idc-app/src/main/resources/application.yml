@@ -78,8 +78,8 @@ feign:
         decode404: false
 
 idc.scheduler.start-auto: true        #  是否开启调度
-idc.scheduler.maxRunningJob: 20       # 调度的最大并发数(nodeJob的最大运行数量)
-idc.scheduler.callbackTimeout: true  # 任务回调超时时间  单位:秒  默认30分钟  1800秒
+idc.scheduler.maxRunningjobs: 12       # 调度的最大并发数(nodeJob的最大运行数量)
+idc.scheduler.callbackTimeout: 1800  # 任务回调超时时间  单位:秒  默认30分钟  1800秒
 
 
 ---
@@ -109,6 +109,7 @@ eureka:
     register-with-eureka: true
 
 idc.scheduler.start-auto: true
+idc.scheduler.callbackTimeout: 25
 
 ---
 spring:

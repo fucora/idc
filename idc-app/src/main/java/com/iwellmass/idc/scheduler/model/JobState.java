@@ -39,4 +39,8 @@ public enum JobState {
 	public String desc() {
 		return null;
 	}
+
+	public boolean isNotCallback() {
+		return this == ACCEPTED || this == RUNNING;
+	}
 }

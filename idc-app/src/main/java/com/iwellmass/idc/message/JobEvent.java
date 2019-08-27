@@ -35,6 +35,11 @@ public enum JobEvent {
 	 */
 	SKIP,
 
+	/**
+	 * 超时回调
+	 */
+	TIMEOUT,
+
 	// =====================  nodeJob 回调
 	/**
 	 * 准备真正运行
