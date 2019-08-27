@@ -96,12 +96,16 @@ public class JobHelper {
             logger.log(executionLog);
         } else {
             // modify node'parent   state to failed
-            triggerKey = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get().getTask().getTriggerKey();
-            modifyJobState(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(), JobState.FAILED);
-            ExecutionLog executionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+            ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                     message.getStackTraceElements() == null ? null : new ObjectMapper().writeValueAsString(message.getStackTraceElements()),
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
-            logger.log(executionLog);
+            logger.log(nodeJobExecutionLog);
+            Job parent = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get();
+            triggerKey = parent.getTask().getTriggerKey();
+            modifyJobState(parent, JobState.FAILED);
+            ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
+                    parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
+            logger.log(jobExecutionLog);
         }
         try {
             if (scheduler.checkExists(triggerKey)) {
