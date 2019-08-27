@@ -1,9 +1,14 @@
 package com.iwellmass.idc.app.service;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.message.FinishMessage;
+import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
@@ -22,10 +27,8 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * @author nobita chen
@@ -35,11 +38,13 @@ import java.util.Set;
 @Component
 public class JobHelper {
 
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.CHINESE);
+
     @Setter
     private Scheduler scheduler;
 
     @Inject
-    private IDCLogger idcLogger;
+    private IDCLogger logger;
     @Inject
     IDCJobStore idcJobStore;
     @Inject
@@ -79,16 +84,24 @@ public class JobHelper {
         onJobFinished(abstractJob);
     }
 
-    public void failed(AbstractJob abstractJob) {
+    public void failed(AbstractJob abstractJob, JobMessage message) throws JsonProcessingException {
         checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FAILED);
         TriggerKey triggerKey;
         if (abstractJob.isJob()) {
             triggerKey = abstractJob.asJob().getTask().getTriggerKey();
+            ExecutionLog executionLog = ExecutionLog.createLog(abstractJob.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
+                    new ObjectMapper().setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY).writeValueAsString(message.getStackTraceElements()),
+                    abstractJob.asJob().getShouldFireTime().format(formatter), abstractJob.asJob().getTask().getTaskName(), abstractJob.getId(), abstractJob.asJob().getLoadDate(), abstractJob.asJob().getTask().getWorkflowId());
+            logger.log(executionLog);
         } else {
             // modify node'parent   state to failed
             triggerKey = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get().getTask().getTriggerKey();
             modifyJobState(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(), JobState.FAILED);
+            ExecutionLog executionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                    message.getStackTraceElements() == null ? null : new ObjectMapper().writeValueAsString(message.getStackTraceElements()),
+                    abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
+            logger.log(executionLog);
         }
         try {
             if (scheduler.checkExists(triggerKey)) {
@@ -114,6 +127,8 @@ public class JobHelper {
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // cache running param
             List<ExecParam> execParams = job.asJob().getParams();
+            logger.log(job.getId(), "重跑任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
+                    job.asJob().getShouldFireTime().format(formatter), job.asJob().getTaskName(), ExecParamHelper.getLoadDate(execParams), job.asJob().getTask().getWorkflowId());
 
             // clear all sunbJobs and job
             nodeJobRepository.deleteAll(job.getSubJobs());
@@ -134,6 +149,8 @@ public class JobHelper {
         } else {
             // create new nodeJob instance
             NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
+            logger.log(job.getId(), "重跑节点任务，oldNodeJobId[{}]，newNodeJobId[{}]，taskId[{}]，domain[{}]",
+                    job.getId(), newNodeJob.getId(), job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain());
             // clear
             nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
@@ -156,17 +173,21 @@ public class JobHelper {
             // modify state of all subJobs of the job to skip
             job.getSubJobs().forEach(subJob -> {
                 if (!subJob.getNodeId().equalsIgnoreCase(NodeTask.START) && !subJob.getNodeId().equalsIgnoreCase(NodeTask.END) && !subJob.getState().isComplete()) {
+                    logger.log(subJob.getId(), "跳过节点实例，nodeJobId[{}]，taskId[{}]，domain[{}]，state[{}]"
+                            , subJob.getId(), subJob.getNodeTask().getTaskId(), subJob.getNodeTask().getDomain(), subJob.getState().name());
                     subJob.setState(JobState.SKIPPED);
                 }
             });
         }
+        logger.log(job.getId(), "跳过任务实例，id[{}]，state[{}]", job.getId(), job.getState().name());
         modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
     }
 
     public void ready(AbstractJob job) {
         checkRunning(job);
-        idcLogger.log(job.getId(), "job:{}," + "已成功派发,准备执行", job.getId());
+        logger.log(job.getId(), "节点任务成功派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
         if (job.getState() == JobState.ACCEPTED) {
             modifyJobState(job, JobState.RUNNING);
         }
@@ -174,7 +195,8 @@ public class JobHelper {
 
     public void running(AbstractJob job) {
         checkRunning(job);
-        idcLogger.log(job.getId(), "job:{}," + "正在执行", job.getId());
+        logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
         if (job.getState() == JobState.ACCEPTED) {
             modifyJobState(job, JobState.RUNNING);
         }
@@ -209,7 +231,9 @@ public class JobHelper {
     }
 
     private void executeJob(Job job) {
-        idcLogger.log(job.getId(), "执行workflow id={}", job.getTask().getWorkflow().getId());
+        logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
+                job.getShouldFireTime().format(formatter)
+                , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
         modifyJobState(job, JobState.RUNNING);
         runNextJob(job, NodeTask.START);
     }
@@ -221,7 +245,6 @@ public class JobHelper {
             return;
         }
         if (nodeJob.getNodeId().equals(NodeTask.END) && !jobRepository.findById(nodeJob.getContainer()).get().getState().isComplete()) {
-            idcLogger.log(nodeJob.getId(), "执行task end,container={}", nodeJob.getContainer());
             FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
@@ -229,7 +252,8 @@ public class JobHelper {
         }
         if (nodeJob.getState().equals(JobState.NONE)) {
             modifyJobState(nodeJob, JobState.ACCEPTED);
-            idcLogger.log(nodeJob.getId(), "执行task id={}, task = {},container={}", nodeJob.getId(), nodeJob.getTask().getTaskId(), nodeJob.getContainer());
+            logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
+                    , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
             IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, task));
         }
     }
@@ -276,11 +300,15 @@ public class JobHelper {
                     idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
                 }
             }
+            logger.log(job.getId(), "节点任务执行完毕，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]，state[{}]",
+                    job.getShouldFireTime().format(formatter), job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId(), job.getState().name());
         } else {
             NodeJob nodeJob = runningJob.asNodeJob();
             Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
             Job parent = jobRepository.findById(nodeJob.getContainer()).get();
             parent.getTask().setWorkflow(workflow);
+            logger.log(nodeJob.getId(), "节点任务执行完毕，批次时间[{}]，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                    parent.getShouldFireTime().format(formatter), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
             runNextJob(parent, nodeJob.getNodeId());
         }
     }

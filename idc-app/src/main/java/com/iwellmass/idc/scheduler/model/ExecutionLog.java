@@ -1,6 +1,7 @@
 package com.iwellmass.idc.scheduler.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.common.criteria.Equal;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.slf4j.helpers.MessageFormatter;
@@ -15,6 +16,7 @@ public class ExecutionLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "job_id")
@@ -31,7 +33,9 @@ public class ExecutionLog {
     @ApiModelProperty("错误日志,堆栈信息")
     private String detail;
 
-    public ExecutionLog(String detail) {
+    public ExecutionLog(String jobId, String message, String detail) {
+        this.jobId = jobId;
+        this.message = message;
         this.detail = detail;
         this.time = LocalDateTime.now();
     }
@@ -41,7 +45,7 @@ public class ExecutionLog {
     }
 
     public static ExecutionLog createLog(String jobId, String message, String detail, Object... args) {
-        ExecutionLog log = new ExecutionLog(detail);
+        ExecutionLog log = new ExecutionLog(jobId, message, detail);
         log.setJobId(jobId);
         log.setMessage(message);
         if (message != null) {

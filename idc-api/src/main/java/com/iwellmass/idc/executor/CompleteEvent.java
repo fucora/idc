@@ -65,6 +65,10 @@ public class CompleteEvent implements IDCJobEvent {
 		return setMessage(arrayFormat(message, args).getMessage());
 	}
 
+	public StackTraceElement[] getStackTraceElements() {
+		return stackTraceElements;
+	}
+
 	public static CompleteEvent successEvent(String nodeJobId) {
 		CompleteEvent event = new CompleteEvent();
 		event.nodeJobId = nodeJobId;

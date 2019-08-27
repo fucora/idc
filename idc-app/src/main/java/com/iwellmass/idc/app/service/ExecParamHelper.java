@@ -67,6 +67,10 @@ public class ExecParamHelper {
         return execParams;
     }
 
+//    public String getLoadDate(List<ExecParam> execParams) {
+//        this
+//    }
+
     public static String getLoadDate(List<ExecParam> execParams) {
         String loadDate = "";
         for (ExecParam p : execParams) {

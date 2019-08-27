@@ -1,7 +1,5 @@
 package com.iwellmass.idc.app.service;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,19 +16,14 @@ import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.ApplicationContextException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ReflectionUtils;
 
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
@@ -54,7 +47,7 @@ public class JobService {
     @Resource
     TaskService taskService;
     @Inject
-    IDCLogger idcLogger;
+    IDCLogger logger;
 
 
     @Resource
@@ -97,14 +90,8 @@ public class JobService {
     @Transactional
     public Job createJob(String id, String taskName, List<ExecParam> execParams) {
         Task task = getTask(taskName);
-        // 有可能前台强制取消了调度
-        // 或者调度已过期、已被删除
-//		if (task.getState().isTerminated()) {
-//			LOGGER.error("调度已关闭：" + task.getState());
-//		} else {
         Job job = new Job(id, task, execParams);
         return jobRepository.save(job);
-//		}
     }
 
     public JobVO getJobDetail(String jobId) {
@@ -140,15 +127,16 @@ public class JobService {
 //        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 //            throw new ApplicationContextException(e.getMessage(), e);
 //        }
-//        idcLogger.log(jobId,template,content)
-        return null;
+//        logger.log(jobId,template,content)
+        logger.log(jobId,template,content);
+        return "success";
 
     }
 
 
-    public PageData<ExecutionLog> getJobInstanceLog(String id, Pager pager) {
+    public PageData<ExecutionLog> getLogs(String jobId, Pager pager) {
         Pageable page = PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
-        Page<ExecutionLog> data = logRepository.findByJobId(id, page);
+        Page<ExecutionLog> data = logRepository.findByJobId(jobId, page);
         return new PageData<>((int) data.getTotalElements(), data.getContent());
     }
 

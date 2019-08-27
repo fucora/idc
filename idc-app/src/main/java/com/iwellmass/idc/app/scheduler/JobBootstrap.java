@@ -1,7 +1,9 @@
 package com.iwellmass.idc.app.scheduler;
 
+import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.service.ExecParamHelper;
 import com.iwellmass.idc.app.service.TaskService;
+import com.iwellmass.idc.scheduler.service.IDCLogger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -14,6 +16,8 @@ import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.quartz.SuspendScheduleAfterExecution;
 
 import lombok.Setter;
+
+import java.util.List;
 
 @DisallowConcurrentExecution
 @SuspendScheduleAfterExecution
@@ -35,24 +39,28 @@ public class JobBootstrap implements org.quartz.Job {
     @Setter
     TaskService taskService;
 
+    @Setter
+    IDCLogger logger;
+
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-
+        // 全局唯一
+        String jobId = context.getFireInstanceId();
         try {
-            // 全局唯一
-            String jobId = context.getFireInstanceId();
             LOGGER.info("开始执行任务：{} , taskName: {} ", jobId, taskName);
             // 恢复的任务，清理现场
             if (context.isRecovering()) {
                 jobService.clear(jobId);
             }
-            jobService.createJob(jobId, taskName, execParamHelper.parse(jobService.getTask(taskName)));
+            List<ExecParam> execParams = execParamHelper.parse(jobService.getTask(taskName));
+            jobService.createJob(jobId, taskName, execParams);
 
             StartMessage message = StartMessage.newMessage(jobId);
             message.setMessage("启动任务");
             TaskEventPlugin.eventService(context.getScheduler()).send(message);
+            logger.log(jobId, "创建任务实例,taskName[{}]，jobId[{}]，loadDate[{}]", taskName, jobId, ExecParamHelper.getLoadDate(execParams));
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            logger.log(jobId, e.getMessage(), e);
         }
     }
 }

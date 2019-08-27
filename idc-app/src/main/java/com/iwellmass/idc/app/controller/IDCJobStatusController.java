@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.controller;
 
+import com.google.common.collect.Lists;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.app.service.JobService;
@@ -59,6 +60,7 @@ public class IDCJobStatusController {
             message = FinishMessage.newMessage(event.getNodeJobId());
         } else if (jobInstanceStatus == JobInstanceStatus.FAILED) {
             message = FailMessage.newMessage(event.getNodeJobId());
+            message.setStackTraceElements(event.getStackTraceElements());
         } else if (jobInstanceStatus == JobInstanceStatus.CANCLED) {
             message = CancelMessage.newMessage(event.getNodeJobId());
         } else {

@@ -8,9 +8,6 @@ import javax.annotation.Resource;
 
 import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.app.vo.*;
-import com.iwellmass.idc.executor.CompleteEvent;
-import com.iwellmass.idc.executor.ProgressEvent;
-import com.iwellmass.idc.executor.StartEvent;
 import com.iwellmass.idc.message.RedoMessage;
 import com.iwellmass.idc.message.SkipMessage;
 import com.iwellmass.idc.scheduler.model.ExecutionLog;
@@ -82,7 +79,7 @@ public class JobController {
 //    @ApiOperation("任务日志(分页)")
 //    @PostMapping("/{id}/log")
 //    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") Integer id, Pager pager) {
-//        PageData<ExecutionLog> data = jobInstanceService.getJobInstanceLog(id, pager);
+//        PageData<ExecutionLog> data = jobInstanceService.getLogs(id, pager);
 //        return ServiceResult.success(data);
 //    }
     
@@ -101,9 +98,9 @@ public class JobController {
     }
 
     @ApiOperation("任务日志(分页)")
-    @PostMapping("/{id}/log")
-    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "id") String id, Pager pager) {
-        PageData<ExecutionLog> data = jobService.getJobInstanceLog(id, pager);
+    @PostMapping("/{jobId}/log")
+    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "jobId") String jobId, Pager pager) {
+        PageData<ExecutionLog> data = jobService.getLogs(jobId, pager);
         return ServiceResult.success(data);
     }
 

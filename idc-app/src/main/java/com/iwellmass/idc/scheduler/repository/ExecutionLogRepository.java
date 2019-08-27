@@ -5,31 +5,23 @@ import com.iwellmass.idc.scheduler.model.ExecutionLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface ExecutionLogRepository extends PagingAndSortingRepository<ExecutionLog, Long> {
-	
-	default void log(String jobId, String message, Object... args) {
-		ExecutionLog log = ExecutionLog.createLog(jobId, message, args);
-		save(log);
-	}
-	
-	default void log(IDCJobEvent event) {
-		ExecutionLog log = ExecutionLog.createLog(event.getNodeJobId(), event.getMessage());
-		save(log);
-	}
+public interface ExecutionLogRepository extends CrudRepository<ExecutionLog, Long> {
 
-	Page<ExecutionLog> findByJobId(String jobId, Pageable page);
+    default void log(String jobId, String message, Object... args) {
+        ExecutionLog log = ExecutionLog.createLog(jobId, message, args);
+        save(log);
+    }
 
-//	@Modifying
-//	@Query("DELETE FROM ExecutionLog WHERE instanceId IN ( SELECT instanceId FROM JobInstance WHERE jobId = :#{#jk.jobId} AND jobGroup = :#{#jk.jobGroup})")
-//	void deleteByJob(@Param("jk") String jobId);
+    Page<ExecutionLog> findByJobId(String jobId, Pageable page);
 
-	@Modifying
-	@Transactional
-	void deleteByJobId(String jobId);
+    @Modifying
+    @Transactional
+    void deleteByJobId(String jobId);
 
 }

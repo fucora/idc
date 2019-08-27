@@ -61,7 +61,7 @@ public class TaskEventProcessor implements org.quartz.Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         // safe execute...
         try {
-            logger.log(message.getJobId(), message.getMessage());
+//            logger.log(message.getJobId(), message.getMessage());
             doExecute(context);
         } catch (Exception e) {
             LOGGER.error("ERROR: " + message);
@@ -92,18 +92,15 @@ public class TaskEventProcessor implements org.quartz.Job {
         }
         try {
             switch (message.getEvent()) {
-                case START: {
+                case START:
                     jobHelper.start(runningJob);
                     break;
-                }
-                case FINISH: {
+                case FINISH:
                     jobHelper.success(runningJob);
                     break;
-                }
-                case FAIL: {
-                    jobHelper.failed(runningJob);
+                case FAIL:
+                    jobHelper.failed(runningJob,message);
                     break;
-                }
                 case REDO:
                     jobHelper.redo(runningJob);
                     break;

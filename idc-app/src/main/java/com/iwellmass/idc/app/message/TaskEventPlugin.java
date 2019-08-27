@@ -3,6 +3,7 @@ package com.iwellmass.idc.app.message;
 import java.util.concurrent.RejectedExecutionException;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.idc.app.service.ExecParamHelper;
 import com.iwellmass.idc.app.service.JobHelper;
@@ -61,8 +62,8 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
     WorkflowRepository workflowRepository;
 
     @Setter
-    @Resource
-    IDCLogger idcLogger;
+    @Inject
+    IDCLogger logger;
 
     @Setter
     @Resource
@@ -84,7 +85,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
         scheduler.getContext().put(TaskEventProcessor.CXT_JOB_STORE, idcJobStore);
         scheduler.getContext().put(TaskEventProcessor.CXT_ALL_JOB_REPOSITORY, allJobRepository);
         scheduler.getContext().put(TaskEventProcessor.CXT_WORKFLOW_REPOSITORY, workflowRepository);
-        scheduler.getContext().put(TaskEventProcessor.CXT_LOGGER, idcLogger);
+        scheduler.getContext().put(TaskEventProcessor.CXT_LOGGER, logger);
         scheduler.getContext().put(TaskEventProcessor.CXT_JOB_HELPER, jobHelper);
         scheduler.getContext().put(TaskEventProcessor.CXT_EXE_PARAM_HELPER, execParamHelper);
         scheduler.getContext().put(TaskEventProcessor.CXT_TASK_SERVICE, taskService);
@@ -113,8 +114,7 @@ public class TaskEventPlugin implements SchedulerPlugin, JobEventService {
 
     public void send(JobMessage message) {
 
-        LOGGER.info("接收事件 {}, message = {}", message.getId(), message);
-        idcLogger.log(message.getJobId(), "存储job的quartz调度计划 jobId={}", message.getJobId());
+        LOGGER.info("接收事件，类型[{}],，message = [{}]", message.getEvent().name(), message);
         // TODO 判断任务堆积
 
         JobDataMap jobDataMap = new JobDataMap();

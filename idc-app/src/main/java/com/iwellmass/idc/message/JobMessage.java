@@ -38,10 +38,17 @@ public abstract class JobMessage implements Serializable {
 
     private String message;
 
+    private StackTraceElement[] stackTraceElements;
+
     public JobMessage(String id, String jobId, JobEvent event) {
+        this(id, jobId, event, null);
+    }
+
+    public JobMessage(String id, String jobId, JobEvent event, StackTraceElement[] stackTraceElements) {
         this.id = id;
         this.jobId = jobId;
         this.event = event;
+        this.stackTraceElements = stackTraceElements;
     }
 
 }

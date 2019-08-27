@@ -1,8 +1,10 @@
 package com.iwellmass.idc.scheduler.service;
 
+import com.iwellmass.idc.scheduler.model.ExecutionLog;
 import com.iwellmass.idc.scheduler.repository.ExecutionLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,12 @@ public class IDCLoggerImpl implements IDCLogger {
 		} catch (Throwable e) {
 			LOGGER.info("job[" + jobId + "] >>>>> " + message, args);
 		}
+		return this;
+	}
+
+	@Override
+	public IDCLogger log(ExecutionLog executionLog) {
+		logRepo.save(executionLog);
 		return this;
 	}
 
