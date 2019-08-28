@@ -35,8 +35,6 @@ public class IDCJobStatusController {
     @ApiOperation("任务开始")
     @PutMapping("/start")
     public void fireStartEvent(@RequestBody StartEvent event) {
-
-        logger.info("jobReady:{}", event.getNodeJobId());
         ReadyMessage message = ReadyMessage.newMessage(event.getNodeJobId());
         message.setMessage("任务准备执行" + event.getNodeJobId());
         TaskEventPlugin.eventService(qs).send(message);
@@ -45,7 +43,6 @@ public class IDCJobStatusController {
     @ApiOperation("发送过程信息")
     @PutMapping(path = "/progress")
     public void saveRuntimeUrlLog(@RequestBody ProgressEvent event) {
-        logger.info("jobRunning:{}", event.getNodeJobId());
         RunningMessage message = RunningMessage.newMessage(event.getNodeJobId());
         message.setMessage("任务正在执行" + event.getNodeJobId());
         TaskEventPlugin.eventService(qs).send(message);
@@ -53,7 +50,6 @@ public class IDCJobStatusController {
 
     @PutMapping("/complete")
     public void fireCompleteEvent(@RequestBody CompleteEvent event) {
-        logger.info("fireCompleteEvent", event.getNodeJobId());
         JobInstanceStatus jobInstanceStatus = event.getFinalStatus();
         JobMessage message;
         if (jobInstanceStatus == JobInstanceStatus.FINISHED) {

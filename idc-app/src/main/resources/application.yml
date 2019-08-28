@@ -77,9 +77,10 @@ feign:
         - com.iwellmass.auth.config.OAuth2FeignRequestInterceptor
         decode404: false
 
-idc.scheduler.start-auto: true        #  是否开启调度
-idc.scheduler.maxRunningjobs: 12       # 调度的最大并发数(nodeJob的最大运行数量)
-idc.scheduler.callbackTimeout: 1800  # 任务回调超时时间  单位:秒  默认30分钟  1800秒
+idc.scheduler.start-auto: true          # 是否开启调度
+idc.scheduler.maxRunningJobs: 10       # 调度的最大并发数(nodeJob的最大运行数量)
+idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认开启
+idc.scheduler.callbackTimeout: 7200  # 任务回调超时时间  单位:秒  默认2小时
 
 
 ---
@@ -109,7 +110,7 @@ eureka:
     register-with-eureka: true
 
 idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 25
+idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
 
 ---
 spring:

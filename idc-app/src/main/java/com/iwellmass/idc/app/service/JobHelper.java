@@ -25,6 +25,7 @@ import lombok.Setter;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -63,6 +64,8 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
+    @Value(value = "${idc.scheduler.openCallbackControl:false}")
+    boolean openCallbackControl;
 
     //==============================================  processor call
 
@@ -259,8 +262,8 @@ public class JobHelper {
     }
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
-        NodeTask task = Objects.requireNonNull(nodeJob.getTask(), "未找到任务");
-        if (nodeJob.getNodeId().equals(NodeTask.CONTROL)) {
+        NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
+        if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
             onJobFinished(nodeJob);
             return;
         }
@@ -274,8 +277,10 @@ public class JobHelper {
             modifyJobState(nodeJob, JobState.ACCEPTED);
             logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
                     , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
-            TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
-            IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, task));
+            if (openCallbackControl) {
+                TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
+            }
+            IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
         }
     }
 
