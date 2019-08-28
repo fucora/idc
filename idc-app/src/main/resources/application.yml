@@ -111,6 +111,7 @@ eureka:
 
 idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
+idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认开启
 
 ---
 spring:
