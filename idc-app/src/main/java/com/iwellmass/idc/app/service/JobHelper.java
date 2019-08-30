@@ -218,10 +218,14 @@ public class JobHelper {
      * @param job
      */
     public void timeout(AbstractJob job) throws JsonProcessingException {
-        if (job.getState().isNotCallback()) {
-            logger.log(job.getId(),"节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                    job.asNodeJob().getNodeTask().getTaskId(),job.asNodeJob().getNodeTask().getDomain(),job.getId(),job.getState());
-            failed(job,FailMessage.newMessage(job.getId()));
+        // if the user  restart idc from openCallbackControl = true to openCallbackControl = false. previous timeout event exist.
+        // so there do a twice validate
+        if (openCallbackControl) {
+            if (job.getState().isNotCallback()) {
+                logger.log(job.getId(),"节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                        job.asNodeJob().getNodeTask().getTaskId(),job.asNodeJob().getNodeTask().getDomain(),job.getId(),job.getState());
+                failed(job,FailMessage.newMessage(job.getId()));
+            }
         }
     }
 
