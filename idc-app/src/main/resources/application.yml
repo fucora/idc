@@ -4,11 +4,11 @@ spring:
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
-#  datasource:
-#    driverClassName: com.mysql.jdbc.Driver
-#    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-#    username: root
-#    password: zjhz2017
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://db.iwellmass.com:3306/idc_cx?characterEncoding=utf8&useSSL=false
+    username: root
+    password: zjhz2017
 
 server:
   port: 9306
@@ -118,7 +118,7 @@ spring:
   profiles: dev
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://db.iwellmass.com:3306/idc_cx?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
 eureka:
@@ -130,10 +130,12 @@ eureka:
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
   client:
     serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
+      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
     healthcheck:
       enabled: true
     lease:
       duration: 5
 
 idc.scheduler.start-auto: true
+idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
+idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认开启
