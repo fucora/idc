@@ -98,4 +98,10 @@ public class TaskController {
         return ServiceResult.success(taskService.getParams(workflowId));
     }
 
+    @ApiOperation("loadDate参数简要可选字段")
+    @GetMapping("/loadDateParams/simplify")
+    public ServiceResult<List<String>> getLoadDateParams() {
+        return ServiceResult.success(taskService.getLoadDateParams());
+    }
+
 }

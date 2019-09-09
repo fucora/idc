@@ -1,5 +1,7 @@
 package com.iwellmass.idc.app.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +37,37 @@ import com.iwellmass.idc.scheduler.repository.TaskRepository;
 
 @Service
 public class TaskService {
+
+    // last day of last month compared to shouldFireTime
+    public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的最后一天";
+    public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的最后一天";
+    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的最后一天";
+    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    // last day of last month compared to realRunTime
+    public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME = "实际运行时间上月的最后一天";
+    public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME = "实际运行时间当月的最后一天";
+    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME = "实际运行时间下月的最后一天";
+    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    // now
+    public static final String NOW = "调度计划提交时间";
+    public static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
+
+
+    public static final Map<String,String> loadDateParams = new HashMap<>();
+
+    static {
+        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(NOW,NOW_OGNL);
+    }
 
     @Resource
     TaskRepository taskRepository;
@@ -138,6 +171,10 @@ public class TaskService {
             }
         }));
         return mergeTaskParamVOS.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+    }
+
+    public List<String> getLoadDateParams() {
+        return Lists.newArrayList(loadDateParams.keySet());
     }
 
 

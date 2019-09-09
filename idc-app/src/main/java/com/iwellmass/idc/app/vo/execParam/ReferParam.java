@@ -21,4 +21,8 @@ public class ReferParam {
 
     @ApiModelProperty("实际运行时间")
     private LocalDateTime realRunTime;
+
+    @ApiModelProperty("调度计划提交或者重新调度的时间更新时间,不是task.createTime")
+    private LocalDateTime taskUpdateTime;
+
 }

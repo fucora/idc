@@ -5,11 +5,8 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.param.ParamParser;
 import com.iwellmass.common.param.ParamType;
-import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.ExecuteRequest;
-import com.iwellmass.idc.app.util.IDCUtils;
 import com.iwellmass.idc.app.vo.execParam.ReferParam;
-import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
@@ -18,9 +15,8 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -60,9 +56,15 @@ public class ExecParamHelper {
     }
 
     public List<ExecParam> parse(Task task) {
-        ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now());
+        ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now(), task.getUpdatetime());
         ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
-        List<ExecParam> execParams = copyExecParam(task.getParams());
+        List<ExecParam> execParams = deepCopyExecParam(task.getParams());
+        // modify the simple loadDate param to ognl expression
+        for (ExecParam execParam : execParams) {
+            if (TaskService.loadDateParams.containsKey(execParam.getDefaultExpr())) {
+                execParam.setDefaultExpr(TaskService.loadDateParams.get(execParam.getDefaultExpr()));
+            }
+        }
         parser.parse(execParams);
         return execParams;
     }
@@ -83,7 +85,7 @@ public class ExecParamHelper {
     }
 
     // there must adapt a new List<ExecParam> copied on task'params,otherwise the task's params will be modified to the value after firstly parse
-    public List<ExecParam> copyExecParam(List<ExecParam> source) {
+    public List<ExecParam> deepCopyExecParam(List<ExecParam> source) {
         List<ExecParam> result = Lists.newArrayList();
         source.forEach(e -> {
             ExecParam r = new ExecParam();
@@ -100,8 +102,8 @@ public class ExecParamHelper {
         // 计算参数
         Task task = new Task();
         task.setPrevFireTime(LocalDateTime.now());
-        String a = "#idc.shouldFireTime.plusMonths(-2).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-        task.setParams(Lists.newArrayList(new ExecParam("loadDate", a, ParamType.VARCHAR)));
+        java.time.LocalDateTime.now();
+        task.setParams(Lists.newArrayList(new ExecParam("loadDate", null, ParamType.VARCHAR)));
         new ExecParamHelper().parse(task).forEach(execParam -> {
             System.out.println(execParam.getValue());
         });
