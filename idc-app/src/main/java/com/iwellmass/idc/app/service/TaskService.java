@@ -89,6 +89,7 @@ public class TaskService {
             ((CronTaskVO) vo).setCronType(CronType.valueOf(task.getProps().get("cronType").toString()));
             if (((CronTaskVO) vo).getCronType().equals(CronType.MONTHLY)) {
                 ((CronTaskVO) vo).setDays((List<Integer>) task.getProps().get("days"));
+                ((CronTaskVO) vo).setExpression(String.valueOf(task.getProps().get("expression")));
             }
         } else {
             vo = new ManualTaskVO();
