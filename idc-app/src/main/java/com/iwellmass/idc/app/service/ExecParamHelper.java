@@ -61,8 +61,8 @@ public class ExecParamHelper {
         List<ExecParam> execParams = deepCopyExecParam(task.getParams());
         // modify the simple loadDate param to ognl expression
         for (ExecParam execParam : execParams) {
-            if (TaskService.loadDateParams.containsKey(execParam.getDefaultExpr())) {
-                execParam.setDefaultExpr(TaskService.loadDateParams.get(execParam.getDefaultExpr()));
+            if (TaskService.loadDateParams.containsKey(execParam.getDefaultExpr().trim())) {
+                execParam.setDefaultExpr(TaskService.loadDateParams.get(execParam.getDefaultExpr().trim()));
             }
         }
         parser.parse(execParams);
