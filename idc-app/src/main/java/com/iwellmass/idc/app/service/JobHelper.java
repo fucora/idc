@@ -271,7 +271,7 @@ public class JobHelper {
             onJobFinished(nodeJob);
             return;
         }
-        if (nodeJob.getNodeId().equals(NodeTask.END) && !jobRepository.findById(nodeJob.getContainer()).get().getState().isComplete()) {
+        if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END) && !jobRepository.findById(nodeJob.getContainer()).get().getState().isComplete()) {
             FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
