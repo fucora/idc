@@ -6,7 +6,7 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc_cx?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
 
@@ -88,7 +88,7 @@ spring:
   profiles: gray
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://grayeureka.iwellmass.com/idc_cx?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://grayeureka.iwellmass.com/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
   jpa:
@@ -118,7 +118,7 @@ spring:
   profiles: dev
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc_cx?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
 eureka:
