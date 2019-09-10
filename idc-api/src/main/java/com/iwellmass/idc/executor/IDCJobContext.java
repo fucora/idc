@@ -15,5 +15,5 @@ public interface IDCJobContext {
 
     public StartEvent newStartEvent();
 
-    public void fail(RuntimeException e);
+    public void fail(Throwable t);
 }

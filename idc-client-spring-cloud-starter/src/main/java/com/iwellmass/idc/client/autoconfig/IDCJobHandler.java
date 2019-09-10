@@ -136,11 +136,11 @@ public class IDCJobHandler implements IDCJobExecutorService {
         }
 
         @Override
-        public void fail(RuntimeException e) {
+        public void fail(Throwable t) {
             if (executeRequest != null && executeRequest.getNodeJobId() != null) {
                 CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId())
-                        .setMessage("任务执行异常: {}", e.getMessage())
-                        .setStackTraceElements(e.getStackTrace())
+                        .setMessage("任务执行异常: {}", t.getMessage())
+                        .setStackTraceElements(t.getStackTrace())
                         .setEndTime(LocalDateTime.now());
                 complete(event);
             }

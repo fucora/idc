@@ -37,7 +37,7 @@ public class IDCJobContextFactory {
 	private class ExecutionContextImpl implements IDCJobContext {
 
 		@Override
-		public void fail(RuntimeException e) {
+		public void fail(Throwable t) {
 
 		}
 
