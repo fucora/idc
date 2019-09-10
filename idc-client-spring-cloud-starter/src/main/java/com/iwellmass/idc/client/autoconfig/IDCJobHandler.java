@@ -31,6 +31,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
     private static final int RUNNING = 0x01;
     private static final int COMPLETE = 0x02;
     private static final int NOTIFY_ERROR = 0x03;
+    private static final int FAIL = 0x04;
 
     private final IDCJob job;
 
@@ -105,15 +106,20 @@ public class IDCJobHandler implements IDCJobExecutorService {
                 return;
             }
 
+            if (state == FAIL) {
+                LOGGER.warn("[{}] job already FAIL {}", event.getNodeJobId());
+                return;
+            }
+
             LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
                     executeRequest.getTaskName(),
                     event.getFinalStatus());
 
             try {
                 idcStatusService.fireCompleteEvent(event);
-                state = COMPLETE;
+                modifyState(event);
             } catch (Throwable e) {
-                state = NOTIFY_ERROR;
+                modifyState(null);
                 LOGGER.error("发送事件失败, EVENT: {}", event, e);
             }
         }
@@ -145,6 +151,18 @@ public class IDCJobHandler implements IDCJobExecutorService {
                         .setStackTraceElements(t.getStackTrace())
                         .setEndTime(LocalDateTime.now());
                 complete(event);
+            }
+        }
+
+        private synchronized void modifyState(CompleteEvent event) {
+            if (event == null) {
+                this.state = NOTIFY_ERROR;
+                return;
+            }
+            if (event.getFinalStatus().equals(JobInstanceStatus.FINISHED)) {
+                this.state = COMPLETE;
+            } else if (event.getFinalStatus().equals(JobInstanceStatus.FAILED)) {
+                this.state = FAIL;
             }
         }
     }
