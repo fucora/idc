@@ -134,6 +134,8 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
                 } else if (inst == ReleaseInstruction.RELEASE) {
                     getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_WAITING, STATE_SUSPENDED);
                     getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_PAUSED, STATE_PAUSED_SUSPENDED);
+                    // maybe user choose skip ,the trigger state is error
+                    getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_WAITING, STATE_ERROR);
                 }
                 signalSchedulingChangeOnTxCompletion(0L);
             } catch (SQLException e) {
