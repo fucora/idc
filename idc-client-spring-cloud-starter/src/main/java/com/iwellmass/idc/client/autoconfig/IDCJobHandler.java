@@ -134,5 +134,16 @@ public class IDCJobHandler implements IDCJobExecutorService {
         public StartEvent newStartEvent() {
             return StartEvent.newEvent(executeRequest.getNodeJobId());
         }
+
+        @Override
+        public void fail(RuntimeException e) {
+            if (executeRequest != null && executeRequest.getNodeJobId() != null) {
+                CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId())
+                        .setMessage("任务执行异常: {}", e.getMessage())
+                        .setStackTraceElements(e.getStackTrace())
+                        .setEndTime(LocalDateTime.now());
+                complete(event);
+            }
+        }
     }
 }

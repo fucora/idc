@@ -14,4 +14,6 @@ public interface IDCJobContext {
     public ProgressEvent newProgressEvent();
 
     public StartEvent newStartEvent();
+
+    public void fail(RuntimeException e);
 }
