@@ -80,6 +80,8 @@ public class IDCJobHandler implements IDCJobExecutorService {
                                 .setStackTraceElements(cause.getStackTrace())
                                 .setEndTime(LocalDateTime.now());
                         context.complete(event);
+                    } else {
+                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED));
                     }
                 });
     }
