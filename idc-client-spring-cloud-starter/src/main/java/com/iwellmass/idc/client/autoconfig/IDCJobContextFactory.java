@@ -36,6 +36,11 @@ public class IDCJobContextFactory {
 
 	private class ExecutionContextImpl implements IDCJobContext {
 
+		@Override
+		public void fail(RuntimeException e) {
+
+		}
+
 		private ExecuteRequest executeRequest;
 		private int state = RUNNING; // TODO use CAS
 
@@ -84,5 +89,6 @@ public class IDCJobContextFactory {
 		public StartEvent newStartEvent() {
 			return StartEvent.newEvent(executeRequest.getNodeJobId());
 		}	}
+
 
 }
