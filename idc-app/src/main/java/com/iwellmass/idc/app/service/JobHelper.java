@@ -84,7 +84,7 @@ public class JobHelper {
     }
 
     public void success(AbstractJob abstractJob) {
-        checkRunning(abstractJob);
+//        checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
     }
