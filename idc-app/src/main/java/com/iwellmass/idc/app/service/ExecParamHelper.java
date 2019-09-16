@@ -55,7 +55,9 @@ public class ExecParamHelper {
         request.setJobId(job.getId());
         request.setTaskName(task.getTaskName());
         request.setScheduleType(task.getScheduleType());
-        request.setShouldFireTime(job.getShouldFireTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        if (job.getShouldFireTime() != null) {
+            request.setShouldFireTime(job.getShouldFireTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        }
         return request;
     }
 
