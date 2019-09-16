@@ -138,7 +138,7 @@ public class JobHelper {
             // cache running param
             List<ExecParam> execParams = job.asJob().getParams();
             logger.log(job.getId(), "重跑任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                    job.asJob().getShouldFireTime().format(formatter), job.asJob().getTaskName(), ExecParamHelper.getLoadDate(execParams), job.asJob().getTask().getWorkflowId());
+                    Objects.nonNull(job.asJob().getShouldFireTime())?job.asJob().getShouldFireTime().format(formatter):null, job.asJob().getTaskName(), ExecParamHelper.getLoadDate(execParams), job.asJob().getTask().getWorkflowId());
 
             // clear all sunbJobs and job
             nodeJobRepository.deleteAll(job.getSubJobs());
@@ -259,7 +259,7 @@ public class JobHelper {
 
     private void executeJob(Job job) {
         logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                job.getShouldFireTime().format(formatter)
+                 Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
                 , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
         modifyJobState(job, JobState.RUNNING);
         runNextJob(job, NodeTask.START);
