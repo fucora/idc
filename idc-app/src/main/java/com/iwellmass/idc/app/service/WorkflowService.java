@@ -161,7 +161,7 @@ public class WorkflowService {
             tk.setContentType(node.getContentType());
             tk.setTaskType(TaskType.SIMPLE);
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(node.getId())) {
+            if (systemNode.contains(node.getTaskId().toUpperCase())) {
                 tk.setDomain("idc");
             } else {
                 tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));
