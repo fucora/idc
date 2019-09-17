@@ -155,7 +155,10 @@ public class TaskService {
     public List<MergeTaskParamVO> getParams(String workflowId) {
         List<NodeTask> nodeTasks = workflowRepository.findById(workflowId).orElseThrow(() -> new AppException("未发现指定工作流:" + workflowId)).getNodeTasks();
         List<TaskDetailVO> taskDetailVOS = dfTaskService.batchQueryTaskInfo(nodeTasks.stream()
-                .filter(nt -> !nt.getTaskId().equalsIgnoreCase("start") && !nt.getTaskId().equalsIgnoreCase("end"))
+                .filter(nt -> !nt.getTaskId().equalsIgnoreCase("start") &&
+                                !nt.getTaskId().equalsIgnoreCase("end") &&
+                                !nt.getTaskId().equalsIgnoreCase("control")
+                                 )
                 .map(nt -> Long.valueOf(nt.getTaskId()))
                 .collect(Collectors.toList()))
                 .getResult();
