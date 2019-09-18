@@ -25,7 +25,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/job")
 public class JobController {
-	
+
 	@Resource
 	JobService jobService;
     @Resource
@@ -37,7 +37,7 @@ public class JobController {
         PageData<JobRuntimeVO> taskInstance = jobService.query(qm);
         return ServiceResult.success(taskInstance);
     }
-    
+
     @ApiOperation("获取 Job 详情")
     @GetMapping("/{id}")
     public ServiceResult<JobVO> get(@PathVariable("id") String id) {
@@ -45,7 +45,7 @@ public class JobController {
     	jobService.get(id);
     	return ServiceResult.success(jobVO);
     }
-    
+
     @ApiOperation("获取所有责任人")
     @GetMapping("/assignee")
     public ServiceResult<List<Assignee>> assignee() {
@@ -82,7 +82,7 @@ public class JobController {
 //        PageData<ExecutionLog> data = jobInstanceService.getLogs(id, pager);
 //        return ServiceResult.success(data);
 //    }
-    
+
     @ApiOperation("测试执行")
     @GetMapping("/{id}/test/{action}")
     public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
@@ -98,9 +98,11 @@ public class JobController {
     }
 
     @ApiOperation("任务日志(分页)")
-    @PostMapping("/{jobId}/log")
-    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "jobId") String jobId, Pager pager) {
-        PageData<ExecutionLog> data = jobService.getLogs(jobId, pager);
+    @GetMapping("/log/{jobId}/{page}/{limit}")
+    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable("jobId") String jobId,
+                                                        @PathVariable("page") Integer page,
+                                                        @PathVariable("limit") Integer limit) {
+        PageData<ExecutionLog> data = jobService.getLogs(jobId, new Pager(page,limit));
         return ServiceResult.success(data);
     }
 
