@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.xml.soap.Node;
 
 import com.google.common.collect.Lists;
 import com.iwellmass.common.util.Utils;
@@ -126,21 +127,21 @@ public class WorkflowService {
 
 
         List<String> necessaryNode = Arrays.asList(NodeTask.START, NodeTask.END);    // required
-        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
+        List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
         necessaryNode.forEach(requiredVertex ->
                 Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
-        Assert.isFalse(systemNode.containsAll(workflowGraph.vertexSet()), "未配置任何任务节点");
+        Assert.isTrue(gvo.getNodes().stream().anyMatch(nvo -> !systemNode.contains(nvo.getTaskId())), "未配置任何任务节点");
 
         // validate graph whether is legal and contain isolated node
         workflowGraph.vertexSet().forEach(tk -> {
             // start
-            if (NodeTask.START.equals(tk)) {
+            if (NodeTask.START.equalsIgnoreCase(tk)) {
                 if (workflowGraph.inDegreeOf(tk) > 0) {
                     throw new AppException("开始节点不能作为下游节点");
                 }
             }
             // end
-            else if (NodeTask.END.equals(tk)) {
+            else if (NodeTask.END.equalsIgnoreCase(tk)) {
                 if (workflowGraph.outDegreeOf(tk) > 0) {
                     throw new AppException("结束节点不能作为上游节点");
                 }
@@ -162,7 +163,7 @@ public class WorkflowService {
             tk.setContentType(node.getContentType());
             tk.setTaskType(TaskType.SIMPLE);
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(node.getTaskId().toUpperCase())) {
+            if (systemNode.contains(node.getTaskId())) {
                 tk.setDomain("idc");
             } else {
                 tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));

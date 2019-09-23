@@ -11,6 +11,8 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Arrays;
+
 /**
  * 子任务（可由 Job 触发，也可由 NodeJob 触发），需要将 {@link NodeJob#getId()} 设置到子任务的 {@link NodeJob#container} 字段
  */
@@ -100,6 +102,6 @@ public class NodeJob extends AbstractJob {
 
     // judge the nodeJob is systemNode
     public boolean isSystemNode() {
-        return this.nodeId.equals(NodeTask.START) || this.nodeId.equals(NodeTask.END) || this.nodeId.equals(NodeTask.CONTROL);
+        return Arrays.asList(NodeTask.START.toLowerCase(),NodeTask.END.toLowerCase(),NodeTask.CONTROL.toLowerCase()).contains(getNodeTask().getTaskId());
     }
 }
