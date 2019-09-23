@@ -128,7 +128,8 @@ public class WorkflowService {
         List<String> necessaryNode = Arrays.asList(NodeTask.START, NodeTask.END);    // required
         List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
         necessaryNode.forEach(requiredVertex ->
-                Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点")); // 判定是否包含 start end 节点
+                Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
+        Assert.isTrue(workflowGraph.vertexSet().stream().filter(v -> !systemNode.contains(v)).collect(Collectors.toList()).size() == 0, "未配置任何任务节点");
 
         // validate graph whether is legal and contain isolated node
         workflowGraph.vertexSet().forEach(tk -> {
