@@ -76,13 +76,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
         CompletableFuture.runAsync(() -> job.execute(context), executor)
                 .whenComplete((_void, cause) -> {
                     if (cause != null) {
-                        CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName())
-                                .setMessage("任务 {} 执行异常: {}", executeRequest.getNodeTaskTaskName(), cause.getMessage())
-                                .setThrowable(cause)
-                                .setEndTime(LocalDateTime.now());
-                        context.complete(event);
+                        context.fail(cause);
                     } else {
-                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED));
+                        context.success();
                     }
                 });
     }
@@ -134,6 +130,11 @@ public class IDCJobHandler implements IDCJobExecutorService {
                         .setEndTime(LocalDateTime.now());
                 complete(event);
             }
+        }
+
+        @Override
+        public void success() {
+            complete(newCompleteEvent(JobInstanceStatus.FINISHED));
         }
 
         @Override

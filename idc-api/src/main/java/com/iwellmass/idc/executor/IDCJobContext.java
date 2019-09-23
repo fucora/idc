@@ -20,4 +20,6 @@ public interface IDCJobContext {
     void progress();
 
     void start();
+
+    void success();
 }

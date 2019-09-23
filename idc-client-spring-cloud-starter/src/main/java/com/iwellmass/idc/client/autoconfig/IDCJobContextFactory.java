@@ -51,6 +51,11 @@ public class IDCJobContextFactory {
 
 		}
 
+		@Override
+		public void success() {
+
+		}
+
 		private ExecuteRequest executeRequest;
 		private int state = RUNNING; // TODO use CAS
 
