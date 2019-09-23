@@ -17,5 +17,7 @@ public interface IDCJobContext {
 
     void fail(Throwable t);
 
-    void progress() ;
+    void progress();
+
+    void start();
 }

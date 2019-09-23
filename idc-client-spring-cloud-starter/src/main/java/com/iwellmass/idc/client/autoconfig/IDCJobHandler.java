@@ -142,6 +142,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
             idcStatusService.fireProgressEvent(progressEvent);
         }
 
+        @Override
+        public void start() {
+            StartEvent startEvent = StartEvent.newEvent(executeRequest.getNodeJobId());
+            idcStatusService.fireStartEvent(startEvent);
+        }
+
         public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
             if (status == JobInstanceStatus.FINISHED) {
                 return CompleteEvent.successEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName());
