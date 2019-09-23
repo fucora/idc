@@ -89,7 +89,7 @@ public class JobHelper {
         onJobFinished(abstractJob);
     }
 
-    public void failed(AbstractJob abstractJob, JobMessage message) throws JsonProcessingException {
+    public void failed(AbstractJob abstractJob, JobMessage message) {
         checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FAILED);
         TriggerKey triggerKey;
@@ -102,7 +102,7 @@ public class JobHelper {
         } else {
             // modify node'parent   state to failed
             ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                    message.getStackTraceElements() == null ? null : new ObjectMapper().writeValueAsString(message.getStackTraceElements()),
+                    message.getThrowable() == null ? null : message.getStackTrace(),
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
             Job parent = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get();

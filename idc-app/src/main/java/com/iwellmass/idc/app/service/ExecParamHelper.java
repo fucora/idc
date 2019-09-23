@@ -41,6 +41,7 @@ public class ExecParamHelper {
         ExecuteRequest request = new ExecuteRequest();
         // task running
         request.setTaskId(nodeTask.getTaskId());
+        request.setNodeTaskTaskName(nodeTask.getTaskName());
         request.setParams(job.getParams());
         request.setLoadDate(getLoadDate(job.getParams()));
         // build req url
@@ -52,6 +53,7 @@ public class ExecParamHelper {
         request.setTaskName(task.getTaskName());
         request.setScheduleType(task.getScheduleType());
         if (job.getShouldFireTime() != null) {
+            // if the last job is fail.then we choose redo it. the shouldFireTime will lose,but this field isn't necessary
             request.setShouldFireTime(job.getShouldFireTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         }
         return request;

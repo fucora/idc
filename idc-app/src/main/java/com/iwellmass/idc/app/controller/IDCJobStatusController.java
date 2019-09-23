@@ -56,7 +56,7 @@ public class IDCJobStatusController {
             message = FinishMessage.newMessage(event.getNodeJobId());
         } else if (jobInstanceStatus == JobInstanceStatus.FAILED) {
             message = FailMessage.newMessage(event.getNodeJobId());
-            message.setStackTraceElements(event.getStackTraceElements());
+            message.setThrowable(event.getThrowable());
         } else if (jobInstanceStatus == JobInstanceStatus.CANCLED) {
             message = CancelMessage.newMessage(event.getNodeJobId());
         } else {

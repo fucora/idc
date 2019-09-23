@@ -76,13 +76,13 @@ public class IDCJobHandler implements IDCJobExecutorService {
         CompletableFuture.runAsync(() -> job.execute(context), executor)
                 .whenComplete((_void, cause) -> {
                     if (cause != null) {
-                        CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId())
-                                .setMessage("任务 {} 执行异常: {}", cause.getMessage())
-                                .setStackTraceElements(cause.getStackTrace())
+                        CompleteEvent event = CompleteEvent.failureEvent(context.executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName())
+                                .setMessage("任务 {} 执行异常: {}", executeRequest.getNodeTaskTaskName(), cause.getMessage())
+                                .setThrowable(cause)
                                 .setEndTime(LocalDateTime.now());
                         context.complete(event);
                     } else {
-                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED));
+                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED, executeRequest.getNodeTaskTaskName()));
                     }
                 });
     }
@@ -102,16 +102,16 @@ public class IDCJobHandler implements IDCJobExecutorService {
             Objects.requireNonNull(event, "event 不能为空");
 
             if (state == COMPLETE) {
-                LOGGER.warn("[{}] job already complete {}", event.getNodeJobId());
+//                LOGGER.warn("任务[{}],id[{}] 已经完成, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId());
                 return;
             }
 
             if (state == FAIL) {
-                LOGGER.warn("[{}] job already FAIL {}", event.getNodeJobId());
+//                LOGGER.warn("任务[{}],id[{}] 已经失败, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId());
                 return;
             }
 
-            LOGGER.info("[{}] 任务 '{}' 执行完毕, 执行结果: {}", event.getNodeJobId(),
+            LOGGER.info("任务[{}],id[{}] 执行完毕, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId(),
                     executeRequest.getTaskName(),
                     event.getFinalStatus());
 
@@ -125,13 +125,13 @@ public class IDCJobHandler implements IDCJobExecutorService {
         }
 
 
-        public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
+        public CompleteEvent newCompleteEvent(JobInstanceStatus status, String nodeTaskName) {
             if (status == JobInstanceStatus.FINISHED) {
-                return CompleteEvent.successEvent(executeRequest.getNodeJobId());
+                return CompleteEvent.successEvent(executeRequest.getNodeJobId(), nodeTaskName);
             } else if (status == JobInstanceStatus.FAILED) {
-                return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), nodeTaskName);
             } else {
-                return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), nodeTaskName).setFinalStatus(status);
             }
         }
 
@@ -146,9 +146,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
         @Override
         public void fail(Throwable t) {
             if (executeRequest != null && executeRequest.getNodeJobId() != null) {
-                CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId())
+                CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName())
                         .setMessage("任务执行异常: {}", t.getMessage())
-                        .setStackTraceElements(t.getStackTrace())
+                        .setThrowable(t)
                         .setEndTime(LocalDateTime.now());
                 complete(event);
             }

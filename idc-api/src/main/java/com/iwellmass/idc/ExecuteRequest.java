@@ -24,6 +24,11 @@ public class ExecuteRequest{
 	private String taskId;
 
 	/**
+	 * 业务方的实际任务名: nodeTask.TaskName
+	 */
+	private String nodeTaskTaskName;
+
+	/**
 	 * 任务运行所需全部参数,也需要包含loadDate
 	 */
 	private List<ExecParam> params;
@@ -79,6 +84,14 @@ public class ExecuteRequest{
 
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
+	}
+
+	public String getNodeTaskTaskName() {
+		return nodeTaskTaskName;
+	}
+
+	public void setNodeTaskTaskName(String nodeTaskTaskName) {
+		this.nodeTaskTaskName = nodeTaskTaskName;
 	}
 
 	public List<ExecParam> getParams() {

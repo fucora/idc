@@ -1,6 +1,9 @@
 package com.iwellmass.idc.message;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -39,17 +42,28 @@ public abstract class JobMessage implements Serializable {
 
     private String message;
 
-    private StackTraceElement[] stackTraceElements;
+    private Throwable throwable;
 
     public JobMessage(String id, String jobId, JobEvent event) {
         this(id, jobId, event, null);
     }
 
-    public JobMessage(String id, String jobId, JobEvent event, StackTraceElement[] stackTraceElements) {
+    public JobMessage(String id, String jobId, JobEvent event, Throwable throwable) {
         this.id = id;
         this.jobId = jobId;
         this.event = event;
-        this.stackTraceElements = stackTraceElements;
+        this.throwable = throwable;
+    }
+
+    public String getStackTrace() {
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw));
+        try {
+            sw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sw.toString();
     }
 
 }

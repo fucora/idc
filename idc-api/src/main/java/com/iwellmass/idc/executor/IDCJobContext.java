@@ -9,7 +9,7 @@ public interface IDCJobContext {
 
     void complete(CompleteEvent event);
 
-    public CompleteEvent newCompleteEvent(JobInstanceStatus status);
+    public CompleteEvent newCompleteEvent(JobInstanceStatus status,String nodeTaskName);
 
     public ProgressEvent newProgressEvent();
 

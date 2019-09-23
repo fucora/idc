@@ -73,13 +73,13 @@ public class IDCJobContextFactory {
 
 
 
-		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
+		public CompleteEvent newCompleteEvent(JobInstanceStatus status,String nodeTaskName) {
 			if (status == JobInstanceStatus.FINISHED) {
-				return CompleteEvent.successEvent(executeRequest.getNodeJobId());
+				return CompleteEvent.successEvent(executeRequest.getNodeJobId(),nodeTaskName);
 			} else if (status == JobInstanceStatus.FAILED) {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId(),nodeTaskName);
 			} else {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId(),nodeTaskName).setFinalStatus(status);
 			}
 		}
 
