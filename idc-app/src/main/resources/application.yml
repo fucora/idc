@@ -137,5 +137,5 @@ eureka:
       duration: 5
 
 idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
-idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认开启
+idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为2 * 60 * 60
+idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认关闭

@@ -111,8 +111,9 @@ public class IDCJobHandler implements IDCJobExecutorService {
                 return;
             }
 
-            LOGGER.info("任务[{}],id[{}] 执行完毕, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId(),
-                    executeRequest.getTaskName(),
+            LOGGER.info("任务[{}], id[{}] 执行完毕, 执行结果: {}",
+                    executeRequest.getNodeTaskTaskName(),
+                    event.getNodeJobId(),
                     event.getFinalStatus());
 
             try {
