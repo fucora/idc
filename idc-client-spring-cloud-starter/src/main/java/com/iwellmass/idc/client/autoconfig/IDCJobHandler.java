@@ -125,6 +125,22 @@ public class IDCJobHandler implements IDCJobExecutorService {
             }
         }
 
+        @Override
+        public void fail(Throwable t) {
+            if (executeRequest != null && executeRequest.getNodeJobId() != null) {
+                CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName())
+                        .setMessage("任务执行异常: {}", t.getMessage())
+                        .setThrowable(t)
+                        .setEndTime(LocalDateTime.now());
+                complete(event);
+            }
+        }
+
+        @Override
+        public void progress() {
+            ProgressEvent progressEvent = ProgressEvent.newEvent(executeRequest.getNodeJobId());
+            idcStatusService.fireProgressEvent(progressEvent);
+        }
 
         public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
             if (status == JobInstanceStatus.FINISHED) {
@@ -142,17 +158,6 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
         public StartEvent newStartEvent() {
             return StartEvent.newEvent(executeRequest.getNodeJobId());
-        }
-
-        @Override
-        public void fail(Throwable t) {
-            if (executeRequest != null && executeRequest.getNodeJobId() != null) {
-                CompleteEvent event = CompleteEvent.failureEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName())
-                        .setMessage("任务执行异常: {}", t.getMessage())
-                        .setThrowable(t)
-                        .setEndTime(LocalDateTime.now());
-                complete(event);
-            }
         }
 
         private synchronized void modifyState(CompleteEvent event) {

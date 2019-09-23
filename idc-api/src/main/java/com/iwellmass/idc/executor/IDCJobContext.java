@@ -9,11 +9,13 @@ public interface IDCJobContext {
 
     void complete(CompleteEvent event);
 
-    public CompleteEvent newCompleteEvent(JobInstanceStatus status);
+    CompleteEvent newCompleteEvent(JobInstanceStatus status);
 
-    public ProgressEvent newProgressEvent();
+    ProgressEvent newProgressEvent();
 
-    public StartEvent newStartEvent();
+    StartEvent newStartEvent();
 
-    public void fail(Throwable t);
+    void fail(Throwable t);
+
+    void progress() ;
 }
