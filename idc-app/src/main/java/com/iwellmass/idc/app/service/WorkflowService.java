@@ -129,7 +129,7 @@ public class WorkflowService {
         List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
         necessaryNode.forEach(requiredVertex ->
                 Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
-        Assert.isTrue(systemNode.containsAll(workflowGraph.vertexSet()), "未配置任何任务节点");
+        Assert.isFalse(systemNode.containsAll(workflowGraph.vertexSet()), "未配置任何任务节点");
 
         // validate graph whether is legal and contain isolated node
         workflowGraph.vertexSet().forEach(tk -> {
