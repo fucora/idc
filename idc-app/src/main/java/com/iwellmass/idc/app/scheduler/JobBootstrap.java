@@ -53,7 +53,7 @@ public class JobBootstrap implements org.quartz.Job {
                 jobService.clear(jobId);
             }
             List<ExecParam> execParams = execParamHelper.parse(jobService.getTask(taskName));
-            jobService.createJob(jobId, taskName, execParams);
+            jobService.createJob(jobId, taskName, execParams,null);
 
             StartMessage message = StartMessage.newMessage(jobId);
             message.setMessage("启动任务");

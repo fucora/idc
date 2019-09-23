@@ -95,7 +95,14 @@ public class Job extends AbstractJob {
 	public Job() {
 	}
 
-	public Job(String id, Task task,List<ExecParam> execParams) {
+	/**
+	 *
+	 * @param id
+	 * @param task
+	 * @param execParams
+	 * @param shouldFireTime task's shouldFireTime,when run the last job,this will lose.so need record it and don't adopt task.getPrevFireTime()
+	 */
+	public Job(String id, Task task,List<ExecParam> execParams,LocalDateTime shouldFireTime) {
 		super(id, task);
 		// 实例类型
 		this.taskName = task.getTaskName();
@@ -103,7 +110,7 @@ public class Job extends AbstractJob {
 		this.assignee = task.getAssignee();
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
 		this.starttime = LocalDateTime.now();
-		this.shouldFireTime = task.getPrevFireTime();
+		this.shouldFireTime = shouldFireTime;
 		this.loadDate = ExecParamHelper.getLoadDate(execParams);
 		this.params = execParams;
 	}

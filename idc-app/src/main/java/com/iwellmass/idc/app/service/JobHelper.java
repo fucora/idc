@@ -151,8 +151,8 @@ public class JobHelper {
             } catch (SchedulerException e) {
                 e.printStackTrace();
             }
-            // recreate job
-            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams);
+            // recreate job:the task info will lose,
+            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams,job.asJob().getShouldFireTime());
             // edit run param
 
             executeJob(jobRepository.findById(job.getId()).get());

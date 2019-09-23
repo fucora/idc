@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,9 +89,9 @@ public class JobService {
     }
 
     @Transactional
-    public Job createJob(String id, String taskName, List<ExecParam> execParams) {
+    public Job createJob(String id, String taskName, List<ExecParam> execParams, LocalDateTime shouldFireTime) {
         Task task = getTask(taskName);
-        Job job = new Job(id, task, execParams);
+        Job job = new Job(id, task, execParams,shouldFireTime == null ? task.getPrevFireTime() : shouldFireTime);
         return jobRepository.save(job);
     }
 
