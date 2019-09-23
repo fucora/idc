@@ -82,7 +82,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
                                 .setEndTime(LocalDateTime.now());
                         context.complete(event);
                     } else {
-                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED, executeRequest.getNodeTaskTaskName()));
+                        context.complete(context.newCompleteEvent(JobInstanceStatus.FINISHED));
                     }
                 });
     }
@@ -125,13 +125,13 @@ public class IDCJobHandler implements IDCJobExecutorService {
         }
 
 
-        public CompleteEvent newCompleteEvent(JobInstanceStatus status, String nodeTaskName) {
+        public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
             if (status == JobInstanceStatus.FINISHED) {
-                return CompleteEvent.successEvent(executeRequest.getNodeJobId(), nodeTaskName);
+                return CompleteEvent.successEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName());
             } else if (status == JobInstanceStatus.FAILED) {
-                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), nodeTaskName);
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName());
             } else {
-                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), nodeTaskName).setFinalStatus(status);
+                return CompleteEvent.failureEvent(executeRequest.getNodeJobId(), executeRequest.getNodeTaskTaskName()).setFinalStatus(status);
             }
         }
 
