@@ -22,4 +22,6 @@ public interface IDCJobContext {
     void start();
 
     void success();
+
+    void fail(String logs);
 }
