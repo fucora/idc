@@ -21,13 +21,9 @@ import lombok.Setter;
 public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 
     @Setter
-    private Integer maxRunningJobs;
-
-    @Setter
     private RecordIdGenerator recordIdGenerator;
 
-    public IDCJobstoreCMT(Integer maxRunningJobs) {
-        this.maxRunningJobs = maxRunningJobs;
+    public IDCJobstoreCMT() {
         this.recordIdGenerator = () -> super.getFiredTriggerRecordId();
     }
 
@@ -40,19 +36,20 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
     }
 
     /*
-     * 并发控制
+     * 并发控制 we can't complete control on concurrent here .
      */
     @Override
     protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
             throws JobPersistenceException {
-        int acceptCount = maxRunningJobs;
-        // todo 查询实际执行的job有哪些. -> runningJobs
-        int runningJobs = 0;
-        acceptCount = maxRunningJobs - runningJobs;
 
-        return acceptCount > 0
-                ? super.acquireNextTrigger(conn, noLaterThan, Math.min(maxCount, acceptCount), timeWindow)
-                : Collections.emptyList();
+//        int acceptCount = maxRunningJobs;
+//        int runningJobs = 0;
+//        acceptCount = maxRunningJobs - runningJobs;
+//
+//        return acceptCount > 0
+//                ? super.acquireNextTrigger(conn, noLaterThan, Math.min(maxCount, acceptCount), timeWindow)
+//                : Collections.emptyList();
+        return super.acquireNextTrigger(conn, noLaterThan, maxCount, timeWindow);
     }
 
     /*

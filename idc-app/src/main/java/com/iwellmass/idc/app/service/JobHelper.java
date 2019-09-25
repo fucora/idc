@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
-import com.iwellmass.idc.message.FailMessage;
-import com.iwellmass.idc.message.FinishMessage;
-import com.iwellmass.idc.message.JobMessage;
-import com.iwellmass.idc.message.TimeoutMessage;
+import com.iwellmass.idc.message.*;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
@@ -66,6 +63,8 @@ public class JobHelper {
     ExecParamHelper execParamHelper;
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
+    @Value(value = "${idc.scheduler.maxRunningJobs:10}")
+    private Integer maxRunningJobs;
 
     //==============================================  processor call
 
@@ -192,6 +191,8 @@ public class JobHelper {
         logger.log(job.getId(), "跳过任务实例，id[{}]，state[{}]", job.getId(), job.getState().name());
         modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
+        // notify wait queue
+
     }
 
     public void ready(AbstractJob job) {
@@ -217,7 +218,7 @@ public class JobHelper {
      * check state.if the nodeJob is ACCEPTED or RUNNING update state to fail
      * @param job
      */
-    public void timeout(AbstractJob job) throws JsonProcessingException {
+    public void timeout(AbstractJob job) {
         // if the user  restart idc from openCallbackControl = true to openCallbackControl = false. previous timeout event exist.
         // so there do a twice validate
         if (openCallbackControl) {
@@ -278,13 +279,20 @@ public class JobHelper {
             return;
         }
         if (nodeJob.getState().equals(JobState.NONE)) {
-            modifyJobState(nodeJob, JobState.ACCEPTED);
-            logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
-                    , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
-            if (openCallbackControl) {
-                TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
+            // concurrent control
+            if (canDispatch()) {
+                modifyJobState(nodeJob, JobState.ACCEPTED);
+                logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
+                        , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
+                if (openCallbackControl) {
+                    TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
+                }
+                IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
+            } else {
+                StartMessage startMessage = StartMessage.newMessage(nodeJob.getId());
+                startMessage.setMessage("并发控制被阻塞,nodJobId:" + nodeJob.getId());
+                TaskEventPlugin.eventService(scheduler).send(startMessage);
             }
-            IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
         }
     }
 
@@ -352,6 +360,15 @@ public class JobHelper {
             job.setUpdatetime(LocalDateTime.now());
         }
         allJobRepository.save(job);
+    }
+
+
+    /**
+     * used for concurrent control.
+     * @return true:canDispatch
+     */
+    private boolean canDispatch() {
+        return nodeJobRepository.countNodeJobsByRunningOrAcceptState() < maxRunningJobs;
     }
 
 }
