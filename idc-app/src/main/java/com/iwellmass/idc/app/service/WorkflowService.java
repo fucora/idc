@@ -287,30 +287,38 @@ public class WorkflowService {
         Workflow oldWorkflow = get(vo.getOldWorkflowId());
         Workflow newWorkflow = new Workflow(vo.getNewWorkflowId(), vo.getWorkflowName(), vo.getDescription());
         List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
-        List<NodeTask> nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
-            NodeTask nodeTask = new NodeTask();
-            nodeTask.setWorkflowId(vo.getNewWorkflowId());
-            nodeTask.setId(nt.getId());
-            nodeTask.setTaskName(nt.getTaskName());
-            nodeTask.setContentType(nt.getContentType());
-            nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(nt.getTaskId())) {
-                nodeTask.setDomain("idc");
-            } else {
-                nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
-            }
-            return nodeTask;
-        }).collect(Collectors.toList());
+
+        // nodeTask
+        List<NodeTask> nodeTasks = Lists.newArrayList();
+        if (oldWorkflow.getNodeTasks() != null) {
+            nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
+                NodeTask nodeTask = new NodeTask();
+                nodeTask.setWorkflowId(vo.getNewWorkflowId());
+                nodeTask.setId(nt.getId());
+                nodeTask.setTaskName(nt.getTaskName());
+                nodeTask.setContentType(nt.getContentType());
+                nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
+                if (systemNode.contains(nt.getTaskId())) {
+                    nodeTask.setDomain("idc");
+                } else {
+                    nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
+                }
+                return nodeTask;
+            }).collect(Collectors.toList());
+        }
 
         // edges
-        List<WorkflowEdge> workflowEdges = oldWorkflow.getEdges().stream().map(edge -> {
-            WorkflowEdge we = new WorkflowEdge();
-            we.setWorkflowId(vo.getNewWorkflowId());
-            we.setId(edge.getId());
-            we.setSource(edge.getSource());
-            we.setTarget(edge.getTarget());
-            return we;
-        }).collect(Collectors.toList());
+        List<WorkflowEdge> workflowEdges = Lists.newArrayList();
+        if (oldWorkflow.getEdges() != null) {
+            workflowEdges = oldWorkflow.getEdges().stream().map(edge -> {
+                WorkflowEdge we = new WorkflowEdge();
+                we.setWorkflowId(vo.getNewWorkflowId());
+                we.setId(edge.getId());
+                we.setSource(edge.getSource());
+                we.setTarget(edge.getTarget());
+                return we;
+            }).collect(Collectors.toList());
+        }
 
         newWorkflow.setUpdatetime(LocalDateTime.now());
         newWorkflow.setEdges(workflowEdges);
