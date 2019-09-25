@@ -286,7 +286,7 @@ public class WorkflowService {
         }
         Workflow oldWorkflow = get(vo.getOldWorkflowId());
         Workflow newWorkflow = new Workflow(vo.getNewWorkflowId(), vo.getWorkflowName(), vo.getDescription());
-        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
+        List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
         List<NodeTask> nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
             NodeTask nodeTask = new NodeTask();
             nodeTask.setWorkflowId(vo.getNewWorkflowId());
@@ -294,7 +294,7 @@ public class WorkflowService {
             nodeTask.setTaskName(nt.getTaskName());
             nodeTask.setContentType(nt.getContentType());
             nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(nt.getId())) {
+            if (systemNode.contains(nt.getTaskId())) {
                 nodeTask.setDomain("idc");
             } else {
                 nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
