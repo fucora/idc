@@ -14,10 +14,7 @@ import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
-import com.iwellmass.idc.scheduler.repository.AllJobRepository;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import com.iwellmass.idc.scheduler.repository.*;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
 import org.quartz.Scheduler;
@@ -66,6 +63,8 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
+//    @Inject
+//    IDCPluginRepository idcPluginRepository;
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
     @Value(value = "${idc.scheduler.maxRunningJobs:10}")
@@ -89,7 +88,7 @@ public class JobHelper {
     }
 
     public void success(AbstractJob abstractJob) {
-//        checkRunning(abstractJob);
+        checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
         // notify wait queue
@@ -399,7 +398,7 @@ public class JobHelper {
                 for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
                     try {
                         NodeJob nodeJob = nodeJobWaitQueue.take();
-                        LOGGER.info("出队：nodeJob[{}]" + nodeJob.getId());
+                        LOGGER.info("任务出队：nodeJob[{}]" + nodeJob.getId());
                         executeNodeJob(nodeJob);
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
@@ -412,12 +411,20 @@ public class JobHelper {
 
     private void addNodeJobToWaitQueue(NodeJob nodeJob) {
         try {
-            LOGGER.info("入队：nodeJob[{}]" + nodeJob.getId());
+            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]" + nodeJob.getId());
             nodeJobWaitQueue.put(nodeJob);
         } catch (InterruptedException e) {
             LOGGER.error("NodeJob等待队列入队异常");
             e.printStackTrace();
         }
+    }
+
+
+    public void modifyConcurrent(Integer maxRunningJobs) {
+        if (maxRunningJobs <= 0) {
+            throw new AppException("illegal param:maxRunningJobs must greater than 0");
+        }
+        this.maxRunningJobs = maxRunningJobs;
     }
 
 }

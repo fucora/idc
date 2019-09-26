@@ -5,15 +5,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 
 import com.iwellmass.idc.scheduler.quartz.*;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.impl.DirectSchedulerFactory;
-import org.quartz.simpl.PropertySettingJobFactory;
-import org.quartz.simpl.SimpleThreadPool;
-import org.quartz.spi.SchedulerPlugin;
 import org.quartz.utils.ConnectionProvider;
 import org.quartz.utils.DBConnectionManager;
 import org.slf4j.Logger;

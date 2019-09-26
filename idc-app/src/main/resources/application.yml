@@ -139,4 +139,4 @@ eureka:
 idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
 idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认关闭
-idc.scheduler.maxRunningJobs: 2  # 最大并发数，测试为2个
+idc.scheduler.maxRunningJobs: 10  # 最大并发数，测试为2个
