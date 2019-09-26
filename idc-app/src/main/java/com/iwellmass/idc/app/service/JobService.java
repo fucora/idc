@@ -30,6 +30,7 @@ import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.QueryUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * Job 服务

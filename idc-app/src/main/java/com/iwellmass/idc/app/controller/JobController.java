@@ -5,8 +5,10 @@ import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.idc.app.message.TaskEventPlugin;
+import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.message.RedoMessage;
 import com.iwellmass.idc.message.SkipMessage;
@@ -30,6 +32,8 @@ public class JobController {
 	JobService jobService;
     @Resource
     Scheduler qs;
+    @Inject
+    JobHelper jobHelper;
 
     @ApiOperation("获取 JOB 实例")
     @PostMapping("/runtime")
@@ -110,6 +114,12 @@ public class JobController {
     @GetMapping("/{jobId}/{template}/{content}")
     public ServiceResult<String> test(@PathVariable(name = "jobId") String jobId,@PathVariable(name = "template") String template,@PathVariable(name = "content") String content) {
         return ServiceResult.success(jobService.test(jobId,template,content));
+    }
+
+    @PutMapping("/{maxRunningJobs}/modifyConcurrent")
+    public ServiceResult<String> modifyConcurrent(@PathVariable(name = "maxRunningJobs") Integer maxRunningJobs) {
+        jobHelper.modifyConcurrent(maxRunningJobs);
+        return ServiceResult.success("success");
     }
 
 }

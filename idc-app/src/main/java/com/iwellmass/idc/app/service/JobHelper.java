@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Queues;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
@@ -13,15 +14,14 @@ import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
-import com.iwellmass.idc.scheduler.repository.AllJobRepository;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import com.iwellmass.idc.scheduler.repository.*;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import lombok.Setter;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author nobita chen
@@ -38,6 +39,7 @@ import java.util.*;
 @Component
 public class JobHelper {
 
+    static Logger LOGGER = LoggerFactory.getLogger(JobHelper.class);
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.CHINESE);
 
     @Setter
@@ -61,10 +63,13 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
+//    @Inject
+//    IDCPluginRepository idcPluginRepository;
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
     @Value(value = "${idc.scheduler.maxRunningJobs:10}")
     private Integer maxRunningJobs;
+    BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
 
     //==============================================  processor call
 
@@ -83,9 +88,11 @@ public class JobHelper {
     }
 
     public void success(AbstractJob abstractJob) {
-//        checkRunning(abstractJob);
+        checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
+        // notify wait queue
+        notifyWaitQueue();
     }
 
     public void failed(AbstractJob abstractJob, JobMessage message) {
@@ -119,6 +126,8 @@ public class JobHelper {
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
+        // notify wait queue
+        notifyWaitQueue();
 
     }
 
@@ -137,7 +146,7 @@ public class JobHelper {
             // cache running param
             List<ExecParam> execParams = job.asJob().getParams();
             logger.log(job.getId(), "重跑任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                    Objects.nonNull(job.asJob().getShouldFireTime())?job.asJob().getShouldFireTime().format(formatter):null, job.asJob().getTaskName(), ExecParamHelper.getLoadDate(execParams), job.asJob().getTask().getWorkflowId());
+                    Objects.nonNull(job.asJob().getShouldFireTime()) ? job.asJob().getShouldFireTime().format(formatter) : null, job.asJob().getTaskName(), ExecParamHelper.getLoadDate(execParams), job.asJob().getTask().getWorkflowId());
 
             // clear all sunbJobs and job
             nodeJobRepository.deleteAll(job.getSubJobs());
@@ -151,7 +160,7 @@ public class JobHelper {
                 e.printStackTrace();
             }
             // recreate job:the task info will lose,
-            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams,job.asJob().getShouldFireTime());
+            jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams, job.asJob().getShouldFireTime());
             // edit run param
 
             executeJob(jobRepository.findById(job.getId()).get());
@@ -170,7 +179,7 @@ public class JobHelper {
     // wait for apply
     public void cancle(AbstractJob job) {
         checkRunning(job);
-
+        notifyWaitQueue();
     }
 
     /**
@@ -192,7 +201,7 @@ public class JobHelper {
         modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
         // notify wait queue
-
+        notifyWaitQueue();
     }
 
     public void ready(AbstractJob job) {
@@ -216,6 +225,7 @@ public class JobHelper {
     /**
      * when nodeJob have been distributed and don't callback in timeout seconds.
      * check state.if the nodeJob is ACCEPTED or RUNNING update state to fail
+     *
      * @param job
      */
     public void timeout(AbstractJob job) {
@@ -223,9 +233,9 @@ public class JobHelper {
         // so there do a twice validate
         if (openCallbackControl) {
             if (job.getState().isNotCallback()) {
-                logger.log(job.getId(),"节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                        job.asNodeJob().getNodeTask().getTaskId(),job.asNodeJob().getNodeTask().getDomain(),job.getId(),job.getState());
-                failed(job,FailMessage.newMessage(job.getId()));
+                logger.log(job.getId(), "节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                        job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState());
+                failed(job, FailMessage.newMessage(job.getId()));
             }
         }
     }
@@ -260,7 +270,7 @@ public class JobHelper {
 
     private void executeJob(Job job) {
         logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                 Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
+                Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
                 , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
         modifyJobState(job, JobState.RUNNING);
         runNextJob(job, NodeTask.START);
@@ -289,9 +299,14 @@ public class JobHelper {
                 }
                 IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
             } else {
-                StartMessage startMessage = StartMessage.newMessage(nodeJob.getId());
-                startMessage.setMessage("并发控制被阻塞,nodJobId:" + nodeJob.getId());
-                TaskEventPlugin.eventService(scheduler).send(startMessage);
+                // concurrent control plan 1:by quartz;The efficiency of this plan is low.
+//                StartMessage startMessage = StartMessage.newMessage(nodeJob.getId());
+//                startMessage.setMessage("并发控制被阻塞,nodJobId:" + nodeJob.getId());
+//                TaskEventPlugin.eventService(scheduler).send(startMessage);
+
+                // concurrent control plan 2:by blockingQueue and notify principle
+                // add this nodeJob to wait queue
+                addNodeJobToWaitQueue(nodeJob);
             }
         }
     }
@@ -365,10 +380,51 @@ public class JobHelper {
 
     /**
      * used for concurrent control.
+     *
      * @return true:canDispatch
      */
     private boolean canDispatch() {
         return nodeJobRepository.countNodeJobsByRunningOrAcceptState() < maxRunningJobs;
+    }
+
+    /**
+     * notify wait queue to release the wait-nodeJobs .need check whether we can release
+     */
+    private synchronized void notifyWaitQueue() {
+        int needReleaseJobs = maxRunningJobs - nodeJobRepository.countNodeJobsByRunningOrAcceptState();
+        if (needReleaseJobs > 0) {
+            // release waiting job
+            if (!nodeJobWaitQueue.isEmpty()) {
+                for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
+                    try {
+                        NodeJob nodeJob = nodeJobWaitQueue.take();
+                        LOGGER.info("任务出队：nodeJob[{}]" + nodeJob.getId());
+                        executeNodeJob(nodeJob);
+                    } catch (InterruptedException e) {
+                        LOGGER.error("NodeJob等待队列出队异常");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    private void addNodeJobToWaitQueue(NodeJob nodeJob) {
+        try {
+            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]" + nodeJob.getId());
+            nodeJobWaitQueue.put(nodeJob);
+        } catch (InterruptedException e) {
+            LOGGER.error("NodeJob等待队列入队异常");
+            e.printStackTrace();
+        }
+    }
+
+
+    public void modifyConcurrent(Integer maxRunningJobs) {
+        if (maxRunningJobs <= 0) {
+            throw new AppException("illegal param:maxRunningJobs must greater than 0");
+        }
+        this.maxRunningJobs = maxRunningJobs;
     }
 
 }
