@@ -63,7 +63,10 @@ with(TemporalAdjuster adjuster)|LocalDateTime|通过指令调节日期|*#ldt.wit
 @firstDayOfYear()|TemporalAdjuster|本年第一天|*@TemporalAdjusters@firstDayOfYear()*
 @lastDayOfYear()|TemporalAdjuster|本年最后一天|*@TemporalAdjusters@lastDayOfYear()*
 
-# 新增工作流
+
+# 数据库表结构
+
+## 新增工作流
 idc_workflow (工作流任务表)
 | 属性          | 描述           | 类型    | 字段值说明       |
 | :------------ | -------------- | ------- | ---------------- |
@@ -73,7 +76,7 @@ idc_workflow (工作流任务表)
 | updatetime    | 记录变化时间   | date    | 每次新增程序传入 |
 
 
-# 保存工作流任务
+## 保存工作流任务
 idc_workflow_edge （工作流路径描述表）   
 
 | 属性        | 描述             | 类型    | 字段值说明         |
@@ -98,7 +101,7 @@ idc_node_task（工作流节点路径）
 | content_type | 数据类型      | varchar | SCALA,DATA_SYNC                     |
 
 
-# 新增调度
+## 新增调度
 idc_task(调度任务表)
 
 | 属性           | 描述                     | 类型    | 字段值说明           |
@@ -122,7 +125,7 @@ idc_task(调度任务表)
 | duetime        | 具体时间                 |         | 时分秒               |
 
 
-# idc_job(新增工作流Job)
+## idc_job(新增工作流Job)
 
 | 属性             | 描述                                           | 类型     | 字段值说明                                                   |
 | :--------------- | ---------------------------------------------- | -------- | ------------------------------------------------------------ |
@@ -139,7 +142,7 @@ idc_task(调度任务表)
 | task_type        | 任务类型                                       |          | WORKFLOW 工作流                                              |
 | params           | 运行时参数(保存已被解析的参数值,供nodeJob使用) |          |                                                              |
 
-# idc_node_job (新增工作流节点任务)
+## idc_node_job (新增工作流节点任务)
 
 
 | 属性        | 描述          | 类型    | 字段值说明                                                   |
@@ -154,7 +157,7 @@ idc_task(调度任务表)
 | main_id     | 主任务ID      | varchar | 暂未使用                                                     |
 | container   | 所属Container | varchar | Job Id                                                       |
 
-# idc_execution_log(工作流日志表)
+## idc_execution_log(工作流日志表)
 
 
 | 属性    | 描述                | 类型    | 字段值说明 |
@@ -170,7 +173,7 @@ idc_task(调度任务表)
 
 # 架构设计文档
 
-# 简介
+## 简介
 
   * 概括
   分布式任务调度平台，其核心设计目标工作流任务串行执行。可以通过页面快速对工作流任务新增，配置，编辑，删除
@@ -224,13 +227,13 @@ idc_task(调度任务表)
   ![](img/list-sche-instance.jpg)
   
   
-# 工作流开发
-  ## 新增任务
+## 工作流开发
+  ### 新增任务
   首先加入maven依赖
         <groupId>com.iwellmass</groupId>
   		<artifactId>idc-client-spring-cloud-starter</artifactId>
   		<version>2.1.2-SNAPSHOT</version>
-  ## 实现Job接口
+  ### 实现Job接口
    
 `  public class DemoHandler implements IDCJob {
        
@@ -251,9 +254,9 @@ idc_task(调度任务表)
  配合数据工厂，新增对应的任务。然后参考上面的工作流配置就可以了。
  
 
-# 架构设计
+## 架构设计
 
-## 执行器
+### 执行器
 
 springboot 自动发现 + spring  AsyncTaskExecutor 异步执行器  + spring mvc  
 
@@ -302,7 +305,7 @@ public class IDCClientAutoConfiguration {
 1：异步执行器 AsyncTaskExecutor ；
 2：把所有实现了IDCjOb执行器通过spring mvc 通过HTTP方式暴露服务；服务地址 ：/idc-job/{idc-job-content-contentType}/execution
 
-## 调度器
+### 调度器
 
 quartz +  数据工厂 + feign + jgrapht
 
@@ -444,12 +447,12 @@ IDC扩展
 修改状态。至此完成并发串行执行
 
 
-## 工作流程图
+### 工作流程图
 
 ![](img/uml.jpg)
 
 
-## 接口说明
+### 接口说明
 
 **调度器如何获取执行器结果**
 
