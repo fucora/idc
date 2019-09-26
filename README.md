@@ -452,7 +452,7 @@ IDC扩展
 ![](img/uml.jpg)
 
 
-### 接口说明
+#### 接口说明
 
 **调度器如何获取执行器结果**
 
@@ -497,3 +497,11 @@ IDC扩展
     public StartEvent newStartEvent();
 
 
+
+### 并发控制
+
+#### 实例并发
+控制利用quartz 并发实现。
+
+#### 任务节点并发控制 
+通过 idc.scheduler.maxRunningJobs 控制；默认为10 。超过控制数量将阻塞任务。知道执行器回调之后唤起执行
