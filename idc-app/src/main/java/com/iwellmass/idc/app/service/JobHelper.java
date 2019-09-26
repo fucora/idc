@@ -395,9 +395,8 @@ public class JobHelper {
         int needReleaseJobs = maxRunningJobs - nodeJobRepository.countNodeJobsByRunningOrAcceptState();
         if (needReleaseJobs > 0) {
             // release waiting job
-            int waitJobs = nodeJobWaitQueue.size();
-            if (waitJobs > 0) {
-                for (int i = 0;i < Math.min(needReleaseJobs,waitJobs);i++) {
+            if (!nodeJobWaitQueue.isEmpty()) {
+                for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
                     try {
                         NodeJob nodeJob = nodeJobWaitQueue.take();
                         LOGGER.info("出队：nodeJob[{}]" + nodeJob.getId());
