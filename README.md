@@ -168,7 +168,7 @@ idc_task(调度任务表)
 
 
 
-//架构设计文档
+# 架构设计文档
 
 # 简介
 
@@ -185,6 +185,7 @@ idc_task(调度任务表)
 
   * 编辑工作流
   点击运维中心-工作流列表-编辑工作流。可以从左侧的所有任务（数据工厂维护）中拖拽到右侧。通过连线的方式描述工作流执行的顺序
+  开始和结束时系统节点，所有的工作流任务开始节点作为起始点。结束节点作为工作流终点
   ![](img/edit-workflow.jpg)
   
   * 新增调度
@@ -207,8 +208,7 @@ idc_task(调度任务表)
   @TemporalAdjusters@firstDayOfYear()，本年第一天
   @TemporalAdjusters@lastDayOfYear()，本年最后一天
   
-  3.示例如下，批次时间上个月的最后一天并将其格式化未yyyyMMdd形式：
-  #idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')
+  3.示例如下，批次时间上个月的最后一天
   调度批次上月的最后一天 
   调度批次当月的最后一天 
   调度批次下月的最后一天 
