@@ -1,9 +1,6 @@
 package com.iwellmass.idc.app.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -56,8 +53,7 @@ public class TaskService {
     public static final String NOW = "调度计划提交时间";
     public static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
 
-
-    public static final Map<String,String> loadDateParams = new HashMap<>();
+    public static final Map<String,String> loadDateParams = new LinkedHashMap<>();
 
     static {
         loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
@@ -180,6 +176,5 @@ public class TaskService {
     public List<String> getLoadDateParams() {
         return Lists.newArrayList(loadDateParams.keySet());
     }
-
 
 }
