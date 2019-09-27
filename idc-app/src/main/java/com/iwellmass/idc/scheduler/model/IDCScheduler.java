@@ -1,19 +1,16 @@
 package com.iwellmass.idc.scheduler.model;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import com.iwellmass.idc.app.service.JobService;
+import com.iwellmass.common.exception.AppException;
+import com.iwellmass.idc.app.scheduler.JobBootstrap;
 import com.iwellmass.idc.app.service.TaskService;
+import com.iwellmass.idc.app.util.JsonUtils;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
+import com.iwellmass.idc.app.vo.task.ReTaskVO;
+import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
+import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +18,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.iwellmass.common.exception.AppException;
-import com.iwellmass.idc.app.scheduler.JobBootstrap;
-import com.iwellmass.idc.app.vo.task.ReTaskVO;
-import com.iwellmass.idc.app.vo.task.TaskVO;
-import com.iwellmass.idc.scheduler.repository.TaskRepository;
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 领域服务，负责调度相关的操作
@@ -59,9 +58,21 @@ public class IDCScheduler {
         Task task = new Task(vo);
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {
+
             task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));// 生效时间
             task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
+
+            shceduleJob(vo, task);
+
+
         }
+
+        taskRepository.save(task);
+
+    }
+
+
+    public void shceduleJob(TaskVO vo, Task task) {
         // 创建作业
         JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
                 .withIdentity(task.getTaskName(), task.getTaskGroup())
@@ -69,16 +80,30 @@ public class IDCScheduler {
 
         // 调度
         try {
-            taskRepository.save(task);
             Trigger trigger = vo.buildTrigger(task.getTriggerKey());
-
             trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, task.getTaskName());
+
+            if(ScheduleType.MANUAL.equals(vo.getScheduleType()) && Objects.nonNull(vo.getParams())){
+
+
+                trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_PARAMS, JsonUtils.toJSon(vo.getParams()));
+                task.setParams(vo.getParams());
+                taskRepository.save(task);
+            }
+
             Date d = qs.scheduleJob(jobDetail, trigger);
             LOGGER.info("task scheduled :" + d);
-        } catch (SchedulerException e) {
+        } catch (Exception e) {
             throw new AppException(e);
         }
     }
+
+
+
+    public void updateScheduleTask(Task task) {
+        taskRepository.save(task);
+    }
+
 
     // 正在执行的trigger 不能直接调用该接口
     @Transactional
