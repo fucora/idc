@@ -114,7 +114,7 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.ready(runningJob);
                     break;
                 case RUNNING:
-                    jobHelper.running(runningJob);
+                    jobHelper.running(runningJob,message);
                     break;
                 case TIMEOUT:
                     jobHelper.timeout(runningJob);

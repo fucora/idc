@@ -213,10 +213,10 @@ public class JobHelper {
         }
     }
 
-    public void running(AbstractJob job) {
+    public void running(AbstractJob job,JobMessage jobMessage) {
         checkRunning(job);
-        logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
+        logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
+                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(),jobMessage.getMessage());
         if (job.getState() == JobState.ACCEPTED) {
             modifyJobState(job, JobState.RUNNING);
         }
@@ -432,6 +432,9 @@ public class JobHelper {
      * @param nodeJob
      */
     public void retry(NodeJob nodeJob) {
+
+
+
 
     }
 

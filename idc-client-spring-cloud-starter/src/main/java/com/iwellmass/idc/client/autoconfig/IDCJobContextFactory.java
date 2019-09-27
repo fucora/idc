@@ -47,6 +47,11 @@ public class IDCJobContextFactory {
 		}
 
 		@Override
+		public void progress(String msg) {
+
+		}
+
+		@Override
 		public void start() {
 
 		}

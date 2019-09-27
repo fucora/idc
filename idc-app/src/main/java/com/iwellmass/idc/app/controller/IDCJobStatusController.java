@@ -44,7 +44,7 @@ public class IDCJobStatusController {
     @PutMapping(path = "/progress")
     public void saveRuntimeUrlLog(@RequestBody ProgressEvent event) {
         RunningMessage message = RunningMessage.newMessage(event.getNodeJobId());
-        message.setMessage("任务正在执行" + event.getNodeJobId());
+        message.setMessage(event.getMessage());
         TaskEventPlugin.eventService(qs).send(message);
     }
 
