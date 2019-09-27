@@ -148,7 +148,12 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
         @Override
         public void progress() {
-            ProgressEvent progressEvent = ProgressEvent.newEvent(executeRequest.getNodeJobId());
+            progress(null);
+        }
+
+        @Override
+        public void progress(String msg) {
+            ProgressEvent progressEvent = ProgressEvent.newEvent(executeRequest.getNodeJobId()).setMessage(msg);
             idcStatusService.fireProgressEvent(progressEvent);
         }
 

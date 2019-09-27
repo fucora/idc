@@ -19,6 +19,8 @@ public interface IDCJobContext {
 
     void progress();
 
+    void progress(String msg);
+
     void start();
 
     void success();
