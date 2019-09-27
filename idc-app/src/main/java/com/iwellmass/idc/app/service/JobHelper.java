@@ -398,7 +398,7 @@ public class JobHelper {
                 for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
                     try {
                         NodeJob nodeJob = nodeJobWaitQueue.take();
-                        LOGGER.info("任务出队：nodeJob[{}]" + nodeJob.getId());
+                        LOGGER.info("任务出队：nodeJob[{}]",nodeJob.getId());
                         executeNodeJob(nodeJob);
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
@@ -411,10 +411,10 @@ public class JobHelper {
 
     private void addNodeJobToWaitQueue(NodeJob nodeJob) {
         try {
-            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]" + nodeJob.getId());
+            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]",nodeJob.getId());
             nodeJobWaitQueue.put(nodeJob);
         } catch (InterruptedException e) {
-            LOGGER.error("NodeJob等待队列入队异常");
+            LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]",nodeJob.getId());
             e.printStackTrace();
         }
     }
@@ -425,6 +425,14 @@ public class JobHelper {
             throw new AppException("illegal param:maxRunningJobs must greater than 0");
         }
         this.maxRunningJobs = maxRunningJobs;
+    }
+
+    /**
+     * 出错重试
+     * @param nodeJob
+     */
+    public void retry(NodeJob nodeJob) {
+
     }
 
 }
