@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.Queues;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
@@ -215,8 +216,14 @@ public class JobHelper {
 
     public void running(AbstractJob job,JobMessage jobMessage) {
         checkRunning(job);
-        logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
-                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(),jobMessage.getMessage());
+        if (Strings.isNullOrEmpty(jobMessage.getMessage())) {
+            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
+        } else {
+            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
+                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(),jobMessage.getMessage());
+        }
+
         if (job.getState() == JobState.ACCEPTED) {
             modifyJobState(job, JobState.RUNNING);
         }
