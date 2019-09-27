@@ -3,6 +3,7 @@ package com.iwellmass.idc.app.vo;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.Task;
 import com.iwellmass.idc.scheduler.model.TaskState;
 
@@ -40,5 +41,8 @@ public class TaskRuntimeVO  {
 	private TaskState state;
 
 	@ApiModelProperty("工作流名称")
-	String workflowName;
+	private String workflowName;
+
+	@ApiModelProperty("调度类型")
+	private ScheduleType scheduleType;
 }
