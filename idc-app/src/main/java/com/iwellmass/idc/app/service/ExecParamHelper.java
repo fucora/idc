@@ -66,7 +66,7 @@ public class ExecParamHelper {
         return parse(task.getParams(), parser);
     }
 
-    // Manual task
+    // Manual task . don't adopt
     public List<ExecParam> parse(Task task, List<ExecParam> params) {
         ReferParam referParam = new ReferParam(LocalDateTime.now(), LocalDateTime.now(), task.getUpdatetime());
         ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
