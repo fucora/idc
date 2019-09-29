@@ -89,7 +89,10 @@ public class JobHelper {
     }
 
     public void success(AbstractJob abstractJob) {
-        checkRunning(abstractJob);
+        // checkRunning(abstractJob); // con't directly adopt checkRunning(abstractJob);if we choose skip wii trigger parent success.it will fail
+        if (!abstractJob.isJob()) {
+            checkRunning(abstractJob);
+        }
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
         // notify wait queue
