@@ -151,6 +151,12 @@ public class TaskService {
                     taskRuntimeVO.setState(TaskState.ERROR);
                     return;
                 }
+
+                if (job.getState().equals(JobState.FINISHED)) {
+                    taskRuntimeVO.setState(TaskState.COMPLETE);
+                    return;
+                }
+
             }
         }
     }
