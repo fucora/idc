@@ -46,11 +46,11 @@ public class TaskService {
     public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME = "实际运行时间上月的最后一天";
     public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME = "实际运行时间当月的最后一天";
-    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME = "实际运行时间下月的最后一天";
-    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     // now
-    public static final String NOW = "调度计划提交时间";
+    public static final String NOW = "调度计划提交日期";
     public static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
 
     public static final Map<String,String> loadDateParams = new LinkedHashMap<>();
