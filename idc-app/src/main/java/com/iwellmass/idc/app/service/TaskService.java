@@ -152,11 +152,12 @@ public class TaskService {
                     return;
                 }
 
+                // compatible with manual task state.because in manual task,a task can contain success job and fail job.
+                // in manual task,the task'state stand for the state of the last of this task
                 if (job.getState().equals(JobState.FINISHED)) {
                     taskRuntimeVO.setState(TaskState.COMPLETE);
                     return;
                 }
-
             }
         }
     }
