@@ -132,7 +132,7 @@ public class TaskService {
         if (task.getState().equals(TaskState.COMPLETE)) {
             List<Job> jobs = jobRepository.findAllByTaskName(task.getTaskName());
             if (jobs.size() == 0) {
-                taskRuntimeVO.setState(TaskState.CANCEL);
+                taskRuntimeVO.setState(TaskState.NONE);
                 return;
             }
             for (Job job : jobs) {
