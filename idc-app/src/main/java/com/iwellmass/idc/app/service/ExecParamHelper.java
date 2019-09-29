@@ -59,23 +59,25 @@ public class ExecParamHelper {
         return request;
     }
 
+    // Auto task
     public List<ExecParam> parse(Task task) {
         ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now(), task.getUpdatetime());
         ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
-        List<ExecParam> execParams = deepCopyExecParam(task.getParams());
-        // modify the simple loadDate param to ognl expression
-        for (ExecParam execParam : execParams) {
-            if (TaskService.loadDateParams.containsKey(execParam.getDefaultExpr().trim())) {
-                execParam.setDefaultExpr(TaskService.loadDateParams.get(execParam.getDefaultExpr().trim()));
-            }
-        }
-        parser.parse(execParams);
-        return execParams;
+        return parse(task.getParams(), parser);
     }
 
-//    public String getLoadDate(List<ExecParam> execParams) {
-//        this
-//    }
+    // Manual task
+    public List<ExecParam> parse(Task task, List<ExecParam> params) {
+        ReferParam referParam = new ReferParam(LocalDateTime.now(), LocalDateTime.now(), task.getUpdatetime());
+        ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
+        return parse(params, parser);
+    }
+
+    public List<ExecParam> parse(List<ExecParam> params, ParamParser parser) {
+        List<ExecParam> execParams = deepCopyExecParam(params);
+        parser.parse(params);
+        return execParams;
+    }
 
     public static String getLoadDate(List<ExecParam> execParams) {
         String loadDate = "";
