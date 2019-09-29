@@ -54,6 +54,7 @@ public class ExecParamHelper {
         request.setScheduleType(task.getScheduleType());
         if (job.getShouldFireTime() != null) {
             // if the last job is fail.then we choose redo it. the shouldFireTime will lose,but this field isn't necessary
+            // after update this filed won't lose
             request.setShouldFireTime(job.getShouldFireTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         }
         return request;

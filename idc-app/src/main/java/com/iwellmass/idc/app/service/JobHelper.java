@@ -410,9 +410,12 @@ public class JobHelper {
             if (!nodeJobWaitQueue.isEmpty()) {
                 for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
                     try {
-                        NodeJob nodeJob = nodeJobWaitQueue.take();
-                        LOGGER.info("任务出队：nodeJob[{}]",nodeJob.getId());
-                        executeNodeJob(nodeJob);
+                        NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job could be illegal;  need update
+                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
+                        LOGGER.info("任务出队：nodeJob[{}]",nodeJobInWaitQueue.getId());
+                        if (nodeJobInDB.getState().equals(JobState.NONE)) {
+                            executeNodeJob(nodeJobInDB);
+                        }
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
                         e.printStackTrace();
