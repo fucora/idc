@@ -76,7 +76,7 @@ public class ExecParamHelper {
 
     public List<ExecParam> parse(List<ExecParam> params, ParamParser parser) {
         List<ExecParam> execParams = deepCopyExecParam(params);
-        parser.parse(params);
+        parser.parse(execParams);
         return execParams;
     }
 
