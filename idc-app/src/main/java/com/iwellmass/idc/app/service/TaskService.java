@@ -135,6 +135,13 @@ public class TaskService {
                 taskRuntimeVO.setState(TaskState.NONE);
                 return;
             }
+
+            Collections.sort(jobs, (o1, o2) -> {
+                String sub01 = o1.getId().substring(o1.getId().lastIndexOf("-"));
+                String sub02 = o2.getId().substring(o2.getId().lastIndexOf("-"));
+                return (int) (Long.valueOf(sub01) -  Long.valueOf(sub02));
+            });
+
             for (Job job : jobs) {
                 if (job.getState().equals(JobState.NONE) || job.getState().equals(JobState.RUNNING)) {
                     taskRuntimeVO.setState(TaskState.EXECUTING);
