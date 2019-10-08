@@ -64,7 +64,7 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
-//    @Inject
+    //    @Inject
 //    IDCPluginRepository idcPluginRepository;
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
@@ -194,9 +194,9 @@ public class JobHelper {
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // modify state of all subJobs of the job to skip
             job.getSubJobs().forEach(subJob -> {
-                if (!subJob.getNodeTask().getTaskId().equalsIgnoreCase("start") &&
-                        !subJob.getNodeTask().getTaskId().equalsIgnoreCase("end") &&
-                        !subJob.getNodeTask().getTaskId().equalsIgnoreCase("control") &&
+                if (!subJob.getNodeTask().getTaskId().equalsIgnoreCase(NodeTask.START) &&
+                        !subJob.getNodeTask().getTaskId().equalsIgnoreCase(NodeTask.END) &&
+                        !subJob.getNodeTask().getTaskId().equalsIgnoreCase(NodeTask.CONTROL) &&
                         !subJob.getState().isComplete()) {
                     logger.log(subJob.getId(), "跳过节点实例，nodeJobId[{}]，taskId[{}]，domain[{}]，state[{}]"
                             , subJob.getId(), subJob.getNodeTask().getTaskId(), subJob.getNodeTask().getDomain(), subJob.getState().name());
@@ -220,14 +220,14 @@ public class JobHelper {
         }
     }
 
-    public void running(AbstractJob job,JobMessage jobMessage) {
+    public void running(AbstractJob job, JobMessage jobMessage) {
         checkRunning(job);
         if (Strings.isNullOrEmpty(jobMessage.getMessage())) {
             logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                     job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
         } else {
             logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
-                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(),jobMessage.getMessage());
+                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(), jobMessage.getMessage());
         }
 
         if (job.getState() == JobState.ACCEPTED) {
@@ -286,16 +286,21 @@ public class JobHelper {
                 Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
                 , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
         modifyJobState(job, JobState.RUNNING);
-        runNextJob(job, NodeTask.START);
+        NodeJob startNodeJob = findStartNodeJob(job.getId());
+        modifyJobState(startNodeJob, JobState.FINISHED);
+        onJobFinished(startNodeJob);
+//        runNextJob(job, NodeTask.START);
     }
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
+            modifyJobState(nodeJob,JobState.FINISHED);
             onJobFinished(nodeJob);
             return;
         }
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END)) {
+            modifyJobState(nodeJob,JobState.FINISHED);
             FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
@@ -393,6 +398,7 @@ public class JobHelper {
 
     /**
      * used for concurrent control.
+     *
      * @return true:the nodeJob can dispatch
      */
     private boolean canDispatch() {
@@ -407,10 +413,10 @@ public class JobHelper {
         if (needReleaseJobs > 0) {
             // release waiting job
             if (!nodeJobWaitQueue.isEmpty()) {
-                for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
+                for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
                     try {
                         NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job'state could be illegal;  need validate
-                        LOGGER.info("任务出队：nodeJob[{}]",nodeJobInWaitQueue.getId());
+                        LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.getId());
                         NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
                             executeNodeJob(nodeJobInDB);
@@ -429,10 +435,10 @@ public class JobHelper {
 
     private void addNodeJobToWaitQueue(NodeJob nodeJob) {
         try {
-            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]",nodeJob.getId());
+            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]", nodeJob.getId());
             nodeJobWaitQueue.put(nodeJob);
         } catch (InterruptedException e) {
-            LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]",nodeJob.getId());
+            LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]", nodeJob.getId());
             e.printStackTrace();
         }
     }
@@ -447,13 +453,19 @@ public class JobHelper {
 
     /**
      * 出错重试
+     *
      * @param nodeJob
      */
     public void retry(NodeJob nodeJob) {
 
 
+    }
 
-
+    private NodeJob findStartNodeJob(String containerId) {
+        return nodeJobRepository.findAllByContainer(containerId).stream().
+                filter(nj -> nj.getNodeId().equalsIgnoreCase(NodeTask.START)).
+                findFirst().
+                orElseThrow(() -> new AppException("未找到指定containerId下的startJob"));
     }
 
 }

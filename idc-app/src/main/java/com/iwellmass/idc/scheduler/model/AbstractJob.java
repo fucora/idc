@@ -79,8 +79,7 @@ public abstract class AbstractJob {
 		if(taskType == TaskType.WORKFLOW) { // 创建子任务
 			subJobs = Objects.requireNonNull(task.getWorkflow())
 				.getNodeTasks().stream()
-				.map(node -> new
-						NodeJob(id, node))
+				.map(node -> new NodeJob(id, node))
 				.collect(Collectors.toList());
 		}
 	}
