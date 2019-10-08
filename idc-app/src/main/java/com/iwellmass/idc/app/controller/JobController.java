@@ -123,10 +123,23 @@ public class JobController {
         return ServiceResult.success("success");
     }
 
-    @ApiModelProperty("强制完成指定实例任务")
+    @ApiOperation("强制完成指定实例任务")
     @PutMapping("/{nodeJobId}/forceComplete")
     public ServiceResult<String> forceComplete(@PathVariable(name = "nodeJobId") String nodeJobId) {
         jobHelper.forceComplete(nodeJobId);
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("暂停job实例，同时暂停调度计划")
+    @GetMapping("/{jobId}/pause")
+    public ServiceResult<String> pause(@PathVariable(name = "jobId") String jobId) {
+        return ServiceResult.success("success");
+    }
+
+
+    @ApiOperation("恢复job实例，同时恢复调度计划")
+    @GetMapping(value = "/{jobId}/resume")
+    public ServiceResult<String> resume(@PathVariable(name = "jobId") String jobId) {
         return ServiceResult.success("success");
     }
 

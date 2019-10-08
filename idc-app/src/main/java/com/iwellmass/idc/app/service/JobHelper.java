@@ -469,7 +469,9 @@ public class JobHelper {
     }
 
     public void forceComplete(String nodeJodId) {
-        onJobFinished(nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId)));
+        NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
+        modifyJobState(nodeJob,JobState.FINISHED);
+        onJobFinished(nodeJob);
     }
 
 }
