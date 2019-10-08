@@ -468,4 +468,8 @@ public class JobHelper {
                 orElseThrow(() -> new AppException("未找到指定containerId下的startJob"));
     }
 
+    public void forceComplete(String nodeJodId) {
+        onJobFinished(nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId)));
+    }
+
 }

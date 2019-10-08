@@ -116,9 +116,17 @@ public class JobController {
         return ServiceResult.success(jobService.test(jobId,template,content));
     }
 
+    @ApiOperation("修改并发数")
     @PutMapping("/{maxRunningJobs}/modifyConcurrent")
     public ServiceResult<String> modifyConcurrent(@PathVariable(name = "maxRunningJobs") Integer maxRunningJobs) {
         jobHelper.modifyConcurrent(maxRunningJobs);
+        return ServiceResult.success("success");
+    }
+
+    @ApiModelProperty("强制完成指定实例任务")
+    @PutMapping("/{nodeJobId}/forceComplete")
+    public ServiceResult<String> forceComplete(@PathVariable(name = "nodeJobId") String nodeJobId) {
+        jobHelper.forceComplete(nodeJobId);
         return ServiceResult.success("success");
     }
 
