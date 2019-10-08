@@ -69,6 +69,7 @@ public class JobService {
             return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "starttime"))).map(job -> {
                 JobRuntimeVO vo = new JobRuntimeVO();
                 BeanUtils.copyProperties(job, vo);
+                vo.setScheduleType(job.getTask().getScheduleType());
                 return vo;
             });
         });

@@ -3,6 +3,7 @@ package com.iwellmass.idc.app.vo;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.JobState;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -36,4 +37,7 @@ public class JobRuntimeVO {
 	@ApiModelProperty("执行批次")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime shouldFireTime;
+
+	@ApiModelProperty("执行方式")
+	private ScheduleType scheduleType;
 }

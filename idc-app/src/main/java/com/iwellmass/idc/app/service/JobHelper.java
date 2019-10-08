@@ -393,8 +393,7 @@ public class JobHelper {
 
     /**
      * used for concurrent control.
-     *
-     * @return true:canDispatch
+     * @return true:the nodeJob can dispatch
      */
     private boolean canDispatch() {
         return nodeJobRepository.countNodeJobsByRunningOrAcceptState() < maxRunningJobs;
@@ -410,11 +409,14 @@ public class JobHelper {
             if (!nodeJobWaitQueue.isEmpty()) {
                 for (int i = 0;i < Math.min(needReleaseJobs,nodeJobWaitQueue.size());i++) {
                     try {
-                        NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job could be illegal;  need update
-                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
+                        NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job'state could be illegal;  need validate
                         LOGGER.info("任务出队：nodeJob[{}]",nodeJobInWaitQueue.getId());
+                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
                             executeNodeJob(nodeJobInDB);
+                        } else {
+                            // recovery the count to release nodeJob in waitQueue.
+                            i--;
                         }
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
