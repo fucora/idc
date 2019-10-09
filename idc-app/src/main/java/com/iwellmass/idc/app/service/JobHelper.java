@@ -419,6 +419,7 @@ public class JobHelper {
                         LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.getId());
                         NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).orElseThrow(() -> new AppException("未发现指定id的nodeJob"));
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
+                            // this operation will lose one callback of message.so we adopt i-- to offset this operation and need twice check by nodeJobWaitQueue.isEmpty()
                             executeNodeJob(nodeJobInDB);
                         } else {
                             i--;
@@ -427,6 +428,8 @@ public class JobHelper {
                         LOGGER.error("NodeJob等待队列出队异常");
                         e.printStackTrace();
                     }
+                } else {
+                    break;
                 }
             }
         }
