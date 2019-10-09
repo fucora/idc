@@ -45,9 +45,7 @@ public class JobController {
     @ApiOperation("获取 Job 详情")
     @GetMapping("/{id}")
     public ServiceResult<JobVO> get(@PathVariable("id") String id) {
-    	JobVO jobVO = new JobVO();
-    	jobService.get(id);
-    	return ServiceResult.success(jobVO);
+    	return ServiceResult.success(jobService.get(id));
     }
 
     @ApiOperation("获取所有责任人")

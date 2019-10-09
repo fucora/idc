@@ -117,7 +117,7 @@ public class JobService {
                 }
             }
         }
-        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS);
+        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS,job.getShouldFireTime());
         return jobVO;
     }
 

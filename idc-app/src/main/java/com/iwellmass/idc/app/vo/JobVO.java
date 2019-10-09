@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -30,4 +32,8 @@ public class JobVO {
 
     @ApiModelProperty("运行的实例参数信息")
     private List<MergeTaskParamVO> mergeTaskParamVOS;
+
+    @ApiModelProperty("执行批次")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime shouldFireTime;
 }
