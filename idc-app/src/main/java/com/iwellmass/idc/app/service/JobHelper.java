@@ -295,12 +295,12 @@ public class JobHelper {
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
-            modifyJobState(nodeJob,JobState.FINISHED);
+            modifyJobState(nodeJob, JobState.FINISHED);
             onJobFinished(nodeJob);
             return;
         }
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END)) {
-            modifyJobState(nodeJob,JobState.FINISHED);
+            modifyJobState(nodeJob, JobState.FINISHED);
             FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
             message.setMessage("执行结束");
             TaskEventPlugin.eventService(scheduler).send(message);
@@ -410,23 +410,19 @@ public class JobHelper {
      */
     private synchronized void notifyWaitQueue() {
         int needReleaseJobs = maxRunningJobs - nodeJobRepository.countNodeJobsByRunningOrAcceptState();
-        if (needReleaseJobs > 0) {
+        if (needReleaseJobs > 0 ) {
             // release waiting job
-            if (!nodeJobWaitQueue.isEmpty()) {
-                for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
+            for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
+                if (!nodeJobWaitQueue.isEmpty()) {
                     try {
                         NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job'state could be illegal;  need validate
                         LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.getId());
-                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
+                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).orElseThrow(() -> new AppException("未发现指定id的nodeJob"));
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
                             executeNodeJob(nodeJobInDB);
-                        } else if (!nodeJobWaitQueue.isEmpty()){
-                            break;
+                        } else {
+                            i--;
                         }
-//                        else {
-//                            // recovery the count to release nodeJob in waitQueue.when nodeJobWaitQueue is empty,nodeJobWaitQueue.take() will throw exception.
-//                            i--;
-//                        }
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
                         e.printStackTrace();
@@ -473,7 +469,7 @@ public class JobHelper {
 
     public void forceComplete(String nodeJodId) {
         NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
-        modifyJobState(nodeJob,JobState.FINISHED);
+        modifyJobState(nodeJob, JobState.FINISHED);
         onJobFinished(nodeJob);
     }
 
