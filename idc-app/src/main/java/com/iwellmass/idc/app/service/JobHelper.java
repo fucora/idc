@@ -420,9 +420,11 @@ public class JobHelper {
                         NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
                             executeNodeJob(nodeJobInDB);
+                        } else if (!nodeJobWaitQueue.isEmpty()){
+                            break;
                         }
 //                        else {
-//                            // recovery the count to release nodeJob in waitQueue.
+//                            // recovery the count to release nodeJob in waitQueue.when nodeJobWaitQueue is empty,nodeJobWaitQueue.take() will throw exception.
 //                            i--;
 //                        }
                     } catch (InterruptedException e) {

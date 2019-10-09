@@ -44,7 +44,7 @@ public class TaskController {
         return ServiceResult.success(ret);
     }
 
-    @ApiOperation("新增调度计划")
+    @ApiOperation("新增自动调度计划")
     @PostMapping
     public ServiceResult<String> schedule(@RequestBody TaskVO vo) {
         idcs.schedule(vo);
@@ -52,7 +52,7 @@ public class TaskController {
     }
 
 
-    @ApiOperation("手动调度计划")
+    @ApiOperation("新增手动调度计划")
     @PostMapping("/manual")
     public ServiceResult<String> manualSchedule(@RequestBody TaskVO vo) {
 

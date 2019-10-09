@@ -61,14 +61,9 @@ public class IDCScheduler {
 
             task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));// 生效时间
             task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
-
             shceduleJob(vo, task);
-
-
         }
-
         taskRepository.save(task);
-
     }
 
 
@@ -98,12 +93,9 @@ public class IDCScheduler {
         }
     }
 
-
-
     public void updateScheduleTask(Task task) {
         taskRepository.save(task);
     }
-
 
     // 正在执行的trigger 不能直接调用该接口
     @Transactional
