@@ -144,9 +144,9 @@ public class TaskController {
     }
 
     @ApiOperation("删除调度计划")
-    @PutMapping("/{taskName}/delete")
-    public ServiceResult<String> delete() {
-
+    @DeleteMapping("/{taskName}/delete")
+    public ServiceResult<String> delete(@PathVariable(name = "taskName") String taskName) {
+        taskService.delete(taskName);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 

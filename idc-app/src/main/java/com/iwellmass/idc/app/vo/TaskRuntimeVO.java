@@ -46,7 +46,6 @@ public class TaskRuntimeVO  {
 	@ApiModelProperty("调度类型")
 	private ScheduleType scheduleType;
 
-
     /**
      * 出错重试
      */
@@ -59,11 +58,12 @@ public class TaskRuntimeVO  {
     @ApiModelProperty("出错时阻塞")
     private Boolean blockOnError;
 
-
     /**
      * 任务描述
      */
     @ApiModelProperty("任务描述")
-    String description;
+    private String description;
 
+    @ApiModelProperty("是否能够删除")
+    private Boolean canDelete;
 }

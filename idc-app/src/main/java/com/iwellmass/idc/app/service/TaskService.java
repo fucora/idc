@@ -16,6 +16,7 @@ import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
+import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
@@ -71,6 +72,8 @@ public class TaskService {
     JobRepository jobRepository;
     @Resource
     WorkflowRepository workflowRepository;
+    @Resource
+    NodeJobRepository nodeJobRepository;
 
     @Inject
     DFTaskService dfTaskService;
@@ -117,6 +120,7 @@ public class TaskService {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 vo.setWorkflowName(t.getWorkflow().getWorkflowName());
+                vo.setCanDelete(canDelete(t.getTaskName()));
                 twiceValidateState(t, vo);
                 return vo;
             });
@@ -191,4 +195,29 @@ public class TaskService {
         return Lists.newArrayList(loadDateParams.keySet());
     }
 
+    public void delete(String taskName) {
+        if (!canDelete(taskName)) {
+            throw new AppException("删除失败：该调度计划存在未结束的实例任务");
+        }
+        // delete nodeJob job task
+        List<Job> jobs = jobRepository.findAllByTaskName(taskName);
+        List<NodeJob> nodeJobs = nodeJobRepository.findAllByContainerIn(jobs.stream().map(Job::getId).collect(Collectors.toList()));
+        // nodeJob
+        nodeJobRepository.deleteAll(nodeJobs);
+        // job
+        jobRepository.deleteAll(jobs);
+        // task
+        taskRepository.deleteById(new TaskID(taskName));
+    }
+
+    /**
+     * judge the task whether can be deleted
+     * @param taskName
+     * @return
+     */
+    private boolean canDelete(String taskName) {
+        return nodeJobRepository.findAllByContainerIn(
+                jobRepository.findAllByTaskName(taskName).stream().map(Job::getId).collect(Collectors.toList())
+        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState().isComplete());
+    }
 }

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Resource;
 import javax.xml.soap.Node;
@@ -249,14 +250,19 @@ public class WorkflowService {
         }
     }
 
-    // judge the workflow whether can be deleted. when the all nodeJobs of job of task of workflow is complete ,the workflow can be deleted.
+    /**
+     *  judge the workflow whether can be deleted. when the all nodeJobs of job of task of workflow is complete ,the workflow can be deleted.
+     *  when stream is empty .the result is always true. see {@link Stream#allMatch(java.util.function.Predicate)} . the result is what we need
+     * @param wfId
+     * @return
+     */
     public boolean canDelete(String wfId) {
         // todo 考虑工作流嵌套情况
         return nodeJobRepository.findAllByContainerIn(
                 jobRepository.findAllByTaskNameIn(
                         taskRepository.findAllByWorkflowId(wfId).stream().map(Task::getTaskName).collect(Collectors.toList())
                 ).stream().map(Job::getId).collect(Collectors.toList())
-        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState() == JobState.FINISHED);
+        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState().isComplete());
     }
 
     // a workflow only can be inited once.judge a workflow whether can be inited with this workflow whether exist task.
@@ -326,5 +332,4 @@ public class WorkflowService {
         workflowRepository.save(newWorkflow);
 
     }
-
 }
