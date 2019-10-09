@@ -420,10 +420,11 @@ public class JobHelper {
                         NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).get();
                         if (nodeJobInDB.getState().equals(JobState.NONE)) {
                             executeNodeJob(nodeJobInDB);
-                        } else {
-                            // recovery the count to release nodeJob in waitQueue.
-                            i--;
                         }
+//                        else {
+//                            // recovery the count to release nodeJob in waitQueue.
+//                            i--;
+//                        }
                     } catch (InterruptedException e) {
                         LOGGER.error("NodeJob等待队列出队异常");
                         e.printStackTrace();

@@ -143,4 +143,11 @@ public class TaskController {
         return ServiceResult.success(taskService.getLoadDateParams());
     }
 
+    @ApiOperation("删除调度计划")
+    @PutMapping("/{taskName}/delete")
+    public ServiceResult<String> delete() {
+
+        return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
 }
