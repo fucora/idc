@@ -3,6 +3,7 @@ package com.iwellmass.idc.app.service;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.idc.app.message.TaskEventPlugin;
@@ -72,7 +73,8 @@ public class JobHelper {
     private Integer retryCount;
 
     BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
-    Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();
+    Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
+    Set<String> pausedJobIds = Sets.newConcurrentHashSet(); // those jobs have been paused.
 
     //==============================================  processor call
 
@@ -284,9 +286,9 @@ public class JobHelper {
         }
     }
 
-    private void checkNotRunning(AbstractJob job) {
-        if (!job.getState().isComplete()) {
-            throw new JobException("任务已结束: " + job.getState());
+    private void checkInit(AbstractJob job) {
+        if (!job.getState().equals(JobState.NONE)) {
+            throw new JobException("任务不在初始化状态: " + job.getState());
         }
     }
 
@@ -311,6 +313,7 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
+        checkInit(nodeJob);
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
             modifyJobState(nodeJob, JobState.FINISHED);
             onJobFinished(nodeJob);
@@ -505,4 +508,30 @@ public class JobHelper {
     private Task getTaskByNodeJob(NodeJob nodeJob) {
         return jobRepository.findById(nodeJob.getContainer()).orElseThrow(() -> new AppException("未找到指定job实例" + nodeJob.getContainer())).getTask();
     }
+
+    /**
+     * 工作流暂停，可以暂停正在运行的工作流
+     * @param jobId jobId
+     */
+    public void pause(String jobId) {
+        if (pausedJobIds.contains(jobId)) {
+            throw new AppException("该实例已经暂停");
+        }
+        pausedJobIds.add(jobId);
+    }
+
+    /**
+     * 恢复暂停的工作流
+     * @param jobId jobId
+     */
+    public void resume(String jobId) {
+        if (!pausedJobIds.contains(jobId)) {
+            throw new AppException("该实例未暂停");
+        }
+        pausedJobIds.remove(jobId);
+
+
+
+    }
+
 }

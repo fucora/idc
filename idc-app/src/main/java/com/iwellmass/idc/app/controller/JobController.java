@@ -127,15 +127,17 @@ public class JobController {
     }
 
     @ApiOperation("暂停job实例，同时暂停调度计划")
-    @GetMapping("/{jobId}/pause")
+    @PutMapping("/{jobId}/pause")
     public ServiceResult<String> pause(@PathVariable(name = "jobId") String jobId) {
+        jobHelper.pause(jobId);
         return ServiceResult.success("success");
     }
 
 
     @ApiOperation("恢复job实例，同时恢复调度计划")
-    @GetMapping(value = "/{jobId}/resume")
+    @PutMapping(value = "/{jobId}/resume")
     public ServiceResult<String> resume(@PathVariable(name = "jobId") String jobId) {
+        jobHelper.resume(jobId);
         return ServiceResult.success("success");
     }
 
