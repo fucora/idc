@@ -114,7 +114,7 @@ public class JobHelper {
                 retry(abstractJob.asNodeJob(), message);
                 return;
             } else {
-                // nodeJobRetryCount.get(abstractJob.getId()).getAndIncrement() > retryCount
+                // nodeJobRetryCount.get(abstractJob.getId()).getAndIncrement() >= retryCount
                 nodeJobRetryCount.remove(abstractJob.getId());
             }
         }
@@ -138,8 +138,6 @@ public class JobHelper {
                     null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
             logger.log(jobExecutionLog);
-
-
         }
         try {
             if (scheduler.checkExists(triggerKey)) {
@@ -148,6 +146,10 @@ public class JobHelper {
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
+        if (!abstractJob.isJob() && !(getTaskByNodeJob(abstractJob.asNodeJob()).getBlockOnError())) {
+            runNextJob(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(), abstractJob.asNodeJob().getNodeId());
+        }
+
         // notify wait queue
         notifyWaitQueue();
 
@@ -358,11 +360,11 @@ public class JobHelper {
             NodeJob next = iterator.next();
             try {
                 Set<String> previous = workflow.getPrevious(next.getNodeId());
-
+                LOGGER.info("Job[{}]是否开启出错阻塞：{}",job.getId(),job.getTask().getBlockOnError());
                 // if  the job's all previous jobs don't complete ,then skip this fire
                 boolean unfinishJob = job.getSubJobs().stream()
                         .filter(sub -> !sub.isSystemNode() && previous.contains(sub.getNodeId()))
-                        .anyMatch(sub -> !sub.getState().isSuccess());
+                        .anyMatch(sub -> job.getTask().getBlockOnError() ? !sub.getState().isSuccess() : !sub.getState().isComplete());
                 if (!unfinishJob) {
                     startJob(next);
                 }
@@ -379,12 +381,16 @@ public class JobHelper {
             // Release trigger
             Job job = runningJob.asJob();
             TriggerKey tk = job.getTask().getTriggerKey();
-            if (job.getState().isComplete()) {
-                if (job.getState().isSuccess()) {
-                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-                } else {
-                    idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+            try {
+                if (scheduler.checkExists(tk) && job.getState().isComplete()) {
+                    if (job.getState().isSuccess()) {
+                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                    } else {
+                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                    }
                 }
+            } catch (SchedulerException e) {
+                e.printStackTrace();
             }
             logger.log(job.getId(), "节点任务执行完毕，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]，state[{}]",
                     job.getShouldFireTime().format(formatter), job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId(), job.getState().name());
