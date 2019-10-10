@@ -1,10 +1,7 @@
 package com.iwellmass.idc.app.service;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
@@ -31,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author nobita chen
@@ -70,7 +68,11 @@ public class JobHelper {
     boolean openCallbackControl;
     @Value(value = "${idc.scheduler.maxRunningJobs:10}")
     private Integer maxRunningJobs;
+    @Value(value = "${idc.scheduler.retryCount:3}")
+    private Integer retryCount;
+
     BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
+    Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();
 
     //==============================================  processor call
 
@@ -102,6 +104,17 @@ public class JobHelper {
     public void failed(AbstractJob abstractJob, JobMessage message) {
         checkRunning(abstractJob);
         modifyJobState(abstractJob, JobState.FAILED);
+        if (!abstractJob.isJob() && getTaskByNodeJob(abstractJob.asNodeJob()).getIsRetry()) {
+            // only support retry nodeJob
+            if (!nodeJobRetryCount.containsKey(abstractJob.getId())) {
+                nodeJobRetryCount.put(abstractJob.getId(), new AtomicInteger(1));
+                retry(abstractJob.asNodeJob(), message);
+                return;
+            } else if (nodeJobRetryCount.containsKey(abstractJob.getId()) && nodeJobRetryCount.get(abstractJob.getId()).getAndIncrement() < retryCount) {
+                retry(abstractJob.asNodeJob(), message);
+                return;
+            }
+        }
         TriggerKey triggerKey;
         if (abstractJob.isJob()) {
             triggerKey = abstractJob.asJob().getTask().getTriggerKey();
@@ -122,6 +135,8 @@ public class JobHelper {
                     null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
             logger.log(jobExecutionLog);
+
+
         }
         try {
             if (scheduler.checkExists(triggerKey)) {
@@ -407,7 +422,7 @@ public class JobHelper {
      */
     private synchronized void notifyWaitQueue() {
         int needReleaseJobs = maxRunningJobs - nodeJobRepository.countNodeJobsByRunningOrAcceptState();
-        if (needReleaseJobs > 0 ) {
+        if (needReleaseJobs > 0) {
             // release waiting job
             for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
                 if (!nodeJobWaitQueue.isEmpty()) {
@@ -455,9 +470,14 @@ public class JobHelper {
      *
      * @param nodeJob
      */
-    public void retry(NodeJob nodeJob) {
-
-
+    public void retry(NodeJob nodeJob, JobMessage message) {
+        LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]",nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
+        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "准备失败重试，节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                message.getThrowable() == null ? null : message.getStackTrace(),
+                nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
+        logger.log(nodeJobExecutionLog);
+        modifyJobState(nodeJob, JobState.NONE);
+        executeNodeJob(nodeJob);
     }
 
     private NodeJob findStartNodeJob(String containerId) {
@@ -473,4 +493,7 @@ public class JobHelper {
         onJobFinished(nodeJob);
     }
 
+    private Task getTaskByNodeJob(NodeJob nodeJob) {
+        return jobRepository.findById(nodeJob.getContainer()).orElseThrow(() -> new AppException("未找到指定job实例" + nodeJob.getContainer())).getTask();
+    }
 }

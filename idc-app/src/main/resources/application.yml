@@ -81,6 +81,7 @@ idc.scheduler.start-auto: true          # 是否开启调度
 idc.scheduler.maxRunningJobs: 10       # 调度的最大并发数(nodeJob的最大运行数量)
 idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认开启
 idc.scheduler.callbackTimeout: 7200  # 任务回调超时时间  单位:秒  默认2小时
+idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
 
 
 ---
@@ -140,3 +141,4 @@ idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
 idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认关闭
 idc.scheduler.maxRunningJobs: 3  # 最大并发数，测试为2个
+idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次

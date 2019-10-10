@@ -137,10 +137,9 @@ public class JobService {
     }
 
 
-    public PageData<ExecutionLog> getLogs(String jobId, Pager pager) {
-        Pageable page = PageRequest.of(pager.getPage() , pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
-        Page<ExecutionLog> data = logRepository.findByJobId(jobId, page);
-        return new PageData<>((int) data.getTotalElements(), data.getContent());
+    public PageData<ExecutionLog> getLogs(String jobId) {
+        List<ExecutionLog> data = logRepository.findAllByJobId(jobId);
+        return new PageData<>(data.size(), data);
     }
 
 }

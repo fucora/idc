@@ -100,11 +100,9 @@ public class JobController {
     }
 
     @ApiOperation("任务日志(分页)")
-    @GetMapping("/log/{jobId}/{page}/{limit}")
-    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable("jobId") String jobId,
-                                                        @PathVariable("page") Integer page,
-                                                        @PathVariable("limit") Integer limit) {
-        PageData<ExecutionLog> data = jobService.getLogs(jobId, new Pager(page,limit));
+    @GetMapping("/log/{jobId}")
+    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable("jobId") String jobId) {
+        PageData<ExecutionLog> data = jobService.getLogs(jobId);
         return ServiceResult.success(data);
     }
 

@@ -45,6 +45,8 @@ public class SchedulerConfig {
 	private Integer maxRunningJobs;
 	@Value(value = "${idc.scheduler.callbackTimeout:1800}")
 	Long timeout;
+	@Value(value = "${idc.scheduler.retryCount:3}")
+	private Integer retryCount;
 
 	@Resource
 	DataSource dataSource;
@@ -105,6 +107,7 @@ public class SchedulerConfig {
 				LOGGER.info("回调超时时长（秒）：" + timeout);
 			}
 			LOGGER.info("最大并发数：" + maxRunningJobs);
+			LOGGER.info("失败重试次数：" + retryCount);
 
 			scheduler().start();
 		}
