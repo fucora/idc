@@ -475,9 +475,9 @@ public class JobHelper {
      */
     public void retry(NodeJob nodeJob, JobMessage message) {
         LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]",nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
-        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "准备失败重试，节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                 message.getThrowable() == null ? null : message.getStackTrace(),
-                nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
+                nodeJobRetryCount.get(nodeJob.getId()).get(),nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
         logger.log(nodeJobExecutionLog);
         modifyJobState(nodeJob, JobState.NONE);
         executeNodeJob(nodeJob);
