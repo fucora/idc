@@ -287,9 +287,7 @@ public class JobHelper {
     }
 
     private void checkInit(AbstractJob job) {
-        if (!job.getState().equals(JobState.NONE)) {
-            throw new JobException("任务不在初始化状态: " + job.getState());
-        }
+
     }
 
     private void startJob(AbstractJob job) {
@@ -313,7 +311,10 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
-        checkInit(nodeJob);
+        if (!nodeJob.getState().equals(JobState.NONE)) {
+            LOGGER.info("nodeJob[{}]不是初始化状态:state{} ",nodeJob.getId(),nodeJob.getState());
+            return;
+        }
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
             modifyJobState(nodeJob, JobState.FINISHED);
             onJobFinished(nodeJob);
