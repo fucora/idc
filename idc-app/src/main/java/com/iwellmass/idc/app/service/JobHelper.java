@@ -113,6 +113,9 @@ public class JobHelper {
             } else if (nodeJobRetryCount.containsKey(abstractJob.getId()) && nodeJobRetryCount.get(abstractJob.getId()).getAndIncrement() < retryCount) {
                 retry(abstractJob.asNodeJob(), message);
                 return;
+            } else {
+                // nodeJobRetryCount.get(abstractJob.getId()).getAndIncrement() > retryCount
+                nodeJobRetryCount.remove(abstractJob.getId());
             }
         }
         TriggerKey triggerKey;

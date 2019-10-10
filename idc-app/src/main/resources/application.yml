@@ -141,4 +141,4 @@ idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
 idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能，默认关闭
 idc.scheduler.maxRunningJobs: 3  # 最大并发数，测试为2个
-idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
+idc.scheduler.retryCount: 20 # 单个任务失败后自动重试次数  默认重试3次
