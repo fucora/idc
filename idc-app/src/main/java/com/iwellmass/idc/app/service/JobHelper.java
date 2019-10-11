@@ -135,7 +135,11 @@ public class JobHelper {
             logger.log(nodeJobExecutionLog);
             Job parent = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get();
             triggerKey = parent.getTask().getTriggerKey();
-            modifyJobState(parent, JobState.FAILED);
+            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
+            // only the parent's state is running.we need modify parent's state
+            if (parent.getState().equals(JobState.RUNNING)) {
+                modifyJobState(parent, JobState.FAILED);
+            }
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
