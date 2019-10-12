@@ -221,7 +221,7 @@ public class JobHelper {
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // modify state of all subJobs of the job to skip
             job.getSubJobs().forEach(subJob -> {
-                if (!subJob.getState().isComplete()) {
+                if (!subJob.getState().isSuccess()) {
                     logger.log(subJob.getId(), "跳过节点实例，nodeJobId[{}]，taskId[{}]，domain[{}]，state[{}]"
                             , subJob.getId(), subJob.getNodeTask().getTaskId(), subJob.getNodeTask().getDomain(), subJob.getState().name());
                     subJob.setState(JobState.SKIPPED);
