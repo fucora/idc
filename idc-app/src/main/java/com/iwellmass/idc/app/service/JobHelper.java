@@ -98,11 +98,10 @@ public class JobHelper {
             checkRunning(abstractJob);
         }
         modifyJobState(abstractJob, JobState.FINISHED);
-        if (!abstractJob.isJob()) {
-            flushParentState(abstractJob.asNodeJob());
-        }
         onJobFinished(abstractJob);
-        if (abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
+        if (!abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
+            flushParentState(abstractJob.asNodeJob());
+        } else {
             flushJobState(abstractJob.asJob());
         }
         // notify wait queue
@@ -161,6 +160,7 @@ public class JobHelper {
         }
         if (!abstractJob.isJob() && !(getTaskByNodeJob(abstractJob.asNodeJob()).getBlockOnError())) {
             onJobFinished(abstractJob);
+            flushParentState(abstractJob.asNodeJob());
         }
 
         // notify wait queue
@@ -210,13 +210,13 @@ public class JobHelper {
             // clear
             nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
-            flushParentState(newNodeJob);
             executeNodeJob(newNodeJob);
+            flushParentState(newNodeJob);
         }
     }
 
     // wait for apply
-    public void cancle(AbstractJob job) {
+    public void cancel(AbstractJob job) {
         checkRunning(job);
         notifyWaitQueue();
     }
@@ -238,10 +238,10 @@ public class JobHelper {
         }
         logger.log(job.getId(), "跳过任务实例，id[{}]，state[{}]", job.getId(), job.getState().name());
         modifyJobState(job, JobState.SKIPPED);
+        onJobFinished(job);
         if (!job.isJob()) {
             flushParentState(job.asNodeJob());
         }
-        onJobFinished(job);
         // notify wait queue
         notifyWaitQueue();
     }
@@ -286,6 +286,63 @@ public class JobHelper {
                 failed(job, FailMessage.newMessage(job.getId()));
             }
         }
+    }
+
+    /**
+     * 出错重试
+     *
+     * @param nodeJob
+     */
+    public void retry(NodeJob nodeJob, JobMessage message) {
+        LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]", nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
+        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+                message.getThrowable() == null ? null : message.getStackTrace(),
+                nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
+        logger.log(nodeJobExecutionLog);
+        modifyJobState(nodeJob, JobState.NONE);
+        executeNodeJob(nodeJob);
+        flushParentState(nodeJob);
+    }
+
+    private NodeJob findStartNodeJob(String containerId) {
+        return nodeJobRepository.findAllByContainer(containerId).stream().
+                filter(nj -> nj.getNodeId().equalsIgnoreCase(NodeTask.START)).
+                findFirst().
+                orElseThrow(() -> new AppException("未找到指定containerId下的startJob"));
+    }
+
+    public void forceComplete(String nodeJodId) {
+        NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
+        modifyJobState(nodeJob, JobState.FINISHED);
+        onJobFinished(nodeJob);
+        flushParentState(nodeJob);
+    }
+
+    /**
+     * pause the job.
+     *
+     * @param jobId jobId
+     */
+    public void pause(String jobId) {
+        if (pausedJobIds.contains(jobId)) {
+            throw new AppException("该实例已经暂停");
+        }
+        pausedJobIds.add(jobId);
+    }
+
+    /**
+     * resume the paused job.
+     *
+     * @param jobId jobId
+     */
+    public void resume(String jobId) {
+        if (!pausedJobIds.contains(jobId)) {
+            throw new AppException("该实例未暂停");
+        }
+        pausedJobIds.remove(jobId);
+        // notify those paused nodeJob.
+
+
     }
 
     //==============================================  this class call
@@ -434,7 +491,6 @@ public class JobHelper {
         allJobRepository.save(job);
     }
 
-
     /**
      * used for concurrent control.
      *
@@ -492,72 +548,8 @@ public class JobHelper {
         this.maxRunningJobs = maxRunningJobs;
     }
 
-    /**
-     * 出错重试
-     *
-     * @param nodeJob
-     */
-    public void retry(NodeJob nodeJob, JobMessage message) {
-        LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]", nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
-        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                message.getThrowable() == null ? null : message.getStackTrace(),
-                nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
-        logger.log(nodeJobExecutionLog);
-        modifyJobState(nodeJob, JobState.NONE);
-        flushParentState(nodeJob);
-        executeNodeJob(nodeJob);
-    }
-
-    private NodeJob findStartNodeJob(String containerId) {
-        return nodeJobRepository.findAllByContainer(containerId).stream().
-                filter(nj -> nj.getNodeId().equalsIgnoreCase(NodeTask.START)).
-                findFirst().
-                orElseThrow(() -> new AppException("未找到指定containerId下的startJob"));
-    }
-
-    public void forceComplete(String nodeJodId) {
-        NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
-        modifyJobState(nodeJob, JobState.FINISHED);
-        flushParentState(nodeJob);
-        onJobFinished(nodeJob);
-    }
-
     private Task getTaskByNodeJob(NodeJob nodeJob) {
         return jobRepository.findById(nodeJob.getContainer()).orElseThrow(() -> new AppException("未找到指定job实例" + nodeJob.getContainer())).getTask();
-    }
-
-    /**
-     * when complete message reach.we call this method.
-     */
-    private void complete() {
-
-    }
-
-    /**
-     * pause the job.
-     *
-     * @param jobId jobId
-     */
-    public void pause(String jobId) {
-        if (pausedJobIds.contains(jobId)) {
-            throw new AppException("该实例已经暂停");
-        }
-        pausedJobIds.add(jobId);
-    }
-
-    /**
-     * resume the paused job.
-     *
-     * @param jobId jobId
-     */
-    public void resume(String jobId) {
-        if (!pausedJobIds.contains(jobId)) {
-            throw new AppException("该实例未暂停");
-        }
-        pausedJobIds.remove(jobId);
-        // notify those paused nodeJob.
-
-
     }
 
     /**
@@ -570,7 +562,7 @@ public class JobHelper {
      * 2.success: all subJobs was done and all subJobs was success,the job'state is success
      * 3.running:when there exist one nodeJob is running ,the job'state is running.
      * <p>
-     * attention:before call this method.we must modify nodeJob's state.
+     * attention:before call this method.we must modify nodeJob's state. and after onJobFinished
      *
      * @param nodeJob the job'state
      */
@@ -591,7 +583,7 @@ public class JobHelper {
                 break;
             }
         }
-        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning()) || inNodeJobWaitQueue) {
+        if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
             modifyJobState(job, JobState.RUNNING);
             return;
         }
