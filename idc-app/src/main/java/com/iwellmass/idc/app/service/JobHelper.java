@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /**
  * @author nobita chen
@@ -100,9 +101,9 @@ public class JobHelper {
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
         if (!abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
-            flushParentState(abstractJob.asNodeJob());
+            flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         } else {
-            flushJobState(abstractJob.asJob());
+            flushJobStateAndHandleTriggerState(abstractJob.asJob());
         }
         // notify wait queue
         notifyWaitQueue();
@@ -125,9 +126,7 @@ public class JobHelper {
                 nodeJobRetryCount.remove(abstractJob.getId());
             }
         }
-        TriggerKey triggerKey;
         if (abstractJob.isJob()) {
-            triggerKey = abstractJob.asJob().getTask().getTriggerKey();
             ExecutionLog executionLog = ExecutionLog.createLog(abstractJob.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
                     abstractJob.asJob().getShouldFireTime().format(formatter), abstractJob.asJob().getTask().getTaskName(), abstractJob.getId(), abstractJob.asJob().getLoadDate(), abstractJob.asJob().getTask().getWorkflowId());
@@ -139,28 +138,20 @@ public class JobHelper {
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
             Job parent = getParentByNodeJob(abstractJob.asNodeJob());
-            triggerKey = parent.getTask().getTriggerKey();
 //            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
 //            // only the parent's state is running.we need modify parent's state
 //            if (parent.getState().equals(JobState.RUNNING)) {
 //                modifyJobState(parent, JobState.FAILED);
 //            }
-            flushParentState(abstractJob.asNodeJob());
+            flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
             logger.log(jobExecutionLog);
         }
-        try {
-            if (scheduler.checkExists(triggerKey)) {
-                idcJobStore.releaseTrigger(triggerKey, ReleaseInstruction.SET_ERROR);
-            }
-        } catch (SchedulerException e) {
-            e.printStackTrace();
-        }
         if (!abstractJob.isJob() && !(getTaskByNodeJob(abstractJob.asNodeJob()).getBlockOnError())) {
             onJobFinished(abstractJob);
-            flushParentState(abstractJob.asNodeJob());
+            flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         }
 
         // notify wait queue
@@ -189,19 +180,20 @@ public class JobHelper {
             nodeJobRepository.deleteAll(job.getSubJobs());
             jobRepository.delete(job.asJob());
             // recover trigger state
-            try {
-                if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
-                    idcJobstoreCMT.updateTriggerStateToSuspended(job.asJob().getTask().getTriggerKey());
-                }
-            } catch (SchedulerException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
+//                    idcJobstoreCMT.updateTriggerStateToSuspended(job.asJob().getTask().getTriggerKey());
+//                }
+//            } catch (SchedulerException e) {
+//                e.printStackTrace();
+//            }
             // recreate job:the task info will lose,
             jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams, job.asJob().getShouldFireTime());
 
             Job newJob = jobRepository.findById(job.getId()).get();
             // edit run param
             executeJob(newJob);
+            flushJobStateAndHandleTriggerState(newJob);
         } else {
             // create new nodeJob instance
             NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
@@ -211,7 +203,7 @@ public class JobHelper {
             nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
             executeNodeJob(newNodeJob);
-            flushParentState(newNodeJob);
+            flushParentStateAndHandleTriggerState(newNodeJob);
         }
     }
 
@@ -240,7 +232,9 @@ public class JobHelper {
         modifyJobState(job, JobState.SKIPPED);
         onJobFinished(job);
         if (!job.isJob()) {
-            flushParentState(job.asNodeJob());
+            flushParentStateAndHandleTriggerState(job.asNodeJob());
+        } else {
+            flushJobStateAndHandleTriggerState(job.asJob());
         }
         // notify wait queue
         notifyWaitQueue();
@@ -301,7 +295,7 @@ public class JobHelper {
         logger.log(nodeJobExecutionLog);
         modifyJobState(nodeJob, JobState.NONE);
         executeNodeJob(nodeJob);
-        flushParentState(nodeJob);
+        flushParentStateAndHandleTriggerState(nodeJob);
     }
 
     private NodeJob findStartNodeJob(String containerId) {
@@ -315,7 +309,7 @@ public class JobHelper {
         NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
         modifyJobState(nodeJob, JobState.FINISHED);
         onJobFinished(nodeJob);
-        flushParentState(nodeJob);
+        flushParentStateAndHandleTriggerState(nodeJob);
     }
 
     /**
@@ -371,11 +365,10 @@ public class JobHelper {
         logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                 Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
                 , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
-        modifyJobState(job, JobState.RUNNING);
         NodeJob startNodeJob = findStartNodeJob(job.getId());
         modifyJobState(startNodeJob, JobState.FINISHED);
         onJobFinished(startNodeJob);
-//        runNextJob(job, NodeTask.START);
+        flushParentStateAndHandleTriggerState(startNodeJob);
     }
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
@@ -387,6 +380,7 @@ public class JobHelper {
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
             modifyJobState(nodeJob, JobState.FINISHED);
             onJobFinished(nodeJob);
+            flushParentStateAndHandleTriggerState(nodeJob);
             return;
         }
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END)) {
@@ -453,18 +447,18 @@ public class JobHelper {
         if (runningJob instanceof Job) {
             // Release trigger
             Job job = runningJob.asJob();
-            TriggerKey tk = job.getTask().getTriggerKey();
-            try {
-                if (scheduler.checkExists(tk) && job.getState().isComplete()) {
-                    if (job.getState().isSuccess()) {
-                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-                    } else {
-                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
-                    }
-                }
-            } catch (SchedulerException e) {
-                e.printStackTrace();
-            }
+//            TriggerKey tk = job.getTask().getTriggerKey();
+//            try {
+//                if (scheduler.checkExists(tk) && job.getState().isComplete()) {
+//                    if (job.getState().isSuccess()) {
+//                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+//                    } else {
+//                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+//                    }
+//                }
+//            } catch (SchedulerException e) {
+//                e.printStackTrace();
+//            }
             logger.log(job.getId(), "节点任务执行完毕，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]，state[{}]",
                     job.getShouldFireTime().format(formatter), job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId(), job.getState().name());
         } else {
@@ -566,14 +560,23 @@ public class JobHelper {
      *
      * @param nodeJob the job'state
      */
-    public synchronized void flushParentState(NodeJob nodeJob) {
-        flushJobState(getParentByNodeJob(nodeJob));
+    public synchronized void flushParentStateAndHandleTriggerState(NodeJob nodeJob) {
+        flushJobStateAndHandleTriggerState(getParentByNodeJob(nodeJob));
     }
 
-    public synchronized void flushJobState(Job job) {
+    public synchronized void flushJobStateAndHandleTriggerState(Job job) {
+        List<Job> jobs = jobRepository.findAllByTaskName(job.getTaskName());
+        // point whether the job is the last job
+        // if the job is the latest job.we should modify trigger state.
+        boolean isLatestJob = jobs.stream().
+                sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? -1 : 1)
+                .findFirst().get().getId().equals(job.getId());
+
+        // flush job state
         List<NodeJob> subJobs = job.getSubJobs();
         if (subJobs.isEmpty()) {
             modifyJobState(job, JobState.NONE);
+            return;
         }
         // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running
         boolean inNodeJobWaitQueue = false;
@@ -584,15 +587,50 @@ public class JobHelper {
             }
         }
         if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
-            modifyJobState(job, JobState.RUNNING);
+            if (!job.getState().equals(JobState.RUNNING)) {
+                modifyJobState(job, JobState.RUNNING);
+                if (isLatestJob) {
+                    try {
+                        if (scheduler.checkExists(job.getTask().getTriggerKey())) {
+                            idcJobstoreCMT.updateTriggerStateToSuspended(job.asJob().getTask().getTriggerKey());
+                        }
+                    } catch (SchedulerException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             return;
         }
         if (subJobs.stream().anyMatch(nd -> nd.getState().isFailure())) {
             modifyJobState(job, JobState.FAILED);
+            if (isLatestJob) {
+                TriggerKey tk = job.getTask().getTriggerKey();
+                try {
+                    if (scheduler.checkExists(tk)) {
+                        if (job.getTask().getBlockOnError()) {
+                            idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                        } else if (job.getSubJobs().stream().allMatch(nd -> nd.getState().isComplete())){
+                            idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                        }
+                    }
+                } catch (SchedulerException e) {
+                    e.printStackTrace();
+                }
+            }
             return;
         }
         if (subJobs.stream().allMatch(nd -> nd.getState().isSuccess())) {
             modifyJobState(job, JobState.FINISHED);
+            if (isLatestJob) {
+                TriggerKey tk = job.getTask().getTriggerKey();
+                try {
+                    if (scheduler.checkExists(tk)) {
+                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                    }
+                } catch (SchedulerException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
