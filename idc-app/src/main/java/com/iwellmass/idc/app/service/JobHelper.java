@@ -102,7 +102,7 @@ public class JobHelper {
             flushParentState(abstractJob.asNodeJob());
         }
         onJobFinished(abstractJob);
-        if (abstractJob.isJob()) {
+        if (abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
             flushJobState(abstractJob.asJob());
         }
         // notify wait queue
@@ -583,7 +583,15 @@ public class JobHelper {
         if (subJobs.isEmpty()) {
             modifyJobState(job, JobState.NONE);
         }
-        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning() || nd.getState().equals(JobState.NONE))) {
+        // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running
+        boolean inNodeJobWaitQueue = false;
+        for (NodeJob nodeJob : subJobs) {
+            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob)) {
+                inNodeJobWaitQueue = true;
+                break;
+            }
+        }
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning()) || inNodeJobWaitQueue) {
             modifyJobState(job, JobState.RUNNING);
             return;
         }
