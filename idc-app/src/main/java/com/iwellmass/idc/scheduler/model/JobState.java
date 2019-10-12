@@ -40,7 +40,7 @@ public enum JobState {
 		return null;
 	}
 
-	public boolean isNotCallback() {
+	public boolean isRunning() {
 		return this == ACCEPTED || this == RUNNING;
 	}
 }

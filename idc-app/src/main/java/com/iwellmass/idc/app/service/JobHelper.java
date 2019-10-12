@@ -98,7 +98,13 @@ public class JobHelper {
             checkRunning(abstractJob);
         }
         modifyJobState(abstractJob, JobState.FINISHED);
+        if (!abstractJob.isJob()) {
+            flushParentState(abstractJob.asNodeJob());
+        }
         onJobFinished(abstractJob);
+        if (abstractJob.isJob()) {
+            flushJobState(abstractJob.asJob());
+        }
         // notify wait queue
         notifyWaitQueue();
     }
@@ -133,13 +139,14 @@ public class JobHelper {
                     message.getThrowable() == null ? null : message.getStackTrace(),
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
-            Job parent = jobRepository.findById(abstractJob.asNodeJob().getContainer()).get();
+            Job parent = getParentByNodeJob(abstractJob.asNodeJob());
             triggerKey = parent.getTask().getTriggerKey();
-            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
-            // only the parent's state is running.we need modify parent's state
-            if (parent.getState().equals(JobState.RUNNING)) {
-                modifyJobState(parent, JobState.FAILED);
-            }
+//            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
+//            // only the parent's state is running.we need modify parent's state
+//            if (parent.getState().equals(JobState.RUNNING)) {
+//                modifyJobState(parent, JobState.FAILED);
+//            }
+            flushParentState(abstractJob.asNodeJob());
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
                     parent.getShouldFireTime().format(formatter), parent.getTask().getTaskName(), parent.getId(), parent.getLoadDate(), parent.getTask().getWorkflowId());
@@ -153,7 +160,7 @@ public class JobHelper {
             e.printStackTrace();
         }
         if (!abstractJob.isJob() && !(getTaskByNodeJob(abstractJob.asNodeJob()).getBlockOnError())) {
-            runNextJob(jobRepository.findById(abstractJob.asNodeJob().getContainer()).get(), abstractJob.asNodeJob().getNodeId());
+            onJobFinished(abstractJob);
         }
 
         // notify wait queue
@@ -191,9 +198,10 @@ public class JobHelper {
             }
             // recreate job:the task info will lose,
             jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams, job.asJob().getShouldFireTime());
-            // edit run param
 
-            executeJob(jobRepository.findById(job.getId()).get());
+            Job newJob = jobRepository.findById(job.getId()).get();
+            // edit run param
+            executeJob(newJob);
         } else {
             // create new nodeJob instance
             NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
@@ -202,6 +210,7 @@ public class JobHelper {
             // clear
             nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
+            flushParentState(newNodeJob);
             executeNodeJob(newNodeJob);
         }
     }
@@ -229,6 +238,9 @@ public class JobHelper {
         }
         logger.log(job.getId(), "跳过任务实例，id[{}]，state[{}]", job.getId(), job.getState().name());
         modifyJobState(job, JobState.SKIPPED);
+        if (!job.isJob()) {
+            flushParentState(job.asNodeJob());
+        }
         onJobFinished(job);
         // notify wait queue
         notifyWaitQueue();
@@ -268,7 +280,7 @@ public class JobHelper {
         // if the user  restart idc from openCallbackControl = true to openCallbackControl = false. previous timeout event exist.
         // so there do a twice validate
         if (openCallbackControl) {
-            if (job.getState().isNotCallback()) {
+            if (job.getState().isRunning()) {
                 logger.log(job.getId(), "节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                         job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState());
                 failed(job, FailMessage.newMessage(job.getId()));
@@ -288,10 +300,6 @@ public class JobHelper {
         if (job.getState().isSuccess()) {
             throw new JobException("job:" + job.getId() + "已成功或跳过,状态为: " + job.getState());
         }
-    }
-
-    private void checkInit(AbstractJob job) {
-
     }
 
     private void startJob(AbstractJob job) {
@@ -316,7 +324,7 @@ public class JobHelper {
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
         if (!nodeJob.getState().equals(JobState.NONE)) {
-            LOGGER.info("nodeJob[{}]不是初始化状态:state{} ",nodeJob.getId(),nodeJob.getState());
+            LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
             return;
         }
         if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
@@ -368,7 +376,7 @@ public class JobHelper {
             NodeJob next = iterator.next();
             try {
                 Set<String> previous = workflow.getPrevious(next.getNodeId());
-                LOGGER.info("Job[{}]是否开启出错阻塞：{}",job.getId(),job.getTask().getBlockOnError());
+                LOGGER.info("Job[{}]是否开启出错阻塞：{}", job.getId(), job.getTask().getBlockOnError());
                 // if  the job's all previous jobs don't complete ,then skip this fire
                 boolean unfinishJob = job.getSubJobs().stream()
                         .filter(sub -> !sub.isSystemNode() && previous.contains(sub.getNodeId()))
@@ -405,7 +413,7 @@ public class JobHelper {
         } else {
             NodeJob nodeJob = runningJob.asNodeJob();
             Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
-            Job parent = jobRepository.findById(nodeJob.getContainer()).get();
+            Job parent = getParentByNodeJob(nodeJob);
             parent.getTask().setWorkflow(workflow);
             logger.log(nodeJob.getId(), "节点任务执行完毕，批次时间[{}]，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                     parent.getShouldFireTime().format(formatter), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
@@ -414,7 +422,9 @@ public class JobHelper {
     }
 
     public void modifyJobState(AbstractJob job, JobState state) {
-        job.setState(state);
+        if (!state.equals(job.getState())) {
+            job.setState(state);
+        }
         if (job.getState().equals(JobState.RUNNING)) {
             job.setStarttime(LocalDateTime.now());
             job.setUpdatetime(null);
@@ -488,12 +498,13 @@ public class JobHelper {
      * @param nodeJob
      */
     public void retry(NodeJob nodeJob, JobMessage message) {
-        LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]",nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
+        LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]", nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
         ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
                 message.getThrowable() == null ? null : message.getStackTrace(),
-                nodeJobRetryCount.get(nodeJob.getId()).get(),nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
+                nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
         logger.log(nodeJobExecutionLog);
         modifyJobState(nodeJob, JobState.NONE);
+        flushParentState(nodeJob);
         executeNodeJob(nodeJob);
     }
 
@@ -507,6 +518,7 @@ public class JobHelper {
     public void forceComplete(String nodeJodId) {
         NodeJob nodeJob = nodeJobRepository.findById(nodeJodId).orElseThrow(() -> new AppException("未查找到指定nodeJobId的实例：" + nodeJodId));
         modifyJobState(nodeJob, JobState.FINISHED);
+        flushParentState(nodeJob);
         onJobFinished(nodeJob);
     }
 
@@ -515,7 +527,15 @@ public class JobHelper {
     }
 
     /**
-     * 工作流暂停，可以暂停正在运行的工作流
+     * when complete message reach.we call this method.
+     */
+    private void complete() {
+
+    }
+
+    /**
+     * pause the job.
+     *
      * @param jobId jobId
      */
     public void pause(String jobId) {
@@ -526,7 +546,8 @@ public class JobHelper {
     }
 
     /**
-     * 恢复暂停的工作流
+     * resume the paused job.
+     *
      * @param jobId jobId
      */
     public void resume(String jobId) {
@@ -534,9 +555,50 @@ public class JobHelper {
             throw new AppException("该实例未暂停");
         }
         pausedJobIds.remove(jobId);
+        // notify those paused nodeJob.
 
 
+    }
 
+    /**
+     * when a message reach and the nodeJob'state need to be changed. we need to flush the state of nodeJob's parent.
+     * 1.when the job open blockOnError. a nodeJob fail then the parent fail
+     * 2.when the job close blockOnError.all nodeJob finish .we need update parent'state to complete.
+     * <p>
+     * job state:
+     * 1.fail:when all subJobs was done and there exist one and more subJobs is fail,the job'state is fail
+     * 2.success: all subJobs was done and all subJobs was success,the job'state is success
+     * 3.running:when there exist one nodeJob is running ,the job'state is running.
+     * <p>
+     * attention:before call this method.we must modify nodeJob's state.
+     *
+     * @param nodeJob the job'state
+     */
+    public synchronized void flushParentState(NodeJob nodeJob) {
+        flushJobState(getParentByNodeJob(nodeJob));
+    }
+
+    public synchronized void flushJobState(Job job) {
+        List<NodeJob> subJobs = job.getSubJobs();
+        if (subJobs.isEmpty()) {
+            modifyJobState(job, JobState.NONE);
+        }
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning() || nd.getState().equals(JobState.NONE))) {
+            modifyJobState(job, JobState.RUNNING);
+            return;
+        }
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isFailure())) {
+            modifyJobState(job, JobState.FAILED);
+            return;
+        }
+        if (subJobs.stream().allMatch(nd -> nd.getState().isSuccess())) {
+            modifyJobState(job, JobState.FINISHED);
+        }
+    }
+
+    private Job getParentByNodeJob(NodeJob nodeJob) {
+        return jobRepository.findById(nodeJob.getContainer())
+                .orElseThrow(() -> new AppException("未能找到nodeJob的parent,nodeJob[%s],container[%s]", nodeJob.getId(), nodeJob.getContainer()));
     }
 
 }
