@@ -83,6 +83,8 @@ idc.scheduler.openCallbackControl: true       # 是否开启回调监控功能�
 idc.scheduler.callbackTimeout: 7200  # 任务回调超时时间  单位:秒  默认2小时
 idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
 
+iwellmass.system.security.permanent.token: iwellmassCustomToken
+
 
 ---
 spring:

@@ -556,9 +556,9 @@ public class JobHelper {
      * 2.success: all subJobs was done and all subJobs was success,the job'state is success
      * 3.running:when there exist one nodeJob is running ,the job'state is running.
      * <p>
-     * attention:before call this method.we must modify nodeJob's state. and after onJobFinished
+     * attention:before call this method.we must modify nodeJob's state and after onJobFinished
      *
-     * @param nodeJob the job'state
+     * @param nodeJob the nodeJob'state
      */
     public synchronized void flushParentStateAndHandleTriggerState(NodeJob nodeJob) {
         flushJobStateAndHandleTriggerState(getParentByNodeJob(nodeJob));

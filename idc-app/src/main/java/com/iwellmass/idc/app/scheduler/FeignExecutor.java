@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.scheduler;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -7,17 +8,16 @@ import javax.annotation.Resource;
 
 import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
+import feign.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 import com.iwellmass.idc.scheduler.service.IDCJobExecutor;
 
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 
@@ -40,6 +40,9 @@ public class FeignExecutor implements IDCJobExecutor {
 
 	@Resource
 	Contract contract;
+
+	@Value(value = "${iwellmass.system.security.permanent.token}")
+	String permanentToken;
 
 	@Override
 	public void execute(ExecuteRequest request) {
@@ -72,8 +75,31 @@ public class FeignExecutor implements IDCJobExecutor {
 		String path = "http://" + domain + IDCJobExecutorService.toURI(contentType);
 		LOGGER.info("create fegin client: {}", path);
 		IDCJob feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
-				.contract(contract).target(IDCJob.class, path);
+				.contract(contract).target(new CustomerTarget<>(IDCJob.class,path,getToken()));
 		return feginClient;
+	}
+
+	public String getToken() {
+		return permanentToken;
+	}
+
+	public static class CustomerTarget<T> extends Target.HardCodedTarget<T> {
+
+		String token;
+
+		public CustomerTarget(Class<T> type, String url,String token) {
+			super(type, url);
+			this.token = token;
+		}
+
+		@Override
+		public Request apply(RequestTemplate input) {
+			if (input.url().indexOf("http") != 0) {
+				input.insert(0, url());
+			}
+			input.header("Authorization", token);
+			return input.request();
+		}
 	}
 
 
