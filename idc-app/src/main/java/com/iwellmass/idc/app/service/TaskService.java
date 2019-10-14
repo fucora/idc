@@ -54,16 +54,16 @@ public class TaskService {
     public static final String NOW = "调度计划提交日期";
     public static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
 
-    public static final Map<String,String> loadDateParams = new LinkedHashMap<>();
+    public static final Map<String, String> loadDateParams = new LinkedHashMap<>();
 
     static {
-        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
-        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
-        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME,LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
-        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME);
-        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME);
-        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME,LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME);
-        loadDateParams.put(NOW,NOW_OGNL);
+        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(NOW, NOW_OGNL);
     }
 
     @Resource
@@ -88,7 +88,8 @@ public class TaskService {
             ((CronTaskVO) vo).setCronType(CronType.valueOf(task.getProps().get("cronType").toString()));
             if (((CronTaskVO) vo).getCronType().equals(CronType.MONTHLY)) {
                 ((CronTaskVO) vo).setDays((List<Integer>) task.getProps().get("days"));
-                ((CronTaskVO) vo).setExpression(String.valueOf(task.getProps().getOrDefault("expression","未配置")));
+            } else if (((CronTaskVO) vo).getCronType().equals(CronType.CUSTOMER)) {
+                ((CronTaskVO) vo).setExpression(String.valueOf(task.getProps().getOrDefault("expression", "未配置")));
             }
         } else {
             vo = new ManualTaskVO();
@@ -143,7 +144,7 @@ public class TaskService {
             Collections.sort(jobs, (o1, o2) -> {
                 String sub01 = o1.getId().substring(o1.getId().lastIndexOf("-"));
                 String sub02 = o2.getId().substring(o2.getId().lastIndexOf("-"));
-                return (int) (Long.valueOf(sub01) -  Long.valueOf(sub02));
+                return (int) (Long.valueOf(sub01) - Long.valueOf(sub02));
             });
 
             for (Job job : jobs) {
@@ -170,9 +171,9 @@ public class TaskService {
         List<NodeTask> nodeTasks = workflowRepository.findById(workflowId).orElseThrow(() -> new AppException("未发现指定工作流:" + workflowId)).getNodeTasks();
         List<TaskDetailVO> taskDetailVOS = dfTaskService.batchQueryTaskInfo(nodeTasks.stream()
                 .filter(nt -> !nt.getTaskId().equalsIgnoreCase("start") &&
-                                !nt.getTaskId().equalsIgnoreCase("end") &&
-                                !nt.getTaskId().equalsIgnoreCase("control")
-                                 )
+                        !nt.getTaskId().equalsIgnoreCase("end") &&
+                        !nt.getTaskId().equalsIgnoreCase("control")
+                )
                 .map(nt -> Long.valueOf(nt.getTaskId()))
                 .collect(Collectors.toList()))
                 .getResult();
@@ -212,6 +213,7 @@ public class TaskService {
 
     /**
      * judge the task whether can be deleted
+     *
      * @param taskName
      * @return
      */

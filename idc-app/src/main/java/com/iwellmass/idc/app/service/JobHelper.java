@@ -75,6 +75,7 @@ public class JobHelper {
 
     BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
     Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
+    BlockingQueue<NodeJob> nodeJobPauseQueue = Queues.newLinkedBlockingQueue();
     Set<String> pausedJobIds = Sets.newConcurrentHashSet(); // those jobs have been paused.
 
     //==============================================  processor call
@@ -317,10 +318,11 @@ public class JobHelper {
      *
      * @param jobId jobId
      */
-    public void pause(String jobId) {
+    public synchronized void pause(String jobId) {
         if (pausedJobIds.contains(jobId)) {
             throw new AppException("该实例已经暂停");
         }
+        flushJobStateAndHandleTriggerState(jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId)));
         pausedJobIds.add(jobId);
     }
 
