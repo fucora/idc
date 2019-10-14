@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /**
  * @author nobita chen
@@ -75,8 +74,7 @@ public class JobHelper {
 
     BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
     Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
-    BlockingQueue<NodeJob> nodeJobPauseQueue = Queues.newLinkedBlockingQueue();
-    Set<String> pausedJobIds = Sets.newConcurrentHashSet(); // those jobs have been paused.
+    Map<String,HashSet<NodeJob>> nodeJobPausedMap = new HashMap<>(); // key -> containerId ,value ->   paused nodeJobs
 
     //==============================================  processor call
 
@@ -319,11 +317,12 @@ public class JobHelper {
      * @param jobId jobId
      */
     public synchronized void pause(String jobId) {
-        if (pausedJobIds.contains(jobId)) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId));
+        if (job.getState().equals(JobState.PAUSED)) {
             throw new AppException("该实例已经暂停");
         }
-        flushJobStateAndHandleTriggerState(jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId)));
-        pausedJobIds.add(jobId);
+        modifyJobState(job,JobState.PAUSED);
+        flushJobStateAndHandleTriggerState(job);
     }
 
     /**
@@ -332,10 +331,11 @@ public class JobHelper {
      * @param jobId jobId
      */
     public void resume(String jobId) {
-        if (!pausedJobIds.contains(jobId)) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId));
+        if (!job.getState().equals(JobState.PAUSED)) {
             throw new AppException("该实例未暂停");
         }
-        pausedJobIds.remove(jobId);
+        modifyJobState(job,JobState.RUNNING);
         // notify those paused nodeJob.
 
 
@@ -375,44 +375,51 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
-        if (!nodeJob.getState().equals(JobState.NONE)) {
-            LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
-            return;
-        }
-        if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
-            modifyJobState(nodeJob, JobState.FINISHED);
-            onJobFinished(nodeJob);
-            flushParentStateAndHandleTriggerState(nodeJob);
-            return;
-        }
-        if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END)) {
-            modifyJobState(nodeJob, JobState.FINISHED);
-            FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
-            message.setMessage("执行结束");
-            TaskEventPlugin.eventService(scheduler).send(message);
-            return;
-        }
-        if (nodeJob.getState().equals(JobState.NONE)) {
-            // concurrent control
-            if (canDispatch()) {
-                modifyJobState(nodeJob, JobState.ACCEPTED);
-                logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
-                        , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
-                if (openCallbackControl) {
-                    TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
+        if (!getParentByNodeJob(nodeJob).getState().isPaused()) {
+            if (getParentByNodeJob(nodeJob).getState().equals(JobState.RUNNING))
+                if (!nodeJob.getState().equals(JobState.NONE)) {
+                    LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
+                    return;
                 }
-                IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
-            } else {
-                // concurrent control plan 1:by quartz;The efficiency of this plan is low.
+            if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
+                modifyJobState(nodeJob, JobState.FINISHED);
+                onJobFinished(nodeJob);
+                flushParentStateAndHandleTriggerState(nodeJob);
+                return;
+            }
+            if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.END)) {
+                modifyJobState(nodeJob, JobState.FINISHED);
+                FinishMessage message = FinishMessage.newMessage(nodeJob.getContainer());
+                message.setMessage("执行结束");
+                TaskEventPlugin.eventService(scheduler).send(message);
+                return;
+            }
+            if (nodeJob.getState().equals(JobState.NONE)) {
+                // concurrent control
+                if (canDispatch()) {
+                    modifyJobState(nodeJob, JobState.ACCEPTED);
+                    logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
+                            , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
+                    if (openCallbackControl) {
+                        TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
+                    }
+                    IDCJobExecutors.getExecutor().execute(execParamHelper.buildExecReq(nodeJob, nodeTask));
+                } else {
+                    // concurrent control plan 1:by quartz;The efficiency of this plan is low.
 //                StartMessage startMessage = StartMessage.newMessage(nodeJob.getId());
 //                startMessage.setMessage("并发控制被阻塞,nodJobId:" + nodeJob.getId());
 //                TaskEventPlugin.eventService(scheduler).send(startMessage);
 
-                // concurrent control plan 2:by blockingQueue and notify principle
-                // add this nodeJob to wait queue
-                addNodeJobToWaitQueue(nodeJob);
+                    // concurrent control plan 2:by blockingQueue and notify principle
+                    // add this nodeJob to wait queue
+                    addNodeJobToWaitQueue(nodeJob);
+                }
             }
+        } else {
+            // add this nodeJob to paused
+            addNodeJobToPausedMap(nodeJob);
         }
+
     }
 
     private void runNextJob(Job job, String startNode) {
@@ -536,7 +543,6 @@ public class JobHelper {
         }
     }
 
-
     public void modifyConcurrent(Integer maxRunningJobs) {
         if (maxRunningJobs <= 0) {
             throw new AppException("illegal param:maxRunningJobs must greater than 0");
@@ -639,6 +645,12 @@ public class JobHelper {
     private Job getParentByNodeJob(NodeJob nodeJob) {
         return jobRepository.findById(nodeJob.getContainer())
                 .orElseThrow(() -> new AppException("未能找到nodeJob的parent,nodeJob[%s],container[%s]", nodeJob.getId(), nodeJob.getContainer()));
+    }
+
+    private void addNodeJobToPausedMap(NodeJob nodeJob) {
+        HashSet<NodeJob> nodeJobsInPausedMap = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
+        nodeJobsInPausedMap.add(nodeJob);
+        nodeJobPausedMap.put(nodeJob.getContainer(),nodeJobsInPausedMap);
     }
 
 }

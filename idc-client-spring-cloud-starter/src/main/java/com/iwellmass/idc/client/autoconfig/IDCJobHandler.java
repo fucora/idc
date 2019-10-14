@@ -33,6 +33,8 @@ public class IDCJobHandler implements IDCJobExecutorService {
     private static final int NOTIFY_ERROR = 0x03;
     private static final int FAIL = 0x04;
 
+    private static final int MAX_RETRY_PUSH_COUNT = 3; // 消息失败的最大推送次数
+    private static final long WAIT_TIME_ON_ERROR = 500L;// 失败时下一次通知的等待时间
     private final IDCJob job;
 
     @Inject
@@ -97,13 +99,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
         public void complete(CompleteEvent event) {
             Objects.requireNonNull(event, "event 不能为空");
 
-            if (state == COMPLETE) {
-//                LOGGER.warn("任务[{}],id[{}] 已经完成, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId());
-                return;
-            }
-
-            if (state == FAIL) {
-//                LOGGER.warn("任务[{}],id[{}] 已经失败, 执行结果: {}",executeRequest.getNodeTaskTaskName(), event.getNodeJobId());
+            if (state == COMPLETE || state == FAIL) {
                 return;
             }
 
@@ -112,13 +108,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
                     event.getNodeJobId(),
                     event.getFinalStatus());
 
-            try {
-                idcStatusService.fireCompleteEvent(event);
-                modifyState(event);
-            } catch (Throwable e) {
-                modifyState(null);
-                LOGGER.error("发送事件失败, EVENT: {}", event, e);
-            }
+            notifyIDCServer(event);
         }
 
         @Override
@@ -153,14 +143,14 @@ public class IDCJobHandler implements IDCJobExecutorService {
 
         @Override
         public void progress(String msg) {
-            ProgressEvent progressEvent = ProgressEvent.newEvent(executeRequest.getNodeJobId()).setMessage(msg);
-            idcStatusService.fireProgressEvent(progressEvent);
+            ProgressEvent event = ProgressEvent.newEvent(executeRequest.getNodeJobId()).setMessage(msg);
+            notifyIDCServer(event);
         }
 
         @Override
         public void start() {
-            StartEvent startEvent = StartEvent.newEvent(executeRequest.getNodeJobId());
-            idcStatusService.fireStartEvent(startEvent);
+            StartEvent event = StartEvent.newEvent(executeRequest.getNodeJobId());
+            notifyIDCServer(event);
         }
 
         public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
@@ -192,5 +182,30 @@ public class IDCJobHandler implements IDCJobExecutorService {
                 this.state = FAIL;
             }
         }
+
+        private synchronized void notifyIDCServer(IDCJobEvent event) {
+            for (int i = 0; i < MAX_RETRY_PUSH_COUNT; i++) {
+                try {
+                    if (event instanceof CompleteEvent) {
+                        idcStatusService.fireCompleteEvent((CompleteEvent) event);
+                        modifyState((CompleteEvent)event);
+                    } else if (event instanceof StartEvent) {
+                        idcStatusService.fireStartEvent((StartEvent) event);
+                    } else if (event instanceof ProgressEvent) {
+                        idcStatusService.fireProgressEvent((ProgressEvent) event);
+                    }
+                    return;
+                } catch (Throwable e) {
+                    modifyState(null);
+                    LOGGER.error("发送事件失败, EVENT: {},第{}次推送", event, i);
+                    try {
+                        Thread.sleep(WAIT_TIME_ON_ERROR);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        }
+
     }
 }
