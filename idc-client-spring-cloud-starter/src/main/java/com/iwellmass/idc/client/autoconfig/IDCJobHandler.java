@@ -197,7 +197,7 @@ public class IDCJobHandler implements IDCJobExecutorService {
                     return;
                 } catch (Throwable e) {
                     modifyState(null);
-                    LOGGER.error("发送事件失败, EVENT: {},第{}次推送", event, i);
+                    LOGGER.error("发送事件失败, EVENT: {},第{}次推送", event, i + 1);
                     try {
                         Thread.sleep(WAIT_TIME_ON_ERROR);
                     } catch (InterruptedException ex) {
