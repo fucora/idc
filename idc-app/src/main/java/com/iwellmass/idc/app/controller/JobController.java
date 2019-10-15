@@ -119,6 +119,13 @@ public class JobController {
         return ServiceResult.success("success");
     }
 
+    @ApiOperation("修改失败重试次数")
+    @PutMapping(value = "/{retryCount}/modifyRetryCount")
+    public ServiceResult<String> modifyRetryCount(@PathVariable(name = "retryCount") Integer retryCount) {
+        jobHelper.modifyRetryCount(retryCount);
+        return ServiceResult.success("success");
+    }
+
     @ApiOperation("强制完成指定实例任务")
     @PutMapping("/{nodeJobId}/forceComplete")
     public ServiceResult<String> forceComplete(@PathVariable(name = "nodeJobId") String nodeJobId) {
@@ -140,5 +147,6 @@ public class JobController {
         jobHelper.resume(jobId);
         return ServiceResult.success("success");
     }
+
 
 }

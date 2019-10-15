@@ -10,7 +10,6 @@ import com.iwellmass.idc.app.message.TaskEventPlugin;
 import com.iwellmass.idc.message.*;
 import com.iwellmass.idc.scheduler.IDCJobExecutors;
 import com.iwellmass.idc.scheduler.model.*;
-import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
 import com.iwellmass.idc.scheduler.quartz.IDCJobstoreCMT;
 import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.*;
@@ -48,8 +47,6 @@ public class JobHelper {
     @Inject
     private IDCLogger logger;
     @Inject
-    IDCJobStore idcJobStore;
-    @Inject
     AllJobRepository allJobRepository;
     @Inject
     WorkflowRepository workflowRepository;
@@ -63,8 +60,7 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
-    //    @Inject
-//    IDCPluginRepository idcPluginRepository;
+
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
     @Value(value = "${idc.scheduler.maxRunningJobs:10}")
@@ -72,9 +68,10 @@ public class JobHelper {
     @Value(value = "${idc.scheduler.retryCount:3}")
     private Integer retryCount;
 
-    BlockingQueue<NodeJob> nodeJobWaitQueue = Queues.newLinkedBlockingQueue();
-    Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
-    Map<String,HashSet<NodeJob>> nodeJobPausedMap = new HashMap<>(); // key -> containerId ,value ->   paused nodeJobs
+    // todo below need to persistence
+    private BlockingQueue<String> nodeJobWaitQueue = Queues.newLinkedBlockingQueue(); // nodeJobId
+    private Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
+    private Map<String, HashSet<String>> nodeJobPausedMap = new HashMap<>(); // key -> containerId ,value ->   paused nodeJobIds
 
     //==============================================  processor call
 
@@ -317,11 +314,21 @@ public class JobHelper {
      * @param jobId jobId
      */
     public synchronized void pause(String jobId) {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId));
-        if (job.getState().equals(JobState.PAUSED)) {
-            throw new AppException("该实例已经暂停");
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
+        if (job.getState().isPaused()) {
+            throw new AppException("该实例job[%s]已暂停", jobId);
         }
-        modifyJobState(job,JobState.PAUSED);
+        if (job.getSubJobs().stream().noneMatch(nd -> nd.getState().equals(JobState.NONE) &&
+                nodeJobWaitQueue.stream().noneMatch(nodeJobId -> nodeJobId.equals(nd.getId())))) {
+            throw new AppException("暂停失败，该实例不存在可以暂停的节点任务");
+        }
+        modifyJobState(job, JobState.PAUSED);
+        // modify those job whose state is none and isn't in waitQueue.
+        job.getSubJobs().forEach(nd -> {
+            if (nd.getState().equals(JobState.NONE) && nodeJobWaitQueue.stream().noneMatch(nodeJobId -> nodeJobId.equals(nd.getId()))) {
+                modifyJobState(nd, JobState.PAUSED);
+            }
+        });
         flushJobStateAndHandleTriggerState(job);
     }
 
@@ -330,15 +337,14 @@ public class JobHelper {
      *
      * @param jobId jobId
      */
-    public void resume(String jobId) {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务",jobId));
+    public synchronized void resume(String jobId) {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
         if (!job.getState().equals(JobState.PAUSED)) {
-            throw new AppException("该实例未暂停");
+            throw new AppException("该实例job[%s]未暂停", jobId);
         }
-        modifyJobState(job,JobState.RUNNING);
         // notify those paused nodeJob.
-
-
+        resumePausedNodeJobs(job);
+        flushJobStateAndHandleTriggerState(job);
     }
 
     //==============================================  this class call
@@ -375,12 +381,11 @@ public class JobHelper {
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
-        if (!getParentByNodeJob(nodeJob).getState().isPaused()) {
-            if (getParentByNodeJob(nodeJob).getState().equals(JobState.RUNNING))
-                if (!nodeJob.getState().equals(JobState.NONE)) {
-                    LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
-                    return;
-                }
+        if (!nodeJob.getState().isPaused()) {
+            if (getParentByNodeJob(nodeJob).getState().equals(JobState.RUNNING) && !nodeJob.getState().equals(JobState.NONE)) {
+                LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
+                return;
+            }
             if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
                 modifyJobState(nodeJob, JobState.FINISHED);
                 onJobFinished(nodeJob);
@@ -416,10 +421,9 @@ public class JobHelper {
                 }
             }
         } else {
-            // add this nodeJob to paused
+            // add this nodeJob to paused map
             addNodeJobToPausedMap(nodeJob);
         }
-
     }
 
     private void runNextJob(Job job, String startNode) {
@@ -481,7 +485,7 @@ public class JobHelper {
         }
     }
 
-    public void modifyJobState(AbstractJob job, JobState state) {
+    private void modifyJobState(AbstractJob job, JobState state) {
         if (!state.equals(job.getState())) {
             job.setState(state);
         }
@@ -513,12 +517,15 @@ public class JobHelper {
             for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
                 if (!nodeJobWaitQueue.isEmpty()) {
                     try {
-                        NodeJob nodeJobInWaitQueue = nodeJobWaitQueue.take(); // this job'state could be illegal;  need validate
-                        LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.getId());
-                        NodeJob nodeJobInDB = nodeJobRepository.findById(nodeJobInWaitQueue.getId()).orElseThrow(() -> new AppException("未发现指定id的nodeJob"));
-                        if (nodeJobInDB.getState().equals(JobState.NONE)) {
-                            // this operation will lose one callback of message.so we adopt i-- to offset this operation and need twice check by nodeJobWaitQueue.isEmpty()
-                            executeNodeJob(nodeJobInDB);
+                        Optional<NodeJob> nodeJobInWaitQueue = nodeJobRepository.findById(nodeJobWaitQueue.take()); // this job'state could be illegal;  need validate
+                        if (nodeJobInWaitQueue.isPresent()) {
+                            LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.get().getId());
+                            if (nodeJobInWaitQueue.get().getState().equals(JobState.NONE)) {
+                                // this operation will lose one callback of message.so we adopt i-- to offset this operation and need twice check by nodeJobWaitQueue.isEmpty()
+                                executeNodeJob(nodeJobInWaitQueue.get());
+                            } else {
+                                i--;
+                            }
                         } else {
                             i--;
                         }
@@ -536,7 +543,7 @@ public class JobHelper {
     private void addNodeJobToWaitQueue(NodeJob nodeJob) {
         try {
             LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]", nodeJob.getId());
-            nodeJobWaitQueue.put(nodeJob);
+            nodeJobWaitQueue.put(nodeJob.getId());
         } catch (InterruptedException e) {
             LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]", nodeJob.getId());
             e.printStackTrace();
@@ -544,10 +551,17 @@ public class JobHelper {
     }
 
     public void modifyConcurrent(Integer maxRunningJobs) {
-        if (maxRunningJobs <= 0) {
+        if (maxRunningJobs < 1) {
             throw new AppException("illegal param:maxRunningJobs must greater than 0");
         }
         this.maxRunningJobs = maxRunningJobs;
+    }
+
+    public void modifyRetryCount(Integer retryCount) {
+        if (retryCount < 1) {
+            throw new AppException("illegal param:retryCount must greater than 0");
+        }
+        this.retryCount = retryCount;
     }
 
     private Task getTaskByNodeJob(NodeJob nodeJob) {
@@ -555,7 +569,7 @@ public class JobHelper {
     }
 
     /**
-     * when a message reach and the nodeJob'state need to be changed. we need to flush the state of nodeJob's parent.
+     * when a message reach and the nodeJob'state need to be changed. we need to flush the state of nodeJob's parent and the trigger.
      * 1.when the job open blockOnError. a nodeJob fail then the parent fail
      * 2.when the job close blockOnError.all nodeJob finish .we need update parent'state to complete.
      * <p>
@@ -564,32 +578,35 @@ public class JobHelper {
      * 2.success: all subJobs was done and all subJobs was success,the job'state is success
      * 3.running:when there exist one nodeJob is running ,the job'state is running.
      * <p>
-     * attention:before call this method.we must modify nodeJob's state and after onJobFinished
+     * attention:the caller of this method must after modifyJobState and onJobFinished and runNextJob.
      *
-     * @param nodeJob the nodeJob'state
+     * @param nodeJob the nodeJob
      */
-    public synchronized void flushParentStateAndHandleTriggerState(NodeJob nodeJob) {
+    private synchronized void flushParentStateAndHandleTriggerState(NodeJob nodeJob) {
         flushJobStateAndHandleTriggerState(getParentByNodeJob(nodeJob));
     }
 
-    public synchronized void flushJobStateAndHandleTriggerState(Job job) {
-        List<Job> jobs = jobRepository.findAllByTaskName(job.getTaskName());
-        // point whether the job is the last job
-        // if the job is the latest job.we should modify trigger state.
-        boolean isLatestJob = jobs.stream().
-                sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? -1 : 1)
-                .findFirst().get().getId().equals(job.getId());
-
+    private synchronized void flushJobStateAndHandleTriggerState(Job job) {
+        // indicate whether the job is the latest job
+        // if the job is the latest job.we should sync trigger's state.
+        boolean isLatestJob = getLatestJobByTaskName(job.getTaskName()).getId().equals(job.getId());
         // flush job state
         List<NodeJob> subJobs = job.getSubJobs();
         if (subJobs.isEmpty()) {
             modifyJobState(job, JobState.NONE);
             return;
         }
-        // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running
+
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isPaused())) {
+            modifyJobState(job, JobState.PAUSED);
+            return;
+        }
+
+        // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running or paused
+        // attention:state of the job may be running or paused.if the state is paused.need modifyJobState and validate job'state before this method.
         boolean inNodeJobWaitQueue = false;
         for (NodeJob nodeJob : subJobs) {
-            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob)) {
+            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob.getId())) {
                 inNodeJobWaitQueue = true;
                 break;
             }
@@ -616,9 +633,9 @@ public class JobHelper {
                 try {
                     if (scheduler.checkExists(tk)) {
                         if (job.getTask().getBlockOnError()) {
-                            idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
-                        } else if (job.getSubJobs().stream().allMatch(nd -> nd.getState().isComplete())){
-                            idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                            idcJobstoreCMT.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
+                        } else if (job.getSubJobs().stream().allMatch(nd -> nd.getState().isComplete())) {
+                            idcJobstoreCMT.releaseTrigger(tk, ReleaseInstruction.RELEASE);
                         }
                     }
                 } catch (SchedulerException e) {
@@ -633,7 +650,7 @@ public class JobHelper {
                 TriggerKey tk = job.getTask().getTriggerKey();
                 try {
                     if (scheduler.checkExists(tk)) {
-                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
+                        idcJobstoreCMT.releaseTrigger(tk, ReleaseInstruction.RELEASE);
                     }
                 } catch (SchedulerException e) {
                     e.printStackTrace();
@@ -648,9 +665,35 @@ public class JobHelper {
     }
 
     private void addNodeJobToPausedMap(NodeJob nodeJob) {
-        HashSet<NodeJob> nodeJobsInPausedMap = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
-        nodeJobsInPausedMap.add(nodeJob);
-        nodeJobPausedMap.put(nodeJob.getContainer(),nodeJobsInPausedMap);
+        LOGGER.info("job[{}]暂停,nodeTask[{}],nodeJob[{}]进入暂停等待区", nodeJob.getContainer(), nodeJob.getNodeTask().getTaskName(), nodeJob.getId());
+        HashSet<String> nodeJobsInPausedMap = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
+        nodeJobsInPausedMap.add(nodeJob.getId());
+        nodeJobPausedMap.put(nodeJob.getContainer(), nodeJobsInPausedMap);
+    }
+
+    private TriggerKey getTriggerKeyByNodeJob(NodeJob nodeJob) {
+        return jobRepository.findById(nodeJob.getContainer())
+                .orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", nodeJob.getContainer()))
+                .getTask().getTriggerKey();
+    }
+
+    // get the latest job of this task.
+    private Job getLatestJobByTaskName(String taskName) {
+        return jobRepository.findAllByTaskName(taskName).stream().
+                sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? -1 : 1)
+                .findFirst().get();
+    }
+
+    private void resumePausedNodeJobs(Job job) {
+        job.getSubJobs().forEach(nd -> {
+            if (nd.getState().equals(JobState.PAUSED)) {
+                modifyJobState(nd, JobState.NONE);
+            }
+        });
+
+        nodeJobPausedMap.getOrDefault(job.getId(), Sets.newHashSet())
+                .forEach(nodeJobId -> nodeJobRepository.findById(nodeJobId).ifPresent(this::executeNodeJob));
+        nodeJobPausedMap.remove(job.getId());
     }
 
 }

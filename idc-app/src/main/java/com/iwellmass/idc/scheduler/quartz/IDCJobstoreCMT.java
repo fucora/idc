@@ -36,23 +36,6 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
     }
 
     /*
-     * 并发控制 we can't complete control on concurrent here .
-     */
-    @Override
-    protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
-            throws JobPersistenceException {
-
-//        int acceptCount = maxRunningJobs;
-//        int runningJobs = 0;
-//        acceptCount = maxRunningJobs - runningJobs;
-//
-//        return acceptCount > 0
-//                ? super.acquireNextTrigger(conn, noLaterThan, Math.min(maxCount, acceptCount), timeWindow)
-//                : Collections.emptyList();
-        return super.acquireNextTrigger(conn, noLaterThan, maxCount, timeWindow);
-    }
-
-    /*
      * 扩展 SUSPEND 机制
      */
     @Override

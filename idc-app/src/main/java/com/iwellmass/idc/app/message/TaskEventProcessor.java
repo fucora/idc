@@ -53,7 +53,7 @@ public class TaskEventProcessor implements org.quartz.Job {
     public void execute(JobExecutionContext context) {
         // safe execute...
         try {
-            LOGGER.info("接收事件，类型[{}],，message = [{}]", message.getEvent().name(), message);
+            LOGGER.info("接收事件，类型[{}],message = [{}]", message.getEvent().name(), message);
             doExecute(context);
         } catch (Exception e) {
             LOGGER.error("ERROR: " + message);
