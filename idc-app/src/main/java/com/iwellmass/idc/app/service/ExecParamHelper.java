@@ -115,8 +115,7 @@ public class ExecParamHelper {
         // 计算参数
         Task task = new Task();
         task.setPrevFireTime(LocalDateTime.now());
-        java.time.LocalDateTime.now();
-        task.setParams(Lists.newArrayList(new ExecParam("loadDate", null, ParamType.VARCHAR)));
+        task.setParams(Lists.newArrayList(new ExecParam("loadDate", "调度批次上月的第一天", ParamType.VARCHAR)));
         new ExecParamHelper().parse(task).forEach(execParam -> {
             System.out.println(execParam.getValue());
         });

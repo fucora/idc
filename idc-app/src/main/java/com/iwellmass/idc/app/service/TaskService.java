@@ -36,14 +36,23 @@ import com.iwellmass.idc.scheduler.repository.TaskRepository;
 @Service
 public class TaskService {
 
-    // last day of last month compared to shouldFireTime
+    // the latest day of last month compared to shouldFireTime
     public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的最后一天";
     public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的最后一天";
     public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的最后一天";
     public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-    // last day of last month compared to realRunTime
+
+    // the first day of month compared to shouldFireTime
+    public static final String FIRST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的第一天";
+    public static final String FIRST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+    public static final String FIRST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的第一天";
+    public static final String FIRST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+    public static final String FIRST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的第一天";
+    public static final String FIRST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+
+    // the latest day of last month compared to realRunTime
     public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME = "实际运行日期上月的最后一天";
     public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME = "实际运行日期当月的最后一天";
@@ -60,9 +69,12 @@ public class TaskService {
         loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
         loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
         loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(FIRST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME, FIRST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(FIRST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME, FIRST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
+        loadDateParams.put(FIRST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME, FIRST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
         loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME);
-        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME);
         loadDateParams.put(LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME);
+        loadDateParams.put(LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME, LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME);
         loadDateParams.put(NOW, NOW_OGNL);
     }
 
