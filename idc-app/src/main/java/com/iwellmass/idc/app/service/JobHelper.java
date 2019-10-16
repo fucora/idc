@@ -182,7 +182,7 @@ public class JobHelper {
             Job newJob = jobRepository.findById(job.getId()).get();
             // edit run param
             executeJob(newJob);
-            flushJobStateAndHandleTriggerState(newJob);
+//            flushJobStateAndHandleTriggerState(newJob);
         } else {
             // create new nodeJob instance
             NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
@@ -466,7 +466,7 @@ public class JobHelper {
         }
     }
 
-    private synchronized void modifyJobState(AbstractJob job, JobState state) {
+    private void modifyJobState(AbstractJob job, JobState state) {
         if (!state.equals(job.getState())) {
             job.setState(state);
         }
