@@ -175,15 +175,8 @@ public class JobHelper {
             // clear all sunbJobs and job
             nodeJobRepository.deleteAll(job.getSubJobs());
             jobRepository.delete(job.asJob());
-            // recover trigger state
-//            try {
-//                if (scheduler.checkExists(job.asJob().getTask().getTriggerKey())) {
-//                    idcJobstoreCMT.updateTriggerStateToSuspended(job.asJob().getTask().getTriggerKey());
-//                }
-//            } catch (SchedulerException e) {
-//                e.printStackTrace();
-//            }
-            // recreate job:the task info will lose,
+
+            // recreate job:the task info will lose,so we need get info from the last job
             jobService.createJob(job.getId(), job.asJob().getTask().getTaskName(), execParams, job.asJob().getShouldFireTime());
 
             Job newJob = jobRepository.findById(job.getId()).get();
@@ -369,7 +362,7 @@ public class JobHelper {
         }
     }
 
-    private void executeJob(Job job) {
+    private synchronized void executeJob(Job job) {
         logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                 Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
                 , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
@@ -460,18 +453,6 @@ public class JobHelper {
         if (runningJob instanceof Job) {
             // Release trigger
             Job job = runningJob.asJob();
-//            TriggerKey tk = job.getTask().getTriggerKey();
-//            try {
-//                if (scheduler.checkExists(tk) && job.getState().isComplete()) {
-//                    if (job.getState().isSuccess()) {
-//                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.RELEASE);
-//                    } else {
-//                        idcJobStore.releaseTrigger(tk, ReleaseInstruction.SET_ERROR);
-//                    }
-//                }
-//            } catch (SchedulerException e) {
-//                e.printStackTrace();
-//            }
             logger.log(job.getId(), "节点任务执行完毕，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]，state[{}]",
                     job.getShouldFireTime().format(formatter), job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId(), job.getState().name());
         } else {
@@ -485,7 +466,7 @@ public class JobHelper {
         }
     }
 
-    private void modifyJobState(AbstractJob job, JobState state) {
+    private synchronized void modifyJobState(AbstractJob job, JobState state) {
         if (!state.equals(job.getState())) {
             job.setState(state);
         }

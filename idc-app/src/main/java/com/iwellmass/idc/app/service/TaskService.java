@@ -18,6 +18,9 @@ import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import lombok.Setter;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,6 +35,7 @@ import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskService {
@@ -86,6 +90,9 @@ public class TaskService {
     WorkflowRepository workflowRepository;
     @Resource
     NodeJobRepository nodeJobRepository;
+
+    @Setter
+    private Scheduler scheduler;
 
     @Inject
     DFTaskService dfTaskService;
@@ -208,6 +215,7 @@ public class TaskService {
         return Lists.newArrayList(loadDateParams.keySet());
     }
 
+    @Transactional
     public void delete(String taskName) {
         if (!canDelete(taskName)) {
             throw new AppException("删除失败：该调度计划存在未结束的实例任务");
@@ -220,7 +228,13 @@ public class TaskService {
         // job
         jobRepository.deleteAll(jobs);
         // task
-        taskRepository.deleteById(new TaskID(taskName));
+        Task task = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未发现taskName[%s]计划",taskName));
+        try {
+            scheduler.unscheduleJob(task.getTriggerKey());
+            taskRepository.delete(task);
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
