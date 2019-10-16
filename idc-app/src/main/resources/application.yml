@@ -83,8 +83,34 @@ idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能�
 idc.scheduler.callbackTimeout: 7200  # 任务回调超时时间  单位:秒  默认2小时
 idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
 
-iwellmass.system.security.permanent.token: iwellmassCustomToken
+---
+spring:
+  profiles: online
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+    username: root
+    password: zjhz2017
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+  client:
+    serviceUrl:
+      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5
 
+idc.scheduler.start-auto: true
+idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
+idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认关闭
+idc.scheduler.maxRunningJobs: 10  # 最大并发数，测试为10个
+idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
 
 ---
 spring:

@@ -6,12 +6,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 
+import com.iwellmass.auth.config.ResourceServerConfig;
 import com.iwellmass.idc.ExecuteRequest;
 import com.iwellmass.idc.executor.IDCJobExecutorService;
 import feign.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
@@ -40,9 +40,6 @@ public class FeignExecutor implements IDCJobExecutor {
 
     @Resource
     Contract contract;
-
-    @Value(value = "${iwellmass.system.security.permanent.token}")
-    String permanentToken;
 
     @Override
     public void execute(ExecuteRequest request) {
@@ -80,7 +77,7 @@ public class FeignExecutor implements IDCJobExecutor {
     }
 
     public String getToken() {
-        return permanentToken;
+        return ResourceServerConfig.CUSTOM_TOKEN;
     }
 
     public static class CustomerTarget<T> extends Target.HardCodedTarget<T> {
