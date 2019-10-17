@@ -6,12 +6,14 @@ import com.iwellmass.idc.app.vo.graph.GraphVO;
 import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.Job;
+import com.iwellmass.idc.scheduler.model.JobState;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +35,9 @@ public class JobVO {
     @ApiModelProperty("运行的实例参数信息")
     private List<MergeTaskParamVO> mergeTaskParamVOS;
 
-    @ApiModelProperty("job信息")
-    private Job job;
+    @ApiModelProperty("执行批次")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime shouldFireTime;
+
+    private JobState state;
 }
