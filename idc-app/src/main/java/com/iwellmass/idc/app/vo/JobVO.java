@@ -33,7 +33,6 @@ public class JobVO {
     @ApiModelProperty("运行的实例参数信息")
     private List<MergeTaskParamVO> mergeTaskParamVOS;
 
-    @ApiModelProperty("执行批次")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime shouldFireTime;
+    @ApiModelProperty("job信息")
+    private Job job;
 }
