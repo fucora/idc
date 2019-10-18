@@ -83,6 +83,8 @@ public class JobHelper {
             throw new JobException("任务不存在");
         }
         if (job.getTaskType() == TaskType.WORKFLOW) {
+            // todo validate task dependency
+
             executeJob(job.asJob());
         } else {
             executeNodeJob(job.asNodeJob());
