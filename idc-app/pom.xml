@@ -21,23 +21,11 @@
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>wac-common</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>com.alibaba</groupId>
-					<artifactId>fastjson</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>com.iwellmass</groupId>
 			<artifactId>wac-auth</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>com.alibaba</groupId>
-					<artifactId>fastjson</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.iwellmass</groupId>
@@ -64,7 +52,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -104,11 +92,6 @@
 		<dependency>
 			<artifactId>junit</artifactId>
 			<groupId>junit</groupId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
 			<scope>test</scope>
 		</dependency>
 
