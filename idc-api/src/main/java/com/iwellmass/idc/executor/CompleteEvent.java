@@ -9,87 +9,91 @@ import static org.slf4j.helpers.MessageFormatter.arrayFormat;
 
 public class CompleteEvent implements IDCJobEvent {
 
-	private static final long serialVersionUID = -2050270529918044581L;
+    private static final long serialVersionUID = -2050270529918044581L;
 
-	private LocalDateTime endTime;
+    private LocalDateTime endTime;
 
-	private JobInstanceStatus finalStatus;
+    private JobInstanceStatus finalStatus;
 
-	private String nodeJobId;
+    private String nodeJobId;
 
-	private String message;
+    private String message;
 
-	private StackTraceElement[] stackTraceElements;
+    private Throwable throwable;
 
-	// protected
-	private CompleteEvent() {
-	}
+    private String nodeTaskName;
 
-	public LocalDateTime getEndTime() {
-		return endTime;
-	}
+    // protected
+    private CompleteEvent() {
+    }
 
-	public CompleteEvent setEndTime(LocalDateTime endTime) {
-		this.endTime = endTime;
-		return this;
-	}
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
 
-	public CompleteEvent setFinalStatus(JobInstanceStatus finalStatus) {
-		this.finalStatus = finalStatus;
-		return this;
-	}
+    public CompleteEvent setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+        return this;
+    }
 
-	public CompleteEvent setStackTraceElements(StackTraceElement[] stackTraceElements) {
-		this.stackTraceElements = stackTraceElements;
-		return this;
-	}
+    public CompleteEvent setFinalStatus(JobInstanceStatus finalStatus) {
+        this.finalStatus = finalStatus;
+        return this;
+    }
 
-	public JobInstanceStatus getFinalStatus() {
-		return finalStatus;
-	}
+    public JobInstanceStatus getFinalStatus() {
+        return finalStatus;
+    }
 
-	public String getNodeJobId() {
-		return nodeJobId;
-	}
+    public String getNodeJobId() {
+        return nodeJobId;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public CompleteEvent setMessage(String message) {
-		this.message = message;
-		return this;
-	}
+    public CompleteEvent setMessage(String message) {
+        this.message = message;
+        return this;
+    }
 
-	public CompleteEvent setMessage(String message, Object... args) {
-		return setMessage(arrayFormat(message, args).getMessage());
-	}
+    public CompleteEvent setMessage(String message, Object... args) {
+        return setMessage(arrayFormat(message, args).getMessage());
+    }
 
-	public StackTraceElement[] getStackTraceElements() {
-		return stackTraceElements;
-	}
+    public static CompleteEvent successEvent(String nodeJobId, String nodeTaskName) {
+        CompleteEvent event = new CompleteEvent();
+        event.nodeJobId = nodeJobId;
+        event.nodeTaskName = nodeTaskName;
+        event.finalStatus = JobInstanceStatus.FINISHED;
+        event.endTime = LocalDateTime.now();
+        event.setMessage("执行成功");
+        return event;
+    }
 
-	public static CompleteEvent successEvent(String nodeJobId) {
-		CompleteEvent event = new CompleteEvent();
-		event.nodeJobId = nodeJobId;
-		event.finalStatus = JobInstanceStatus.FINISHED;
-		event.endTime = LocalDateTime.now();
-		event.setMessage("执行成功");
-		return event;
-	}
+    public static CompleteEvent failureEvent(String nodeJobId, String nodeTaskName) {
+        CompleteEvent event = new CompleteEvent();
+        event.nodeJobId = nodeJobId;
+        event.nodeTaskName = nodeTaskName;
+        event.finalStatus = JobInstanceStatus.FAILED;
+        event.endTime = LocalDateTime.now();
+        event.setMessage("执行失败");
+        return event;
+    }
 
-	public static CompleteEvent failureEvent(String nodeJobId) {
-		CompleteEvent event = new CompleteEvent();
-		event.nodeJobId = nodeJobId;
-		event.finalStatus = JobInstanceStatus.FAILED;
-		event.endTime = LocalDateTime.now();
-		event.setMessage("执行失败");
-		return event;
-	}
+    public Throwable getThrowable() {
+        return throwable;
+    }
 
-	@Override
-	public String toString() {
-		return "CompleteEvent [endTime=" + endTime + ", finalStatus=" + finalStatus + ", nodeJobId=" + nodeJobId
-				+ ", message=" + message + "]";
-	}
+    public CompleteEvent setThrowable(Throwable throwable) {
+        this.throwable = throwable;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "CompleteEvent [endTime=" + endTime + ", finalStatus=" + finalStatus + ", nodeJobId=" + nodeJobId
+                + ", message=" + message + "]";
+    }
 }

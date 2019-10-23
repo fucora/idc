@@ -1,13 +1,16 @@
 package com.iwellmass.idc.app;
 
 import com.alibaba.fastjson.JSON;
+import com.iwellmass.common.exception.AppException;
 import com.iwellmass.idc.scheduler.model.*;
 import lombok.Getter;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -103,5 +106,25 @@ public class IDCTestUtils {
         public String toString() {
             return a.toString();
         }
+    }
+
+    @Test
+    public void testRef() throws IOException {
+        Throwable throwable = new AppException();
+        StringWriter sw = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(sw));
+        sw.close();
+        System.out.println(sw.toString());
+    }
+
+    @Test
+    public void aaa() {
+
+        List<String> container = Arrays.asList("1","2","3"); // 容器
+        List<String> waitToFilter = Arrays.asList("1","2","3","1"); // 需要过滤的数据
+        List<String> res = waitToFilter.stream()
+                .filter(container::contains) // 等价于: wtf -> container.contains(wtf)
+                .collect(Collectors.toList());
+        System.out.println(container.containsAll(waitToFilter));
     }
 }

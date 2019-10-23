@@ -62,7 +62,7 @@ public class IDCJobEndpoint {
 		CompletableFuture.runAsync(() -> job.execute(context), executor)
 		.whenComplete((_void, cause) -> {
 			if (cause != null) {
-				CompleteEvent event = CompleteEvent.failureEvent(context.getExecuteRequest().getNodeJobId())
+				CompleteEvent event = CompleteEvent.failureEvent(context.getExecuteRequest().getNodeJobId(),null)
 					.setMessage("任务 {} 执行异常: {}", cause.getMessage())
 					.setEndTime(LocalDateTime.now());
 				context.complete(event);

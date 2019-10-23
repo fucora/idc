@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Resource;
+import javax.xml.soap.Node;
 
 import com.google.common.collect.Lists;
 import com.iwellmass.common.util.Utils;
@@ -126,20 +128,21 @@ public class WorkflowService {
 
 
         List<String> necessaryNode = Arrays.asList(NodeTask.START, NodeTask.END);    // required
-        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
+        List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
         necessaryNode.forEach(requiredVertex ->
-                Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点")); // 判定是否包含 start end 节点
+                Assert.isTrue(workflowGraph.containsVertex(requiredVertex), "未找到 " + requiredVertex + "节点"));
+        Assert.isTrue(gvo.getNodes().stream().anyMatch(nvo -> !systemNode.contains(nvo.getTaskId())), "未配置任何任务节点");
 
         // validate graph whether is legal and contain isolated node
         workflowGraph.vertexSet().forEach(tk -> {
             // start
-            if (NodeTask.START.equals(tk)) {
+            if (NodeTask.START.equalsIgnoreCase(tk)) {
                 if (workflowGraph.inDegreeOf(tk) > 0) {
                     throw new AppException("开始节点不能作为下游节点");
                 }
             }
             // end
-            else if (NodeTask.END.equals(tk)) {
+            else if (NodeTask.END.equalsIgnoreCase(tk)) {
                 if (workflowGraph.outDegreeOf(tk) > 0) {
                     throw new AppException("结束节点不能作为上游节点");
                 }
@@ -161,7 +164,7 @@ public class WorkflowService {
             tk.setContentType(node.getContentType());
             tk.setTaskType(TaskType.SIMPLE);
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(node.getId())) {
+            if (systemNode.contains(node.getTaskId())) {
                 tk.setDomain("idc");
             } else {
                 tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));
@@ -247,14 +250,19 @@ public class WorkflowService {
         }
     }
 
-    // judge the workflow whether can be deleted. when the all nodeJobs of job of task of workflow is complete ,the workflow can be deleted.
+    /**
+     *  judge the workflow whether can be deleted. when the all nodeJobs of job of task of workflow is complete ,the workflow can be deleted.
+     *  when stream is empty .the result is always true. see {@link Stream#allMatch(java.util.function.Predicate)} . the result is what we need
+     * @param wfId
+     * @return
+     */
     public boolean canDelete(String wfId) {
         // todo 考虑工作流嵌套情况
         return nodeJobRepository.findAllByContainerIn(
                 jobRepository.findAllByTaskNameIn(
                         taskRepository.findAllByWorkflowId(wfId).stream().map(Task::getTaskName).collect(Collectors.toList())
                 ).stream().map(Job::getId).collect(Collectors.toList())
-        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState() == JobState.FINISHED);
+        ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState().isComplete());
     }
 
     // a workflow only can be inited once.judge a workflow whether can be inited with this workflow whether exist task.
@@ -284,31 +292,39 @@ public class WorkflowService {
         }
         Workflow oldWorkflow = get(vo.getOldWorkflowId());
         Workflow newWorkflow = new Workflow(vo.getNewWorkflowId(), vo.getWorkflowName(), vo.getDescription());
-        List<String> systemNode = Arrays.asList(NodeTask.START, NodeTask.CONTROL, NodeTask.END);
-        List<NodeTask> nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
-            NodeTask nodeTask = new NodeTask();
-            nodeTask.setWorkflowId(vo.getNewWorkflowId());
-            nodeTask.setId(nt.getId());
-            nodeTask.setTaskName(nt.getTaskName());
-            nodeTask.setContentType(nt.getContentType());
-            nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(nt.getId())) {
-                nodeTask.setDomain("idc");
-            } else {
-                nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
-            }
-            return nodeTask;
-        }).collect(Collectors.toList());
+        List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
+
+        // nodeTask
+        List<NodeTask> nodeTasks = Lists.newArrayList();
+        if (oldWorkflow.getNodeTasks() != null) {
+            nodeTasks = oldWorkflow.getNodeTasks().stream().map(nt -> {
+                NodeTask nodeTask = new NodeTask();
+                nodeTask.setWorkflowId(vo.getNewWorkflowId());
+                nodeTask.setId(nt.getId());
+                nodeTask.setTaskName(nt.getTaskName());
+                nodeTask.setContentType(nt.getContentType());
+                nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
+                if (systemNode.contains(nt.getTaskId())) {
+                    nodeTask.setDomain("idc");
+                } else {
+                    nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
+                }
+                return nodeTask;
+            }).collect(Collectors.toList());
+        }
 
         // edges
-        List<WorkflowEdge> workflowEdges = oldWorkflow.getEdges().stream().map(edge -> {
-            WorkflowEdge we = new WorkflowEdge();
-            we.setWorkflowId(vo.getNewWorkflowId());
-            we.setId(edge.getId());
-            we.setSource(edge.getSource());
-            we.setTarget(edge.getTarget());
-            return we;
-        }).collect(Collectors.toList());
+        List<WorkflowEdge> workflowEdges = Lists.newArrayList();
+        if (oldWorkflow.getEdges() != null) {
+            workflowEdges = oldWorkflow.getEdges().stream().map(edge -> {
+                WorkflowEdge we = new WorkflowEdge();
+                we.setWorkflowId(vo.getNewWorkflowId());
+                we.setId(edge.getId());
+                we.setSource(edge.getSource());
+                we.setTarget(edge.getTarget());
+                return we;
+            }).collect(Collectors.toList());
+        }
 
         newWorkflow.setUpdatetime(LocalDateTime.now());
         newWorkflow.setEdges(workflowEdges);
@@ -316,5 +332,4 @@ public class WorkflowService {
         workflowRepository.save(newWorkflow);
 
     }
-
 }

@@ -44,7 +44,7 @@ public class IDCJobStatusController {
     @PutMapping(path = "/progress")
     public void saveRuntimeUrlLog(@RequestBody ProgressEvent event) {
         RunningMessage message = RunningMessage.newMessage(event.getNodeJobId());
-        message.setMessage("任务正在执行" + event.getNodeJobId());
+        message.setMessage(event.getMessage());
         TaskEventPlugin.eventService(qs).send(message);
     }
 
@@ -56,7 +56,7 @@ public class IDCJobStatusController {
             message = FinishMessage.newMessage(event.getNodeJobId());
         } else if (jobInstanceStatus == JobInstanceStatus.FAILED) {
             message = FailMessage.newMessage(event.getNodeJobId());
-            message.setStackTraceElements(event.getStackTraceElements());
+            message.setThrowable(event.getThrowable());
         } else if (jobInstanceStatus == JobInstanceStatus.CANCLED) {
             message = CancelMessage.newMessage(event.getNodeJobId());
         } else {

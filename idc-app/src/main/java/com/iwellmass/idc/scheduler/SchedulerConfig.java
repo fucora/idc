@@ -5,15 +5,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 
 import com.iwellmass.idc.scheduler.quartz.*;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.impl.DirectSchedulerFactory;
-import org.quartz.simpl.PropertySettingJobFactory;
-import org.quartz.simpl.SimpleThreadPool;
-import org.quartz.spi.SchedulerPlugin;
 import org.quartz.utils.ConnectionProvider;
 import org.quartz.utils.DBConnectionManager;
 import org.slf4j.Logger;
@@ -42,8 +39,14 @@ public class SchedulerConfig {
 
 	@Value(value = "${idc.scheduler.start-auto:true}")
 	private Boolean startAuto;
+	@Value(value = "${idc.scheduler.openCallbackControl:false}")
+	boolean openCallbackControl;
 	@Value(value = "${idc.scheduler.maxRunningJobs:10}")
 	private Integer maxRunningJobs;
+	@Value(value = "${idc.scheduler.callbackTimeout:1800}")
+	Long timeout;
+	@Value(value = "${idc.scheduler.retryCount:3}")
+	private Integer retryCount;
 
 	@Resource
 	DataSource dataSource;
@@ -69,7 +72,7 @@ public class SchedulerConfig {
 		DBConnectionManager.getInstance().addConnectionProvider("ds1", managedProvider());
 		DBConnectionManager.getInstance().addConnectionProvider("ds2", noManagedProvider());
 
-		IDCJobstoreCMT cmt = new IDCJobstoreCMT(maxRunningJobs);
+		IDCJobstoreCMT cmt = new IDCJobstoreCMT();
 		cmt.setDataSource("ds1");
 		cmt.setNonManagedTXDataSource("ds2");
 		// cmt.setRecordIdGenerator(recordIdGenerator());
@@ -99,6 +102,13 @@ public class SchedulerConfig {
 		}
 		// start scheduler
 		if (startAuto) {
+			LOGGER.info("是否开启回调超时：" + openCallbackControl);
+			if (openCallbackControl) {
+				LOGGER.info("回调超时时长（秒）：" + timeout);
+			}
+			LOGGER.info("最大并发数：" + maxRunningJobs);
+			LOGGER.info("失败重试次数：" + retryCount);
+
 			scheduler().start();
 		}
 	}

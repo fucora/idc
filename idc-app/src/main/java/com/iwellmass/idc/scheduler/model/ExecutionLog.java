@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.common.criteria.Equal;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.slf4j.helpers.MessageFormatter;
 
 import javax.persistence.*;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "idc_execution_log")
 @Data
+@NoArgsConstructor
 public class ExecutionLog {
 
     @Id

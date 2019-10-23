@@ -20,7 +20,9 @@ public enum JobState {
 	@ApiModelProperty("失败")
 	FAILED,
 	@ApiModelProperty("取消")
-	CANCEL;
+	CANCEL,
+	@ApiModelProperty("暂停")
+	PAUSED;
 	
 	public boolean isComplete() {
 		return isSuccess() || isFailure();
@@ -40,7 +42,11 @@ public enum JobState {
 		return null;
 	}
 
-	public boolean isNotCallback() {
+	public boolean isRunning() {
 		return this == ACCEPTED || this == RUNNING;
+	}
+
+	public boolean isPaused() {
+		return this == PAUSED;
 	}
 }

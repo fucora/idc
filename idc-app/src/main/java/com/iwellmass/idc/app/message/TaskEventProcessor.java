@@ -1,29 +1,21 @@
 package com.iwellmass.idc.app.message;
 
-import java.beans.Transient;
 import java.util.*;
 
 import com.iwellmass.idc.app.service.JobHelper;
-import com.iwellmass.idc.message.FinishMessage;
-import com.iwellmass.idc.message.JobEvent;
-import com.iwellmass.idc.message.StartMessage;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
 import com.iwellmass.idc.scheduler.service.IDCLogger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iwellmass.idc.message.JobMessage;
 import com.iwellmass.idc.scheduler.quartz.IDCJobStore;
-import com.iwellmass.idc.scheduler.quartz.ReleaseInstruction;
 import com.iwellmass.idc.scheduler.repository.AllJobRepository;
 
 import lombok.Setter;
-import org.springframework.transaction.annotation.Transactional;
 
 @DisallowConcurrentExecution
 public class TaskEventProcessor implements org.quartz.Job {
@@ -61,7 +53,7 @@ public class TaskEventProcessor implements org.quartz.Job {
     public void execute(JobExecutionContext context) {
         // safe execute...
         try {
-            LOGGER.info("接收事件，类型[{}],，message = [{}]", message.getEvent().name(), message);
+            LOGGER.info("接收事件，类型[{}],message = [{}]", message.getEvent().name(), message);
             doExecute(context);
         } catch (Exception e) {
             LOGGER.error("ERROR: " + message);
@@ -105,7 +97,7 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.redo(runningJob);
                     break;
                 case CANCEL:
-                    jobHelper.cancle(runningJob);
+                    jobHelper.cancel(runningJob);
                     break;
                 case SKIP:
                     jobHelper.skip(runningJob);
@@ -114,7 +106,7 @@ public class TaskEventProcessor implements org.quartz.Job {
                     jobHelper.ready(runningJob);
                     break;
                 case RUNNING:
-                    jobHelper.running(runningJob);
+                    jobHelper.running(runningJob,message);
                     break;
                 case TIMEOUT:
                     jobHelper.timeout(runningJob);

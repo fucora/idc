@@ -1,30 +1,28 @@
 package com.iwellmass.idc.app.controller;
 
-import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
-
-import java.util.List;
-
-import javax.annotation.Resource;
-
-import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
+import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
+import com.iwellmass.idc.app.vo.task.ManualUpdateVo;
+import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.ReTaskVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.scheduler.model.IDCScheduler;
-
+import com.iwellmass.idc.scheduler.model.Task;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
 
 @RestController
 @RequestMapping("/task")
@@ -36,6 +34,9 @@ public class TaskController {
     @Resource
     private TaskService taskService;
 
+    @Autowired
+    private JobService jobService;
+
     @ApiOperation("获取调度运行时信息")
     @PostMapping("/runtime")
     public ServiceResult<PageData<TaskRuntimeVO>> getJobRuntime(@RequestBody TaskQueryParam jqm) {
@@ -43,12 +44,50 @@ public class TaskController {
         return ServiceResult.success(ret);
     }
 
-    @ApiOperation("新增调度计划")
+    @ApiOperation("新增自动调度计划")
     @PostMapping
     public ServiceResult<String> schedule(@RequestBody TaskVO vo) {
         idcs.schedule(vo);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
+
+
+    @ApiOperation("新增手动调度计划")
+    @PostMapping("/manual")
+    public ServiceResult<String> manualSchedule(@RequestBody TaskVO vo) {
+
+        Task task = jobService.getTask(vo.getTaskName());
+        Assert.notNull(task,String.format("taskName:[%s]不存在",vo.getTaskName()));
+
+        idcs.shceduleJob(vo,task);
+        return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
+
+
+    @ApiOperation("修改手动调度计划")
+    @PutMapping("/manual")
+    public ServiceResult<String> updateManualSchedule(@RequestBody ManualUpdateVo vo) {
+
+        Task queryTask = jobService.getTask(vo.getTaskName());
+        Assert.notNull(queryTask,String.format("taskName:[%s]不存在",vo.getTaskName()));
+
+        setUpdateParams(vo, queryTask);
+        idcs.updateScheduleTask(queryTask);
+
+        return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
+
+
+    private void setUpdateParams(@RequestBody ManualUpdateVo vo, Task queryTask) {
+        queryTask.setAssignee(vo.getAssignee());
+        queryTask.setUpdatetime(LocalDateTime.now());
+        queryTask.setBlockOnError(vo.getBlockOnError());
+        queryTask.setIsRetry(vo.getIsRetry());
+        queryTask.setDescription(vo.getDescription());
+    }
+
 
     @ApiOperation("获取调度计划详情")
     @GetMapping("/{name}")
@@ -96,6 +135,19 @@ public class TaskController {
     @GetMapping(path = "{workflowId}/params")
     public ServiceResult<List<MergeTaskParamVO>> getParams(@PathVariable(name = "workflowId") String workflowId) {
         return ServiceResult.success(taskService.getParams(workflowId));
+    }
+
+    @ApiOperation("loadDate参数简要可选字段")
+    @GetMapping("/loadDateParams/simplify")
+    public ServiceResult<List<String>> getLoadDateParams() {
+        return ServiceResult.success(taskService.getLoadDateParams());
+    }
+
+    @ApiOperation("删除调度计划")
+    @DeleteMapping("/{taskName}/delete")
+    public ServiceResult<String> delete(@PathVariable(name = "taskName") String taskName) {
+        taskService.delete(taskName);
+        return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
 }

@@ -36,6 +36,36 @@ public class IDCJobContextFactory {
 
 	private class ExecutionContextImpl implements IDCJobContext {
 
+		@Override
+		public void fail(Throwable t) {
+
+		}
+
+		@Override
+		public void progress() {
+
+		}
+
+		@Override
+		public void progress(String msg) {
+
+		}
+
+		@Override
+		public void start() {
+
+		}
+
+		@Override
+		public void success() {
+
+		}
+
+		@Override
+		public void fail(String logs) {
+
+		}
+
 		private ExecuteRequest executeRequest;
 		private int state = RUNNING; // TODO use CAS
 
@@ -70,11 +100,11 @@ public class IDCJobContextFactory {
 
 		public CompleteEvent newCompleteEvent(JobInstanceStatus status) {
 			if (status == JobInstanceStatus.FINISHED) {
-				return CompleteEvent.successEvent(executeRequest.getNodeJobId());
+				return CompleteEvent.successEvent(executeRequest.getNodeJobId(),executeRequest.getNodeTaskTaskName());
 			} else if (status == JobInstanceStatus.FAILED) {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId());
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId(),executeRequest.getNodeTaskTaskName());
 			} else {
-				return CompleteEvent.failureEvent(executeRequest.getNodeJobId()).setFinalStatus(status);
+				return CompleteEvent.failureEvent(executeRequest.getNodeJobId(),executeRequest.getNodeTaskTaskName()).setFinalStatus(status);
 			}
 		}
 
@@ -84,5 +114,6 @@ public class IDCJobContextFactory {
 		public StartEvent newStartEvent() {
 			return StartEvent.newEvent(executeRequest.getNodeJobId());
 		}	}
+
 
 }

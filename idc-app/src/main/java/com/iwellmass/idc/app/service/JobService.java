@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
 import com.iwellmass.common.util.QueryUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * Job 服务
@@ -67,6 +69,7 @@ public class JobService {
             return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "starttime"))).map(job -> {
                 JobRuntimeVO vo = new JobRuntimeVO();
                 BeanUtils.copyProperties(job, vo);
+                vo.setScheduleType(job.getTask().getScheduleType());
                 return vo;
             });
         });
@@ -88,9 +91,9 @@ public class JobService {
     }
 
     @Transactional
-    public Job createJob(String id, String taskName, List<ExecParam> execParams) {
+    public Job createJob(String id, String taskName, List<ExecParam> execParams, LocalDateTime shouldFireTime) {
         Task task = getTask(taskName);
-        Job job = new Job(id, task, execParams);
+        Job job = new Job(id, task, execParams,shouldFireTime == null ? task.getPrevFireTime() : shouldFireTime);
         return jobRepository.save(job);
     }
 
@@ -114,8 +117,7 @@ public class JobService {
                 }
             }
         }
-        JobVO jobVO = new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS);
-        return jobVO;
+        return new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS,job.getShouldFireTime(),job.getState());
     }
 
     @Transactional
@@ -134,10 +136,9 @@ public class JobService {
     }
 
 
-    public PageData<ExecutionLog> getLogs(String jobId, Pager pager) {
-        Pageable page = PageRequest.of(pager.getPage(), pager.getLimit(), new Sort(Sort.Direction.ASC, "id"));
-        Page<ExecutionLog> data = logRepository.findByJobId(jobId, page);
-        return new PageData<>((int) data.getTotalElements(), data.getContent());
+    public PageData<ExecutionLog> getLogs(String jobId) {
+        List<ExecutionLog> data = logRepository.findAllByJobId(jobId);
+        return new PageData<>(data.size(), data);
     }
 
 }

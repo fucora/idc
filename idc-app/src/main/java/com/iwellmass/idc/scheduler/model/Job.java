@@ -3,16 +3,7 @@ package com.iwellmass.idc.scheduler.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.app.service.ExecParamHelper;
@@ -95,7 +86,14 @@ public class Job extends AbstractJob {
 	public Job() {
 	}
 
-	public Job(String id, Task task,List<ExecParam> execParams) {
+	/**
+	 *
+	 * @param id
+	 * @param task
+	 * @param execParams
+	 * @param shouldFireTime task's shouldFireTime,when run the last job,this will lose.so need record it and don't adopt task.getPrevFireTime()
+	 */
+	public Job(String id, Task task,List<ExecParam> execParams,LocalDateTime shouldFireTime) {
 		super(id, task);
 		// 实例类型
 		this.taskName = task.getTaskName();
@@ -103,7 +101,7 @@ public class Job extends AbstractJob {
 		this.assignee = task.getAssignee();
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
 		this.starttime = LocalDateTime.now();
-		this.shouldFireTime = task.getPrevFireTime();
+		this.shouldFireTime = shouldFireTime;
 		this.loadDate = ExecParamHelper.getLoadDate(execParams);
 		this.params = execParams;
 	}

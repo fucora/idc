@@ -5,8 +5,10 @@ import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 
 import com.iwellmass.idc.app.message.TaskEventPlugin;
+import com.iwellmass.idc.app.service.JobHelper;
 import com.iwellmass.idc.app.vo.*;
 import com.iwellmass.idc.message.RedoMessage;
 import com.iwellmass.idc.message.SkipMessage;
@@ -25,11 +27,13 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/job")
 public class JobController {
-	
+
 	@Resource
 	JobService jobService;
     @Resource
     Scheduler qs;
+    @Inject
+    JobHelper jobHelper;
 
     @ApiOperation("获取 JOB 实例")
     @PostMapping("/runtime")
@@ -37,15 +41,13 @@ public class JobController {
         PageData<JobRuntimeVO> taskInstance = jobService.query(qm);
         return ServiceResult.success(taskInstance);
     }
-    
+
     @ApiOperation("获取 Job 详情")
     @GetMapping("/{id}")
     public ServiceResult<JobVO> get(@PathVariable("id") String id) {
-    	JobVO jobVO = new JobVO();
-    	jobService.get(id);
-    	return ServiceResult.success(jobVO);
+    	return ServiceResult.success(jobService.get(id));
     }
-    
+
     @ApiOperation("获取所有责任人")
     @GetMapping("/assignee")
     public ServiceResult<List<Assignee>> assignee() {
@@ -82,7 +84,7 @@ public class JobController {
 //        PageData<ExecutionLog> data = jobInstanceService.getLogs(id, pager);
 //        return ServiceResult.success(data);
 //    }
-    
+
     @ApiOperation("测试执行")
     @GetMapping("/{id}/test/{action}")
     public ServiceResult<String> getWorkflowTask(@PathVariable("id") String id, @PathVariable("action") String action) {
@@ -98,9 +100,9 @@ public class JobController {
     }
 
     @ApiOperation("任务日志(分页)")
-    @PostMapping("/{jobId}/log")
-    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable(name = "jobId") String jobId, Pager pager) {
-        PageData<ExecutionLog> data = jobService.getLogs(jobId, pager);
+    @GetMapping("/log/{jobId}")
+    public ServiceResult<PageData<ExecutionLog>> getLog(@PathVariable("jobId") String jobId) {
+        PageData<ExecutionLog> data = jobService.getLogs(jobId);
         return ServiceResult.success(data);
     }
 
@@ -109,5 +111,42 @@ public class JobController {
     public ServiceResult<String> test(@PathVariable(name = "jobId") String jobId,@PathVariable(name = "template") String template,@PathVariable(name = "content") String content) {
         return ServiceResult.success(jobService.test(jobId,template,content));
     }
+
+    @ApiOperation("修改并发数")
+    @PutMapping("/{maxRunningJobs}/modifyConcurrent")
+    public ServiceResult<String> modifyConcurrent(@PathVariable(name = "maxRunningJobs") Integer maxRunningJobs) {
+        jobHelper.modifyConcurrent(maxRunningJobs);
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("修改失败重试次数")
+    @PutMapping(value = "/{retryCount}/modifyRetryCount")
+    public ServiceResult<String> modifyRetryCount(@PathVariable(name = "retryCount") Integer retryCount) {
+        jobHelper.modifyRetryCount(retryCount);
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("强制完成指定实例任务")
+    @PutMapping("/{nodeJobId}/forceComplete")
+    public ServiceResult<String> forceComplete(@PathVariable(name = "nodeJobId") String nodeJobId) {
+        jobHelper.forceComplete(nodeJobId);
+        return ServiceResult.success("success");
+    }
+
+    @ApiOperation("暂停job实例，同时暂停调度计划")
+    @PutMapping("/{jobId}/pause")
+    public ServiceResult<String> pause(@PathVariable(name = "jobId") String jobId) {
+        jobHelper.pause(jobId);
+        return ServiceResult.success("success");
+    }
+
+
+    @ApiOperation("恢复job实例，同时恢复调度计划")
+    @PutMapping(value = "/{jobId}/resume")
+    public ServiceResult<String> resume(@PathVariable(name = "jobId") String jobId) {
+        jobHelper.resume(jobId);
+        return ServiceResult.success("success");
+    }
+
 
 }

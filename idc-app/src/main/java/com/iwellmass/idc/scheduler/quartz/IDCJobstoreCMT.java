@@ -21,13 +21,9 @@ import lombok.Setter;
 public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
 
     @Setter
-    private Integer maxRunningJobs;
-
-    @Setter
     private RecordIdGenerator recordIdGenerator;
 
-    public IDCJobstoreCMT(Integer maxRunningJobs) {
-        this.maxRunningJobs = maxRunningJobs;
+    public IDCJobstoreCMT() {
         this.recordIdGenerator = () -> super.getFiredTriggerRecordId();
     }
 
@@ -37,22 +33,6 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
     @Override
     public synchronized String getFiredTriggerRecordId() {
         return recordIdGenerator.generate();
-    }
-
-    /*
-     * 并发控制
-     */
-    @Override
-    protected List<OperableTrigger> acquireNextTrigger(Connection conn, long noLaterThan, int maxCount, long timeWindow)
-            throws JobPersistenceException {
-        int acceptCount = maxRunningJobs;
-        // todo 查询实际执行的job有哪些. -> runningJobs
-        int runningJobs = 0;
-        acceptCount = maxRunningJobs - runningJobs;
-
-        return acceptCount > 0
-                ? super.acquireNextTrigger(conn, noLaterThan, Math.min(maxCount, acceptCount), timeWindow)
-                : Collections.emptyList();
     }
 
     /*
@@ -134,6 +114,8 @@ public class IDCJobstoreCMT extends JobStoreCMT implements IDCJobStore {
                 } else if (inst == ReleaseInstruction.RELEASE) {
                     getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_WAITING, STATE_SUSPENDED);
                     getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_PAUSED, STATE_PAUSED_SUSPENDED);
+                    // maybe user choose skip ,the trigger state is error
+                    getDelegate().updateTriggerStateFromOtherState(conn, triggerKey, STATE_WAITING, STATE_ERROR);
                 }
                 signalSchedulingChangeOnTxCompletion(0L);
             } catch (SQLException e) {

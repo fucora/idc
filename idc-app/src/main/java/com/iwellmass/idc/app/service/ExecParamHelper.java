@@ -5,11 +5,8 @@ import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.param.ParamParser;
 import com.iwellmass.common.param.ParamType;
-import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.ExecuteRequest;
-import com.iwellmass.idc.app.util.IDCUtils;
 import com.iwellmass.idc.app.vo.execParam.ReferParam;
-import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
@@ -18,9 +15,8 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,6 +41,7 @@ public class ExecParamHelper {
         ExecuteRequest request = new ExecuteRequest();
         // task running
         request.setTaskId(nodeTask.getTaskId());
+        request.setNodeTaskTaskName(nodeTask.getTaskName());
         request.setParams(job.getParams());
         request.setLoadDate(getLoadDate(job.getParams()));
         // build req url
@@ -56,22 +53,38 @@ public class ExecParamHelper {
         request.setTaskName(task.getTaskName());
         request.setScheduleType(task.getScheduleType());
         if (job.getShouldFireTime() != null) {
+            // if the last job is fail.then we choose redo it. the shouldFireTime will lose,but this field isn't necessary
+            // after update this filed won't lose
             request.setShouldFireTime(job.getShouldFireTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         }
         return request;
     }
 
+    // Auto task
     public List<ExecParam> parse(Task task) {
-        ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now());
+        ReferParam referParam = new ReferParam(task.getPrevFireTime(), LocalDateTime.now(), task.getUpdatetime());
         ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
-        List<ExecParam> execParams = copyExecParam(task.getParams());
+        return parse(task.getParams(), parser);
+    }
+
+    // Manual task . don't adopt
+    public List<ExecParam> parse(Task task, List<ExecParam> params) {
+        ReferParam referParam = new ReferParam(LocalDateTime.now(), LocalDateTime.now(), task.getUpdatetime());
+        ParamParser parser = new ParamParser(Collections.singletonMap("idc", referParam));
+        return parse(params, parser);
+    }
+
+    public List<ExecParam> parse(List<ExecParam> params, ParamParser parser) {
+        List<ExecParam> execParams = deepCopyExecParam(params);
+        // modify the simple loadDate param to ognl expression
+        for (ExecParam execParam : execParams) {
+            if (TaskService.loadDateParams.containsKey(execParam.getDefaultExpr().trim())) {
+                execParam.setDefaultExpr(TaskService.loadDateParams.get(execParam.getDefaultExpr().trim()));
+            }
+        }
         parser.parse(execParams);
         return execParams;
     }
-
-//    public String getLoadDate(List<ExecParam> execParams) {
-//        this
-//    }
 
     public static String getLoadDate(List<ExecParam> execParams) {
         String loadDate = "";
@@ -85,7 +98,7 @@ public class ExecParamHelper {
     }
 
     // there must adapt a new List<ExecParam> copied on task'params,otherwise the task's params will be modified to the value after firstly parse
-    public List<ExecParam> copyExecParam(List<ExecParam> source) {
+    public List<ExecParam> deepCopyExecParam(List<ExecParam> source) {
         List<ExecParam> result = Lists.newArrayList();
         source.forEach(e -> {
             ExecParam r = new ExecParam();
@@ -102,8 +115,7 @@ public class ExecParamHelper {
         // 计算参数
         Task task = new Task();
         task.setPrevFireTime(LocalDateTime.now());
-        String a = "#idc.shouldFireTime.plusMonths(-2).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-        task.setParams(Lists.newArrayList(new ExecParam("loadDate", a, ParamType.VARCHAR)));
+        task.setParams(Lists.newArrayList(new ExecParam("loadDate", "调度批次上月的第一天", ParamType.VARCHAR)));
         new ExecParamHelper().parse(task).forEach(execParam -> {
             System.out.println(execParam.getValue());
         });
