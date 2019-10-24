@@ -2,11 +2,14 @@ package com.iwellmass.idc.app.controller;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
+import com.iwellmass.common.util.Tree;
+import com.iwellmass.common.util.TreeNode;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
+import com.iwellmass.idc.app.vo.graph.TaskGraphVO;
 import com.iwellmass.idc.app.vo.task.ManualUpdateVo;
 import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.ReTaskVO;
@@ -59,7 +62,7 @@ public class TaskController {
         Task task = jobService.getTask(vo.getTaskName());
         Assert.notNull(task,String.format("taskName:[%s]不存在",vo.getTaskName()));
 
-        idcs.shceduleJob(vo,task);
+        idcs.scheduleJob(vo,task);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
@@ -148,6 +151,12 @@ public class TaskController {
     public ServiceResult<String> delete(@PathVariable(name = "taskName") String taskName) {
         taskService.delete(taskName);
         return ServiceResult.success(MSG_OP_SUCCESS);
+    }
+
+    @ApiOperation("查询调度计划依赖查看")
+    @GetMapping("/{taskName}/getTaskDependencies")
+    public ServiceResult<TaskGraphVO> getTaskDependencies(@PathVariable(name = "taskName") String taskName) {
+        return ServiceResult.success(taskService.getTaskDependencies(taskName));
     }
 
 }

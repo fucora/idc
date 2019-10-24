@@ -10,6 +10,7 @@ import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
+import com.iwellmass.idc.scheduler.repository.TaskDependencyRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.quartz.*;
 import org.slf4j.Logger;
@@ -42,6 +43,8 @@ public class IDCScheduler {
     NodeJobRepository nodeJobRepository;
     @Resource
     TaskService taskService;
+    @Resource
+    TaskDependencyRepository taskDependencyRepository;
 
     @Resource
     Scheduler qs;
@@ -58,16 +61,23 @@ public class IDCScheduler {
         Task task = new Task(vo);
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {
+            // store task dependency: clear task dependency whose source is this;store those taskDependencies
+            taskDependencyRepository.deleteByTarget(vo.getTaskName());
+            List<TaskDependency> taskDependencies = vo.asCronTaskVO().getTaskDependencyVOS()
+                    .stream()
+                    .map(tdvo -> new TaskDependency(tdvo.getSource(),vo.getTaskName()))
+                    .collect(Collectors.toList());
+            taskDependencyRepository.saveAll(taskDependencies);
 
             task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));// 生效时间
             task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
-            shceduleJob(vo, task);
+            scheduleJob(vo, task);
         }
         taskRepository.save(task);
     }
 
 
-    public void shceduleJob(TaskVO vo, Task task) {
+    public void scheduleJob(TaskVO vo, Task task) {
         // 创建作业
         JobDetail jobDetail = JobBuilder.newJob(JobBootstrap.class)
                 .withIdentity(task.getTaskName(), task.getTaskGroup())
@@ -79,8 +89,6 @@ public class IDCScheduler {
             trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_NAME, task.getTaskName());
 
             if(ScheduleType.MANUAL.equals(vo.getScheduleType()) && Objects.nonNull(vo.getParams())){
-
-
                 trigger.getJobDataMap().put(JobBootstrap.PROP_TASK_PARAMS, JsonUtils.toJSon(vo.getParams()));
                 task.setParams(vo.getParams());
                 taskRepository.save(task);

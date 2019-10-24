@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.iwellmass.common.exception.AppException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.springframework.beans.BeanUtils;
@@ -80,7 +81,6 @@ public abstract class TaskVO {
 	@ApiModelProperty("合并后的参数配置")
 	List<MergeTaskParamVO> mergeTaskParamVOS;
 
-	
 	public abstract Trigger buildTrigger(TriggerKey tk);
 
 	@JsonIgnore
@@ -90,6 +90,20 @@ public abstract class TaskVO {
 		if (props != null) {
 			BeanUtils.copyProperties(props, this);
 		}
+	}
+
+	public CronTaskVO asCronTaskVO() {
+		if (this instanceof CronTaskVO) {
+			return (CronTaskVO)this;
+		}
+		throw new AppException("类型错误：" + this.getClass());
+	}
+
+	public ManualTaskVO asManualTaskVO() {
+		if (this instanceof ManualTaskVO) {
+			return (ManualTaskVO)this;
+		}
+		throw new AppException("类型错误：" + this.getClass());
 	}
 	
 }
