@@ -1,9 +1,13 @@
+server:
+  port: 9306
 spring:
   application:
     name: idc
   cloud:
     nacos:
       discovery:
+        server-addr: eureka.iwellmass.com:8848
+      config:
         server-addr: eureka.iwellmass.com:8848
   jackson:
     serialization:
@@ -13,9 +17,6 @@ spring:
     url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
-
-server:
-  port: 9306
 
 spring.jpa.hibernate.naming.physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 # spring.jpa.hibernate.ddl-auto: update
@@ -74,42 +75,11 @@ idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重
 
 ---
 spring:
-  profiles: online
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
-
-idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
-idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认关闭
-idc.scheduler.maxRunningJobs: 10  # 最大并发数，测试为10个
-idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
-
----
-spring:
-  profiles: gray
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://grayeureka.iwellmass.com/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
-  jpa:
-    show-sql: false
-
-idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
-idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认关闭
-
----
-spring:
   profiles: dev
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
+  cloud:
+    nacos:
+      discovery:
+        namespace: 238e694d-6e0a-4354-b083-3323e1351724
 
 idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
