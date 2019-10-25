@@ -38,6 +38,6 @@ master maven package build:
     expire_in:
         15 days
   tags:
-    - test-runner
+    - test-runner2
   only:
     - test
