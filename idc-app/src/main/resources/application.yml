@@ -6,9 +6,9 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: eureka.iwellmass.com:8848
+        server-addr: nacos.iwellmass.com
       config:
-        server-addr: eureka.iwellmass.com:8848
+        server-addr: nacos.iwellmass.com
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -79,7 +79,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        namespace: 238e694d-6e0a-4354-b083-3323e1351724
+        namespace: dev
 
 idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
