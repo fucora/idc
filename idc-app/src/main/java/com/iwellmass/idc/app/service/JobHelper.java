@@ -187,7 +187,7 @@ public class JobHelper {
 
             Job newJob = jobRepository.findById(job.getId()).get();
             // edit run param
-            executeJob(newJob);
+            start(newJob);
 //            flushJobStateAndHandleTriggerState(newJob);
         } else {
             // create new nodeJob instance
