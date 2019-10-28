@@ -62,8 +62,8 @@ public class IDCScheduler {
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {
             // store task dependency: clear task dependency whose source is this;store those taskDependencies
+            taskDependencyRepository.deleteByTarget(vo.getTaskName());
             if (vo.asCronTaskVO().getTaskDependencyVOS() != null) {
-                taskDependencyRepository.deleteByTarget(vo.getTaskName());
                 List<TaskDependency> taskDependencies = vo.asCronTaskVO().getTaskDependencyVOS()
                         .stream()
                         .map(tdvo -> new TaskDependency(tdvo.getSource(),vo.getTaskName()))
