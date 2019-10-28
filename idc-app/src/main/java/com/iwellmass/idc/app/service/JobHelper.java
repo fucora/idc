@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -90,6 +91,7 @@ public class JobHelper {
             if (jobCanExec(job)) {
                 executeJob(job);
             } else {
+                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞",job.getTaskName(),job.getId(),job.getBatchTime().toString());
                 jobWaitSet.add(job.getId());
             }
         } else {
