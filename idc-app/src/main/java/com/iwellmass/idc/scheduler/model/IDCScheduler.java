@@ -62,13 +62,14 @@ public class IDCScheduler {
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {
             // store task dependency: clear task dependency whose source is this;store those taskDependencies
-            taskDependencyRepository.deleteByTarget(vo.getTaskName());
-            List<TaskDependency> taskDependencies = vo.asCronTaskVO().getTaskDependencyVOS()
-                    .stream()
-                    .map(tdvo -> new TaskDependency(tdvo.getSource(),vo.getTaskName()))
-                    .collect(Collectors.toList());
-            taskDependencyRepository.saveAll(taskDependencies);
-
+            if (vo.asCronTaskVO().getTaskDependencyVOS() != null) {
+                taskDependencyRepository.deleteByTarget(vo.getTaskName());
+                List<TaskDependency> taskDependencies = vo.asCronTaskVO().getTaskDependencyVOS()
+                        .stream()
+                        .map(tdvo -> new TaskDependency(tdvo.getSource(),vo.getTaskName()))
+                        .collect(Collectors.toList());
+                taskDependencyRepository.saveAll(taskDependencies);
+            }
             task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));// 生效时间
             task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
             scheduleJob(vo, task);
