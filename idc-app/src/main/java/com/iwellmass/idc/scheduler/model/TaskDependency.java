@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "idc_task_dependency")
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaskDependency {
 
     @Id
