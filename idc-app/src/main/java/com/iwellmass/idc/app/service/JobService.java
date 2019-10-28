@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 
+import com.google.common.collect.Lists;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.vo.*;
@@ -121,7 +122,7 @@ public class JobService {
     }
 
     @Transactional
-    public String test(String jobId, String template,String content) {
+    public List<Job> test() {
 //        AbstractJob job = allJobRepository.findById(id).get();
 //        Method method = ReflectionUtils.findMethod(job.getClass(), action);
 //        try {
@@ -130,8 +131,7 @@ public class JobService {
 //            throw new ApplicationContextException(e.getMessage(), e);
 //        }
 //        logger.log(jobId,template,content)
-        logger.log(jobId,template,content);
-        return "success";
+        return Lists.newArrayList(jobRepository.findAll());
 
     }
 
