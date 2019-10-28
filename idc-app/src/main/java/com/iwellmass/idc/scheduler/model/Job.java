@@ -105,7 +105,6 @@ public class Job extends AbstractJob {
 		this.taskGroup = task.getTaskGroup();
 		this.assignee = task.getAssignee();
 		this.jobType = task.getScheduleType() == ScheduleType.MANUAL ? JobType.MANUAL : JobType.AUTO;
-		this.starttime = LocalDateTime.now();
 		this.shouldFireTime = shouldFireTime;
 		this.loadDate = ExecParamHelper.getLoadDate(execParams);
 		this.params = execParams;
