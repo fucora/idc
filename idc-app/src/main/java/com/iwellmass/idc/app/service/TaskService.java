@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -24,6 +25,8 @@ import lombok.Setter;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -140,15 +143,21 @@ public class TaskService {
 
     public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {
         return QueryUtils.doJpaQuery(jqm, (p) -> {
-            Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
-            return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(), p.getPageSize(), Sort.by(Sort.Direction.DESC, "createtime"))).map(t -> {
+            Function<Task, TaskRuntimeVO> converter = t -> {
                 TaskRuntimeVO vo = new TaskRuntimeVO();
                 BeanUtils.copyProperties(t, vo);
                 vo.setWorkflowName(t.getWorkflow().getWorkflowName());
                 vo.setCanDelete(canDelete(t.getTaskName()));
                 twiceValidateState(t, vo);
                 return vo;
-            });
+            };
+            Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
+            if (p == null || (p.getPageNumber() == 0 && p.getPageSize() == 0)) {
+                List<Task> tasks = taskRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createtime"));
+                return new PageImpl<>(tasks.stream().map(converter).collect(Collectors.toList()));
+            } else {
+                return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(), p.getPageSize(), Sort.by(Sort.Direction.DESC, "createtime"))).map(converter);
+            }
         });
     }
 
@@ -259,18 +268,18 @@ public class TaskService {
     }
 
     private TaskGraphVO findRecordByTaskNameAsSourceAndTarget(String taskName, TaskGraphVO taskGraphVO) {
-        addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName),taskGraphVO);
+        addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName), taskGraphVO);
         List<TaskDependency> targetTaskDependencies = taskDependencyRepository.findAllBySource(taskName);
         List<TaskDependency> sourceTaskDependencies = taskDependencyRepository.findAllByTarget(taskName);
         targetTaskDependencies.forEach(td -> {
-            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()),taskGraphVO);
-            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(),new SourceVO(taskName),new TargetVO(td.getTarget())),taskGraphVO);
-            findRecordByTaskNameAsSourceAndTarget(td.getTarget(),taskGraphVO);
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()), taskGraphVO);
+            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(taskName), new TargetVO(td.getTarget())), taskGraphVO);
+            findRecordByTaskNameAsSourceAndTarget(td.getTarget(), taskGraphVO);
         });
         sourceTaskDependencies.forEach(td -> {
-            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getSource()), td.getSource()),taskGraphVO);
-            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(),new SourceVO(td.getSource()),new TargetVO(taskName)),taskGraphVO);
-            findRecordByTaskNameAsSourceAndTarget(td.getSource(),taskGraphVO);
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getSource()), td.getSource()), taskGraphVO);
+            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(td.getSource()), new TargetVO(taskName)), taskGraphVO);
+            findRecordByTaskNameAsSourceAndTarget(td.getSource(), taskGraphVO);
         });
         return taskGraphVO;
     }
