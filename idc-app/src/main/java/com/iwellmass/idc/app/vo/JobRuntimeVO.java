@@ -1,5 +1,6 @@
 package com.iwellmass.idc.app.vo;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -9,6 +10,8 @@ import com.iwellmass.idc.scheduler.model.JobState;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.persistence.Column;
 
 @Getter
 @Setter
@@ -40,4 +43,8 @@ public class JobRuntimeVO {
 
 	@ApiModelProperty("执行方式")
 	private ScheduleType scheduleType;
+
+	@ApiModelProperty("批次时间")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+	private LocalDate batchTime;
 }

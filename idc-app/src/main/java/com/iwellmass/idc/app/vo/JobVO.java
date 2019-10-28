@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Column;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,9 +36,14 @@ public class JobVO {
     @ApiModelProperty("运行的实例参数信息")
     private List<MergeTaskParamVO> mergeTaskParamVOS;
 
-    @ApiModelProperty("执行批次")
+    @ApiModelProperty("执行批次准确时间(带有dueTime)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime shouldFireTime;
 
+    @ApiModelProperty("执行状态")
     private JobState state;
+
+    @ApiModelProperty("批次时间")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    private LocalDate batchTime;
 }

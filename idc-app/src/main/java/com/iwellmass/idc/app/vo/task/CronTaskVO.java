@@ -33,12 +33,16 @@ public class CronTaskVO extends TaskVO implements CronTriggerBuilder {
     @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
     LocalTime duetime = LocalTime.MIN;
 
+    @ApiModelProperty("所依赖的调度计划及其规则")
+    List<TaskDependencyVO> taskDependencyVOS;
+
     @Override
     public Map<String, Object> getProps() {
         Map<String, Object> props = new HashMap<>();
         props.put("cronType", cronType);
         props.put("days", days);
         props.put("expression", Utils.isNullOrEmpty(expression) ? "" : expression);
+        props.put("taskDependencyVOS", taskDependencyVOS);
         return props;
     }
 

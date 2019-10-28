@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -8,20 +9,25 @@ import javax.inject.Inject;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.datafactory.common.vo.TaskDetailVO;
 import com.iwellmass.idc.app.rpc.DFTaskService;
+import com.iwellmass.idc.app.vo.graph.EdgeVO;
+import com.iwellmass.idc.app.vo.graph.SourceVO;
+import com.iwellmass.idc.app.vo.graph.TargetVO;
+import com.iwellmass.idc.app.vo.graph.TaskGraphVO;
 import com.iwellmass.idc.app.vo.task.*;
 import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
-import com.iwellmass.idc.scheduler.repository.JobRepository;
-import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import com.iwellmass.idc.scheduler.repository.WorkflowRepository;
+import com.iwellmass.idc.scheduler.repository.*;
 import lombok.Setter;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,7 +40,6 @@ import com.iwellmass.common.util.QueryUtils;
 import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
-import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -90,6 +95,10 @@ public class TaskService {
     WorkflowRepository workflowRepository;
     @Resource
     NodeJobRepository nodeJobRepository;
+    @Resource
+    TaskDependencyRepository taskDependencyRepository;
+    @Inject
+    JobService jobService;
 
     @Setter
     private Scheduler scheduler;
@@ -134,17 +143,18 @@ public class TaskService {
     }
 
     public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {
-        return QueryUtils.doJpaQuery(jqm, (p) -> {
-            Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
-            return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(), p.getPageSize(), Sort.by(Sort.Direction.DESC, "createtime"))).map(t -> {
-                TaskRuntimeVO vo = new TaskRuntimeVO();
-                BeanUtils.copyProperties(t, vo);
-                vo.setWorkflowName(t.getWorkflow().getWorkflowName());
-                vo.setCanDelete(canDelete(t.getTaskName()));
-                twiceValidateState(t, vo);
-                return vo;
-            });
-        });
+        Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
+        Page<TaskRuntimeVO> taskRuntimeVOPage = taskRepository
+                .findAll(spec, PageRequest.of(jqm.getPage(), jqm.getLimit(), Sort.by(Sort.Direction.DESC, "createtime")))
+                .map(t -> {
+                    TaskRuntimeVO vo = new TaskRuntimeVO();
+                    BeanUtils.copyProperties(t, vo);
+                    vo.setWorkflowName(t.getWorkflow().getWorkflowName());
+                    vo.setCanDelete(canDelete(t.getTaskName()));
+                    twiceValidateState(t, vo);
+                    return vo;
+                });
+        return new PageData<>((int) taskRuntimeVOPage.getTotalElements(), taskRuntimeVOPage.getContent());
     }
 
     public List<Assignee> getAllAssignee() {
@@ -228,7 +238,7 @@ public class TaskService {
         // job
         jobRepository.deleteAll(jobs);
         // task
-        Task task = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未发现taskName[%s]计划",taskName));
+        Task task = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未发现taskName[%s]计划", taskName));
         try {
             scheduler.unscheduleJob(task.getTriggerKey());
             taskRepository.delete(task);
@@ -248,4 +258,55 @@ public class TaskService {
                 jobRepository.findAllByTaskName(taskName).stream().map(Job::getId).collect(Collectors.toList())
         ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState().isComplete());
     }
+
+    public TaskGraphVO getTaskDependencies(String taskName) {
+        return findRecordByTaskNameAsSourceAndTarget(taskName, new TaskGraphVO(), Sets.newConcurrentHashSet());
+    }
+
+    private TaskGraphVO findRecordByTaskNameAsSourceAndTarget(String taskName, TaskGraphVO taskGraphVO, Set<String> taskNamesProcessed) {
+        if (!taskNamesProcessed.contains(taskName)) {
+            taskNamesProcessed.add(taskName);
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName), taskGraphVO);
+            List<TaskDependency> targetTaskDependencies = taskDependencyRepository.findAllBySource(taskName);
+            List<TaskDependency> sourceTaskDependencies = taskDependencyRepository.findAllByTarget(taskName);
+            targetTaskDependencies.forEach(td -> {
+                addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()), taskGraphVO);
+                addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(taskName), new TargetVO(td.getTarget())), taskGraphVO);
+                findRecordByTaskNameAsSourceAndTarget(td.getTarget(), taskGraphVO, taskNamesProcessed);
+            });
+            sourceTaskDependencies.forEach(td -> {
+                addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getSource()), td.getSource()), taskGraphVO);
+                addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(td.getSource()), new TargetVO(taskName)), taskGraphVO);
+                findRecordByTaskNameAsSourceAndTarget(td.getSource(), taskGraphVO, taskNamesProcessed);
+            });
+        }
+        return taskGraphVO;
+    }
+
+    private void addTaskNodeVOToTaskGraphVO(TaskNodeVO taskNodeVO, TaskGraphVO taskGraphVO) {
+        if (taskGraphVO.getNodes().stream().map(TaskNodeVO::getId).noneMatch(id -> taskNodeVO.getId().equals(id))) {
+            taskGraphVO.getNodes().add(taskNodeVO);
+        }
+    }
+
+    private void addEdgeVOToTaskGraphVO(EdgeVO edgeVO, TaskGraphVO taskGraphVO) {
+        if (taskGraphVO.getEdges().stream().map(EdgeVO::getId).noneMatch(id -> edgeVO.getId().equals(id))) {
+            taskGraphVO.getEdges().add(edgeVO);
+        }
+    }
+
+    public List<TaskRuntimeVO> getTaskToDependency(CronType cronType) {
+        return Lists.newArrayList(taskRepository.findAll()).stream()
+                .filter(tk -> tk.getProps() != null && CronType.valueOf(tk.getProps().get("cronType").toString()) == cronType)
+                .map(tk -> {
+                    TaskRuntimeVO vo = new TaskRuntimeVO();
+                    BeanUtils.copyProperties(tk, vo);
+                    vo.setWorkflowName(tk.getWorkflow().getWorkflowName());
+                    vo.setCanDelete(canDelete(tk.getTaskName()));
+                    twiceValidateState(tk, vo);
+                    return vo;
+                })
+                .collect(Collectors.toList());
+    }
+
 }

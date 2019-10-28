@@ -1,5 +1,6 @@
 package com.iwellmass.idc.scheduler.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,7 +28,7 @@ import lombok.Setter;
 public class Job extends AbstractJob {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
-	
+
 	/**
 	 * 任务名（Task.taskName）
 	 */
@@ -72,6 +73,10 @@ public class Job extends AbstractJob {
 	@Column(name = "should_fire_time")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime shouldFireTime;
+
+	@Column(name = "batch_time")
+	@JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+	private LocalDate batchTime;
 	
 	/**
 	 * 主任务（Task）
@@ -104,6 +109,7 @@ public class Job extends AbstractJob {
 		this.shouldFireTime = shouldFireTime;
 		this.loadDate = ExecParamHelper.getLoadDate(execParams);
 		this.params = execParams;
+		this.batchTime = shouldFireTime.toLocalDate();
 	}
 
 	/**

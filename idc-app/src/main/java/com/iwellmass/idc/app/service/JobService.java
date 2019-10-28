@@ -117,7 +117,7 @@ public class JobService {
                 }
             }
         }
-        return new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS,job.getShouldFireTime(),job.getState());
+        return new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS,job.getShouldFireTime(),job.getState(),job.getBatchTime());
     }
 
     @Transactional
@@ -135,10 +135,17 @@ public class JobService {
 
     }
 
-
     public PageData<ExecutionLog> getLogs(String jobId) {
         List<ExecutionLog> data = logRepository.findAllByJobId(jobId);
         return new PageData<>(data.size(), data);
+    }
+
+    // get the latest job of this task.
+    public Job getLatestJobByTaskName(String taskName) {
+        return jobRepository.findAllByTaskName(taskName).stream().
+                sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? -1 : 1)
+                .findFirst()
+                .orElse(null);
     }
 
 }

@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -60,6 +61,8 @@ public class JobHelper {
     JobService jobService;
     @Inject
     ExecParamHelper execParamHelper;
+    @Inject
+    TaskDependencyRepository taskDependencyRepository;
 
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
@@ -68,24 +71,31 @@ public class JobHelper {
     @Value(value = "${idc.scheduler.retryCount:3}")
     private Integer retryCount;
 
-    // todo below need to persistence
+    // todo below need to persistence(store into database)
     private BlockingQueue<String> nodeJobWaitQueue = Queues.newLinkedBlockingQueue(); // nodeJobId
     private Map<String, AtomicInteger> nodeJobRetryCount = Maps.newConcurrentMap();// key -> nodeJobId, value -> the count of nodeJob run
-    private Map<String, HashSet<String>> nodeJobPausedMap = new HashMap<>(); // key -> containerId ,value ->   paused nodeJobIds
+    private Map<String, HashSet<String>> nodeJobPausedMap = Maps.newConcurrentMap(); // key -> containerId ,value ->  those nodeJob which call executeNodeJob method and then should exec after resume.
+    private Set<String> jobWaitSet = Sets.newConcurrentHashSet(); // jobId that waited because of dependencies between task.
 
     //==============================================  processor call
 
-    public void start(AbstractJob job) {
-        if (job.getState().isComplete()) {
+    public void start(AbstractJob abstractJob) {
+        if (abstractJob.getState().isComplete()) {
             throw new JobException("任务已执行");
         }
-        if (job.getTask() == null) {
+        if (abstractJob.getTask() == null) {
             throw new JobException("任务不存在");
         }
-        if (job.getTaskType() == TaskType.WORKFLOW) {
-            executeJob(job.asJob());
+        if (abstractJob.getTaskType() == TaskType.WORKFLOW) {
+            Job job = abstractJob.asJob();
+            if (jobCanExec(job)) {
+                executeJob(job);
+            } else {
+                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞",job.getTaskName(),job.getId(),job.getBatchTime().toString());
+                jobWaitSet.add(job.getId());
+            }
         } else {
-            executeNodeJob(job.asNodeJob());
+            executeNodeJob(abstractJob.asNodeJob());
         }
     }
 
@@ -99,6 +109,7 @@ public class JobHelper {
         if (!abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         } else {
+            notifyWaitJob();
             flushJobStateAndHandleTriggerState(abstractJob.asJob());
         }
         // notify wait queue
@@ -134,11 +145,6 @@ public class JobHelper {
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
             Job parent = getParentByNodeJob(abstractJob.asNodeJob());
-//            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
-//            // only the parent's state is running.we need modify parent's state
-//            if (parent.getState().equals(JobState.RUNNING)) {
-//                modifyJobState(parent, JobState.FAILED);
-//            }
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
@@ -163,9 +169,6 @@ public class JobHelper {
      * @param job
      */
     public void redo(AbstractJob job) {
-        if (job.getState().isSuccess()) {
-            throw new AppException("该job已完成:" + job.getId());
-        }
         if (job.getTaskType() == TaskType.WORKFLOW) {
             // cache running param
             List<ExecParam> execParams = job.asJob().getParams();
@@ -181,7 +184,7 @@ public class JobHelper {
 
             Job newJob = jobRepository.findById(job.getId()).get();
             // edit run param
-            executeJob(newJob);
+            start(newJob);
 //            flushJobStateAndHandleTriggerState(newJob);
         } else {
             // create new nodeJob instance
@@ -223,6 +226,7 @@ public class JobHelper {
         if (!job.isJob()) {
             flushParentStateAndHandleTriggerState(job.asNodeJob());
         } else {
+            notifyWaitJob();
             flushJobStateAndHandleTriggerState(job.asJob());
         }
         // notify wait queue
@@ -307,22 +311,29 @@ public class JobHelper {
      * @param jobId jobId
      */
     public synchronized void pause(String jobId) {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
-        if (job.getState().isPaused()) {
+        AbstractJob abstractJob = allJobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
+        if (abstractJob.getState().isPaused()) {
             throw new AppException("该实例job[%s]已暂停", jobId);
         }
-        if (job.getSubJobs().stream().noneMatch(nd -> nd.getState().equals(JobState.NONE) &&
-                nodeJobWaitQueue.stream().noneMatch(nodeJobId -> nodeJobId.equals(nd.getId())))) {
-            throw new AppException("暂停失败，该实例不存在可以暂停的节点任务");
-        }
-        modifyJobState(job, JobState.PAUSED);
-        // modify those job whose state is none and isn't in waitQueue.
-        job.getSubJobs().forEach(nd -> {
-            if (nd.getState().equals(JobState.NONE) && nodeJobWaitQueue.stream().noneMatch(nodeJobId -> nodeJobId.equals(nd.getId()))) {
-                modifyJobState(nd, JobState.PAUSED);
+        if (abstractJob.isJob()) {
+            if (abstractJob.getSubJobs().stream().noneMatch(nd -> nd.getState().equals(JobState.NONE))) {
+                throw new AppException("暂停失败，该实例不存在可以暂停的节点任务");
             }
-        });
-        flushJobStateAndHandleTriggerState(job);
+            modifyJobState(abstractJob, JobState.PAUSED);
+            // modify those job whose state is none and isn't in waitQueue.
+            abstractJob.getSubJobs().forEach(nd -> {
+                if (nd.getState().equals(JobState.NONE)) {
+                    modifyJobState(nd, JobState.PAUSED);
+                }
+            });
+            flushJobStateAndHandleTriggerState(abstractJob.asJob());
+        } else {
+            if (!abstractJob.getState().isNone()) {
+                throw new AppException("该实例nodeJob[%s]未处于初始化状态", jobId);
+            }
+            modifyJobState(abstractJob, JobState.PAUSED);
+            flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
+        }
     }
 
     /**
@@ -331,16 +342,22 @@ public class JobHelper {
      * @param jobId jobId
      */
     public synchronized void resume(String jobId) {
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
-        if (!job.getState().equals(JobState.PAUSED)) {
+        AbstractJob abstractJob = allJobRepository.findById(jobId).orElseThrow(() -> new AppException("未发现jobId[%s]的实例任务", jobId));
+        if (!abstractJob.getState().isPaused()) {
             throw new AppException("该实例job[%s]未暂停", jobId);
         }
-        // notify those paused nodeJob.
-        resumePausedNodeJobs(job);
-        flushJobStateAndHandleTriggerState(job);
+        if (abstractJob.isJob()) {
+            // notify those paused nodeJob.
+            resumePausedNodeJobsByJob(abstractJob.asJob());
+            flushJobStateAndHandleTriggerState(abstractJob.asJob());
+        } else {
+            resumePausedNodeJob(abstractJob.asNodeJob());
+            flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
+        }
+
     }
 
-    //==============================================  this class call
+    //==============================================  inner call
 
     private void checkRunning(AbstractJob job) {
         if (job.getState().isComplete()) {
@@ -498,16 +515,22 @@ public class JobHelper {
             for (int i = 0; i < Math.min(needReleaseJobs, nodeJobWaitQueue.size()); i++) {
                 if (!nodeJobWaitQueue.isEmpty()) {
                     try {
-                        Optional<NodeJob> nodeJobInWaitQueue = nodeJobRepository.findById(nodeJobWaitQueue.take()); // this job'state could be illegal;  need validate
+                        String nodeJobId = nodeJobWaitQueue.take();
+                        Optional<NodeJob> nodeJobInWaitQueue = nodeJobRepository.findById(nodeJobId); // this job'state could be illegal;  need validate
                         if (nodeJobInWaitQueue.isPresent()) {
-                            LOGGER.info("任务出队：nodeJob[{}]", nodeJobInWaitQueue.get().getId());
-                            if (nodeJobInWaitQueue.get().getState().equals(JobState.NONE)) {
+                            LOGGER.info("任务出队：nodeJob[{}]", nodeJobId);
+                            if (nodeJobInWaitQueue.get().getState().isNone() || nodeJobInWaitQueue.get().getState().isPaused()) {
                                 // this operation will lose one callback of message.so we adopt i-- to offset this operation and need twice check by nodeJobWaitQueue.isEmpty()
+                                if (nodeJobInWaitQueue.get().getState().isPaused()) {
+                                    i--;
+                                }
                                 executeNodeJob(nodeJobInWaitQueue.get());
                             } else {
+                                LOGGER.info("任务状态异常：nodeJob[{}]", nodeJobInWaitQueue.get().getId());
                                 i--;
                             }
                         } else {
+                            LOGGER.info("任务已被删除：nodeJob[{}]", nodeJobId);
                             i--;
                         }
                     } catch (InterruptedException e) {
@@ -522,12 +545,14 @@ public class JobHelper {
     }
 
     private void addNodeJobToWaitQueue(NodeJob nodeJob) {
-        try {
-            LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]", nodeJob.getId());
-            nodeJobWaitQueue.put(nodeJob.getId());
-        } catch (InterruptedException e) {
-            LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]", nodeJob.getId());
-            e.printStackTrace();
+        if (!nodeJobWaitQueue.contains(nodeJob.getId())) { // redo success job will cause the same nodeJobId was putted into nodeJobWaitQueue
+            try {
+                LOGGER.info("达到最大并发数，任务入队：nodeJob[{}]", nodeJob.getId());
+                nodeJobWaitQueue.put(nodeJob.getId());
+            } catch (InterruptedException e) {
+                LOGGER.error("NodeJob等待队列入队异常:nodeJob[{}]", nodeJob.getId());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -558,8 +583,9 @@ public class JobHelper {
      * 1.fail:when all subJobs was done and there exist one and more subJobs is fail,the job'state is fail
      * 2.success: all subJobs was done and all subJobs was success,the job'state is success
      * 3.running:when there exist one nodeJob is running ,the job'state is running.
+     * 4.paused:when there isn't one nodeJob is running and exist one and more nodeJob is paused,then the job'state is paused
      * <p>
-     * attention:the caller of this method must after modifyJobState and onJobFinished and runNextJob.
+     * attention:the caller of this method must after modifyJobState or onJobFinished or runNextJob.
      *
      * @param nodeJob the nodeJob
      */
@@ -570,7 +596,8 @@ public class JobHelper {
     private synchronized void flushJobStateAndHandleTriggerState(Job job) {
         // indicate whether the job is the latest job
         // if the job is the latest job.we should sync trigger's state.
-        boolean isLatestJob = getLatestJobByTaskName(job.getTaskName()).getId().equals(job.getId());
+        Job latestJob = jobService.getLatestJobByTaskName(job.getTaskName());
+        boolean isLatestJob = latestJob != null && latestJob.getId().equals(job.getId());
         // flush job state
         List<NodeJob> subJobs = job.getSubJobs();
         if (subJobs.isEmpty()) {
@@ -578,21 +605,17 @@ public class JobHelper {
             return;
         }
 
-        if (subJobs.stream().anyMatch(nd -> nd.getState().isPaused())) {
-            modifyJobState(job, JobState.PAUSED);
-            return;
-        }
-
         // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running or paused
         // attention:state of the job may be running or paused.if the state is paused.need modifyJobState and validate job'state before this method.
-        boolean inNodeJobWaitQueue = false;
-        for (NodeJob nodeJob : subJobs) {
-            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob.getId())) {
-                inNodeJobWaitQueue = true;
-                break;
-            }
-        }
-        if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
+//        boolean inNodeJobWaitQueue = false;
+//        for (NodeJob nodeJob : subJobs) {
+//            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob.getId())) {
+//                inNodeJobWaitQueue = true;
+//                break;
+//            }
+//        }
+//        if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
             if (!job.getState().equals(JobState.RUNNING)) {
                 modifyJobState(job, JobState.RUNNING);
                 if (isLatestJob) {
@@ -607,6 +630,12 @@ public class JobHelper {
             }
             return;
         }
+
+        if (subJobs.stream().anyMatch(nd -> nd.getState().isPaused())) {
+            modifyJobState(job, JobState.PAUSED);
+            return;
+        }
+
         if (subJobs.stream().anyMatch(nd -> nd.getState().isFailure())) {
             modifyJobState(job, JobState.FAILED);
             if (isLatestJob) {
@@ -646,10 +675,12 @@ public class JobHelper {
     }
 
     private void addNodeJobToPausedMap(NodeJob nodeJob) {
-        LOGGER.info("job[{}]暂停,nodeTask[{}],nodeJob[{}]进入暂停等待区", nodeJob.getContainer(), nodeJob.getNodeTask().getTaskName(), nodeJob.getId());
         HashSet<String> nodeJobsInPausedMap = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
-        nodeJobsInPausedMap.add(nodeJob.getId());
-        nodeJobPausedMap.put(nodeJob.getContainer(), nodeJobsInPausedMap);
+        if (!nodeJobsInPausedMap.contains(nodeJob.getId())) { // redo success job will cause the same nodeJobId was added into nodeJobPausedMap
+            LOGGER.info("job[{}]暂停,nodeTask[{}],nodeJob[{}]进入暂停等待区", nodeJob.getContainer(), nodeJob.getNodeTask().getTaskName(), nodeJob.getId());
+            nodeJobsInPausedMap.add(nodeJob.getId());
+            nodeJobPausedMap.put(nodeJob.getContainer(), nodeJobsInPausedMap);
+        }
     }
 
     private TriggerKey getTriggerKeyByNodeJob(NodeJob nodeJob) {
@@ -658,14 +689,7 @@ public class JobHelper {
                 .getTask().getTriggerKey();
     }
 
-    // get the latest job of this task.
-    private Job getLatestJobByTaskName(String taskName) {
-        return jobRepository.findAllByTaskName(taskName).stream().
-                sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? -1 : 1)
-                .findFirst().get();
-    }
-
-    private void resumePausedNodeJobs(Job job) {
+    private void resumePausedNodeJobsByJob(Job job) {
         job.getSubJobs().forEach(nd -> {
             if (nd.getState().equals(JobState.PAUSED)) {
                 modifyJobState(nd, JobState.NONE);
@@ -673,8 +697,65 @@ public class JobHelper {
         });
 
         nodeJobPausedMap.getOrDefault(job.getId(), Sets.newHashSet())
-                .forEach(nodeJobId -> nodeJobRepository.findById(nodeJobId).ifPresent(this::executeNodeJob));
+                .forEach(nodeJobId -> nodeJobRepository.findById(nodeJobId).ifPresent(nd -> {
+                    LOGGER.info("nodeJob[{}]暂停等待中恢复",nd.getId());
+                    executeNodeJob(nd);
+                }));
         nodeJobPausedMap.remove(job.getId());
+    }
+
+    private void resumePausedNodeJob(NodeJob nodeJob) {
+        if (nodeJob.getState().isPaused()) {
+            modifyJobState(nodeJob, JobState.NONE);
+        }
+        HashSet<String> nodeJobPausedIds = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
+        if (nodeJobPausedIds.contains(nodeJob.getId())) {
+            nodeJobPausedIds.remove(nodeJob.getId());
+            LOGGER.info("nodeJob[{}]暂停等待中恢复",nodeJob.getId());
+            executeNodeJob(nodeJob);
+        }
+    }
+
+    /**
+     * judge the job whether can execute,the condition is that we need all jobs of task depended by the task of this job and those job have the same batchTime.
+     * @param job
+     * @return
+     */
+    private boolean jobCanExec(Job job) {
+        for (TaskDependency td: taskDependencyRepository.findAllByTarget(job.getTaskName())) {
+            switch (td.getPrinciple()) {
+                // at present,we only support the dependencies of tasks whose schedule type is monthly.
+                case MONTHLY_2_MONTHLY:
+                    Optional<Job> jobDepended = jobRepository.findByTaskNameAndBatchTime(td.getSource(),job.getBatchTime());
+                    if (!jobDepended.isPresent() || !jobDepended.get().getState().isSuccess()) {
+                        return false;
+                    }
+                    break;
+                case DAYLY_2_MONTHLY:
+                case MONTHLY_2_DAYLY:
+                case DAYLY_2_DAYLY:
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * when a job success or skip ;we need to call this method to notify job waited.
+     */
+    private void notifyWaitJob() {
+        jobWaitSet.forEach(jobId -> {
+            Optional<Job> jobWaited = jobRepository.findById(jobId);
+            if (jobWaited.isPresent()) {
+                if (jobCanExec(jobWaited.get())) {
+                    jobWaitSet.remove(jobId);
+                    executeJob(jobWaited.get());
+                }
+            } else {
+                jobWaitSet.remove(jobId);
+            }
+        });
     }
 
 }

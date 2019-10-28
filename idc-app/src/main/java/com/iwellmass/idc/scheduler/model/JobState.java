@@ -49,4 +49,8 @@ public enum JobState {
 	public boolean isPaused() {
 		return this == PAUSED;
 	}
+
+	public boolean isNone() {
+		return this == NONE;
+	}
 }
