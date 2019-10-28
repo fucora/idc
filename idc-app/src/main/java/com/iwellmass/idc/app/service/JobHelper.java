@@ -140,9 +140,9 @@ public class JobHelper {
             logger.log(executionLog);
         } else {
             // modify node'parent   state to failed
-            ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+            ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(abstractJob.getId(), "节点任务执行失败，taskId[{}]，nodeJobId[{}]，state[{}]",
                     message.getThrowable() == null ? null : message.getStackTrace(),
-                    abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
+                    abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
             Job parent = getParentByNodeJob(abstractJob.asNodeJob());
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
@@ -189,8 +189,8 @@ public class JobHelper {
         } else {
             // create new nodeJob instance
             NodeJob newNodeJob = new NodeJob(job.asNodeJob().getContainer(), job.asNodeJob().getNodeTask());
-            logger.log(job.getId(), "重跑节点任务，oldNodeJobId[{}]，newNodeJobId[{}]，taskId[{}]，domain[{}]",
-                    job.getId(), newNodeJob.getId(), job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain());
+            logger.log(job.getId(), "重跑节点任务，oldNodeJobId[{}]，newNodeJobId[{}]，taskId[{}]",
+                    job.getId(), newNodeJob.getId(), job.asNodeJob().getNodeTask().getTaskId());
             // clear
             nodeJobRepository.delete(job.asNodeJob());
             nodeJobRepository.save(newNodeJob);
@@ -214,8 +214,8 @@ public class JobHelper {
             // modify state of all subJobs of the job to skip
             job.getSubJobs().forEach(subJob -> {
                 if (!subJob.getState().isSuccess()) {
-                    logger.log(subJob.getId(), "跳过节点实例，nodeJobId[{}]，taskId[{}]，domain[{}]，state[{}]"
-                            , subJob.getId(), subJob.getNodeTask().getTaskId(), subJob.getNodeTask().getDomain(), subJob.getState().name());
+                    logger.log(subJob.getId(), "跳过节点实例，nodeJobId[{}]，taskId[{}]，state[{}]"
+                            , subJob.getId(), subJob.getNodeTask().getTaskId(), subJob.getState().name());
                     subJob.setState(JobState.SKIPPED);
                 }
             });
@@ -235,8 +235,8 @@ public class JobHelper {
 
     public void ready(AbstractJob job) {
         checkRunning(job);
-        logger.log(job.getId(), "节点任务成功派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
+        logger.log(job.getId(), "节点任务成功派发，taskId[{}]，nodeJobId[{}]，state[{}]",
+                job.asNodeJob().getNodeTask().getTaskId(), job.getId(), job.getState().name());
         if (job.getState() == JobState.ACCEPTED) {
             modifyJobState(job, JobState.RUNNING);
         }
@@ -245,11 +245,11 @@ public class JobHelper {
     public void running(AbstractJob job, JobMessage jobMessage) {
         checkRunning(job);
         if (Strings.isNullOrEmpty(jobMessage.getMessage())) {
-            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name());
+            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，nodeJobId[{}]，state[{}]",
+                    job.asNodeJob().getNodeTask().getTaskId(), job.getId(), job.getState().name());
         } else {
-            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
-                    job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState().name(), jobMessage.getMessage());
+            logger.log(job.getId(), "节点任务正在执行，taskId[{}]，nodeJobId[{}]，state[{}]，detail[{}]",
+                    job.asNodeJob().getNodeTask().getTaskId(), job.getId(), job.getState().name(), jobMessage.getMessage());
         }
 
         if (job.getState() == JobState.ACCEPTED) {
@@ -268,8 +268,8 @@ public class JobHelper {
         // so there do a twice validate
         if (openCallbackControl) {
             if (job.getState().isRunning()) {
-                logger.log(job.getId(), "节点任务运行超时，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                        job.asNodeJob().getNodeTask().getTaskId(), job.asNodeJob().getNodeTask().getDomain(), job.getId(), job.getState());
+                logger.log(job.getId(), "节点任务运行超时，taskId[{}]，nodeJobId[{}]，state[{}]",
+                        job.asNodeJob().getNodeTask().getTaskId(), job.getId(), job.getState());
                 failed(job, FailMessage.newMessage(job.getId()));
             }
         }
@@ -282,9 +282,9 @@ public class JobHelper {
      */
     public void retry(NodeJob nodeJob, JobMessage message) {
         LOGGER.info("NodeJob执行失败，失败重试第{}次，nodeJob[{}]", nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getId());
-        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
+        ExecutionLog nodeJobExecutionLog = ExecutionLog.createLog(nodeJob.getId(), "节点任务执行失败，失败重试第{}次，taskId[{}]，nodeJobId[{}]，state[{}]",
                 message.getThrowable() == null ? null : message.getStackTrace(),
-                nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob, nodeJob.getState().name());
+                nodeJobRetryCount.get(nodeJob.getId()).get(), nodeJob.getNodeTask().getTaskId(), nodeJob, nodeJob.getState().name());
         logger.log(nodeJobExecutionLog);
         modifyJobState(nodeJob, JobState.NONE);
         executeNodeJob(nodeJob);
@@ -413,8 +413,8 @@ public class JobHelper {
                 // concurrent control
                 if (canDispatch()) {
                     modifyJobState(nodeJob, JobState.ACCEPTED);
-                    logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]"
-                            , nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
+                    logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，nodeJobId[{}]，state[{}]"
+                            , nodeJob.getNodeTask().getTaskId(), nodeJob.getId(), nodeJob.getState());
                     if (openCallbackControl) {
                         TaskEventPlugin.eventService(scheduler).send(TimeoutMessage.newMessage(nodeJob.getId()));
                     }
@@ -477,8 +477,8 @@ public class JobHelper {
             Workflow workflow = workflowRepository.findById(nodeJob.getWorkflowId()).get();
             Job parent = getParentByNodeJob(nodeJob);
             parent.getTask().setWorkflow(workflow);
-            logger.log(nodeJob.getId(), "节点任务执行完毕，批次时间[{}]，taskId[{}]，domain[{}]，nodeJobId[{}]，state[{}]",
-                    parent.getShouldFireTime().format(formatter), nodeJob.getNodeTask().getTaskId(), nodeJob.getNodeTask().getDomain(), nodeJob.getId(), nodeJob.getState());
+            logger.log(nodeJob.getId(), "节点任务执行完毕，批次时间[{}]，taskId[{}]，nodeJobId[{}]，state[{}]",
+                    parent.getShouldFireTime().format(formatter), nodeJob.getNodeTask().getTaskId(), nodeJob.getId(), nodeJob.getState());
             runNextJob(parent, nodeJob.getNodeId());
         }
     }

@@ -41,11 +41,6 @@ public class ExecuteRequest{
 	// ========================= use to build url for request
 
 	/**
-	 * 业务域
-	 */
-	private String domain;
-
-	/**
 	 * 业务类型
 	 */
 	private String contentType;
@@ -108,14 +103,6 @@ public class ExecuteRequest{
 
 	public void setLoadDate(String loadDate) {
 		this.loadDate = loadDate;
-	}
-
-	public String getDomain() {
-		return domain;
-	}
-
-	public void setDomain(String domain) {
-		this.domain = domain;
 	}
 
 	public String getContentType() {

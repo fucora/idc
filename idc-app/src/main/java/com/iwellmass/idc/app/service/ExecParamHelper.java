@@ -45,7 +45,6 @@ public class ExecParamHelper {
         request.setParams(job.getParams());
         request.setLoadDate(getLoadDate(job.getParams()));
         // build req url
-        request.setDomain(nodeTask.getDomain());
         request.setContentType(nodeTask.getContentType());
         // redundant
         request.setNodeJobId(nodeJob.getId());

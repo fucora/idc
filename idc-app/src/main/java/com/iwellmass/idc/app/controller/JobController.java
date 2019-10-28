@@ -107,9 +107,9 @@ public class JobController {
     }
 
     @ApiOperation("test")
-    @GetMapping("/{jobId}/{template}/{content}")
-    public ServiceResult<String> test(@PathVariable(name = "jobId") String jobId,@PathVariable(name = "template") String template,@PathVariable(name = "content") String content) {
-        return ServiceResult.success(jobService.test(jobId,template,content));
+    @GetMapping("/test")
+    public ServiceResult test() {
+        return ServiceResult.success(jobService.test());
     }
 
     @ApiOperation("修改并发数")
