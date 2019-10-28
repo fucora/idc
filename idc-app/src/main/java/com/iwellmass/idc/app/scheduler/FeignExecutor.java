@@ -46,13 +46,13 @@ public class FeignExecutor implements IDCJobExecutor {
 
 //		IDCJob idcJob = registryMap.computeIfAbsent(request.getDomain(),request.getDomain(),this::newFeignClient);
 
-        String _key = request.getDomain() + request.getContentType();
-        IDCJob idcJob = registryMap.computeIfAbsent(_key, (key) -> newFeignClient(request.getDomain(), request.getContentType()));
+        String _key = request.getContentType();
+        IDCJob idcJob = registryMap.computeIfAbsent(_key, (key) -> newFeignClient(request.getContentType()));
         idcJob.execute(request);
     }
 
-    private IDCJob newFeignClientold(String domain) {
-        String path = String.format("http://%s/idc-job/execute", domain);
+    private IDCJob newFeignClientold() {
+        String path = String.format("http://data-factory-executor/idc-job/execute");
         LOGGER.info("Create fegin-base IDCJob: {}", path);
         IDCJob feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder).contract(contract)
                 .target(new CustomerTarget<>(IDCJob.class, path, getToken()));
@@ -68,8 +68,8 @@ public class FeignExecutor implements IDCJobExecutor {
 //		return service;
 //	}
 
-    private IDCJob newFeignClient(String domain, String contentType) {
-        String path = "http://" + domain + IDCJobExecutorService.toURI(contentType);
+    private IDCJob newFeignClient(String contentType) {
+        String path = "http://data-factory-executor" + IDCJobExecutorService.toURI(contentType);
         LOGGER.info("create fegin client: {}", path);
         IDCJob feginClient = Feign.builder().client(client).encoder(encoder).decoder(decoder)
                 .contract(contract).target(new CustomerTarget<>(IDCJob.class, path, getToken()));

@@ -164,11 +164,6 @@ public class WorkflowService {
             tk.setContentType(node.getContentType());
             tk.setTaskType(TaskType.SIMPLE);
             tk.setTaskId(Objects.requireNonNull(node.getTaskId(), "数据格式错误"));
-            if (systemNode.contains(node.getTaskId())) {
-                tk.setDomain("idc");
-            } else {
-                tk.setDomain(Objects.requireNonNull(node.getDomain(), "数据格式错误"));
-            }
             return tk;
         }).collect(Collectors.toList());
 
@@ -304,11 +299,6 @@ public class WorkflowService {
                 nodeTask.setTaskName(nt.getTaskName());
                 nodeTask.setContentType(nt.getContentType());
                 nodeTask.setTaskId(Objects.requireNonNull(nt.getTaskId(), "数据格式错误"));
-                if (systemNode.contains(nt.getTaskId())) {
-                    nodeTask.setDomain("idc");
-                } else {
-                    nodeTask.setDomain(Objects.requireNonNull(nt.getDomain(), "数据格式错误"));
-                }
                 return nodeTask;
             }).collect(Collectors.toList());
         }

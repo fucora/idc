@@ -36,12 +36,6 @@ public abstract class AbstractTask {
 	private TaskType taskType;
 
 	/**
-	 * 任务域
-	 */
-	@Column(name = "domain")
-	String domain;
-	
-	/**
 	 * 任务描述
 	 */
 	@Column(name = "description")
