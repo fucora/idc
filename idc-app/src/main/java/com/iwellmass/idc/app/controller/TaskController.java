@@ -14,6 +14,7 @@ import com.iwellmass.idc.app.vo.task.ManualUpdateVo;
 import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
 import com.iwellmass.idc.app.vo.task.ReTaskVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
+import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.scheduler.model.IDCScheduler;
 import com.iwellmass.idc.scheduler.model.Task;
 import io.swagger.annotations.ApiOperation;
@@ -42,7 +43,7 @@ public class TaskController {
 
     @ApiOperation("获取调度运行时信息")
     @PostMapping("/runtime")
-    public ServiceResult<PageData<TaskRuntimeVO>> getJobRuntime(@RequestBody TaskQueryParam jqm) {
+    public ServiceResult<PageData<TaskRuntimeVO>> getTaskRuntime(@RequestBody TaskQueryParam jqm) {
         PageData<TaskRuntimeVO> ret = taskService.query(jqm);
         return ServiceResult.success(ret);
     }
@@ -157,6 +158,12 @@ public class TaskController {
     @GetMapping("/{taskName}/getTaskDependencies")
     public ServiceResult<TaskGraphVO> getTaskDependencies(@PathVariable(name = "taskName") String taskName) {
         return ServiceResult.success(taskService.getTaskDependencies(taskName));
+    }
+
+    @ApiOperation("获取调度运行时信息")
+    @GetMapping("{cronType}/getTaskToDependency")
+    public ServiceResult<List<TaskRuntimeVO>> getTaskToDependency(@PathVariable(name = "cronType") CronType cronType) {
+        return ServiceResult.success(taskService.getTaskToDependency(cronType));
     }
 
 }

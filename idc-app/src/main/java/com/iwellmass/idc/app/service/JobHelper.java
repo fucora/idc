@@ -107,7 +107,7 @@ public class JobHelper {
         if (!abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         } else {
-            notifyWaiJob();
+            notifyWaitJob();
             flushJobStateAndHandleTriggerState(abstractJob.asJob());
         }
         // notify wait queue
@@ -143,11 +143,6 @@ public class JobHelper {
                     abstractJob.asNodeJob().getNodeTask().getTaskId(), abstractJob.asNodeJob().getNodeTask().getDomain(), abstractJob.getId(), abstractJob.getState().name());
             logger.log(nodeJobExecutionLog);
             Job parent = getParentByNodeJob(abstractJob.asNodeJob());
-//            // caller of this method may by redo method.before redo.the parent'state is likely to be complete.
-//            // only the parent's state is running.we need modify parent's state
-//            if (parent.getState().equals(JobState.RUNNING)) {
-//                modifyJobState(parent, JobState.FAILED);
-//            }
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
             ExecutionLog jobExecutionLog = ExecutionLog.createLog(parent.getId(), "任务实例执行失败，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
                     null,
@@ -229,7 +224,7 @@ public class JobHelper {
         if (!job.isJob()) {
             flushParentStateAndHandleTriggerState(job.asNodeJob());
         } else {
-            notifyWaiJob();
+            notifyWaitJob();
             flushJobStateAndHandleTriggerState(job.asJob());
         }
         // notify wait queue
@@ -747,7 +742,7 @@ public class JobHelper {
     /**
      * when a job success or skip ;we need to call this method to notify job waited.
      */
-    private void notifyWaiJob() {
+    private void notifyWaitJob() {
         jobWaitSet.forEach(jobId -> {
             Optional<Job> jobWaited = jobRepository.findById(jobId);
             if (jobWaited.isPresent()) {

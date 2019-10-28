@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.datafactory.common.vo.TaskDetailVO;
 import com.iwellmass.idc.app.rpc.DFTaskService;
@@ -142,23 +143,18 @@ public class TaskService {
     }
 
     public PageData<TaskRuntimeVO> query(TaskQueryParam jqm) {
-        return QueryUtils.doJpaQuery(jqm, (p) -> {
-            Function<Task, TaskRuntimeVO> converter = t -> {
-                TaskRuntimeVO vo = new TaskRuntimeVO();
-                BeanUtils.copyProperties(t, vo);
-                vo.setWorkflowName(t.getWorkflow().getWorkflowName());
-                vo.setCanDelete(canDelete(t.getTaskName()));
-                twiceValidateState(t, vo);
-                return vo;
-            };
-            Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
-            if (p == null || (p.getPageNumber() == 0 && p.getPageSize() == 0)) {
-                List<Task> tasks = taskRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createtime"));
-                return new PageImpl<>(tasks.stream().map(converter).collect(Collectors.toList()));
-            } else {
-                return taskRepository.findAll(spec, PageRequest.of(p.getPageNumber(), p.getPageSize(), Sort.by(Sort.Direction.DESC, "createtime"))).map(converter);
-            }
-        });
+        Specification<Task> spec = SpecificationBuilder.toSpecification(jqm);
+        Page<TaskRuntimeVO> taskRuntimeVOPage = taskRepository
+                .findAll(spec, PageRequest.of(jqm.getPage(), jqm.getLimit(), Sort.by(Sort.Direction.DESC, "createtime")))
+                .map(t -> {
+                    TaskRuntimeVO vo = new TaskRuntimeVO();
+                    BeanUtils.copyProperties(t, vo);
+                    vo.setWorkflowName(t.getWorkflow().getWorkflowName());
+                    vo.setCanDelete(canDelete(t.getTaskName()));
+                    twiceValidateState(t, vo);
+                    return vo;
+                });
+        return new PageData<>((int) taskRuntimeVOPage.getTotalElements(), taskRuntimeVOPage.getContent());
     }
 
     public List<Assignee> getAllAssignee() {
@@ -264,23 +260,26 @@ public class TaskService {
     }
 
     public TaskGraphVO getTaskDependencies(String taskName) {
-        return findRecordByTaskNameAsSourceAndTarget(taskName, new TaskGraphVO());
+        return findRecordByTaskNameAsSourceAndTarget(taskName, new TaskGraphVO(), Sets.newConcurrentHashSet());
     }
 
-    private TaskGraphVO findRecordByTaskNameAsSourceAndTarget(String taskName, TaskGraphVO taskGraphVO) {
-        addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName), taskGraphVO);
-        List<TaskDependency> targetTaskDependencies = taskDependencyRepository.findAllBySource(taskName);
-        List<TaskDependency> sourceTaskDependencies = taskDependencyRepository.findAllByTarget(taskName);
-        targetTaskDependencies.forEach(td -> {
-            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()), taskGraphVO);
-            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(taskName), new TargetVO(td.getTarget())), taskGraphVO);
-            findRecordByTaskNameAsSourceAndTarget(td.getTarget(), taskGraphVO);
-        });
-        sourceTaskDependencies.forEach(td -> {
-            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getSource()), td.getSource()), taskGraphVO);
-            addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(td.getSource()), new TargetVO(taskName)), taskGraphVO);
-            findRecordByTaskNameAsSourceAndTarget(td.getSource(), taskGraphVO);
-        });
+    private TaskGraphVO findRecordByTaskNameAsSourceAndTarget(String taskName, TaskGraphVO taskGraphVO, Set<String> taskNamesProcessed) {
+        if (!taskNamesProcessed.contains(taskName)) {
+            taskNamesProcessed.add(taskName);
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName), taskGraphVO);
+            List<TaskDependency> targetTaskDependencies = taskDependencyRepository.findAllBySource(taskName);
+            List<TaskDependency> sourceTaskDependencies = taskDependencyRepository.findAllByTarget(taskName);
+            targetTaskDependencies.forEach(td -> {
+                addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()), taskGraphVO);
+                addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(taskName), new TargetVO(td.getTarget())), taskGraphVO);
+                findRecordByTaskNameAsSourceAndTarget(td.getTarget(), taskGraphVO, taskNamesProcessed);
+            });
+            sourceTaskDependencies.forEach(td -> {
+                addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getSource()), td.getSource()), taskGraphVO);
+                addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(td.getSource()), new TargetVO(taskName)), taskGraphVO);
+                findRecordByTaskNameAsSourceAndTarget(td.getSource(), taskGraphVO, taskNamesProcessed);
+            });
+        }
         return taskGraphVO;
     }
 
@@ -294,6 +293,20 @@ public class TaskService {
         if (taskGraphVO.getEdges().stream().map(EdgeVO::getId).noneMatch(id -> edgeVO.getId().equals(id))) {
             taskGraphVO.getEdges().add(edgeVO);
         }
+    }
+
+    public List<TaskRuntimeVO> getTaskToDependency(CronType cronType) {
+        return Lists.newArrayList(taskRepository.findAll()).stream()
+                .filter(tk -> tk.getProps() != null && CronType.valueOf(tk.getProps().get("cronType").toString()) == cronType)
+                .map(tk -> {
+                    TaskRuntimeVO vo = new TaskRuntimeVO();
+                    BeanUtils.copyProperties(tk, vo);
+                    vo.setWorkflowName(tk.getWorkflow().getWorkflowName());
+                    vo.setCanDelete(canDelete(tk.getTaskName()));
+                    twiceValidateState(tk, vo);
+                    return vo;
+                })
+                .collect(Collectors.toList());
     }
 
 }
