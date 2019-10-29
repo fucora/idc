@@ -14,7 +14,7 @@ spring:
       WRITE_DATES_AS_TIMESTAMPS: false
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://mysql.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
 
@@ -76,6 +76,11 @@ idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重
 ---
 spring:
   profiles: dev
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://devmysql.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
+    username: root
+    password: zjhz2017
   cloud:
     nacos:
       discovery:
