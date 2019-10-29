@@ -1,6 +1,14 @@
+server:
+  port: 9306
 spring:
   application:
     name: idc
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos.iwellmass.com
+      config:
+        server-addr: nacos.iwellmass.com
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -9,9 +17,6 @@ spring:
     url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
     username: root
     password: zjhz2017
-
-server:
-  port: 9306
 
 spring.jpa.hibernate.naming.physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 # spring.jpa.hibernate.ddl-auto: update
@@ -34,21 +39,6 @@ supervise:
     autoApprove: true
     accessTokenValiditySeconds: 28800
     refreshTokenValiditySeconds: 57600
-
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 1
-    leaseExpirationDurationInSeconds: 2
-    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
-    prefer-ip-address: true
-    instance-id: ${spring.cloud.client.ip-address}:${server.port}
-  client:
-    serviceUrl:
-      defaultZone: http://eureka.iwellmass.com:8761/eureka/
-    healthcheck:
-      enabled: true
-    lease:
-      duration: 5
 
 security:
   oauth2:
@@ -85,85 +75,11 @@ idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重
 
 ---
 spring:
-  profiles: online
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 1
-    leaseExpirationDurationInSeconds: 2
-    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
-    prefer-ip-address: true
-    instance-id: ${spring.cloud.client.ip-address}:${server.port}
-  client:
-    serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
-    healthcheck:
-      enabled: true
-    lease:
-      duration: 5
-
-idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60
-idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认关闭
-idc.scheduler.maxRunningJobs: 10  # 最大并发数，测试为10个
-idc.scheduler.retryCount: 3 # 单个任务失败后自动重试次数  默认重试3次
-
----
-spring:
-  profiles: gray
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://grayeureka.iwellmass.com/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
-  jpa:
-    show-sql: false
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 1
-    leaseExpirationDurationInSeconds: 2
-    status-page-url: http://grayeureka.iwellmass.com:${server.port}/swagger-ui.html
-    prefer-ip-address: true
-    instance-id: ${spring.cloud.client.ip-address}:${server.port}
-  client:
-    serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@grayeureka.iwellmass.com:8761/eureka/
-    healthcheck:
-      enabled: true
-    lease:
-      duration: 5
-    register-with-eureka: true
-
-idc.scheduler.start-auto: true
-idc.scheduler.callbackTimeout: 25  # 测试callbackTimeout 为25秒
-idc.scheduler.openCallbackControl: false       # 是否开启回调监控功能，默认关闭
-
----
-spring:
   profiles: dev
-  datasource:
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.iwellmass.com:3306/idc?characterEncoding=utf8&useSSL=false
-    username: root
-    password: zjhz2017
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 1
-    leaseExpirationDurationInSeconds: 2
-    status-page-url: http://eureka.iwellmass.com:${server.port}/swagger-ui.html
-    prefer-ip-address: true
-    instance-id: ${spring.cloud.client.ip-address}:${server.port}
-  client:
-    serviceUrl:
-      defaultZone: http://zjhz:zjhz!2017@eureka.iwellmass.com:8761/eureka/
-    healthcheck:
-      enabled: true
-    lease:
-      duration: 5
+  cloud:
+    nacos:
+      discovery:
+        namespace: dev
 
 idc.scheduler.start-auto: true
 idc.scheduler.callbackTimeout: 7200  # 测试callbackTimeout 为 2 * 60 * 60

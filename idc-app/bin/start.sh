@@ -19,7 +19,7 @@ then
         done
 fi
 
-nohup java -cp "./conf:lib/*" -Dspring.profiles.active=online com.iwellmass.idc.app.IDCApplication -Xms1024m -Xmx1024m  &
+nohup java -cp "./conf:lib/*" -Dspring.profiles.active=default com.iwellmass.idc.app.IDCApplication -Xms1024m -Xmx1024m  &
 pid=$!
 echo $pid > $PID_FILE;
 echo "start success"

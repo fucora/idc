@@ -6,12 +6,12 @@ services:
     build:
       context: ./idc-app
       args:
-        - profile=gray
+        - profile=default
     network_mode: "host"
     ports:
       - "9306:9306"
     environment:
-      - profile=gray
+      - profile=default
     volumes:
       - /web/logs:/web/logs
 networks:

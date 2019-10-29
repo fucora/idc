@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.SpringCloudApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -24,6 +25,7 @@ import com.iwellmass.idc.scheduler.SchedulerConfig;
 @EnableFeignClients
 @Configuration
 @EnableResourceServer
+@EnableDiscoveryClient
 @Import({ SchedulerConfig.class })
 public class IDCApplication {
 

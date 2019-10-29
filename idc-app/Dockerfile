@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM registry.iwellmass.com:5000/openjdk:8
 ARG profile
 ENV TZ=Asia/Shanghai
 RUN mkdir /app
