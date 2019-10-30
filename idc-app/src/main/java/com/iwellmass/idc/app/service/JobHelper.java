@@ -392,7 +392,8 @@ public class JobHelper {
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
         if (!nodeJob.getState().isPaused()) {
-            if (getParentByNodeJob(nodeJob).getState().equals(JobState.RUNNING) && !nodeJob.getState().equals(JobState.NONE)) {
+            // the nodeJob'state won't be none.this condition will be create by redo operation.
+            if (!nodeJob.getState().equals(JobState.NONE)) {
                 LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
                 return;
             }
