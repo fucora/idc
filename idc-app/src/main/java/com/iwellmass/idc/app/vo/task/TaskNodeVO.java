@@ -42,6 +42,9 @@ public class TaskNodeVO {
         if(latestJob == null) {
             this.id = taskName;
             this.taskName = taskName;
+            this.state = JobState.NONE;
+            this.loadDate = "";
+            this.batchTime = null;
         } else {
             this.id = latestJob.getTaskName();
             this.taskName = latestJob.getTaskName();
