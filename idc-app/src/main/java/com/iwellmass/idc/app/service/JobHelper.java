@@ -91,7 +91,7 @@ public class JobHelper {
             if (jobCanExec(job)) {
                 executeJob(job);
             } else {
-                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞",job.getTaskName(),job.getId(),job.getBatchTime().toString());
+                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞", job.getTaskName(), job.getId(), job.getBatchTime().toString());
                 jobWaitSet.add(job.getId());
             }
         } else {
@@ -397,6 +397,10 @@ public class JobHelper {
                 LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
                 return;
             }
+            if (!nodeJobWaitQueue.contains(nodeJob.getId())) {
+                LOGGER.info("nodeJob[{}]被多次触发,可能是redo成功或跳过的节点导致",nodeJob.getId());
+                return;
+            }
             if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
                 modifyJobState(nodeJob, JobState.FINISHED);
                 onJobFinished(nodeJob);
@@ -411,8 +415,8 @@ public class JobHelper {
                 return;
             }
             if (nodeJob.getState().equals(JobState.NONE)) {
-                // concurrent control
                 if (canDispatch()) {
+                    // concurrent control
                     modifyJobState(nodeJob, JobState.ACCEPTED);
                     logger.log(nodeJob.getId(), "节点任务准备派发，taskId[{}]，nodeJobId[{}]，state[{}]"
                             , nodeJob.getNodeTask().getTaskId(), nodeJob.getId(), nodeJob.getState());
@@ -699,7 +703,7 @@ public class JobHelper {
 
         nodeJobPausedMap.getOrDefault(job.getId(), Sets.newHashSet())
                 .forEach(nodeJobId -> nodeJobRepository.findById(nodeJobId).ifPresent(nd -> {
-                    LOGGER.info("nodeJob[{}]暂停等待中恢复",nd.getId());
+                    LOGGER.info("nodeJob[{}]暂停等待中恢复", nd.getId());
                     executeNodeJob(nd);
                 }));
         nodeJobPausedMap.remove(job.getId());
@@ -712,22 +716,23 @@ public class JobHelper {
         HashSet<String> nodeJobPausedIds = nodeJobPausedMap.getOrDefault(nodeJob.getContainer(), Sets.newHashSet());
         if (nodeJobPausedIds.contains(nodeJob.getId())) {
             nodeJobPausedIds.remove(nodeJob.getId());
-            LOGGER.info("nodeJob[{}]暂停等待中恢复",nodeJob.getId());
+            LOGGER.info("nodeJob[{}]暂停等待中恢复", nodeJob.getId());
             executeNodeJob(nodeJob);
         }
     }
 
     /**
      * judge the job whether can execute,the condition is that we need all jobs of task depended by the task of this job and those job have the same batchTime.
+     *
      * @param job
      * @return
      */
     private boolean jobCanExec(Job job) {
-        for (TaskDependency td: taskDependencyRepository.findAllByTarget(job.getTaskName())) {
+        for (TaskDependency td : taskDependencyRepository.findAllByTarget(job.getTaskName())) {
             switch (td.getPrinciple()) {
                 // at present,we only support the dependencies of tasks whose schedule type is monthly.
                 case MONTHLY_2_MONTHLY:
-                    Optional<Job> jobDepended = jobRepository.findByTaskNameAndBatchTime(td.getSource(),job.getBatchTime());
+                    Optional<Job> jobDepended = jobRepository.findByTaskNameAndBatchTime(td.getSource(), job.getBatchTime());
                     if (!jobDepended.isPresent() || !jobDepended.get().getState().isSuccess()) {
                         return false;
                     }
@@ -751,7 +756,7 @@ public class JobHelper {
             if (jobWaited.isPresent()) {
                 if (jobCanExec(jobWaited.get())) {
                     jobWaitSet.remove(jobId);
-                    LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,准备执行",jobId,jobWaited.get().getBatchTime().toString());
+                    LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,准备执行", jobId, jobWaited.get().getBatchTime().toString());
                     executeJob(jobWaited.get());
                 }
             } else {
