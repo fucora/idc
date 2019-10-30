@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.ScheduleType;
+import io.swagger.annotations.ApiModelProperty;
 import org.quartz.TriggerKey;
 
 import com.iwellmass.common.param.ExecParam;
@@ -123,6 +124,10 @@ public class Task extends AbstractTask {
     @Column(name = "duetime")
     @JsonFormat(pattern = "HH:mm:ss", timezone = "GMT+8")
     private LocalTime duetime;
+
+    @Column(name = "max_batch")
+    @ApiModelProperty("该调度计划允许执行的最大批次,值为0：任何一个批次均不可执行，仅对周期调度生效")
+    private Integer maxBatch;
 
     @Column(table = "QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
     @Convert(converter = LocalLongConverter.class)

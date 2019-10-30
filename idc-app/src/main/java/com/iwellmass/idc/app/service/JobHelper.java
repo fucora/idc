@@ -750,6 +750,7 @@ public class JobHelper {
             if (jobWaited.isPresent()) {
                 if (jobCanExec(jobWaited.get())) {
                     jobWaitSet.remove(jobId);
+                    LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,准备执行",jobId,jobWaited.get().getBatchTime().toString());
                     executeJob(jobWaited.get());
                 }
             } else {

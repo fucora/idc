@@ -10,6 +10,8 @@ import javax.annotation.Resource;
 import javax.xml.soap.Node;
 
 import com.google.common.collect.Lists;
+import com.google.common.graph.Graphs;
+import com.google.common.graph.Network;
 import com.iwellmass.common.util.Utils;
 import com.iwellmass.idc.app.vo.CloneWorkflowVO;
 import com.iwellmass.idc.scheduler.model.*;
@@ -320,6 +322,10 @@ public class WorkflowService {
         newWorkflow.setEdges(workflowEdges);
         newWorkflow.setNodeTasks(nodeTasks);
         workflowRepository.save(newWorkflow);
+    }
+
+    public static void main(String[] args) {
+
 
     }
 }

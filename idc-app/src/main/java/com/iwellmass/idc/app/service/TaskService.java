@@ -239,6 +239,9 @@ public class TaskService {
         jobRepository.deleteAll(jobs);
         // task
         Task task = taskRepository.findById(new TaskID(taskName)).orElseThrow(() -> new AppException("未发现taskName[%s]计划", taskName));
+        // task dependency
+//        taskDependencyRepository.deleteBySourceOrTarget(taskName, taskName);
+
         try {
             scheduler.unscheduleJob(task.getTriggerKey());
             taskRepository.delete(task);

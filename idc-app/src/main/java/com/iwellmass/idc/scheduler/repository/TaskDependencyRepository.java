@@ -12,6 +12,8 @@ public interface TaskDependencyRepository extends CrudRepository<TaskDependency,
 
     void deleteByTarget(String target);
 
+    void deleteBySourceOrTarget(String source,String target);
+
     List<TaskDependency> findAllByTarget(String target);
 
     List<TaskDependency> findAllBySource(String string);
