@@ -397,7 +397,7 @@ public class JobHelper {
                 LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
                 return;
             }
-            if (!nodeJobWaitQueue.contains(nodeJob.getId())) {
+            if (nodeJobWaitQueue.contains(nodeJob.getId())) {
                 LOGGER.info("nodeJob[{}]被多次触发,可能是redo成功或跳过的节点导致",nodeJob.getId());
                 return;
             }
