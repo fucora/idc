@@ -36,6 +36,9 @@ public class CronTaskVO extends TaskVO implements CronTriggerBuilder {
     @ApiModelProperty("所依赖的调度计划及其规则")
     List<TaskDependencyVO> taskDependencyVOS;
 
+    @ApiModelProperty("运行的最大批次")
+    Integer maxBatch;
+
     @Override
     public Map<String, Object> getProps() {
         Map<String, Object> props = new HashMap<>();

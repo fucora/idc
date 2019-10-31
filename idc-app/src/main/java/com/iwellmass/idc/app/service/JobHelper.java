@@ -24,12 +24,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author nobita chen
@@ -88,7 +88,7 @@ public class JobHelper {
         }
         if (abstractJob.getTaskType() == TaskType.WORKFLOW) {
             Job job = abstractJob.asJob();
-            if (jobCanExec(job)) {
+            if (jobCanExecByTaskDependency(job)) {
                 executeJob(job);
             } else {
                 LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞", job.getTaskName(), job.getId(), job.getBatchTime().toString());
@@ -106,14 +106,14 @@ public class JobHelper {
         }
         modifyJobState(abstractJob, JobState.FINISHED);
         onJobFinished(abstractJob);
-        if (!abstractJob.isJob()) {  // this flush must be after onJobFinished.because onJobFinish method dependent on job'state.we first need call onJobFinish then valdiate job'state
+        if (!abstractJob.isJob()) {
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         } else {
             notifyWaitJob();
             flushJobStateAndHandleTriggerState(abstractJob.asJob());
         }
-        // notify wait queue
-        notifyWaitQueue();
+        // notify wait nodeJob
+        notifyWaitNodeJob();
     }
 
     public void failed(AbstractJob abstractJob, JobMessage message) {
@@ -157,7 +157,7 @@ public class JobHelper {
         }
 
         // notify wait queue
-        notifyWaitQueue();
+        notifyWaitNodeJob();
 
     }
 
@@ -202,7 +202,7 @@ public class JobHelper {
     // wait for apply
     public void cancel(AbstractJob job) {
         checkRunning(job);
-        notifyWaitQueue();
+        notifyWaitNodeJob();
     }
 
     /**
@@ -230,7 +230,7 @@ public class JobHelper {
             flushJobStateAndHandleTriggerState(job.asJob());
         }
         // notify wait queue
-        notifyWaitQueue();
+        notifyWaitNodeJob();
     }
 
     public void ready(AbstractJob job) {
@@ -379,29 +379,37 @@ public class JobHelper {
         }
     }
 
+    /**
+     * execute job.if the job have been limited by maxBatch,we need to pause this job until the maxBatch change(increment)
+     *
+     * @param job
+     */
     private synchronized void executeJob(Job job) {
-        logger.log(job.getId(), "开始执行任务实例，批次时间[{}]，taskName[{}]，jobId[{}]，loadDate[{}]，workflowId[{}]",
-                Objects.nonNull(job.getShouldFireTime()) ? job.getShouldFireTime().format(formatter) : null
-                , job.getTask().getTaskName(), job.getId(), ExecParamHelper.getLoadDate(job.getParams()), job.getTask().getWorkflowId());
-        NodeJob startNodeJob = findStartNodeJob(job.getId());
-        modifyJobState(startNodeJob, JobState.FINISHED);
-        onJobFinished(startNodeJob);
-        flushParentStateAndHandleTriggerState(startNodeJob);
+        // judge the max_batch
+        boolean canExec = jobCanExecByMaxBatch(job);
+        if (!canExec) {
+            LOGGER.info("job[{}],maxBatch[{}]由于最大执行批次被限制，进入暂停状态", job.getId(), job.getTask().getMaxBatch());
+            pause(job.getId());
+        }
+        executeNodeJob(findStartNodeJob(job.getId()));
+        if (!canExec) {
+            flushJobStateAndHandleTriggerState(job);
+        }
     }
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
         NodeTask nodeTask = Objects.requireNonNull(nodeJob.getNodeTask(), "未找到任务");
         if (!nodeJob.getState().isPaused()) {
-            // the nodeJob'state won't be none.this condition will be create by redo operation.
+            // the nodeJob'state will be none.this condition will be created by redo operation.
             if (!nodeJob.getState().equals(JobState.NONE)) {
                 LOGGER.info("nodeJob[{}]不是初始化状态:state{} ", nodeJob.getId(), nodeJob.getState());
                 return;
             }
             if (nodeJobWaitQueue.contains(nodeJob.getId())) {
-                LOGGER.info("nodeJob[{}]被多次触发,可能是redo成功或跳过的节点导致",nodeJob.getId());
+                LOGGER.info("nodeJob[{}]被多次触发,可能是redo成功或跳过的节点导致", nodeJob.getId());
                 return;
             }
-            if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL)) {
+            if (nodeTask.getTaskId().equalsIgnoreCase(NodeTask.CONTROL) || nodeTask.getTaskId().equalsIgnoreCase(NodeTask.START)) {
                 modifyJobState(nodeJob, JobState.FINISHED);
                 onJobFinished(nodeJob);
                 flushParentStateAndHandleTriggerState(nodeJob);
@@ -513,7 +521,7 @@ public class JobHelper {
     /**
      * notify wait queue to release the wait-nodeJobs .need check whether we can release
      */
-    private synchronized void notifyWaitQueue() {
+    private synchronized void notifyWaitNodeJob() {
         int needReleaseJobs = maxRunningJobs - nodeJobRepository.countNodeJobsByRunningOrAcceptState();
         if (needReleaseJobs > 0) {
             // release waiting job
@@ -722,12 +730,13 @@ public class JobHelper {
     }
 
     /**
-     * judge the job whether can execute,the condition is that we need all jobs of task depended by the task of this job and those job have the same batchTime.
+     * judge the job whether can execute because of the dependencies between tasks
+     * the condition is that we need all jobs of task depended by the task of this job and those job have the same batchTime.
      *
      * @param job
      * @return
      */
-    private boolean jobCanExec(Job job) {
+    private boolean jobCanExecByTaskDependency(Job job) {
         for (TaskDependency td : taskDependencyRepository.findAllByTarget(job.getTaskName())) {
             switch (td.getPrinciple()) {
                 // at present,we only support the dependencies of tasks whose schedule type is monthly.
@@ -754,7 +763,7 @@ public class JobHelper {
         jobWaitSet.forEach(jobId -> {
             Optional<Job> jobWaited = jobRepository.findById(jobId);
             if (jobWaited.isPresent()) {
-                if (jobCanExec(jobWaited.get())) {
+                if (jobCanExecByTaskDependency(jobWaited.get())) {
                     jobWaitSet.remove(jobId);
                     LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,准备执行", jobId, jobWaited.get().getBatchTime().toString());
                     executeJob(jobWaited.get());
@@ -763,6 +772,25 @@ public class JobHelper {
                 jobWaitSet.remove(jobId);
             }
         });
+    }
+
+    /**
+     * judge the job whether can execute because of task's maxBatch
+     * if maxBatch is null,there isn't limit to running of job.
+     * if the job which sequence with shouldFireTime is over the maxBatch ,the job can't execute.
+     *
+     * @param job
+     * @return true:the job can run
+     */
+    private boolean jobCanExecByMaxBatch(Job job) {
+        Integer maxBatch = job.getTask().getMaxBatch();
+        return maxBatch == null ||
+                jobRepository.findAllByTaskName(job.getTaskName())
+                        .stream()
+                        .sorted((o1, o2) -> o1.getShouldFireTime().isAfter(o2.getShouldFireTime()) ? 1 : -1)
+                        .map(Job::getId)
+                        .collect(Collectors.toList())
+                        .indexOf(job.getId()) < maxBatch;
     }
 
 }

@@ -126,7 +126,7 @@ public class Task extends AbstractTask {
     private LocalTime duetime;
 
     @Column(name = "max_batch")
-    @ApiModelProperty("该调度计划允许执行的最大批次,值为0：任何一个批次均不可执行，仅对周期调度生效")
+    @ApiModelProperty("该调度计划允许执行的最大批次,值为0：任何一个批次均不可执行，仅对周期调度生效，值为null时不做限制")
     private Integer maxBatch;
 
     @Column(table = "QRTZ_TRIGGERS", name = "PREV_FIRE_TIME", insertable = false, updatable = false)
