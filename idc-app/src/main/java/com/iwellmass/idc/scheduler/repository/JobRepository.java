@@ -26,4 +26,6 @@ public interface JobRepository extends CrudRepository<Job, String>, JpaSpecifica
 
 	Optional<Job> findByTaskNameAndBatchTime(String taskName, LocalDate batchTime);
 
+	List<Job> findAllByIdIn(List<String> jobIds);
+
 }

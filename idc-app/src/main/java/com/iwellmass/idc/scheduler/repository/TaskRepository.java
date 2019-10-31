@@ -17,4 +17,6 @@ public interface TaskRepository extends CrudRepository<Task, TaskID>, JpaSpecifi
 	List<String> findAllAssignee();
 
 	List<Task> findAllByWorkflowId(String workflowId);
+
+	List<Task> findAllByTaskNameIn(List<String> taskNames);
 }

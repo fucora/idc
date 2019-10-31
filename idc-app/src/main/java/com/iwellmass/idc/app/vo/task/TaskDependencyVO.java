@@ -1,6 +1,6 @@
 package com.iwellmass.idc.app.vo.task;
 
-import com.iwellmass.idc.scheduler.model.TaskDependency;
+import com.iwellmass.idc.scheduler.model.Principle;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,5 +13,5 @@ public class TaskDependencyVO {
     private String source;
 
     @ApiModelProperty("依赖规则")
-    private TaskDependency.Principle principle;
+    private Principle principle;
 }

@@ -1,7 +1,6 @@
 package com.iwellmass.idc.app.service;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -27,7 +26,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,7 +34,6 @@ import org.springframework.stereotype.Service;
 import com.iwellmass.common.criteria.SpecificationBuilder;
 import com.iwellmass.common.exception.AppException;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.common.util.QueryUtils;
 import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
@@ -96,7 +93,7 @@ public class TaskService {
     @Resource
     NodeJobRepository nodeJobRepository;
     @Resource
-    TaskDependencyRepository taskDependencyRepository;
+    TaskDependencyEdgeRepository taskDependencyEdgeRepository;
     @Inject
     JobService jobService;
 
@@ -270,8 +267,8 @@ public class TaskService {
         if (!taskNamesProcessed.contains(taskName)) {
             taskNamesProcessed.add(taskName);
             addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(taskName), taskName), taskGraphVO);
-            List<TaskDependency> targetTaskDependencies = taskDependencyRepository.findAllBySource(taskName);
-            List<TaskDependency> sourceTaskDependencies = taskDependencyRepository.findAllByTarget(taskName);
+            List<TaskDependencyEdge> targetTaskDependencies = taskDependencyEdgeRepository.findAllBySource(taskName);
+            List<TaskDependencyEdge> sourceTaskDependencies = taskDependencyEdgeRepository.findAllByTarget(taskName);
             targetTaskDependencies.forEach(td -> {
                 addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(td.getTarget()), td.getTarget()), taskGraphVO);
                 addEdgeVOToTaskGraphVO(new EdgeVO(td.getId().toString(), new SourceVO(taskName), new TargetVO(td.getTarget())), taskGraphVO);

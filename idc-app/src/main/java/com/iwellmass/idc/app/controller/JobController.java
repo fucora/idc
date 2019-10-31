@@ -28,6 +28,8 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/job")
 public class JobController {
 
+    static final String OPT_SUCCESS = "success";
+
 	@Resource
 	JobService jobService;
     @Resource
@@ -146,6 +148,22 @@ public class JobController {
     public ServiceResult<String> resume(@PathVariable(name = "jobId") String jobId) {
         jobHelper.resume(jobId);
         return ServiceResult.success("success");
+    }
+
+    @ApiOperation("继续执行该调度计划图")
+    @PutMapping("/{addBatch}/{taskDependencyId}/executeTaskDependency")
+    public ServiceResult<String> executeTaskDependency(@PathVariable(name = "addBatch") Integer addBatch,
+                                                       @PathVariable(name = "taskDependencyId") Integer taskDependencyId) {
+//        jobHelper.executeTaskDependency(addBatch,taskDependencyId);
+        return ServiceResult.success(OPT_SUCCESS);
+    }
+
+    @ApiOperation("推进某一个Job实例")
+    @PutMapping("/{jobId}/{addBatch}/advanceJob")
+    public ServiceResult<String> advanceJob(@PathVariable(name = "addBatch") Integer addBatch,
+                                            @PathVariable(name = "jobId") String jobId) {
+        jobHelper.advanceJob(addBatch,jobId);
+        return ServiceResult.success(OPT_SUCCESS);
     }
 
 

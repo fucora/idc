@@ -17,6 +17,7 @@ import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.scheduler.model.IDCScheduler;
 import com.iwellmass.idc.scheduler.model.Task;
+import com.iwellmass.idc.scheduler.model.TaskDependency;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
@@ -31,6 +32,8 @@ import static com.iwellmass.idc.scheduler.util.IDCConstants.MSG_OP_SUCCESS;
 @RestController
 @RequestMapping("/task")
 public class TaskController {
+
+    static final String OPT_SUCCESS = "success";
 
     @Resource
     private IDCScheduler idcs;
@@ -166,4 +169,16 @@ public class TaskController {
         return ServiceResult.success(taskService.getTaskToDependency(cronType));
     }
 
+    @ApiOperation("创建调度计划依赖")
+    @PostMapping("/dependency")
+    public ServiceResult<String> saveDependency(@RequestBody TaskDependency taskDependency) {
+
+        return ServiceResult.success(OPT_SUCCESS);
+    }
+
+    @ApiOperation("保存或更新调度计划依赖边")
+    @PostMapping("/edge/dependency")
+    public ServiceResult<String> saveDependencyEdge() {
+        return ServiceResult.success(OPT_SUCCESS);
+    }
 }

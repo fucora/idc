@@ -10,7 +10,7 @@ import com.iwellmass.idc.app.vo.task.TaskVO;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.repository.JobRepository;
 import com.iwellmass.idc.scheduler.repository.NodeJobRepository;
-import com.iwellmass.idc.scheduler.repository.TaskDependencyRepository;
+import com.iwellmass.idc.scheduler.repository.TaskDependencyEdgeRepository;
 import com.iwellmass.idc.scheduler.repository.TaskRepository;
 import org.quartz.*;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ public class IDCScheduler {
     @Resource
     TaskService taskService;
     @Resource
-    TaskDependencyRepository taskDependencyRepository;
+    TaskDependencyEdgeRepository taskDependencyEdgeRepository;
 
     @Resource
     Scheduler qs;
@@ -62,14 +62,14 @@ public class IDCScheduler {
         BeanUtils.copyProperties(vo, task);
         if (vo.getScheduleType().equals(ScheduleType.AUTO)) {
             // store task dependency: clear task dependency whose source is this;store those taskDependencies
-            taskDependencyRepository.deleteByTarget(vo.getTaskName());
-            if (vo.asCronTaskVO().getTaskDependencyVOS() != null) {
-                List<TaskDependency> taskDependencies = vo.asCronTaskVO().getTaskDependencyVOS()
-                        .stream()
-                        .map(tdvo -> new TaskDependency(tdvo.getSource(),vo.getTaskName()))
-                        .collect(Collectors.toList());
-                taskDependencyRepository.saveAll(taskDependencies);
-            }
+//            taskDependencyEdgeRepository.deleteByTarget(vo.getTaskName());
+//            if (vo.asCronTaskVO().getTaskDependencyVOS() != null) {
+//                List<TaskDependencyEdge> taskDependencyEdges = vo.asCronTaskVO().getTaskDependencyVOS()
+//                        .stream()
+//                        .map(tdvo -> new TaskDependencyEdge(tdvo.getSource(),vo.getTaskName()))
+//                        .collect(Collectors.toList());
+//                taskDependencyEdgeRepository.saveAll(taskDependencyEdges);
+//            }
             task.setStartDateTime(LocalDateTime.of(vo.getStartDate(), LocalTime.MIN));// 生效时间
             task.setEndDateTime(LocalDateTime.of(vo.getEndDate(), LocalTime.of(23, 59, 59)));    // 失效时间  // con't use  LocalTime.Max
             scheduleJob(vo, task);

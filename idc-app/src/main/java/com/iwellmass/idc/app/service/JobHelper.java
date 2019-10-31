@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
@@ -62,7 +63,9 @@ public class JobHelper {
     @Inject
     ExecParamHelper execParamHelper;
     @Inject
-    TaskDependencyRepository taskDependencyRepository;
+    TaskDependencyEdgeRepository taskDependencyEdgeRepository;
+    @Inject
+    TaskRepository taskRepository;
 
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
@@ -88,10 +91,10 @@ public class JobHelper {
         }
         if (abstractJob.getTaskType() == TaskType.WORKFLOW) {
             Job job = abstractJob.asJob();
-            if (jobCanExecByTaskDependency(job)) {
+            if (jobCanExecByTaskDependency(job) && jobCanExecByMaxBatch(job)) {
                 executeJob(job);
             } else {
-                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖被阻塞", job.getTaskName(), job.getId(), job.getBatchTime().toString());
+                LOGGER.info("taskName[{}],Job[{}],batchTime[{}]由于调度计划依赖或最大批次被阻塞", job.getTaskName(), job.getId(), job.getBatchTime().toString());
                 jobWaitSet.add(job.getId());
             }
         } else {
@@ -109,7 +112,7 @@ public class JobHelper {
         if (!abstractJob.isJob()) {
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         } else {
-            notifyWaitJob();
+            notifyJobInWaitSet();
             flushJobStateAndHandleTriggerState(abstractJob.asJob());
         }
         // notify wait nodeJob
@@ -226,7 +229,7 @@ public class JobHelper {
         if (!job.isJob()) {
             flushParentStateAndHandleTriggerState(job.asNodeJob());
         } else {
-            notifyWaitJob();
+            notifyJobInWaitSet();
             flushJobStateAndHandleTriggerState(job.asJob());
         }
         // notify wait queue
@@ -354,7 +357,10 @@ public class JobHelper {
             resumePausedNodeJob(abstractJob.asNodeJob());
             flushParentStateAndHandleTriggerState(abstractJob.asNodeJob());
         }
+    }
 
+    public void advanceJob(Integer addBatch, String jobId) {
+        updateBatchAndExec(addBatch,Sets.newHashSet(jobId));
     }
 
     //==============================================  inner call
@@ -385,16 +391,17 @@ public class JobHelper {
      * @param job
      */
     private synchronized void executeJob(Job job) {
-        // judge the max_batch
-        boolean canExec = jobCanExecByMaxBatch(job);
-        if (!canExec) {
-            LOGGER.info("job[{}],maxBatch[{}]由于最大执行批次被限制，进入暂停状态", job.getId(), job.getTask().getMaxBatch());
-            pause(job.getId());
-        }
+//        // judge the max_batch
+//        boolean canExec = jobCanExecByMaxBatch(job);
+//        if (!canExec) {
+//            LOGGER.info("job[{}],maxBatch[{}]由于最大执行批次被限制，进入暂停状态", job.getId(), job.getTask().getMaxBatch());
+//            pause(job.getId());
+//        }
+//        executeNodeJob(findStartNodeJob(job.getId()));
+//        if (!canExec) {
+//            flushJobStateAndHandleTriggerState(job);
+//        }
         executeNodeJob(findStartNodeJob(job.getId()));
-        if (!canExec) {
-            flushJobStateAndHandleTriggerState(job);
-        }
     }
 
     private synchronized void executeNodeJob(NodeJob nodeJob) {
@@ -737,7 +744,7 @@ public class JobHelper {
      * @return
      */
     private boolean jobCanExecByTaskDependency(Job job) {
-        for (TaskDependency td : taskDependencyRepository.findAllByTarget(job.getTaskName())) {
+        for (TaskDependencyEdge td : taskDependencyEdgeRepository.findAllByTarget(job.getTaskName())) {
             switch (td.getPrinciple()) {
                 // at present,we only support the dependencies of tasks whose schedule type is monthly.
                 case MONTHLY_2_MONTHLY:
@@ -757,21 +764,43 @@ public class JobHelper {
     }
 
     /**
+     * when
+     *
+     * @param addBatch the batch need to advance
+     * @param jobIds   two condition:1. the special job   2.by start task dependency,all job whose state is none by check of the dependency
+     */
+    private void updateBatchAndExec(Integer addBatch, Set<String> jobIds) {
+        List<String> taskNames = jobRepository.findAllByIdIn(Lists.newArrayList(jobIds)).stream().map(Job::getTaskName).distinct().collect(Collectors.toList());
+        taskRepository.findAllByTaskNameIn(taskNames).forEach(tk -> {
+            tk.setMaxBatch(tk.getMaxBatch() + addBatch);
+            taskRepository.save(tk);
+        });
+        notifyWaitJobs(jobIds);
+    }
+
+    /**
      * when a job success or skip ;we need to call this method to notify job waited.
      */
-    private void notifyWaitJob() {
-        jobWaitSet.forEach(jobId -> {
-            Optional<Job> jobWaited = jobRepository.findById(jobId);
-            if (jobWaited.isPresent()) {
-                if (jobCanExecByTaskDependency(jobWaited.get())) {
+    private void notifyJobInWaitSet() {
+        notifyWaitJobs(jobWaitSet);
+    }
+
+    // notify those jobs which can run below task's dependencies and maxBatch.
+    private void notifyWaitJobs(Set<String> jobIds) {
+        if (jobIds != null) {
+            jobIds.forEach(jobId -> {
+                Optional<Job> jobWaited = jobRepository.findById(jobId);
+                if (jobWaited.isPresent()) {
+                    if (jobCanExecByTaskDependency(jobWaited.get()) && jobCanExecByMaxBatch(jobWaited.get())) {
+                        jobWaitSet.remove(jobId);
+                        LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,且未达到最大批次,准备执行", jobId, jobWaited.get().getBatchTime().toString());
+                        executeJob(jobWaited.get());
+                    }
+                } else {
                     jobWaitSet.remove(jobId);
-                    LOGGER.info("job[{}],batchTime[{}]前置实例已全部完成,准备执行", jobId, jobWaited.get().getBatchTime().toString());
-                    executeJob(jobWaited.get());
                 }
-            } else {
-                jobWaitSet.remove(jobId);
-            }
-        });
+            });
+        }
     }
 
     /**
