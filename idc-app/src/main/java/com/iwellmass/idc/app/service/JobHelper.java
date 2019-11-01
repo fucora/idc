@@ -30,7 +30,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author nobita chen
@@ -64,6 +66,8 @@ public class JobHelper {
     ExecParamHelper execParamHelper;
     @Inject
     TaskDependencyEdgeRepository taskDependencyEdgeRepository;
+    @Inject
+    TaskDependencyRepository taskDependencyRepository;
     @Inject
     TaskRepository taskRepository;
 
@@ -359,8 +363,43 @@ public class JobHelper {
         }
     }
 
+    /**
+     * 统一推进某一个调度计划依赖图
+     * @param addBatch 推进的批次数
+     * @param taskDependencyId 调度计划依赖图id
+     */
+    public void advanceTaskDependency(Integer addBatch, Long taskDependencyId) {
+        TaskDependency taskDependency = taskDependencyRepository.findById(taskDependencyId).orElseThrow(() -> new AppException("未找到taskDependencyId[%s]调度计划依赖", taskDependencyId));
+        if (taskDependency.getEdges().isEmpty()) {
+            throw new AppException("当前调度计划依赖图{%s}未配置任何调度计划",taskDependency.getName());
+        }
+        List<String> sourceTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toList());
+        List<String> targetTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toList());
+        Set<String> jobIds = Stream.of(sourceTaskName, targetTaskName).collect(Collector.of(
+                ArrayList<String>::new,
+                List::addAll,
+                (left, right) -> {
+                    left.addAll(right);
+                    return left;
+                }
+        )).stream()
+                .distinct()
+                .map(taskName -> {
+                    Job latestJob = jobService.getLatestJobByTaskName(taskName);
+                    if (latestJob != null) {
+                        return latestJob.getId();
+                    } else {
+                        return "";
+                    }
+                })
+                .filter(taskName -> !taskName.equals(""))
+                .collect(Collectors.toSet());
+
+        updateBatchAndExec(addBatch, jobIds);
+    }
+
     public void advanceJob(Integer addBatch, String jobId) {
-        updateBatchAndExec(addBatch,Sets.newHashSet(jobId));
+        updateBatchAndExec(addBatch, Sets.newHashSet(jobId));
     }
 
     //==============================================  inner call
@@ -772,8 +811,10 @@ public class JobHelper {
     private void updateBatchAndExec(Integer addBatch, Set<String> jobIds) {
         List<String> taskNames = jobRepository.findAllByIdIn(Lists.newArrayList(jobIds)).stream().map(Job::getTaskName).distinct().collect(Collectors.toList());
         taskRepository.findAllByTaskNameIn(taskNames).forEach(tk -> {
-            tk.setMaxBatch(tk.getMaxBatch() + addBatch);
-            taskRepository.save(tk);
+            if (tk.getMaxBatch() != null) {
+                tk.setMaxBatch(tk.getMaxBatch() + addBatch);
+                taskRepository.save(tk);
+            }
         });
         notifyWaitJobs(jobIds);
     }

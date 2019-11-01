@@ -52,6 +52,7 @@ public class TaskDependencyEdge {
     }
 
     public TaskDependencyEdge(Long taskDependencyId,String source, String target, Principle principle) {
+        this.taskDependencyId = taskDependencyId;
         this.source = source;
         this.target = target;
         this.principle = principle;

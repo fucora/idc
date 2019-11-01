@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.common.util.Pager;
 import com.iwellmass.idc.app.service.JobService;
 
 import io.swagger.annotations.ApiOperation;
@@ -150,11 +149,11 @@ public class JobController {
         return ServiceResult.success("success");
     }
 
-    @ApiOperation("继续执行该调度计划图")
+    @ApiOperation("推进该调度计划图")
     @PutMapping("/{addBatch}/{taskDependencyId}/executeTaskDependency")
     public ServiceResult<String> executeTaskDependency(@PathVariable(name = "addBatch") Integer addBatch,
-                                                       @PathVariable(name = "taskDependencyId") Integer taskDependencyId) {
-//        jobHelper.executeTaskDependency(addBatch,taskDependencyId);
+                                                       @PathVariable(name = "taskDependencyId") Long taskDependencyId) {
+        jobHelper.advanceTaskDependency(addBatch,taskDependencyId);
         return ServiceResult.success(OPT_SUCCESS);
     }
 

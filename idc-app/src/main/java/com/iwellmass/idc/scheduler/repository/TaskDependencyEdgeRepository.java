@@ -17,4 +17,6 @@ public interface TaskDependencyEdgeRepository extends CrudRepository<TaskDepende
     List<TaskDependencyEdge> findAllByTarget(String target);
 
     List<TaskDependencyEdge> findAllBySource(String string);
+
+    void deleteByTaskDependencyId(Long dependencyId);
 }

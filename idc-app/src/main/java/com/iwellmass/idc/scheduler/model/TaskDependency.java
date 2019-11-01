@@ -1,13 +1,17 @@
 package com.iwellmass.idc.scheduler.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.iwellmass.idc.app.vo.task.TaskDependencyVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -39,4 +43,16 @@ public class TaskDependency {
     @ApiModelProperty("计划依赖修改日期")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updatetime;
+
+    @Fetch(FetchMode.SELECT)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "name", updatable = false)
+    private List<TaskDependencyEdge> edges;
+
+    public TaskDependency(TaskDependencyVO taskDependencyVO) {
+        this.name = taskDependencyVO.getName();
+        this.description = taskDependencyVO.getDescription();
+        this.principle = Principle.MONTHLY_2_MONTHLY;
+        this.updatetime = LocalDateTime.now();
+    }
 }

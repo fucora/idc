@@ -128,7 +128,6 @@ public class WorkflowService {
             workflowGraph.addEdge(evo.getSource().getId(), evo.getTarget().getId(), evo);
         }
 
-
         List<String> necessaryNode = Arrays.asList(NodeTask.START, NodeTask.END);    // required
         List<String> systemNode = Arrays.asList(NodeTask.START.toLowerCase(), NodeTask.CONTROL.toLowerCase(), NodeTask.END.toLowerCase());
         necessaryNode.forEach(requiredVertex ->

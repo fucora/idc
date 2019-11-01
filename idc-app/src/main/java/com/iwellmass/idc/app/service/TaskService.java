@@ -1,6 +1,7 @@
 package com.iwellmass.idc.app.service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -12,16 +13,14 @@ import com.google.common.collect.Sets;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.datafactory.common.vo.TaskDetailVO;
 import com.iwellmass.idc.app.rpc.DFTaskService;
-import com.iwellmass.idc.app.vo.graph.EdgeVO;
-import com.iwellmass.idc.app.vo.graph.SourceVO;
-import com.iwellmass.idc.app.vo.graph.TargetVO;
-import com.iwellmass.idc.app.vo.graph.TaskGraphVO;
+import com.iwellmass.idc.app.vo.graph.*;
 import com.iwellmass.idc.app.vo.task.*;
 import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.model.ScheduleType;
 import com.iwellmass.idc.scheduler.model.*;
 import com.iwellmass.idc.scheduler.repository.*;
 import lombok.Setter;
+import org.jgrapht.graph.DirectedAcyclicGraph;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
@@ -38,6 +37,7 @@ import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class TaskService {
@@ -94,6 +94,8 @@ public class TaskService {
     NodeJobRepository nodeJobRepository;
     @Resource
     TaskDependencyEdgeRepository taskDependencyEdgeRepository;
+    @Resource
+    TaskDependencyRepository taskDependencyRepository;
     @Inject
     JobService jobService;
 
@@ -307,6 +309,50 @@ public class TaskService {
                     return vo;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public void saveDependency(TaskDependencyVO taskDependencyVO) {
+        taskDependencyRepository.findByName(taskDependencyVO.getName()).ifPresent(td -> {
+            throw new AppException("当前计划依赖图名称已存在");
+        });
+        taskDependencyRepository.save(new TaskDependency(taskDependencyVO));
+    }
+
+    @Transactional
+    public void saveDependencyEdge(Long id, TaskGraphVO taskGraphVO) {
+        Optional<TaskDependency> taskDependency = taskDependencyRepository.findById(id);
+        if (!taskDependency.isPresent()) {
+            throw new AppException("当前计划依赖图名称不存在");
+        }
+
+        if (taskGraphVO.getEdges().isEmpty() || taskGraphVO.getNodes().isEmpty()) {
+            throw new AppException("未配置任何边或者节点");
+        }
+
+        // clear old
+        taskDependencyEdgeRepository.deleteByTaskDependencyId(id);
+
+        // validate graph
+        DirectedAcyclicGraph<String, EdgeVO> taskDependencyGraph = new DirectedAcyclicGraph<>(EdgeVO.class); // vertex:id, edge:EdgeVO
+        Map<String, TaskNodeVO> nodeMap = taskGraphVO.getNodes().stream()  // <id,TaskNodeVO>
+                .collect(Collectors.toMap(TaskNodeVO::getId, Function.identity()));
+        nodeMap.keySet().forEach(taskDependencyGraph::addVertex);
+
+        for (EdgeVO evo : taskGraphVO.getEdges()) {
+            taskDependencyGraph.addEdge(evo.getSource().getId(), evo.getTarget().getId(), evo);
+        }
+
+        taskDependencyGraph.vertexSet().forEach(v -> {
+            if (taskDependencyGraph.inDegreeOf(v) == 0 && taskDependencyGraph.outDegreeOf(v) == 0) {
+                throw new AppException("节点" + v + "不能独立");
+            }
+        });
+
+        // save new graph
+        List<TaskDependencyEdge> edges = taskGraphVO.getEdges().stream()
+                .map(edge -> new TaskDependencyEdge(id, edge.getSource().getId(), edge.getTarget().getId(), taskDependency.get().getPrinciple()))
+                .collect(Collectors.toList());
+        taskDependencyEdgeRepository.saveAll(edges);
     }
 
 }

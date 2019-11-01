@@ -10,10 +10,7 @@ import com.iwellmass.idc.app.vo.Assignee;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.graph.TaskGraphVO;
-import com.iwellmass.idc.app.vo.task.ManualUpdateVo;
-import com.iwellmass.idc.app.vo.task.MergeTaskParamVO;
-import com.iwellmass.idc.app.vo.task.ReTaskVO;
-import com.iwellmass.idc.app.vo.task.TaskVO;
+import com.iwellmass.idc.app.vo.task.*;
 import com.iwellmass.idc.model.CronType;
 import com.iwellmass.idc.scheduler.model.IDCScheduler;
 import com.iwellmass.idc.scheduler.model.Task;
@@ -171,14 +168,15 @@ public class TaskController {
 
     @ApiOperation("创建调度计划依赖")
     @PostMapping("/dependency")
-    public ServiceResult<String> saveDependency(@RequestBody TaskDependency taskDependency) {
-
+    public ServiceResult<String> saveDependency(@RequestBody TaskDependencyVO taskDependencyVO) {
+        taskService.saveDependency(taskDependencyVO);
         return ServiceResult.success(OPT_SUCCESS);
     }
 
     @ApiOperation("保存或更新调度计划依赖边")
-    @PostMapping("/edge/dependency")
-    public ServiceResult<String> saveDependencyEdge() {
+    @PostMapping("/{id}/dependency/edge")
+    public ServiceResult<String> saveDependencyEdge(@PathVariable(name = "id") Long id,@RequestBody TaskGraphVO taskGraphVO) {
+        taskService.saveDependencyEdge(id,taskGraphVO);
         return ServiceResult.success(OPT_SUCCESS);
     }
 }

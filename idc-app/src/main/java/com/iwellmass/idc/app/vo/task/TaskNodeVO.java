@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class TaskNodeVO {
 
-    @ApiModelProperty("调度计划名，用于前端绘图")
+    @ApiModelProperty("调度计划名，用于前端绘图,值和taskName保持一致")
     private String id;
 
     @ApiModelProperty("调度计划名")
