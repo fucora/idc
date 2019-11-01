@@ -365,13 +365,14 @@ public class JobHelper {
 
     /**
      * 统一推进某一个调度计划依赖图
-     * @param addBatch 推进的批次数
+     *
+     * @param addBatch         推进的批次数
      * @param taskDependencyId 调度计划依赖图id
      */
     public void advanceTaskDependency(Integer addBatch, Long taskDependencyId) {
         TaskDependency taskDependency = taskDependencyRepository.findById(taskDependencyId).orElseThrow(() -> new AppException("未找到taskDependencyId[%s]调度计划依赖", taskDependencyId));
         if (taskDependency.getEdges().isEmpty()) {
-            throw new AppException("当前调度计划依赖图{%s}未配置任何调度计划",taskDependency.getName());
+            throw new AppException("当前调度计划依赖图{%s}未配置任何调度计划", taskDependency.getName());
         }
         List<String> sourceTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toList());
         List<String> targetTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toList());
@@ -381,8 +382,8 @@ public class JobHelper {
                 (left, right) -> {
                     left.addAll(right);
                     return left;
-                }
-        )).stream()
+                }))
+                .stream()
                 .distinct()
                 .map(taskName -> {
                     Job latestJob = jobService.getLatestJobByTaskName(taskName);
@@ -440,6 +441,7 @@ public class JobHelper {
 //        if (!canExec) {
 //            flushJobStateAndHandleTriggerState(job);
 //        }
+        modifyJobState(job,JobState.RUNNING);
         executeNodeJob(findStartNodeJob(job.getId()));
     }
 
