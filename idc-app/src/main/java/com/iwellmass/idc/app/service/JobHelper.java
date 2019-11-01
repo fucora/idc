@@ -441,7 +441,7 @@ public class JobHelper {
 //        if (!canExec) {
 //            flushJobStateAndHandleTriggerState(job);
 //        }
-        modifyJobState(job,JobState.RUNNING);
+//        modifyJobState(job,JobState.RUNNING);
         executeNodeJob(findStartNodeJob(job.getId()));
     }
 
@@ -668,15 +668,15 @@ public class JobHelper {
 
         // when there exist one running job or exist one nodejob in nodejobWaitQueue,the job'state is running or paused
         // attention:state of the job may be running or paused.if the state is paused.need modifyJobState and validate job'state before this method.
-//        boolean inNodeJobWaitQueue = false;
-//        for (NodeJob nodeJob : subJobs) {
-//            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob.getId())) {
-//                inNodeJobWaitQueue = true;
-//                break;
-//            }
-//        }
-//        if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
-        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
+        boolean inNodeJobWaitQueue = false;
+        for (NodeJob nodeJob : subJobs) {
+            if (!nodeJob.getState().isComplete() && nodeJobWaitQueue.contains(nodeJob.getId())) {
+                inNodeJobWaitQueue = true;
+                break;
+            }
+        }
+        if (inNodeJobWaitQueue || subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
+//        if (subJobs.stream().anyMatch(nd -> nd.getState().isRunning())) {
             if (!job.getState().equals(JobState.RUNNING)) {
                 modifyJobState(job, JobState.RUNNING);
                 if (isLatestJob) {
