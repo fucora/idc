@@ -66,14 +66,14 @@ public class JobService {
 
     public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
         Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
-        return QueryUtils.doJpaQuery(jqm, pageable -> {
-            return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "should_fire_time"))).map(job -> {
-                JobRuntimeVO vo = new JobRuntimeVO();
-                BeanUtils.copyProperties(job, vo);
-                vo.setScheduleType(job.getTask().getScheduleType());
-                return vo;
-            });
-        });
+        return QueryUtils.doJpaQuery(jqm, pageable -> jobRepository
+                .findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "shouldFireTime")))
+                .map(job -> {
+                    JobRuntimeVO vo = new JobRuntimeVO();
+                    BeanUtils.copyProperties(job, vo);
+                    vo.setScheduleType(job.getTask().getScheduleType());
+                    return vo;
+                }));
     }
 
     public List<Assignee> getAllAssignee() {
@@ -94,7 +94,7 @@ public class JobService {
     @Transactional
     public Job createJob(String id, String taskName, List<ExecParam> execParams, LocalDateTime shouldFireTime) {
         Task task = getTask(taskName);
-        Job job = new Job(id, task, execParams,shouldFireTime == null ? task.getPrevFireTime() : shouldFireTime);
+        Job job = new Job(id, task, execParams, shouldFireTime == null ? task.getPrevFireTime() : shouldFireTime);
         return jobRepository.save(job);
     }
 
@@ -118,7 +118,7 @@ public class JobService {
                 }
             }
         }
-        return new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS,job.getShouldFireTime(),job.getState(),job.getBatchTime());
+        return new JobVO(nodeJobVOS, graphVO, taskVO, mergeTaskParamVOS, job.getShouldFireTime(), job.getState(), job.getBatchTime());
     }
 
     @Transactional
