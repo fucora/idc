@@ -39,7 +39,7 @@ public class TaskDependency {
     @Enumerated(value = EnumType.STRING)
     private Principle principle;
 
-    @Column(name = "create_time")
+    @Column(name = "updatetime")
     @ApiModelProperty("计划依赖修改日期")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updatetime;

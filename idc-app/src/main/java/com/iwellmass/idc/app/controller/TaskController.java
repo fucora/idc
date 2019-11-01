@@ -61,12 +61,11 @@ public class TaskController {
     public ServiceResult<String> manualSchedule(@RequestBody TaskVO vo) {
 
         Task task = jobService.getTask(vo.getTaskName());
-        Assert.notNull(task,String.format("taskName:[%s]不存在",vo.getTaskName()));
+        Assert.notNull(task, String.format("taskName:[%s]不存在", vo.getTaskName()));
 
-        idcs.scheduleJob(vo,task);
+        idcs.scheduleJob(vo, task);
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
-
 
 
     @ApiOperation("修改手动调度计划")
@@ -74,14 +73,13 @@ public class TaskController {
     public ServiceResult<String> updateManualSchedule(@RequestBody ManualUpdateVo vo) {
 
         Task queryTask = jobService.getTask(vo.getTaskName());
-        Assert.notNull(queryTask,String.format("taskName:[%s]不存在",vo.getTaskName()));
+        Assert.notNull(queryTask, String.format("taskName:[%s]不存在", vo.getTaskName()));
 
         setUpdateParams(vo, queryTask);
         idcs.updateScheduleTask(queryTask);
 
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
-
 
 
     private void setUpdateParams(@RequestBody ManualUpdateVo vo, Task queryTask) {
@@ -175,8 +173,14 @@ public class TaskController {
 
     @ApiOperation("保存或更新调度计划依赖边")
     @PostMapping("/{id}/dependency/edge")
-    public ServiceResult<String> saveDependencyEdge(@PathVariable(name = "id") Long id,@RequestBody TaskGraphVO taskGraphVO) {
-        taskService.saveDependencyEdge(id,taskGraphVO);
+    public ServiceResult<String> saveDependencyEdge(@PathVariable(name = "id") Long id, @RequestBody TaskGraphVO taskGraphVO) {
+        taskService.saveDependencyEdge(id, taskGraphVO);
         return ServiceResult.success(OPT_SUCCESS);
+    }
+
+    @ApiOperation("查询调度计划依赖图")
+    @GetMapping("/dependency")
+    public ServiceResult<List<TaskDependency>> queryAllTaskDependency() {
+        return ServiceResult.success(taskService.queryAllTaskDependency());
     }
 }

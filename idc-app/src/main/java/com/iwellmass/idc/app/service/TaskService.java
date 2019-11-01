@@ -43,33 +43,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class TaskService {
 
     // the latest day of last month compared to shouldFireTime
-    public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的最后一天";
-    public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-    public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的最后一天";
-    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-    public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的最后一天";
-    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的最后一天";
+    private static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的最后一天";
+    private static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的最后一天";
+    private static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
 
     // the first day of month compared to shouldFireTime
-    public static final String FIRST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的第一天";
-    public static final String FIRST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
-    public static final String FIRST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的第一天";
-    public static final String FIRST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
-    public static final String FIRST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的第一天";
-    public static final String FIRST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+    private static final String FIRST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME = "调度批次上月的第一天";
+    private static final String FIRST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(-1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+    private static final String FIRST_DAY_OF_THIS_MONTH_COMPARED_SHOULDFIRETIME = "调度批次当月的第一天";
+    private static final String FIRST_DAY_OF_THIS_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
+    private static final String FIRST_DAY_OF_NEXT_MONTH_COMPARED_SHOULDFIRETIME = "调度批次下月的第一天";
+    private static final String FIRST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_SHOULDFIRETIME = "#idc.shouldFireTime.plusMonths(1).with(@TemporalAdjusters@firstDayOfMonth()).format('yyyyMMdd')";
 
     // the latest day of last month compared to realRunTime
-    public static final String LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME = "实际运行日期上月的最后一天";
-    public static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-    public static final String LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME = "实际运行日期当月的最后一天";
-    public static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
-    public static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME = "实际运行日期下月的最后一天";
-    public static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_LAST_MONTH_COMPARED_REALRUNTIME = "实际运行日期上月的最后一天";
+    private static final String LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(-1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_THIS_MONTH_COMPARED_REALRUNTIME = "实际运行日期当月的最后一天";
+    private static final String LAST_DAY_OF_THIS_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
+    private static final String LAST_DAY_OF_NEXT_MONTH_COMPARED_REALRUNTIME = "实际运行日期下月的最后一天";
+    private static final String LAST_DAY_OF_NEXT_MONTH_OGNL_COMPARED_REALRUNTIME = "#idc.realRunTime.plusMonths(1).with(@TemporalAdjusters@lastDayOfMonth()).format('yyyyMMdd')";
     // now
-    public static final String NOW = "调度计划提交日期";
-    public static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
+    private static final String NOW = "调度计划提交日期";
+    private static final String NOW_OGNL = "#idc.taskUpdateTime.format('yyyyMMdd')";
 
-    public static final Map<String, String> loadDateParams = new LinkedHashMap<>();
+    static final Map<String, String> loadDateParams = new LinkedHashMap<>();
 
     static {
         loadDateParams.put(LAST_DAY_OF_LAST_MONTH_COMPARED_SHOULDFIRETIME, LAST_DAY_OF_LAST_MONTH_OGNL_COMPARED_SHOULDFIRETIME);
@@ -353,6 +353,18 @@ public class TaskService {
                 .map(edge -> new TaskDependencyEdge(id, edge.getSource().getId(), edge.getTarget().getId(), taskDependency.get().getPrinciple()))
                 .collect(Collectors.toList());
         taskDependencyEdgeRepository.saveAll(edges);
+    }
+
+    /**
+     *
+     * @return
+     */
+    public List<TaskDependency> queryAllTaskDependency() {
+        return taskDependencyRepository.findAll(null,Sort.by(Sort.Direction.DESC,"updatetime"));
+    }
+
+    public List<Task> queryCanDrawTask(String taskDependencyId) {
+        return null;
     }
 
 }

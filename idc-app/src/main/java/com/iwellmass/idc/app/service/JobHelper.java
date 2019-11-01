@@ -641,8 +641,8 @@ public class JobHelper {
      * job state:
      * 1.fail:when all subJobs was done and there exist one and more subJobs is fail,the job'state is fail
      * 2.success: all subJobs was done and all subJobs was success,the job'state is success
-     * 3.running:when there exist one nodeJob is running ,the job'state is running.
-     * 4.paused:when there isn't one nodeJob is running and exist one and more nodeJob is paused,then the job'state is paused
+     * 3.running:when there exist a nodeJob is running ,the job'state is running.
+     * 4.paused:when there isn't a nodeJob is running and exist one and more nodeJob is paused,then the job'state is paused
      * <p>
      * attention:the caller of this method must after modifyJobState or onJobFinished or runNextJob.
      *
