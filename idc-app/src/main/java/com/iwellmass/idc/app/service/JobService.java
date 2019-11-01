@@ -67,7 +67,7 @@ public class JobService {
     public PageData<JobRuntimeVO> query(JobQueryParam jqm) {
         Specification<Job> spec = SpecificationBuilder.toSpecification(jqm);
         return QueryUtils.doJpaQuery(jqm, pageable -> {
-            return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "starttime"))).map(job -> {
+            return jobRepository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "should_fire_time"))).map(job -> {
                 JobRuntimeVO vo = new JobRuntimeVO();
                 BeanUtils.copyProperties(job, vo);
                 vo.setScheduleType(job.getTask().getScheduleType());
