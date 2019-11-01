@@ -70,6 +70,8 @@ public class JobHelper {
     TaskDependencyRepository taskDependencyRepository;
     @Inject
     TaskRepository taskRepository;
+    @Inject
+    TaskService taskService;
 
     @Value(value = "${idc.scheduler.openCallbackControl:false}")
     boolean openCallbackControl;
@@ -374,17 +376,9 @@ public class JobHelper {
         if (taskDependency.getEdges().isEmpty()) {
             throw new AppException("当前调度计划依赖图{%s}未配置任何调度计划", taskDependency.getName());
         }
-        List<String> sourceTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toList());
-        List<String> targetTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toList());
-        Set<String> jobIds = Stream.of(sourceTaskName, targetTaskName).collect(Collector.of(
-                ArrayList<String>::new,
-                List::addAll,
-                (left, right) -> {
-                    left.addAll(right);
-                    return left;
-                }))
+
+        Set<String> jobIds = taskService.getAllTaskInTaskDependency(taskDependency)
                 .stream()
-                .distinct()
                 .map(taskName -> {
                     Job latestJob = jobService.getLatestJobByTaskName(taskName);
                     if (latestJob != null) {

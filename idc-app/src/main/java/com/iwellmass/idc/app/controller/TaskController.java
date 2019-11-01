@@ -2,11 +2,10 @@ package com.iwellmass.idc.app.controller;
 
 import com.iwellmass.common.ServiceResult;
 import com.iwellmass.common.util.PageData;
-import com.iwellmass.common.util.Tree;
-import com.iwellmass.common.util.TreeNode;
 import com.iwellmass.idc.app.service.JobService;
 import com.iwellmass.idc.app.service.TaskService;
 import com.iwellmass.idc.app.vo.Assignee;
+import com.iwellmass.idc.app.vo.TaskDependencyQueryVO;
 import com.iwellmass.idc.app.vo.TaskQueryParam;
 import com.iwellmass.idc.app.vo.TaskRuntimeVO;
 import com.iwellmass.idc.app.vo.graph.TaskGraphVO;
@@ -179,8 +178,14 @@ public class TaskController {
     }
 
     @ApiOperation("查询调度计划依赖图")
-    @GetMapping("/dependency")
-    public ServiceResult<List<TaskDependency>> queryAllTaskDependency() {
-        return ServiceResult.success(taskService.queryAllTaskDependency());
+    @PostMapping("/dependency")
+    public ServiceResult<List<TaskDependency>> queryAllTaskDependency(@RequestBody TaskDependencyQueryVO taskDependencyQueryVO) {
+        return ServiceResult.success(taskService.queryTaskDependency(taskDependencyQueryVO));
+    }
+
+    @ApiOperation("查询调度计划依赖图可以选择调度计划")
+    @GetMapping("/{dependencyId}/queryDependencyTasks")
+    public ServiceResult<List<Task>> queryDependencyTasks(@PathVariable(name = "dependencyId") Long taskDependencyId) {
+        return ServiceResult.success(taskService.queryCanDrawTask(taskDependencyId));
     }
 }

@@ -2,7 +2,9 @@ package com.iwellmass.idc.app.service;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
@@ -13,6 +15,7 @@ import com.google.common.collect.Sets;
 import com.iwellmass.common.param.ExecParam;
 import com.iwellmass.datafactory.common.vo.TaskDetailVO;
 import com.iwellmass.idc.app.rpc.DFTaskService;
+import com.iwellmass.idc.app.vo.TaskDependencyQueryVO;
 import com.iwellmass.idc.app.vo.graph.*;
 import com.iwellmass.idc.app.vo.task.*;
 import com.iwellmass.idc.model.CronType;
@@ -353,17 +356,36 @@ public class TaskService {
                 .map(edge -> new TaskDependencyEdge(id, edge.getSource().getId(), edge.getTarget().getId(), taskDependency.get().getPrinciple()))
                 .collect(Collectors.toList());
         taskDependencyEdgeRepository.saveAll(edges);
+
+        // todo jobHelper.notifyJobInWaitSet();
+    }
+
+    public Set<String> getAllTaskInTaskDependency(TaskDependency taskDependency) {
+        List<String> sourceTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toList());
+        List<String> targetTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toList());
+        return new HashSet<>(Stream.of(sourceTaskName, targetTaskName).collect(Collector.of(
+                ArrayList::new,
+                List::addAll,
+                (left, right) -> {
+                    left.addAll(right);
+                    return left;
+                })));
     }
 
     /**
+     * query dependency by taskName or name.
      *
      * @return
      */
-    public List<TaskDependency> queryAllTaskDependency() {
-        return taskDependencyRepository.findAll(null,Sort.by(Sort.Direction.DESC,"updatetime"));
+    public List<TaskDependency> queryTaskDependency(TaskDependencyQueryVO taskDependencyQueryVO) {
+        return taskDependencyRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime"))
+                .stream()
+                .filter(td -> taskDependencyQueryVO == null || taskDependencyQueryVO.getName() == null || taskDependencyQueryVO.getName().equals(td.getName()))
+                .filter(td -> taskDependencyQueryVO == null || taskDependencyQueryVO.getTaskName() == null || getAllTaskInTaskDependency(td).contains(taskDependencyQueryVO.getTaskName()))
+                .collect(Collectors.toList());
     }
 
-    public List<Task> queryCanDrawTask(String taskDependencyId) {
+    public List<Task> queryCanDrawTask(Long taskDependencyId) {
         return null;
     }
 
