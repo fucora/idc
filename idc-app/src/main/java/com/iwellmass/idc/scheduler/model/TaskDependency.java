@@ -46,13 +46,13 @@ public class TaskDependency {
 
     @Fetch(FetchMode.SELECT)
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "name", updatable = false)
+    @JoinColumn(name = "task_dependency_id", updatable = false)
     private List<TaskDependencyEdge> edges;
 
     public TaskDependency(TaskDependencyVO taskDependencyVO) {
         this.name = taskDependencyVO.getName();
         this.description = taskDependencyVO.getDescription();
-        this.principle = Principle.MONTHLY_2_MONTHLY;
+        this.principle = Principle.MONTHLY_2_MONTHLY; // only support monthly2monthly
         this.updatetime = LocalDateTime.now();
     }
 }

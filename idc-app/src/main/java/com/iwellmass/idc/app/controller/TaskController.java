@@ -151,10 +151,16 @@ public class TaskController {
         return ServiceResult.success(MSG_OP_SUCCESS);
     }
 
-    @ApiOperation("查询调度计划依赖查看")
-    @GetMapping("/{taskName}/getTaskDependencies")
-    public ServiceResult<TaskGraphVO> getTaskDependencies(@PathVariable(name = "taskName") String taskName) {
-        return ServiceResult.success(taskService.getTaskDependencies(taskName));
+    @ApiOperation("根据任务名查询调度计划依赖查看")
+    @GetMapping("/{taskName}/getTaskDependenciesByTaskName")
+    public ServiceResult<TaskGraphVO> getTaskDependenciesByTaskName(@PathVariable(name = "taskName") String taskName) {
+        return ServiceResult.success(taskService.getTaskDependenciesByTaskName(taskName));
+    }
+
+    @ApiOperation("查看调度计划依赖图及其运行信息")
+    @GetMapping("/{taskDependencyId}/getTaskDependenciesByTaskName")
+    public ServiceResult<TaskGraphVO> getTaskDependenciesById(@PathVariable(name = "taskDependencyId") Long taskDependencyId) {
+        return ServiceResult.success(taskService.getTaskDependenciesById(taskDependencyId));
     }
 
     @ApiOperation("获取调度运行时信息")
@@ -178,9 +184,9 @@ public class TaskController {
     }
 
     @ApiOperation("查询调度计划依赖图")
-    @PostMapping("/dependency")
-    public ServiceResult<List<TaskDependency>> queryAllTaskDependency(@RequestBody TaskDependencyQueryVO taskDependencyQueryVO) {
-        return ServiceResult.success(taskService.queryTaskDependency(taskDependencyQueryVO));
+    @PostMapping("/queryTaskDependencies")
+    public ServiceResult<List<TaskDependency>> queryTaskDependencies(@RequestBody TaskDependencyQueryVO taskDependencyQueryVO) {
+        return ServiceResult.success(taskService.queryTaskDependencies(taskDependencyQueryVO));
     }
 
     @ApiOperation("查询调度计划依赖图可以选择调度计划")

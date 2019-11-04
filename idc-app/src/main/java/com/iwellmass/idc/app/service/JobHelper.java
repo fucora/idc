@@ -377,7 +377,7 @@ public class JobHelper {
             throw new AppException("当前调度计划依赖图{%s}未配置任何调度计划", taskDependency.getName());
         }
 
-        Set<String> jobIds = taskService.getAllTaskInTaskDependency(taskDependency)
+        Set<String> jobIds = taskService.getAllTaskInTaskDependency(taskDependency.getId())
                 .stream()
                 .map(taskName -> {
                     Job latestJob = jobService.getLatestJobByTaskName(taskName);
@@ -387,7 +387,7 @@ public class JobHelper {
                         return "";
                     }
                 })
-                .filter(taskName -> !taskName.equals(""))
+                .filter(jobId -> !jobId.equals(""))
                 .collect(Collectors.toSet());
 
         updateBatchAndExec(addBatch, jobIds);
@@ -823,7 +823,7 @@ public class JobHelper {
     }
 
     // notify those jobs which can run below task's dependencies and maxBatch.
-    private void notifyWaitJobs(Set<String> jobIds) {
+    private synchronized void notifyWaitJobs(Set<String> jobIds) {
         if (jobIds != null) {
             jobIds.forEach(jobId -> {
                 Optional<Job> jobWaited = jobRepository.findById(jobId);

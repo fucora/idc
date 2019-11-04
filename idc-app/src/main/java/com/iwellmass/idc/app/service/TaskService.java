@@ -264,10 +264,26 @@ public class TaskService {
         ).stream().filter(nj -> !nj.isSystemNode()).allMatch(n -> n.getState().isComplete());
     }
 
-    public TaskGraphVO getTaskDependencies(String taskName) {
-        return findRecordByTaskNameAsSourceAndTarget(taskName, new TaskGraphVO(), Sets.newConcurrentHashSet());
+    public TaskGraphVO getTaskDependenciesByTaskName(String taskName) {
+        return getTaskDependenciesById(taskDependencyEdgeRepository.findAllBySourceOrTarget(taskName,taskName)
+                .stream()
+                .map(TaskDependencyEdge::getTaskDependencyId)
+                .distinct()
+                .findFirst()
+                .orElseThrow(() -> new AppException("该调度计划[%s]不存在于任何计划依赖中",taskName)));
     }
 
+    public TaskGraphVO getTaskDependenciesById(Long taskDependencyId) {
+        TaskDependency taskDependency = taskDependencyRepository.findById(taskDependencyId).orElseThrow(() -> new AppException("未发现指定任务依赖[%s]",taskDependencyId));
+        TaskGraphVO taskGraphVO = new TaskGraphVO();
+        taskDependency.getEdges().forEach(edge -> {
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(edge.getTarget()), edge.getTarget()), taskGraphVO);
+            addTaskNodeVOToTaskGraphVO(new TaskNodeVO(jobService.getLatestJobByTaskName(edge.getSource()), edge.getSource()), taskGraphVO);
+        });
+        return taskGraphVO;
+    }
+
+    // do not use.but this method can work.adopt getTaskDependenciesById instead.
     private TaskGraphVO findRecordByTaskNameAsSourceAndTarget(String taskName, TaskGraphVO taskGraphVO, Set<String> taskNamesProcessed) {
         if (!taskNamesProcessed.contains(taskName)) {
             taskNamesProcessed.add(taskName);
@@ -360,33 +376,44 @@ public class TaskService {
         // todo jobHelper.notifyJobInWaitSet();
     }
 
-    public Set<String> getAllTaskInTaskDependency(TaskDependency taskDependency) {
-        List<String> sourceTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toList());
-        List<String> targetTaskName = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toList());
-        return new HashSet<>(Stream.of(sourceTaskName, targetTaskName).collect(Collector.of(
-                ArrayList::new,
-                List::addAll,
+    /**
+     * @param taskDependencyId
+     * @return all taskNames contained by this taskDependency
+     */
+    public Set<String> getAllTaskInTaskDependency(Long taskDependencyId) {
+        TaskDependency taskDependency = taskDependencyRepository.findById(taskDependencyId).orElseThrow(() -> new AppException("未发现该任务依赖图taskDependencyId[%s]", taskDependencyId));
+        Set<String> sourceTaskNames = taskDependency.getEdges().stream().map(TaskDependencyEdge::getSource).collect(Collectors.toSet());
+        Set<String> targetTaskNames = taskDependency.getEdges().stream().map(TaskDependencyEdge::getTarget).collect(Collectors.toSet());
+        return Stream.of(sourceTaskNames, targetTaskNames).collect(Collector.of(
+                HashSet::new,
+                Set::addAll,
                 (left, right) -> {
                     left.addAll(right);
                     return left;
-                })));
+                }));
     }
 
     /**
-     * query dependency by taskName or name.
-     *
+     * query dependency by taskName or taskDependencyName.
      * @return
      */
-    public List<TaskDependency> queryTaskDependency(TaskDependencyQueryVO taskDependencyQueryVO) {
+    public List<TaskDependency> queryTaskDependencies(TaskDependencyQueryVO taskDependencyQueryVO) {
         return taskDependencyRepository.findAll(null, Sort.by(Sort.Direction.DESC, "updatetime"))
                 .stream()
                 .filter(td -> taskDependencyQueryVO == null || taskDependencyQueryVO.getName() == null || taskDependencyQueryVO.getName().equals(td.getName()))
-                .filter(td -> taskDependencyQueryVO == null || taskDependencyQueryVO.getTaskName() == null || getAllTaskInTaskDependency(td).contains(taskDependencyQueryVO.getTaskName()))
+                .filter(td -> taskDependencyQueryVO == null || taskDependencyQueryVO.getTaskName() == null || getAllTaskInTaskDependency(td.getId()).contains(taskDependencyQueryVO.getTaskName()))
                 .collect(Collectors.toList());
     }
 
     public List<Task> queryCanDrawTask(Long taskDependencyId) {
-        return null;
+        Set<String> taskNames = getAllTaskInTaskDependency(taskDependencyId);
+        return taskRepository.findAll(null,Sort.by(Sort.Direction.DESC, "createtime"))
+                .stream()
+                .filter(tk -> tk.getScheduleType() == ScheduleType.AUTO &&
+                        tk.getProps() != null &&
+                        tk.getProps().getOrDefault("cronType","").equals(CronType.MONTHLY.name()) &&
+                        !taskNames.contains(tk.getTaskName()))
+                .collect(Collectors.toList());
     }
 
 }
